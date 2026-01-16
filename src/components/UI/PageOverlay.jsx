@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import DataStream from './DataStream';
 import './PageOverlay.css';
 
 export default function PageOverlay({ isOpen, onClose, children, title }) {
@@ -75,6 +76,9 @@ export default function PageOverlay({ isOpen, onClose, children, title }) {
               overflow: 'hidden'
             }}
           >
+            {/* Data Stream Background Animation */}
+            <DataStream />
+
             {/* Decorative corner accents */}
             <div
               className="corner-accent top-left"

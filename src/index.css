@@ -12,7 +12,7 @@
   --text-secondary: rgba(255, 255, 255, 0.7);
 
   /* Typography */
-  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-family: 'Rajdhani', system-ui, -apple-system, 'Segoe UI', sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
@@ -82,6 +82,8 @@ button:focus-visible {
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-weight: 300;
-  letter-spacing: 1px;
+  font-family: 'Orbitron', 'Rajdhani', sans-serif;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
 }
