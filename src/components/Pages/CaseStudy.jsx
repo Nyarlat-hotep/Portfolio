@@ -1,5 +1,7 @@
 import { motion } from 'framer-motion';
 import './CaseStudy.css';
+import HexAccent from '../UI/HexAccent';
+import OctagonAccent from '../UI/OctagonAccent';
 
 export default function CaseStudy({ caseStudy }) {
   if (!caseStudy) return null;
@@ -44,10 +46,14 @@ export default function CaseStudy({ caseStudy }) {
       {/* Role & Company */}
       <motion.div className="case-study-info" variants={itemVariants}>
         <div className="info-card">
+          <OctagonAccent size={24} opacity={0.4} className="card-accent top-left" />
+          <OctagonAccent size={24} opacity={0.4} className="card-accent bottom-right" />
           <span className="info-label">Role</span>
           <span className="info-value">{caseStudy.role}</span>
         </div>
         <div className="info-card">
+          <OctagonAccent size={24} opacity={0.4} className="card-accent top-left" />
+          <OctagonAccent size={24} opacity={0.4} className="card-accent bottom-right" />
           <span className="info-label">Company</span>
           <span className="info-value">{caseStudy.company}</span>
         </div>

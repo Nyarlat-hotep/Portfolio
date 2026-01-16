@@ -1,5 +1,7 @@
 import { motion } from 'framer-motion';
 import './About.css';
+import HexAccent from '../UI/HexAccent';
+import OctagonAccent from '../UI/OctagonAccent';
 
 export default function About({ aboutData }) {
   if (!aboutData) return null;
@@ -94,6 +96,8 @@ export default function About({ aboutData }) {
           Get In Touch
         </h3>
         <div className="contact-card">
+          <HexAccent size={30} opacity={0.3} className="card-accent top-left" />
+          <HexAccent size={30} opacity={0.3} className="card-accent bottom-right" />
           <p className="contact-text">
             I'm always interested in hearing about new projects and opportunities.
           </p>

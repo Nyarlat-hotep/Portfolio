@@ -2,6 +2,7 @@ import { useState } from 'react';
 import './BottomNav.css';
 import { planetsData } from '../../data/planets';
 import { aboutContent } from '../../data/caseStudies';
+import HexAccent from '../UI/HexAccent';
 
 export default function BottomNav({ activePlanetId, onNavigate }) {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -50,6 +51,12 @@ export default function BottomNav({ activePlanetId, onNavigate }) {
                   className={`nav-button ${isActive ? 'active' : ''}`}
                   onClick={() => handleNavClick(item.id)}
                 >
+                  <HexAccent
+                    size={16}
+                    color={isActive ? '#00d4ff' : '#00d4ff'}
+                    opacity={isActive ? 0.8 : 0.3}
+                    className="nav-hex-accent"
+                  />
                   <span className="nav-icon">{item.icon}</span>
                   <span className="nav-label">{item.label}</span>
                   {isActive && <span className="nav-indicator"></span>}

@@ -1,6 +1,8 @@
 import { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import DataStream from './DataStream';
+import HexAccent from './HexAccent';
+import OctagonAccent from './OctagonAccent';
 import './PageOverlay.css';
 
 export default function PageOverlay({ isOpen, onClose, children, title }) {
@@ -78,6 +80,14 @@ export default function PageOverlay({ isOpen, onClose, children, title }) {
           >
             {/* Data Stream Background Animation */}
             <DataStream />
+
+            {/* Floating Geometric Elements */}
+            <HexAccent size={60} opacity={0.15} className="floating" style={{ top: '15%', left: '8%' }} />
+            <HexAccent size={40} opacity={0.2} className="floating" style={{ top: '45%', right: '10%' }} />
+            <HexAccent size={50} opacity={0.12} className="floating" style={{ bottom: '20%', left: '12%' }} />
+            <OctagonAccent size={70} opacity={0.15} className="floating" style={{ top: '25%', right: '15%' }} />
+            <OctagonAccent size={45} opacity={0.18} className="floating" style={{ bottom: '30%', right: '8%' }} />
+            <OctagonAccent size={55} opacity={0.1} className="floating" style={{ top: '60%', left: '15%' }} />
 
             {/* Decorative corner accents */}
             <div

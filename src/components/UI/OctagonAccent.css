@@ -1,0 +1,29 @@
+.octagon-accent {
+  display: inline-block;
+  color: var(--octagon-color, #00d4ff);
+  opacity: var(--octagon-opacity, 0.3);
+  animation: octagonPulse 4s ease-in-out infinite;
+}
+
+.octagon-accent svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+@keyframes octagonPulse {
+  0%, 100% {
+    opacity: var(--octagon-opacity, 0.3);
+    transform: scale(1) rotate(0deg);
+  }
+  50% {
+    opacity: calc(var(--octagon-opacity, 0.3) * 1.5);
+    transform: scale(1.05) rotate(5deg);
+  }
+}
+
+/* Positioning variants */
+.octagon-accent.floating {
+  position: absolute;
+  pointer-events: none;
+}
