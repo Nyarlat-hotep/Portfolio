@@ -1,0 +1,345 @@
+/* Backdrop */
+.overlay-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(10, 14, 39, 0.8);
+  backdrop-filter: blur(8px);
+  z-index: 2000;
+}
+
+/* Main Overlay Container */
+.overlay-container {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90%;
+  max-width: 1200px;
+  height: 85vh;
+  max-height: 900px;
+  z-index: 2001;
+
+  /* Glassmorphism */
+  background: rgba(26, 29, 58, 0.7);
+  backdrop-filter: blur(40px) saturate(150%);
+  border: 1px solid rgba(0, 212, 255, 0.2);
+  border-radius: 24px;
+
+  /* Glow effect */
+  box-shadow:
+    0 0 0 1px rgba(0, 212, 255, 0.1) inset,
+    0 8px 32px rgba(0, 0, 0, 0.6),
+    0 0 60px rgba(0, 212, 255, 0.15);
+
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Animated gradient border effect */
+.overlay-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 24px;
+  padding: 1px;
+  background: linear-gradient(
+    135deg,
+    rgba(0, 212, 255, 0.3) 0%,
+    rgba(168, 85, 247, 0.3) 50%,
+    rgba(34, 211, 238, 0.3) 100%
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+/* Corner Accents - Cyberpunk style */
+.corner-accent {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  border: 2px solid rgba(0, 212, 255, 0.6);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.corner-accent.top-left {
+  top: 16px;
+  left: 16px;
+  border-right: none;
+  border-bottom: none;
+  border-top-left-radius: 4px;
+}
+
+.corner-accent.top-right {
+  top: 16px;
+  right: 16px;
+  border-left: none;
+  border-bottom: none;
+  border-top-right-radius: 4px;
+}
+
+.corner-accent.bottom-left {
+  bottom: 16px;
+  left: 16px;
+  border-right: none;
+  border-top: none;
+  border-bottom-left-radius: 4px;
+}
+
+.corner-accent.bottom-right {
+  bottom: 16px;
+  right: 16px;
+  border-left: none;
+  border-top: none;
+  border-bottom-right-radius: 4px;
+}
+
+/* Glowing effect on corners */
+.corner-accent::before {
+  content: '';
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: #00d4ff;
+  border-radius: 50%;
+  box-shadow: 0 0 10px #00d4ff;
+}
+
+.corner-accent.top-left::before {
+  top: -3px;
+  left: -3px;
+}
+
+.corner-accent.top-right::before {
+  top: -3px;
+  right: -3px;
+}
+
+.corner-accent.bottom-left::before {
+  bottom: -3px;
+  left: -3px;
+}
+
+.corner-accent.bottom-right::before {
+  bottom: -3px;
+  right: -3px;
+}
+
+/* Header */
+.overlay-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2rem 3rem;
+  border-bottom: 1px solid rgba(0, 212, 255, 0.15);
+  background: linear-gradient(
+    180deg,
+    rgba(0, 212, 255, 0.05) 0%,
+    rgba(0, 212, 255, 0) 100%
+  );
+  flex-shrink: 0;
+  position: relative;
+  z-index: 2;
+}
+
+.header-content {
+  flex: 1;
+}
+
+.overlay-title {
+  font-size: 2.5rem;
+  font-weight: 200;
+  letter-spacing: 2px;
+  margin: 0;
+  background: linear-gradient(135deg, #00d4ff 0%, #a855f7 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: 0 0 30px rgba(0, 212, 255, 0.3);
+}
+
+/* Close Button */
+.close-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  background: rgba(0, 212, 255, 0.1);
+  border: 1px solid rgba(0, 212, 255, 0.3);
+  border-radius: 12px;
+  color: #00d4ff;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 500;
+  letter-spacing: 1px;
+}
+
+.close-button:hover {
+  background: rgba(0, 212, 255, 0.2);
+  border-color: #00d4ff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 212, 255, 0.3);
+}
+
+.close-icon {
+  font-size: 24px;
+  line-height: 1;
+  font-weight: 300;
+}
+
+.close-text {
+  font-family: monospace;
+  font-size: 11px;
+  opacity: 0.7;
+  background: rgba(0, 212, 255, 0.2);
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid rgba(0, 212, 255, 0.3);
+}
+
+/* Content Area */
+.overlay-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 2rem 3rem 3rem;
+  position: relative;
+  z-index: 1;
+
+  /* Custom scrollbar */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 212, 255, 0.5) rgba(255, 255, 255, 0.1);
+}
+
+.overlay-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.overlay-content::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+  margin: 8px 0;
+}
+
+.overlay-content::-webkit-scrollbar-thumb {
+  background: rgba(0, 212, 255, 0.5);
+  border-radius: 4px;
+  border: 2px solid rgba(26, 29, 58, 0.7);
+}
+
+.overlay-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 212, 255, 0.7);
+}
+
+/* Bottom fade effect */
+.overlay-fade {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 100px;
+  background: linear-gradient(
+    to bottom,
+    rgba(26, 29, 58, 0) 0%,
+    rgba(26, 29, 58, 0.9) 100%
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .overlay-container {
+    width: 95%;
+    height: 90vh;
+  }
+
+  .overlay-header {
+    padding: 1.5rem 2rem;
+  }
+
+  .overlay-title {
+    font-size: 2rem;
+  }
+
+  .overlay-content {
+    padding: 1.5rem 2rem 2rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .overlay-container {
+    width: 100%;
+    height: 100vh;
+    max-height: 100vh;
+    border-radius: 0;
+  }
+
+  .overlay-header {
+    padding: 1.25rem 1.5rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .overlay-title {
+    font-size: 1.75rem;
+  }
+
+  .overlay-content {
+    padding: 1.25rem 1.5rem 2rem;
+  }
+
+  .close-button {
+    align-self: flex-end;
+    position: absolute;
+    top: 1.25rem;
+    right: 1.5rem;
+  }
+
+  .corner-accent {
+    display: none;
+  }
+}
+
+/* Scan line animation - subtle cyberpunk effect */
+@keyframes scanline {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(100vh);
+  }
+}
+
+.overlay-container::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(0, 212, 255, 0.3),
+    transparent
+  );
+  animation: scanline 8s linear infinite;
+  pointer-events: none;
+  opacity: 0.3;
+}

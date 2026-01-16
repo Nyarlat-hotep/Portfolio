@@ -1,35 +1,65 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState } from 'react';
+import Galaxy from './components/Galaxy/Galaxy';
+import PageOverlay from './components/UI/PageOverlay';
+import CaseStudy from './components/Pages/CaseStudy';
+import About from './components/Pages/About';
+import { caseStudies, aboutContent } from './data/caseStudies';
+import './App.css';
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [activePlanet, setActivePlanet] = useState(null);
+  const [isOverlayOpen, setIsOverlayOpen] = useState(false);
+
+  const handlePlanetClick = (planet) => {
+    console.log('Planet clicked:', planet);
+    setActivePlanet(planet);
+
+    // Don't open overlay for home planet
+    if (planet.id !== 'home') {
+      setIsOverlayOpen(true);
+    } else {
+      setIsOverlayOpen(false);
+    }
+  };
+
+  const handleCloseOverlay = () => {
+    setIsOverlayOpen(false);
+    setActivePlanet(null);
+  };
+
+  // Determine what content to show in overlay
+  const getOverlayContent = () => {
+    if (!activePlanet) return null;
+
+    if (activePlanet.id === 'about') {
+      return <About aboutData={aboutContent} />;
+    }
+
+    // Case study pages
+    const caseStudy = caseStudies[activePlanet.id];
+    if (caseStudy) {
+      return <CaseStudy caseStudy={caseStudy} />;
+    }
+
+    return null;
+  };
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <div className="App">
+      <Galaxy
+        onPlanetClick={handlePlanetClick}
+        activePlanetId={activePlanet?.id}
+      />
+
+      <PageOverlay
+        isOpen={isOverlayOpen}
+        onClose={handleCloseOverlay}
+        title={activePlanet?.id === 'about' ? aboutContent.name : caseStudies[activePlanet?.id]?.title}
+      >
+        {getOverlayContent()}
+      </PageOverlay>
+    </div>
+  );
 }
 
-export default App
+export default App;
