@@ -1,14 +1,7 @@
 import { useRef, useState, useMemo } from 'react';
-import { useFrame } from '@react-three/fiber';
+import { useFrame, useLoader } from '@react-three/fiber';
 import { Sphere } from '@react-three/drei';
 import * as THREE from 'three';
-import {
-  createEarthLikeTexture,
-  createGasGiantTexture,
-  createRockyTexture,
-  createIcyTexture,
-  createAlienTexture
-} from '../../utils/planetTextures';
 
 export default function Planet({
   position,
@@ -28,31 +21,26 @@ export default function Planet({
   const particlesRef = useRef();
   const [hovered, setHovered] = useState(false);
 
-  // Generate procedural texture based on planet color and type
-  const planetTexture = useMemo(() => {
-    // Parse color to determine planet style
+  // Determine which texture to use based on planet properties
+  const getTextureUrl = () => {
     const colorValue = color.toLowerCase();
 
-    if (colorValue.includes('00d4ff') || colorValue.includes('cyan') && type === 'star') {
-      // Home planet - cyan gas giant
-      return createGasGiantTexture(512, { r: 80, g: 200, b: 255 });
-    } else if (colorValue.includes('a855f7') || colorValue.includes('purple')) {
-      // Purple planet - alien world
-      return createAlienTexture(512, { r: 150, g: 80, b: 200 });
-    } else if (colorValue.includes('22d3ee') || colorValue.includes('cyan')) {
-      // Cyan planet - icy world
-      return createIcyTexture(512);
-    } else if (colorValue.includes('ec4899') || colorValue.includes('pink')) {
-      // Pink planet - rocky/mars-like
-      return createRockyTexture(512, { r: 200, g: 100, b: 140 });
-    } else if (colorValue.includes('10b981') || colorValue.includes('green')) {
-      // Green planet - earth-like
-      return createEarthLikeTexture(512);
-    } else {
-      // Default gas giant
-      return createGasGiantTexture(512, { r: 150, g: 120, b: 100 });
+    if (colorValue.includes('00d4ff') && type === 'star') {
+      return 'https://raw.githubusercontent.com/turban/solar-system-threejs/master/img/neptune.jpg';
+    } else if (colorValue.includes('a855f7')) {
+      return 'https://raw.githubusercontent.com/turban/solar-system-threejs/master/img/venus.jpg';
+    } else if (colorValue.includes('22d3ee')) {
+      return 'https://raw.githubusercontent.com/turban/solar-system-threejs/master/img/uranus.jpg';
+    } else if (colorValue.includes('ec4899')) {
+      return 'https://raw.githubusercontent.com/turban/solar-system-threejs/master/img/mars.jpg';
+    } else if (colorValue.includes('10b981')) {
+      return 'https://raw.githubusercontent.com/turban/solar-system-threejs/master/img/earth.jpg';
     }
-  }, [color, type]);
+    return 'https://raw.githubusercontent.com/turban/solar-system-threejs/master/img/jupiter.jpg';
+  };
+
+  // Load the planet texture
+  const planetTexture = useLoader(THREE.TextureLoader, getTextureUrl());
 
   // Create particle positions around the planet
   const particleCount = 50;
