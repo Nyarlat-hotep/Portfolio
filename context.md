@@ -117,17 +117,77 @@ portfolio/
 
 ## Design Specifications
 
-### Color Palette
+### Visual Inspiration & Aesthetic Direction
+
+**Target Aesthetic:** High-tech HUD/Cyberpunk/Sci-fi Interface
+
+Based on provided reference images, the portfolio should embody:
+
+**Key Visual Elements from References:**
+
+1. **HUD Elements & Frames**
+   - Geometric corner brackets (L-shaped accents) ✅ Implemented
+   - Technical grid overlays and dotted patterns
+   - Circuit board-inspired line work
+   - Hexagonal shapes and geometric patterns
+   - Warning/alert style frames with diagonal stripes
+   - Technical readouts and data panels
+
+2. **Color Scheme (Orange/Blue Variant)**
+   - Primary: Orange/Amber (#FF8C00, #FFA500, #FFB84D) for warnings, highlights
+   - Secondary: Dark background (#0a0a0a, #1a1a1a)
+   - Accents: Bright cyan/blue for contrast
+   - **Current Implementation:** Using cyan/blue primary (#00d4ff, #22d3ee) with purple accents
+   - **Note:** Could add orange as tertiary accent for warning states or special highlights
+
+3. **UI Component Style**
+   - Technical frames with labeled sections ("WARNING", "01", "LOREM IPSUM")
+   - Progress bars with circuit-like end caps
+   - Layered transparent panels with technical details
+   - Diagonal cut corners and beveled edges
+   - Circular radar/target-style graphics
+   - Line connectors between UI elements
+   - Modular, panel-based layouts
+
+4. **Typography Treatment**
+   - Bold, geometric, futuristic fonts (like "FRAME FUTURE" in references)
+   - Monospace/technical fonts for data readouts
+   - All-caps labels for section headers
+   - Glowing text effects on important elements
+   - Letter spacing for readability and tech feel
+
+5. **Effects & Details**
+   - Glowing edges and light leaks
+   - Scanline animations ✅ Implemented
+   - Subtle grid patterns in backgrounds
+   - Hazard stripes (diagonal lines)
+   - Dotted borders and dashed lines
+   - Inner glow/outer glow on frames
+   - Opacity layers creating depth
+
+6. **Interactive Elements Style**
+   - Buttons with technical frames
+   - Animated scanlines on hover
+   - Glowing borders on active states
+   - Corner accents that light up
+   - Progress indicators with technical styling
+
+### Current Color Palette
 ```css
 /* Background */
 --space-dark: #0a0e27;
 --space-medium: #1a1d3a;
 
-/* Accents */
+/* Primary Accents (Blue/Cyan Theme) */
 --electric-blue: #00d4ff;
 --neon-purple: #a855f7;
 --cyan: #22d3ee;
 --pink: #ec4899;
+
+/* Potential Orange Accents (from reference) */
+--warning-orange: #FF8C00;
+--tech-amber: #FFA500;
+--highlight-gold: #FFB84D;
 
 /* UI Elements */
 --glass-white: rgba(255, 255, 255, 0.1);
@@ -137,9 +197,10 @@ portfolio/
 ```
 
 ### Typography
-- **Headings:** Orbitron, Exo 2, Audiowide, or Michroma
-- **Body:** Inter, Space Grotesk, or DM Sans
-- **Monospace (optional):** JetBrains Mono, Fira Code
+- **Headings:** Orbitron, Exo 2, Audiowide, Michroma, or Rajdhani (geometric, futuristic)
+- **Body:** Inter, Space Grotesk, DM Sans, or Rajdhani
+- **Monospace/Technical:** JetBrains Mono, Fira Code, Share Tech Mono
+- **Display (Special):** Consider custom tech/HUD fonts for emphasis
 
 ### Navigation Structure
 1. **Home** - Galaxy view (default)
@@ -248,16 +309,44 @@ Each case study should include:
 
 ## Future Enhancements (Post-MVP)
 
+### Visual Enhancements (Based on HUD References)
+- [ ] Add technical grid overlay patterns to overlays
+- [ ] Implement diagonal hazard stripes for accent areas
+- [ ] Create hexagonal UI elements for special highlights
+- [ ] Add progress bars with circuit-style end caps
+- [ ] Implement labeled section headers (e.g., "01_OVERVIEW", "02_CHALLENGE")
+- [ ] Add dotted/dashed border variations
+- [ ] Create radar/circular target graphics for planet selection
+- [ ] Add technical line connectors between related UI elements
+- [ ] Implement orange/amber accent color for warnings or CTAs
+- [ ] Add more geometric shapes (hexagons, octagons) to design system
+- [ ] Create modular panel system with interchangeable frames
+
+### Interaction & Animation
 - [ ] Sound effects for interactions (optional toggle)
 - [ ] Parallax effects in content overlays
+- [ ] Scanline hover effects on buttons
+- [ ] Glowing border animations on active states
+- [ ] Corner bracket light-up animations
+- [ ] Typewriter effect for text reveals
+- [ ] Data stream animations in backgrounds
+
+### 3D & Visual Effects
 - [ ] Custom 3D models instead of basic spheres
-- [ ] Dynamic planet shaders
+- [ ] Dynamic planet shaders with tech patterns
+- [ ] Bloom/glow post-processing effects
+- [ ] Particle trails between planets
+- [ ] Holographic material effects
 - [ ] Easter eggs (hidden planets, constellations)
+
+### Content & Features
 - [ ] Blog section
-- [ ] Contact form
+- [ ] Contact form with HUD styling
 - [ ] Analytics integration
 - [ ] SEO optimization
 - [ ] PWA capabilities
+- [ ] Project filtering system
+- [ ] Dark/light mode toggle (HUD style switch)
 
 ## Resources & References
 

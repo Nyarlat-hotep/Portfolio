@@ -11,7 +11,6 @@ function App() {
   const [isOverlayOpen, setIsOverlayOpen] = useState(false);
 
   const handlePlanetClick = (planet) => {
-    console.log('Planet clicked:', planet);
     setActivePlanet(planet);
 
     // Don't open overlay for home planet

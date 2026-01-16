@@ -7,7 +7,6 @@ export default function BottomNav({ activePlanetId, onNavigate }) {
   const [isExpanded, setIsExpanded] = useState(false);
 
   const navItems = [
-    { id: 'home', label: 'Home', icon: '⭐' },
     { id: 'case-study-1', label: 'Project 1', icon: '🎨' },
     { id: 'case-study-2', label: 'Project 2', icon: '💼' },
     { id: 'case-study-3', label: 'Project 3', icon: '🚀' },
