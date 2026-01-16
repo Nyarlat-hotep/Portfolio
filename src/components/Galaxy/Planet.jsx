@@ -99,14 +99,14 @@ export default function Planet({
         />
       )}
 
-      {/* Main planet sphere */}
-      <Sphere
+      {/* Main planet sphere with wireframe */}
+      <mesh
         ref={meshRef}
-        args={[1, 32, 32]}
         onClick={handleClick}
         onPointerOver={handlePointerOver}
         onPointerOut={handlePointerOut}
       >
+        <sphereGeometry args={[1, 32, 32]} />
         <meshStandardMaterial
           color={color}
           emissive={emissive}
@@ -114,28 +114,32 @@ export default function Planet({
           roughness={0.5}
           metalness={0.5}
         />
-      </Sphere>
+      </mesh>
 
-      {/* Wireframe overlay */}
-      <Sphere args={[1.02, 16, 16]}>
-        <meshBasicMaterial
-          color={color}
-          wireframe
-          transparent
-          opacity={hovered || isActive ? 0.4 : 0.2}
-        />
-      </Sphere>
-
-      {/* Holographic scanning lines - only when hovered/active */}
+      {/* Wireframe overlay - only when hovered/active */}
       {(hovered || isActive) && (
-        <Sphere args={[1.01, 32, 8]}>
-          <meshBasicMaterial
-            color={color}
-            wireframe
-            transparent
-            opacity={0.3}
-          />
-        </Sphere>
+        <>
+          <mesh>
+            <sphereGeometry args={[1.02, 16, 16]} />
+            <meshBasicMaterial
+              color={color}
+              wireframe
+              transparent
+              opacity={0.4}
+            />
+          </mesh>
+
+          {/* Holographic scanning lines */}
+          <mesh>
+            <sphereGeometry args={[1.01, 32, 8]} />
+            <meshBasicMaterial
+              color={color}
+              wireframe
+              transparent
+              opacity={0.3}
+            />
+          </mesh>
+        </>
       )}
 
       {/* Glow effect ring for active/hovered state */}
