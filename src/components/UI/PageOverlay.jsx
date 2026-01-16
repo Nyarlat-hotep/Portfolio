@@ -60,7 +60,12 @@ export default function PageOverlay({ isOpen, onClose, children, title }) {
               margin: '0 auto',
               maxWidth: '1200px',
               zIndex: 2001,
-              background: 'rgba(26, 29, 58, 0.9)',
+              background: `
+                linear-gradient(90deg, rgba(0, 212, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(rgba(0, 212, 255, 0.03) 1px, transparent 1px),
+                rgba(26, 29, 58, 0.9)
+              `,
+              backgroundSize: '20px 20px, 20px 20px, 100% 100%',
               borderRadius: '24px',
               backdropFilter: 'blur(40px)',
               border: '1px solid rgba(0, 212, 255, 0.2)',
@@ -85,7 +90,18 @@ export default function PageOverlay({ isOpen, onClose, children, title }) {
                 left: '16px',
                 zIndex: 1
               }}
-            ></div>
+            >
+              <div style={{
+                position: 'absolute',
+                width: '6px',
+                height: '6px',
+                background: '#00d4ff',
+                borderRadius: '50%',
+                boxShadow: '0 0 10px #00d4ff',
+                top: '-3px',
+                left: '-3px'
+              }}></div>
+            </div>
             <div
               className="corner-accent top-right"
               style={{
@@ -100,7 +116,18 @@ export default function PageOverlay({ isOpen, onClose, children, title }) {
                 right: '16px',
                 zIndex: 1
               }}
-            ></div>
+            >
+              <div style={{
+                position: 'absolute',
+                width: '6px',
+                height: '6px',
+                background: '#00d4ff',
+                borderRadius: '50%',
+                boxShadow: '0 0 10px #00d4ff',
+                top: '-3px',
+                right: '-3px'
+              }}></div>
+            </div>
             <div
               className="corner-accent bottom-left"
               style={{
@@ -115,7 +142,18 @@ export default function PageOverlay({ isOpen, onClose, children, title }) {
                 left: '16px',
                 zIndex: 1
               }}
-            ></div>
+            >
+              <div style={{
+                position: 'absolute',
+                width: '6px',
+                height: '6px',
+                background: '#00d4ff',
+                borderRadius: '50%',
+                boxShadow: '0 0 10px #00d4ff',
+                bottom: '-3px',
+                left: '-3px'
+              }}></div>
+            </div>
             <div
               className="corner-accent bottom-right"
               style={{
@@ -130,7 +168,18 @@ export default function PageOverlay({ isOpen, onClose, children, title }) {
                 right: '16px',
                 zIndex: 1
               }}
-            ></div>
+            >
+              <div style={{
+                position: 'absolute',
+                width: '6px',
+                height: '6px',
+                background: '#00d4ff',
+                borderRadius: '50%',
+                boxShadow: '0 0 10px #00d4ff',
+                bottom: '-3px',
+                right: '-3px'
+              }}></div>
+            </div>
 
             {/* Header */}
             <div

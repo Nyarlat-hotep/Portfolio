@@ -14,10 +14,15 @@
   text-transform: uppercase;
   letter-spacing: 2px;
   font-weight: 500;
+  padding: 0.75rem 1rem;
+  background: rgba(0, 212, 255, 0.03);
+  border-left: 2px solid #00d4ff;
+  font-family: monospace;
 }
 
 .meta-divider {
-  color: rgba(0, 212, 255, 0.5);
+  color: rgba(0, 212, 255, 0.8);
+  font-weight: 700;
 }
 
 /* Info Cards */
@@ -36,6 +41,20 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Diagonal accent line */
+.info-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 3px;
+  height: 40px;
+  background: linear-gradient(180deg, #00d4ff, transparent);
+  transform: translateX(-10px);
 }
 
 .info-label {
@@ -56,6 +75,7 @@
 /* Sections */
 .case-study-section {
   margin-bottom: 3rem;
+  position: relative;
 }
 
 .section-title {
@@ -67,6 +87,20 @@
   color: #ffffff;
   margin-bottom: 1.25rem;
   letter-spacing: 1px;
+  text-transform: uppercase;
+  position: relative;
+  padding-bottom: 0.75rem;
+}
+
+/* Technical underline */
+.section-title::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, #00d4ff 0%, rgba(0, 212, 255, 0.2) 50%, transparent 100%);
 }
 
 .title-accent {
@@ -82,6 +116,30 @@
   font-weight: 500;
   color: #00d4ff;
   font-family: monospace;
+  position: relative;
+  box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+}
+
+/* Corner dots for technical HUD feel */
+.title-accent::before,
+.title-accent::after {
+  content: '';
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: #00d4ff;
+  border-radius: 50%;
+  box-shadow: 0 0 6px #00d4ff;
+}
+
+.title-accent::before {
+  top: 2px;
+  left: 2px;
+}
+
+.title-accent::after {
+  bottom: 2px;
+  right: 2px;
 }
 
 .section-text {
