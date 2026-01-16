@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Sphere } from '@react-three/drei';
 import * as THREE from 'three';
@@ -16,7 +16,26 @@ export default function Planet({
   onHover
 }) {
   const meshRef = useRef();
+  const ringRef1 = useRef();
+  const ringRef2 = useRef();
+  const particlesRef = useRef();
   const [hovered, setHovered] = useState(false);
+
+  // Create particle positions around the planet
+  const particleCount = 50;
+  const particles = useMemo(() => {
+    const positions = new Float32Array(particleCount * 3);
+    for (let i = 0; i < particleCount; i++) {
+      const theta = Math.random() * Math.PI * 2;
+      const phi = Math.random() * Math.PI;
+      const radius = 1.8 + Math.random() * 0.5;
+
+      positions[i * 3] = radius * Math.sin(phi) * Math.cos(theta);
+      positions[i * 3 + 1] = radius * Math.sin(phi) * Math.sin(theta);
+      positions[i * 3 + 2] = radius * Math.cos(phi);
+    }
+    return positions;
+  }, []);
 
   // Rotate the planet slowly
   useFrame((state, delta) => {
@@ -32,6 +51,20 @@ export default function Planet({
         new THREE.Vector3(targetScale, targetScale, targetScale),
         0.1
       );
+    }
+
+    // Rotate orbital rings
+    if (ringRef1.current) {
+      ringRef1.current.rotation.z += delta * 0.3;
+    }
+    if (ringRef2.current) {
+      ringRef2.current.rotation.z -= delta * 0.2;
+    }
+
+    // Animate particles
+    if (particlesRef.current && (hovered || isActive)) {
+      particlesRef.current.rotation.y += delta * 0.1;
+      particlesRef.current.rotation.x += delta * 0.05;
     }
   });
 
@@ -56,6 +89,17 @@ export default function Planet({
 
   return (
     <group position={position}>
+      {/* Point light for glow effect */}
+      {(hovered || isActive) && (
+        <pointLight
+          color={color}
+          intensity={isActive ? 2 : 1}
+          distance={5}
+          decay={2}
+        />
+      )}
+
+      {/* Main planet sphere */}
       <Sphere
         ref={meshRef}
         args={[1, 32, 32]}
@@ -67,10 +111,32 @@ export default function Planet({
           color={color}
           emissive={emissive}
           emissiveIntensity={isActive ? emissiveIntensity * 1.5 : emissiveIntensity}
-          roughness={0.7}
-          metalness={0.3}
+          roughness={0.5}
+          metalness={0.5}
         />
       </Sphere>
+
+      {/* Wireframe overlay */}
+      <Sphere args={[1.02, 16, 16]}>
+        <meshBasicMaterial
+          color={color}
+          wireframe
+          transparent
+          opacity={hovered || isActive ? 0.4 : 0.2}
+        />
+      </Sphere>
+
+      {/* Holographic scanning lines - only when hovered/active */}
+      {(hovered || isActive) && (
+        <Sphere args={[1.01, 32, 8]}>
+          <meshBasicMaterial
+            color={color}
+            wireframe
+            transparent
+            opacity={0.3}
+          />
+        </Sphere>
+      )}
 
       {/* Glow effect ring for active/hovered state */}
       {(hovered || isActive) && (
@@ -82,6 +148,52 @@ export default function Planet({
             side={THREE.BackSide}
           />
         </Sphere>
+      )}
+
+      {/* Particle system - appear on hover/active */}
+      {(hovered || isActive) && (
+        <points ref={particlesRef}>
+          <bufferGeometry>
+            <bufferAttribute
+              attach="attributes-position"
+              count={particleCount}
+              array={particles}
+              itemSize={3}
+            />
+          </bufferGeometry>
+          <pointsMaterial
+            size={0.05}
+            color={color}
+            transparent
+            opacity={0.6}
+            sizeAttenuation
+          />
+        </points>
+      )}
+
+      {/* Technical orbital rings - appear on hover/active */}
+      {(hovered || isActive) && (
+        <>
+          {/* First orbital ring */}
+          <mesh ref={ringRef1} rotation={[Math.PI / 3, 0, 0]}>
+            <torusGeometry args={[1.5, 0.015, 16, 64]} />
+            <meshBasicMaterial
+              color={color}
+              transparent
+              opacity={0.5}
+            />
+          </mesh>
+
+          {/* Second orbital ring */}
+          <mesh ref={ringRef2} rotation={[Math.PI / 2.5, Math.PI / 4, 0]}>
+            <torusGeometry args={[1.6, 0.01, 16, 64]} />
+            <meshBasicMaterial
+              color={color}
+              transparent
+              opacity={0.3}
+            />
+          </mesh>
+        </>
       )}
 
       {/* Optional ring for certain planets (like Saturn) */}
