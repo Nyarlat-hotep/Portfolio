@@ -30,15 +30,13 @@ export default function Planet({
 
   // Generate procedural texture based on planet color and type
   const planetTexture = useMemo(() => {
-    if (type === 'star') {
-      // Stars don't need texture - they're emissive
-      return null;
-    }
-
     // Parse color to determine planet style
     const colorValue = color.toLowerCase();
 
-    if (colorValue.includes('a855f7') || colorValue.includes('purple')) {
+    if (colorValue.includes('00d4ff') || colorValue.includes('cyan') && type === 'star') {
+      // Home planet - cyan gas giant
+      return createGasGiantTexture(512, { r: 80, g: 200, b: 255 });
+    } else if (colorValue.includes('a855f7') || colorValue.includes('purple')) {
       // Purple planet - alien world
       return createAlienTexture(512, { r: 150, g: 80, b: 200 });
     } else if (colorValue.includes('22d3ee') || colorValue.includes('cyan')) {
@@ -143,20 +141,20 @@ export default function Planet({
       >
         <sphereGeometry args={[1, 64, 64]} />
         {type === 'star' ? (
-          // Stars are emissive and glowing
-          <meshStandardMaterial
-            color={color}
-            emissive={emissive}
-            emissiveIntensity={isActive ? emissiveIntensity * 1.5 : emissiveIntensity}
-            roughness={0.2}
-            metalness={0.8}
-          />
-        ) : (
-          // Planets have realistic textures
+          // Home planet - gas giant with extra glow
           <meshStandardMaterial
             map={planetTexture}
             emissive={emissive}
-            emissiveIntensity={isActive ? emissiveIntensity * 0.5 : emissiveIntensity * 0.2}
+            emissiveIntensity={isActive ? 0.6 : 0.4}
+            roughness={0.6}
+            metalness={0.3}
+          />
+        ) : (
+          // Other planets have realistic textures
+          <meshStandardMaterial
+            map={planetTexture}
+            emissive={emissive}
+            emissiveIntensity={isActive ? 0.3 : 0.15}
             roughness={0.8}
             metalness={0.2}
           />
