@@ -2,6 +2,13 @@ import { useRef, useState, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Sphere } from '@react-three/drei';
 import * as THREE from 'three';
+import {
+  createEarthLikeTexture,
+  createGasGiantTexture,
+  createRockyTexture,
+  createIcyTexture,
+  createAlienTexture
+} from '../../utils/planetTextures';
 
 export default function Planet({
   position,
@@ -20,6 +27,34 @@ export default function Planet({
   const ringRef2 = useRef();
   const particlesRef = useRef();
   const [hovered, setHovered] = useState(false);
+
+  // Generate procedural texture based on planet color and type
+  const planetTexture = useMemo(() => {
+    if (type === 'star') {
+      // Stars don't need texture - they're emissive
+      return null;
+    }
+
+    // Parse color to determine planet style
+    const colorValue = color.toLowerCase();
+
+    if (colorValue.includes('a855f7') || colorValue.includes('purple')) {
+      // Purple planet - alien world
+      return createAlienTexture(512, { r: 150, g: 80, b: 200 });
+    } else if (colorValue.includes('22d3ee') || colorValue.includes('cyan')) {
+      // Cyan planet - icy world
+      return createIcyTexture(512);
+    } else if (colorValue.includes('ec4899') || colorValue.includes('pink')) {
+      // Pink planet - rocky/mars-like
+      return createRockyTexture(512, { r: 200, g: 100, b: 140 });
+    } else if (colorValue.includes('10b981') || colorValue.includes('green')) {
+      // Green planet - earth-like
+      return createEarthLikeTexture(512);
+    } else {
+      // Default gas giant
+      return createGasGiantTexture(512, { r: 150, g: 120, b: 100 });
+    }
+  }, [color, type]);
 
   // Create particle positions around the planet
   const particleCount = 50;
@@ -106,14 +141,26 @@ export default function Planet({
         onPointerOver={handlePointerOver}
         onPointerOut={handlePointerOut}
       >
-        <sphereGeometry args={[1, 32, 32]} />
-        <meshStandardMaterial
-          color={color}
-          emissive={emissive}
-          emissiveIntensity={isActive ? emissiveIntensity * 1.5 : emissiveIntensity}
-          roughness={0.5}
-          metalness={0.5}
-        />
+        <sphereGeometry args={[1, 64, 64]} />
+        {type === 'star' ? (
+          // Stars are emissive and glowing
+          <meshStandardMaterial
+            color={color}
+            emissive={emissive}
+            emissiveIntensity={isActive ? emissiveIntensity * 1.5 : emissiveIntensity}
+            roughness={0.2}
+            metalness={0.8}
+          />
+        ) : (
+          // Planets have realistic textures
+          <meshStandardMaterial
+            map={planetTexture}
+            emissive={emissive}
+            emissiveIntensity={isActive ? emissiveIntensity * 0.5 : emissiveIntensity * 0.2}
+            roughness={0.8}
+            metalness={0.2}
+          />
+        )}
       </mesh>
 
       {/* Wireframe overlay - only when hovered/active */}
