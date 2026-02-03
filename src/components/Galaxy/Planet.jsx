@@ -1,49 +1,71 @@
 import { useRef, useState, useMemo } from 'react';
-import { useFrame, useLoader } from '@react-three/fiber';
-import { Sphere } from '@react-three/drei';
+import { useFrame, useThree } from '@react-three/fiber';
+import { Sphere, useTexture } from '@react-three/drei';
 import * as THREE from 'three';
+import Moon from './Moon';
 
 export default function Planet({
   position,
   scale,
   color,
+  tooltipColor,
   emissive,
   emissiveIntensity,
+  rotationSpeed = 0.1,
   name,
   type,
+  moons,
   onClick,
   isActive,
   onHover
 }) {
   const meshRef = useRef();
+  const floatingRef = useRef();
   const ringRef1 = useRef();
   const ringRef2 = useRef();
   const particlesRef = useRef();
   const [hovered, setHovered] = useState(false);
+  const { camera, size } = useThree();
 
   // Determine which texture to use based on planet properties
-  const getTextureUrl = () => {
+  const textureUrl = useMemo(() => {
     const colorValue = color.toLowerCase();
 
-    if (colorValue.includes('00d4ff') && type === 'star') {
-      return 'https://raw.githubusercontent.com/turban/solar-system-threejs/master/img/neptune.jpg';
+    // Home planet uses sun texture
+    if (type === 'star') {
+      return '/textures/sun.jpg';
     } else if (colorValue.includes('a855f7')) {
-      return 'https://raw.githubusercontent.com/turban/solar-system-threejs/master/img/venus.jpg';
+      return '/textures/venus.jpg';
     } else if (colorValue.includes('22d3ee')) {
-      return 'https://raw.githubusercontent.com/turban/solar-system-threejs/master/img/uranus.jpg';
+      return '/textures/uranus.jpg';
     } else if (colorValue.includes('ec4899')) {
-      return 'https://raw.githubusercontent.com/turban/solar-system-threejs/master/img/mars.jpg';
+      return '/textures/mars.jpg';
     } else if (colorValue.includes('10b981')) {
-      return 'https://raw.githubusercontent.com/turban/solar-system-threejs/master/img/earth.jpg';
+      return '/textures/neptune.jpg';
     }
-    return 'https://raw.githubusercontent.com/turban/solar-system-threejs/master/img/jupiter.jpg';
-  };
+    return '/textures/jupiter.jpg';
+  }, [color, type]);
 
   // Load the planet texture
-  const planetTexture = useLoader(THREE.TextureLoader, getTextureUrl());
+  const planetTexture = useTexture(textureUrl);
+
+  // Circular particle texture (prevents square points)
+  const particleTexture = useMemo(() => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 32;
+    canvas.height = 32;
+    const ctx = canvas.getContext('2d');
+    const gradient = ctx.createRadialGradient(16, 16, 0, 16, 16, 16);
+    gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
+    gradient.addColorStop(0.4, 'rgba(255, 255, 255, 0.8)');
+    gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, 32, 32);
+    return new THREE.CanvasTexture(canvas);
+  }, []);
 
   // Create particle positions around the planet
-  const particleCount = 50;
+  const particleCount = 30;
   const particles = useMemo(() => {
     const positions = new Float32Array(particleCount * 3);
     for (let i = 0; i < particleCount; i++) {
@@ -60,17 +82,19 @@ export default function Planet({
 
   // Rotate the planet slowly
   useFrame((state, delta) => {
+    // Gentle floating animation on the shared group (planet + moons move together)
+    if (floatingRef.current) {
+      floatingRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * 0.5) * 0.1;
+    }
+
     if (meshRef.current) {
-      meshRef.current.rotation.y += delta * 0.1;
+      meshRef.current.rotation.y += delta * rotationSpeed;
 
-      // Gentle floating animation
-      meshRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * 0.5) * 0.1;
-
-      // Scale up on hover or when active
+      // Scale up on hover or when active - smoother animation
       const targetScale = (hovered || isActive) ? scale * 1.15 : scale;
       meshRef.current.scale.lerp(
         new THREE.Vector3(targetScale, targetScale, targetScale),
-        0.1
+        0.05
       );
     }
 
@@ -92,14 +116,36 @@ export default function Planet({
   const handlePointerOver = (e) => {
     e.stopPropagation();
     setHovered(true);
-    onHover?.(name);
+
+    // Calculate screen position and screen-space radius of the planet
+    if (meshRef.current) {
+      const center = new THREE.Vector3();
+      meshRef.current.getWorldPosition(center);
+
+      // Get current visual scale (accounts for hover lerp)
+      const currentScale = meshRef.current.scale.x;
+
+      // Project center to screen
+      const projCenter = center.clone().project(camera);
+      const cx = (projCenter.x * 0.5 + 0.5) * size.width;
+      const cy = (projCenter.y * -0.5 + 0.5) * size.height;
+
+      // Project a point on the planet's right edge to get screen-space radius
+      const edge = center.clone().add(new THREE.Vector3(currentScale, 0, 0));
+      const projEdge = edge.project(camera);
+      const ex = (projEdge.x * 0.5 + 0.5) * size.width;
+      const screenRadius = Math.abs(ex - cx);
+
+      onHover?.(name, { x: cx, y: cy, radius: screenRadius, color: tooltipColor || color });
+    }
+
     document.body.style.cursor = 'pointer';
   };
 
   const handlePointerOut = (e) => {
     e.stopPropagation();
     setHovered(false);
-    onHover?.(null);
+    onHover?.(null, null);
     document.body.style.cursor = 'auto';
   };
 
@@ -120,131 +166,78 @@ export default function Planet({
         />
       )}
 
-      {/* Main planet sphere with wireframe */}
-      <mesh
-        ref={meshRef}
-        onClick={handleClick}
-        onPointerOver={handlePointerOver}
-        onPointerOut={handlePointerOut}
-      >
-        <sphereGeometry args={[1, 64, 64]} />
-        {type === 'star' ? (
-          // Home planet - gas giant with extra glow
-          <meshStandardMaterial
-            map={planetTexture}
-            emissive={emissive}
-            emissiveIntensity={isActive ? 0.6 : 0.4}
-            roughness={0.6}
-            metalness={0.3}
-          />
-        ) : (
-          // Other planets have realistic textures
-          <meshStandardMaterial
-            map={planetTexture}
-            emissive={emissive}
-            emissiveIntensity={isActive ? 0.3 : 0.15}
-            roughness={0.8}
-            metalness={0.2}
-          />
-        )}
-      </mesh>
+      {/* Floating group — planet, moons, and particles share the same center */}
+      <group ref={floatingRef}>
+        {/* Main planet sphere */}
+        <mesh
+          ref={meshRef}
+          onClick={handleClick}
+          onPointerOver={handlePointerOver}
+          onPointerOut={handlePointerOut}
+        >
+          <sphereGeometry args={[1, 32, 32]} />
+          {type === 'star' ? (
+            // Sun - bright and emissive
+            <meshStandardMaterial
+              map={planetTexture}
+              emissive="#ffaa00"
+              emissiveMap={planetTexture}
+              emissiveIntensity={1.2}
+              roughness={1.0}
+              metalness={0.0}
+              toneMapped={false}
+            />
+          ) : (
+            // Planets - realistic with better lighting response
+            <meshStandardMaterial
+              map={planetTexture}
+              emissive={emissive}
+              emissiveIntensity={isActive ? 0.4 : 0.2}
+              roughness={0.7}
+              metalness={0.1}
+            />
+          )}
+        </mesh>
 
-      {/* Wireframe overlay - only when hovered/active */}
-      {(hovered || isActive) && (
-        <>
-          <mesh>
-            <sphereGeometry args={[1.02, 16, 16]} />
+        {/* Moons */}
+        {moons?.map(moon => <Moon key={moon.id} {...moon} />)}
+
+        {/* Particle system - appear on hover/active */}
+        {(hovered || isActive) && (
+          <points ref={particlesRef}>
+            <bufferGeometry>
+              <bufferAttribute
+                attach="attributes-position"
+                count={particleCount}
+                array={particles}
+                itemSize={3}
+              />
+            </bufferGeometry>
+            <pointsMaterial
+              map={particleTexture}
+              size={0.05}
+              color={color}
+              transparent
+              opacity={0.6}
+              sizeAttenuation
+              depthWrite={false}
+            />
+          </points>
+        )}
+
+        {/* Optional ring for certain planets (like Saturn) */}
+        {type === 'ringed' && (
+          <mesh rotation={[Math.PI / 2, 0, 0]}>
+            <ringGeometry args={[1.5, 2, 64]} />
             <meshBasicMaterial
               color={color}
-              wireframe
               transparent
               opacity={0.4}
+              side={THREE.DoubleSide}
             />
           </mesh>
-
-          {/* Holographic scanning lines */}
-          <mesh>
-            <sphereGeometry args={[1.01, 32, 8]} />
-            <meshBasicMaterial
-              color={color}
-              wireframe
-              transparent
-              opacity={0.3}
-            />
-          </mesh>
-        </>
-      )}
-
-      {/* Glow effect ring for active/hovered state */}
-      {(hovered || isActive) && (
-        <Sphere args={[1.3, 32, 32]}>
-          <meshBasicMaterial
-            color={color}
-            transparent
-            opacity={0.2}
-            side={THREE.BackSide}
-          />
-        </Sphere>
-      )}
-
-      {/* Particle system - appear on hover/active */}
-      {(hovered || isActive) && (
-        <points ref={particlesRef}>
-          <bufferGeometry>
-            <bufferAttribute
-              attach="attributes-position"
-              count={particleCount}
-              array={particles}
-              itemSize={3}
-            />
-          </bufferGeometry>
-          <pointsMaterial
-            size={0.05}
-            color={color}
-            transparent
-            opacity={0.6}
-            sizeAttenuation
-          />
-        </points>
-      )}
-
-      {/* Technical orbital rings - appear on hover/active */}
-      {(hovered || isActive) && (
-        <>
-          {/* First orbital ring */}
-          <mesh ref={ringRef1} rotation={[Math.PI / 3, 0, 0]}>
-            <torusGeometry args={[1.5, 0.015, 16, 64]} />
-            <meshBasicMaterial
-              color={color}
-              transparent
-              opacity={0.5}
-            />
-          </mesh>
-
-          {/* Second orbital ring */}
-          <mesh ref={ringRef2} rotation={[Math.PI / 2.5, Math.PI / 4, 0]}>
-            <torusGeometry args={[1.6, 0.01, 16, 64]} />
-            <meshBasicMaterial
-              color={color}
-              transparent
-              opacity={0.3}
-            />
-          </mesh>
-        </>
-      )}
-
-      {/* Optional ring for certain planets (like Saturn) */}
-      {type === 'ringed' && (
-        <mesh rotation={[Math.PI / 2, 0, 0]}>
-          <ringGeometry args={[1.5, 2, 64]} />
-          <meshBasicMaterial
-            color={color}
-            transparent
-            opacity={0.4}
-            side={THREE.DoubleSide}
-          />
-        </mesh>
-      )}
+        )}
+      </group>
     </group>
   );
 }

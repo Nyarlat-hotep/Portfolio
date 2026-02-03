@@ -19,7 +19,7 @@
   margin: 0;
   line-height: 1.6;
   letter-spacing: 1px;
-  background: linear-gradient(135deg, #00d4ff 0%, #a855f7 50%, #ec4899 100%);
+  background: linear-gradient(135deg, var(--planet-color, #10b981) 0%, #00d4ff 50%, var(--planet-color, #10b981) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -45,15 +45,20 @@
   padding-bottom: 0.75rem;
 }
 
-/* Technical underline */
-.section-title::after {
-  content: '';
+/* Animated title underline (replaces static ::after) */
+.about-page .section-title-underline {
   position: absolute;
   bottom: 0;
   left: 0;
   width: 100%;
   height: 1px;
-  background: linear-gradient(90deg, #00d4ff 0%, rgba(0, 212, 255, 0.2) 50%, transparent 100%);
+  background: linear-gradient(90deg, var(--planet-color, #10b981) 0%, rgba(var(--planet-color-rgb, 16, 185, 129), 0.2) 50%, transparent 100%);
+  transform-origin: left;
+  display: block;
+}
+
+.about-page .section-title-text {
+  display: inline;
 }
 
 .title-accent {
@@ -62,38 +67,18 @@
   justify-content: center;
   min-width: 48px;
   height: 48px;
-  background: linear-gradient(135deg, rgba(0, 212, 255, 0.2), rgba(168, 85, 247, 0.2));
-  border: 1px solid rgba(0, 212, 255, 0.4);
+  background: linear-gradient(135deg, rgba(var(--planet-color-rgb, 16, 185, 129), 0.2), rgba(var(--planet-color-rgb, 16, 185, 129), 0.1));
+  border: 1px solid rgba(var(--planet-color-rgb, 16, 185, 129), 0.4);
   border-radius: 8px;
   font-size: 1rem;
   font-weight: 500;
-  color: #00d4ff;
+  color: var(--planet-color, #10b981);
   font-family: monospace;
   position: relative;
-  box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+  box-shadow: 0 0 20px rgba(var(--planet-color-rgb, 16, 185, 129), 0.3);
 }
 
-/* Corner dots for technical HUD feel */
-.title-accent::before,
-.title-accent::after {
-  content: '';
-  position: absolute;
-  width: 4px;
-  height: 4px;
-  background: #00d4ff;
-  border-radius: 50%;
-  box-shadow: 0 0 6px #00d4ff;
-}
 
-.title-accent::before {
-  top: 2px;
-  left: 2px;
-}
-
-.title-accent::after {
-  bottom: 2px;
-  right: 2px;
-}
 
 /* Bio */
 .bio-content {
@@ -130,11 +115,11 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem 1.25rem;
-  background: rgba(168, 85, 247, 0.1);
-  border: 1px solid rgba(168, 85, 247, 0.3);
+  background: rgba(var(--planet-color-rgb, 16, 185, 129), 0.1);
+  border: 1px solid rgba(var(--planet-color-rgb, 16, 185, 129), 0.3);
   border-radius: 24px;
   font-size: 0.9375rem;
-  color: #a855f7;
+  color: var(--planet-color, #10b981);
   font-weight: 400;
   letter-spacing: 0.5px;
   transition: all 0.3s ease;
@@ -142,23 +127,13 @@
   overflow: hidden;
 }
 
-/* Diagonal accent */
-.skill-chip::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 2px;
-  height: 20px;
-  background: linear-gradient(180deg, #a855f7, transparent);
-  transform: translateX(-8px);
-}
+
 
 .skill-chip:hover {
-  background: rgba(168, 85, 247, 0.2);
-  border-color: #a855f7;
+  background: rgba(var(--planet-color-rgb, 16, 185, 129), 0.2);
+  border-color: var(--planet-color, #10b981);
   transform: translateY(-2px);
-  box-shadow: 0 4px 16px rgba(168, 85, 247, 0.3);
+  box-shadow: 0 4px 16px rgba(var(--planet-color-rgb, 16, 185, 129), 0.3);
 }
 
 /* Tool Chips */
@@ -167,11 +142,11 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem 1.25rem;
-  background: rgba(34, 211, 238, 0.1);
-  border: 1px solid rgba(34, 211, 238, 0.3);
+  background: rgba(var(--planet-color-rgb, 16, 185, 129), 0.08);
+  border: 1px solid rgba(var(--planet-color-rgb, 16, 185, 129), 0.25);
   border-radius: 24px;
   font-size: 0.9375rem;
-  color: #22d3ee;
+  color: var(--planet-color, #10b981);
   font-weight: 400;
   letter-spacing: 0.5px;
   transition: all 0.3s ease;
@@ -180,22 +155,13 @@
 }
 
 /* Diagonal accent */
-.tool-chip::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 2px;
-  height: 20px;
-  background: linear-gradient(180deg, #22d3ee, transparent);
-  transform: translateX(-8px);
-}
+
 
 .tool-chip:hover {
-  background: rgba(34, 211, 238, 0.2);
-  border-color: #22d3ee;
+  background: rgba(var(--planet-color-rgb, 16, 185, 129), 0.18);
+  border-color: var(--planet-color, #10b981);
   transform: translateY(-2px);
-  box-shadow: 0 4px 16px rgba(34, 211, 238, 0.3);
+  box-shadow: 0 4px 16px rgba(var(--planet-color-rgb, 16, 185, 129), 0.3);
 }
 
 .chip-icon {
@@ -205,8 +171,8 @@
 
 /* Contact Card */
 .contact-card {
-  background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(168, 85, 247, 0.1));
-  border: 1px solid rgba(0, 212, 255, 0.3);
+  background: linear-gradient(135deg, rgba(var(--planet-color-rgb, 16, 185, 129), 0.1), rgba(var(--planet-color-rgb, 16, 185, 129), 0.05));
+  border: 1px solid rgba(var(--planet-color-rgb, 16, 185, 129), 0.3);
   border-radius: 16px;
   padding: 2rem;
   display: flex;
@@ -215,20 +181,6 @@
   align-items: flex-start;
   position: relative;
   overflow: visible;
-}
-
-.contact-card .card-accent.top-left {
-  position: absolute;
-  top: -10px;
-  left: -10px;
-  z-index: 1;
-}
-
-.contact-card .card-accent.bottom-right {
-  position: absolute;
-  bottom: -10px;
-  right: -10px;
-  z-index: 1;
 }
 
 .contact-text {
@@ -244,10 +196,10 @@
   align-items: center;
   gap: 0.75rem;
   padding: 1rem 2rem;
-  background: rgba(0, 212, 255, 0.15);
-  border: 1px solid rgba(0, 212, 255, 0.5);
+  background: rgba(var(--planet-color-rgb, 16, 185, 129), 0.15);
+  border: 1px solid rgba(var(--planet-color-rgb, 16, 185, 129), 0.5);
   border-radius: 12px;
-  color: #00d4ff;
+  color: var(--planet-color, #10b981);
   font-size: 1rem;
   font-weight: 500;
   text-decoration: none;
@@ -256,10 +208,10 @@
 }
 
 .contact-button:hover {
-  background: rgba(0, 212, 255, 0.25);
-  border-color: #00d4ff;
+  background: rgba(var(--planet-color-rgb, 16, 185, 129), 0.25);
+  border-color: var(--planet-color, #10b981);
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0, 212, 255, 0.3);
+  box-shadow: 0 8px 24px rgba(var(--planet-color-rgb, 16, 185, 129), 0.3);
 }
 
 .button-icon {
@@ -268,64 +220,40 @@
 
 /* Social Links */
 .social-links {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
+  display: flex;
+  gap: 12px;
 }
 
-.social-link {
+.about-page .social-link {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  padding: 1.25rem 1.5rem;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  justify-content: center;
+  padding: 0;
+  background: rgba(var(--planet-color-rgb, 16, 185, 129), 0.1);
+  border: 1px solid rgba(var(--planet-color-rgb, 16, 185, 129), 0.3);
   border-radius: 12px;
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--planet-color, #10b981);
   text-decoration: none;
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
 }
 
-.social-link::after {
-  content: '';
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 16px;
-  height: 16px;
-  border: 2px solid rgba(0, 212, 255, 0.3);
-  border-left: none;
-  border-bottom: none;
-  border-top-right-radius: 3px;
-  transition: all 0.3s ease;
-  z-index: 1;
-}
-
-.social-link:hover::after {
-  border-color: #00d4ff;
-  width: 20px;
-  height: 20px;
-}
-
-
-.social-link:hover {
-  background: rgba(0, 212, 255, 0.1);
-  border-color: #00d4ff;
-  color: #00d4ff;
+.about-page .social-link:hover {
+  background: rgba(var(--planet-color-rgb, 16, 185, 129), 0.2);
+  border-color: var(--planet-color, #10b981);
   transform: translateY(-2px);
-  box-shadow: 0 4px 16px rgba(0, 212, 255, 0.2);
+  box-shadow: 0 4px 16px rgba(var(--planet-color-rgb, 16, 185, 129), 0.3);
 }
 
-.social-icon {
+.about-page .social-icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
-  background: rgba(0, 212, 255, 0.15);
-  border: 1px solid rgba(0, 212, 255, 0.3);
+  width: 24px;
+  height: 24px;
+  background: transparent;
+  border: none;
   border-radius: 8px;
   font-size: 0.875rem;
   font-weight: 600;
@@ -333,12 +261,7 @@
   flex-shrink: 0;
 }
 
-.social-link:hover .social-icon {
-  background: rgba(0, 212, 255, 0.25);
-  border-color: #00d4ff;
-}
-
-.social-label {
+.about-page .social-label {
   font-size: 1rem;
   font-weight: 400;
   letter-spacing: 0.5px;

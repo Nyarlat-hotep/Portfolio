@@ -13,31 +13,21 @@
 /* Main Overlay Container */
 .overlay-container {
   position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 90%;
-  max-width: 1200px;
-  height: 85vh;
-  max-height: 900px;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   z-index: 2001;
 
   /* Glassmorphism */
   background: rgba(26, 29, 58, 0.7);
   backdrop-filter: blur(40px) saturate(150%);
-  border: 1px solid rgba(0, 212, 255, 0.2);
-  border-radius: 24px;
-
-  /* Glow effect */
-  box-shadow:
-    0 0 0 1px rgba(0, 212, 255, 0.1) inset,
-    0 8px 32px rgba(0, 0, 0, 0.6),
-    0 0 60px rgba(0, 212, 255, 0.15);
+  border: none;
+  border-radius: 0;
 
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  position: relative;
 }
 
 /* Animated gradient border effect */
@@ -48,7 +38,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  border-radius: 24px;
+  border-radius: 0;
   padding: 1px;
   background: linear-gradient(
     135deg,
@@ -62,7 +52,7 @@
   -webkit-mask-composite: xor;
   mask-composite: exclude;
   pointer-events: none;
-  opacity: 0.5;
+  opacity: 0.3;
 }
 
 /* Corner Accents - Cyberpunk style */
@@ -263,11 +253,6 @@
 
 /* Responsive Design */
 @media (max-width: 1024px) {
-  .overlay-container {
-    width: 95%;
-    height: 90vh;
-  }
-
   .overlay-header {
     padding: 1.5rem 2rem;
   }
@@ -282,13 +267,6 @@
 }
 
 @media (max-width: 768px) {
-  .overlay-container {
-    width: 100%;
-    height: 100vh;
-    max-height: 100vh;
-    border-radius: 0;
-  }
-
   .overlay-header {
     padding: 1.25rem 1.5rem;
     flex-direction: column;
@@ -342,7 +320,7 @@
   top: 0;
   left: 0;
   right: 0;
-  height: 3px;
+  height: 2px;
   background: linear-gradient(
     90deg,
     transparent,
@@ -352,7 +330,7 @@
   box-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
   animation: scanline 6s linear infinite;
   pointer-events: none;
-  opacity: 0.6;
+  opacity: 0.1;
 }
 
 /* Secondary scanline */

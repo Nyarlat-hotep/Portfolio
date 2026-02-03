@@ -3,6 +3,7 @@ import Galaxy from './components/Galaxy/Galaxy';
 import PageOverlay from './components/UI/PageOverlay';
 import CaseStudy from './components/Pages/CaseStudy';
 import About from './components/Pages/About';
+import Experiments from './components/Pages/Experiments';
 import { caseStudies, aboutContent } from './data/caseStudies';
 import './App.css';
 
@@ -31,13 +32,17 @@ function App() {
     if (!activePlanet) return null;
 
     if (activePlanet.id === 'about') {
-      return <About aboutData={aboutContent} />;
+      return <About aboutData={aboutContent} planetColor={activePlanet.color} />;
+    }
+
+    if (activePlanet.id === 'experiments') {
+      return <Experiments planetColor={activePlanet.color} />;
     }
 
     // Case study pages
     const caseStudy = caseStudies[activePlanet.id];
     if (caseStudy) {
-      return <CaseStudy caseStudy={caseStudy} />;
+      return <CaseStudy caseStudy={caseStudy} planetColor={activePlanet.color} />;
     }
 
     return null;
@@ -53,7 +58,8 @@ function App() {
       <PageOverlay
         isOpen={isOverlayOpen}
         onClose={handleCloseOverlay}
-        title={activePlanet?.id === 'about' ? aboutContent.name : caseStudies[activePlanet?.id]?.title}
+        title={activePlanet?.id === 'about' ? aboutContent.name : activePlanet?.id === 'experiments' ? 'Experiments' : caseStudies[activePlanet?.id]?.title}
+        planetColor={activePlanet?.color}
       >
         {getOverlayContent()}
       </PageOverlay>

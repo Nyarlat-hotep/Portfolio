@@ -23,7 +23,7 @@
   background: linear-gradient(
     180deg,
     transparent 0%,
-    rgba(0, 212, 255, 0.8) 50%,
+    rgba(0, 212, 255, 0.4) 50%,
     transparent 100%
   );
   animation: streamFlow 4s linear infinite;

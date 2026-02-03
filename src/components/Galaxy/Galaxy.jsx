@@ -1,14 +1,23 @@
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
 import Planet from './Planet';
 import Starfield from './Starfield';
+import CosmicVoid from './CosmicVoid';
+import VoidVignette from './VoidVignette';
 import BottomNav from '../Navigation/BottomNav';
 import { planetsData, getAdjacentPlanet } from '../../data/planets';
 
 export default function Galaxy({ onPlanetClick, activePlanetId }) {
   const [hoveredPlanet, setHoveredPlanet] = useState(null);
+  const [hoveredPlanetPosition, setHoveredPlanetPosition] = useState(null);
   const [currentPlanetIndex, setCurrentPlanetIndex] = useState(0);
+  const [vignetteIntensity, setVignetteIntensity] = useState(0);
+
+  // Void position - behind the user's starting camera angle (camera faces -Z, void is at +Z)
+  const voidPosition = [0, 0, 80];
 
   // Keyboard navigation
   useEffect(() => {
@@ -48,55 +57,202 @@ export default function Galaxy({ onPlanetClick, activePlanetId }) {
           enableZoom={true}
           enableRotate={true}
           minDistance={10}
-          maxDistance={40}
+          maxDistance={120}
           maxPolarAngle={Math.PI / 1.5}
           minPolarAngle={Math.PI / 3}
         />
 
         {/* Lighting */}
-        <ambientLight intensity={0.3} />
-        <pointLight position={[10, 10, 10]} intensity={1} color="#ffffff" />
-        <pointLight position={[-10, -10, -10]} intensity={0.5} color="#00d4ff" />
+        <ambientLight intensity={0.5} />
+        <directionalLight position={[10, 10, 10]} intensity={1.5} color="#ffffff" />
+        <pointLight position={[-10, -10, -10]} intensity={1.2} color="#00d4ff" />
+        <pointLight position={[0, 15, 0]} intensity={0.8} color="#a855f7" />
 
         {/* Starfield background */}
-        <Starfield count={3000} />
+        <Starfield count={1200} />
 
-        {/* Planets */}
-        {planetsData.map((planet) => (
-          <Planet
-            key={planet.id}
-            {...planet}
-            onClick={() => {
-              const index = planetsData.findIndex(p => p.id === planet.id);
-              setCurrentPlanetIndex(index);
-              onPlanetClick?.(planet);
-            }}
-            onHover={setHoveredPlanet}
-            isActive={activePlanetId === planet.id}
-          />
-        ))}
+        {/* Cosmic horror elements */}
+        <CosmicVoid
+          position={voidPosition}
+          onClick={() => onPlanetClick?.({ id: 'experiments', name: 'Experiments', color: '#6b2fa0' })}
+        />
+
+        {/* Vignette tracker */}
+        <VoidVignette
+          voidPosition={voidPosition}
+          threshold={35}
+          onDistanceChange={(intensity) => setVignetteIntensity(intensity)}
+        />
+
+        {/* Planets - wrapped in Suspense for texture loading */}
+        <Suspense fallback={null}>
+          {planetsData.map((planet) => (
+            <Planet
+              key={planet.id}
+              {...planet}
+              onClick={() => {
+                const index = planetsData.findIndex(p => p.id === planet.id);
+                setCurrentPlanetIndex(index);
+                onPlanetClick?.(planet);
+              }}
+              onHover={(name, screenPosition) => {
+                setHoveredPlanet(name);
+                setHoveredPlanetPosition(screenPosition);
+              }}
+              isActive={activePlanetId === planet.id}
+            />
+          ))}
+        </Suspense>
       </Canvas>
 
-      {/* Planet name tooltip */}
-      {hoveredPlanet && (
-        <div
-          style={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            pointerEvents: 'none',
-            color: 'white',
-            fontSize: '24px',
-            fontWeight: '300',
-            textShadow: '0 0 10px rgba(0, 212, 255, 0.5)',
-            fontFamily: 'system-ui, -apple-system, sans-serif',
-            letterSpacing: '2px'
-          }}
-        >
-          {hoveredPlanet}
-        </div>
-      )}
+      {/* Vignette overlay - creeping darkness */}
+      <div
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          pointerEvents: 'none',
+          background: `radial-gradient(ellipse at center,
+            transparent 0%,
+            transparent ${Math.max(0, 60 - vignetteIntensity * 40)}%,
+            rgba(10, 5, 20, ${vignetteIntensity * 0.4}) ${Math.max(0, 80 - vignetteIntensity * 30)}%,
+            rgba(5, 2, 15, ${vignetteIntensity * 0.7}) 100%
+          )`,
+          transition: 'background 0.5s ease-out',
+          zIndex: 10
+        }}
+      />
+
+      {/* Planet name label - futuristic HUD style */}
+      <AnimatePresence>
+        {hoveredPlanet && hoveredPlanetPosition && (
+          <motion.div
+            key={hoveredPlanet}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.1 }}
+            style={{
+              position: 'absolute',
+              left: `${hoveredPlanetPosition.x}px`,
+              top: `${hoveredPlanetPosition.y}px`,
+              transform: `translate(${(hoveredPlanetPosition.radius || 40) + 12}px, -16px)`,
+              pointerEvents: 'none',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}
+          >
+            {(() => {
+              const c = hoveredPlanetPosition.color || '#00d4ff';
+              const rgb = c.replace('#', '').match(/.{2}/g).map(x => parseInt(x, 16)).join(', ');
+              return (
+                <>
+                  {/* Connection dot */}
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    exit={{ scale: 0 }}
+                    transition={{ duration: 0.12, ease: [0.4, 0, 0.2, 1] }}
+                    style={{
+                      position: 'relative',
+                      width: '6px',
+                      height: '6px',
+                      flexShrink: 0
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: '6px',
+                        height: '6px',
+                        background: c,
+                        borderRadius: '50%',
+                        boxShadow: `0 0 8px rgba(${rgb}, 0.8)`
+                      }}
+                    />
+                  </motion.div>
+
+                  {/* Connection line — draws left to right */}
+                  <motion.div
+                    initial={{ scaleX: 0 }}
+                    animate={{ scaleX: 1 }}
+                    exit={{ scaleX: 0 }}
+                    transition={{ duration: 0.15, delay: 0.03, ease: [0.4, 0, 0.2, 1] }}
+                    style={{
+                      width: '24px',
+                      height: '1px',
+                      background: `linear-gradient(90deg, rgba(${rgb}, 0.8), rgba(${rgb}, 0.3))`,
+                      transformOrigin: 'left',
+                      flexShrink: 0
+                    }}
+                  />
+
+                  {/* Label container — slides in from left */}
+                  <motion.div
+                    initial={{ opacity: 0, x: -12 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -6 }}
+                    transition={{ duration: 0.2, delay: 0.06, ease: [0.4, 0, 0.2, 1] }}
+                    style={{
+                      background: `linear-gradient(135deg, rgba(${rgb}, 0.15), rgba(${rgb}, 0.05))`,
+                      border: `1px solid rgba(${rgb}, 0.5)`,
+                      borderRadius: '4px',
+                      padding: '8px 16px',
+                      position: 'relative',
+                      backdropFilter: 'blur(10px)',
+                      clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)'
+                    }}
+                  >
+                    {/* Corner accents */}
+                    <div
+                      style={{
+                        position: 'absolute',
+                        top: '-1px',
+                        left: '-1px',
+                        width: '12px',
+                        height: '12px',
+                        borderTop: `2px solid ${c}`,
+                        borderLeft: `2px solid ${c}`,
+                        borderTopLeftRadius: '4px'
+                      }}
+                    />
+                    <div
+                      style={{
+                        position: 'absolute',
+                        bottom: '-1px',
+                        right: '-1px',
+                        width: '12px',
+                        height: '12px',
+                        borderBottom: `2px solid ${c}`,
+                        borderRight: `2px solid ${c}`,
+                        borderBottomRightRadius: '4px'
+                      }}
+                    />
+
+                    {/* Text */}
+                    <div
+                      style={{
+                        color: c,
+                        fontSize: '14px',
+                        fontWeight: '500',
+                        fontFamily: 'monospace',
+                        letterSpacing: '1.5px',
+                        textTransform: 'uppercase',
+                        textShadow: `0 0 10px rgba(${rgb}, 0.5)`,
+                        whiteSpace: 'nowrap'
+                      }}
+                    >
+                      {hoveredPlanet}
+                    </div>
+                  </motion.div>
+                </>
+              );
+            })()}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Navigation hint */}
       <div
@@ -111,7 +267,7 @@ export default function Galaxy({ onPlanetClick, activePlanetId }) {
           pointerEvents: 'none'
         }}
       >
-        <div>← → Arrow keys to navigate</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'flex-end' }}><ArrowLeft size={12} /> <ArrowRight size={12} /> Arrow keys to navigate</div>
         <div>Click and drag to orbit</div>
         <div>Scroll to zoom</div>
         <div>ESC to return home</div>

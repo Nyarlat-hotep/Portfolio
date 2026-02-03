@@ -1,173 +1,276 @@
 import { motion } from 'framer-motion';
+import { Sparkles, Zap, Mail, Linkedin, Dribbble } from 'lucide-react';
 import './About.css';
-import HexAccent from '../UI/HexAccent';
-import OctagonAccent from '../UI/OctagonAccent';
 
-export default function About({ aboutData }) {
+// --- Variant definitions ---
+
+// Section number — parallax offset
+const numberVariants = {
+  hidden: { opacity: 0, y: 60, scale: 0.8 },
+  visible: {
+    opacity: 1, y: 0, scale: 1,
+    transition: { duration: 0.5, delay: 0.15, ease: [0.4, 0, 0.2, 1] }
+  }
+};
+
+// Title text slides from left
+const titleVariants = {
+  hidden: { opacity: 0, x: -30 },
+  visible: {
+    opacity: 1, x: 0,
+    transition: { duration: 0.6, delay: 0.25, ease: [0.4, 0, 0.2, 1] }
+  }
+};
+
+// Underline draws from left
+const underlineVariants = {
+  hidden: { scaleX: 0 },
+  visible: {
+    scaleX: 1,
+    transition: { duration: 0.8, delay: 0.35, ease: [0.4, 0, 0.2, 1] }
+  }
+};
+
+// Body content — subtle slide-up
+const contentVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1, y: 0,
+    transition: { duration: 0.6, delay: 0.45, ease: [0.4, 0, 0.2, 1] }
+  }
+};
+
+// Bio paragraphs (delay handled by parent stagger)
+const paragraphVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1, y: 0,
+    transition: { duration: 0.6, ease: [0.4, 0, 0.2, 1] }
+  }
+};
+
+// Chips — pop in (delay handled by parent stagger)
+const chipVariants = {
+  hidden: { opacity: 0, y: 15, scale: 0.9 },
+  visible: {
+    opacity: 1, y: 0, scale: 1,
+    transition: { duration: 0.4, ease: [0.4, 0, 0.2, 1] }
+  }
+};
+
+// Social links
+const socialVariants = {
+  hidden: { opacity: 0, scale: 0.8 },
+  visible: {
+    opacity: 1, scale: 1,
+    transition: { duration: 0.4, ease: [0.4, 0, 0.2, 1] }
+  }
+};
+
+// --- Animated section with title parallax + draw-in ---
+function AnimatedSection({ number, title, children, viewport }) {
+  return (
+    <motion.section
+      className="about-section"
+      initial="hidden"
+      whileInView="visible"
+      viewport={viewport}
+    >
+      <h3 className="section-title">
+        <motion.span className="title-accent" variants={numberVariants}>
+          {number}
+        </motion.span>
+        <motion.span className="section-title-text" variants={titleVariants}>
+          {title}
+        </motion.span>
+        <motion.span className="section-title-underline" variants={underlineVariants} />
+      </h3>
+      {children}
+    </motion.section>
+  );
+}
+
+// --- Main component ---
+export default function About({ aboutData, planetColor = '#10b981', scrollContainerRef }) {
   if (!aboutData) return null;
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1
-      }
-    }
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.5 }
-    }
+  const viewport = {
+    root: scrollContainerRef,
+    once: true,
+    amount: 0.15
   };
 
   return (
-    <motion.div
+    <div
       className="about-page"
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
+      style={{
+        '--planet-color': planetColor,
+        '--planet-color-rgb': planetColor.replace('#', '').match(/.{2}/g).map(x => parseInt(x, 16)).join(', ')
+      }}
     >
-      {/* Header */}
-      <motion.div className="about-header" variants={itemVariants}>
+      {/* Header tagline */}
+      <motion.div
+        className="about-header"
+        initial={{ opacity: 0, y: -20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={viewport}
+        transition={{ duration: 0.7, ease: [0.4, 0, 0.2, 1] }}
+      >
         <div className="about-intro">
           <h2 className="about-tagline">{aboutData.tagline}</h2>
         </div>
       </motion.div>
 
-      {/* Bio */}
-      <motion.section className="about-section" variants={itemVariants}>
-        <h3 className="section-title">
-          <span className="title-accent">01</span>
-          About Me
-        </h3>
-        <div className="bio-content">
+      {/* Bio — staggered paragraphs */}
+      <AnimatedSection number="01" title="About Me" viewport={viewport}>
+        <motion.div
+          className="bio-content"
+          variants={{
+            hidden: {},
+            visible: { transition: { staggerChildren: 0.1, delayChildren: 0.45 } }
+          }}
+        >
           {aboutData.bio.map((paragraph, index) => (
-            <p key={index} className="bio-paragraph">
+            <motion.p key={index} className="bio-paragraph" variants={paragraphVariants}>
               {paragraph}
-            </p>
+            </motion.p>
           ))}
-        </div>
-      </motion.section>
+        </motion.div>
+      </AnimatedSection>
 
-      {/* Skills & Tools Grid */}
-      <motion.div className="skills-tools-grid" variants={itemVariants}>
+      {/* Skills & Tools Grid — staggered columns */}
+      <motion.div
+        className="skills-tools-grid"
+        initial="hidden"
+        whileInView="visible"
+        viewport={viewport}
+        variants={{
+          hidden: {},
+          visible: { transition: { staggerChildren: 0.2 } }
+        }}
+      >
         {/* Skills */}
-        <section className="about-section">
+        <motion.section
+          className="about-section"
+          variants={{
+            hidden: { opacity: 0, y: 30 },
+            visible: {
+              opacity: 1, y: 0,
+              transition: { duration: 0.6, ease: [0.4, 0, 0.2, 1] }
+            }
+          }}
+        >
           <h3 className="section-title">
-            <span className="title-accent">02</span>
-            Skills
+            <motion.span className="title-accent" variants={numberVariants}>02</motion.span>
+            <motion.span className="section-title-text" variants={titleVariants}>Skills</motion.span>
+            <motion.span className="section-title-underline" variants={underlineVariants} />
           </h3>
-          <div className="chip-grid">
+          <motion.div
+            className="chip-grid"
+            variants={{
+              hidden: {},
+              visible: { transition: { staggerChildren: 0.05, delayChildren: 0.3 } }
+            }}
+          >
             {aboutData.skills.map((skill, index) => (
-              <div key={index} className="skill-chip">
-                <span className="chip-icon">✦</span>
+              <motion.div key={index} className="skill-chip" variants={chipVariants}>
+                <Sparkles className="chip-icon" size={14} />
                 {skill}
-              </div>
+              </motion.div>
             ))}
-          </div>
-        </section>
+          </motion.div>
+        </motion.section>
 
         {/* Tools */}
-        <section className="about-section">
+        <motion.section
+          className="about-section"
+          variants={{
+            hidden: { opacity: 0, y: 30 },
+            visible: {
+              opacity: 1, y: 0,
+              transition: { duration: 0.6, ease: [0.4, 0, 0.2, 1] }
+            }
+          }}
+        >
           <h3 className="section-title">
-            <span className="title-accent">03</span>
-            Tools
+            <motion.span className="title-accent" variants={numberVariants}>03</motion.span>
+            <motion.span className="section-title-text" variants={titleVariants}>Tools</motion.span>
+            <motion.span className="section-title-underline" variants={underlineVariants} />
           </h3>
-          <div className="chip-grid">
+          <motion.div
+            className="chip-grid"
+            variants={{
+              hidden: {},
+              visible: { transition: { staggerChildren: 0.05, delayChildren: 0.3 } }
+            }}
+          >
             {aboutData.tools.map((tool, index) => (
-              <div key={index} className="tool-chip">
-                <span className="chip-icon">⚡</span>
+              <motion.div key={index} className="tool-chip" variants={chipVariants}>
+                <Zap className="chip-icon" size={14} />
                 {tool}
-              </div>
+              </motion.div>
             ))}
-          </div>
-        </section>
+          </motion.div>
+        </motion.section>
       </motion.div>
 
       {/* Contact */}
-      <motion.section className="about-section" variants={itemVariants}>
-        <h3 className="section-title">
-          <span className="title-accent">04</span>
-          Get In Touch
-        </h3>
-        <div className="contact-card">
-          <HexAccent size={30} opacity={0.3} className="card-accent top-left" />
-          <HexAccent size={30} opacity={0.3} className="card-accent bottom-right" />
+      <AnimatedSection number="04" title="Get In Touch" viewport={viewport}>
+        <motion.div className="contact-card" variants={contentVariants}>
           <p className="contact-text">
             I'm always interested in hearing about new projects and opportunities.
           </p>
           {aboutData.contact.email && (
-            <a
+            <motion.a
               href={`mailto:${aboutData.contact.email}`}
               className="contact-button"
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.98 }}
             >
-              <span className="button-icon">✉</span>
+              <Mail className="button-icon" size={20} />
               {aboutData.contact.email}
-            </a>
+            </motion.a>
           )}
-        </div>
-      </motion.section>
+        </motion.div>
+      </AnimatedSection>
 
       {/* Social Links */}
       {aboutData.social && (
-        <motion.section className="about-section" variants={itemVariants}>
-          <h3 className="section-title">
-            <span className="title-accent">05</span>
-            Connect
-          </h3>
-          <div className="social-links">
+        <AnimatedSection number="05" title="Connect" viewport={viewport}>
+          <motion.div
+            className="social-links"
+            variants={{
+              hidden: {},
+              visible: { transition: { staggerChildren: 0.1, delayChildren: 0.3 } }
+            }}
+          >
             {aboutData.social.linkedin && (
-              <a
+              <motion.a
                 href={aboutData.social.linkedin}
                 className="social-link"
                 target="_blank"
                 rel="noopener noreferrer"
+                variants={socialVariants}
+                whileHover={{ scale: 1.1 }}
               >
-                <span className="social-icon">in</span>
-                <span className="social-label">LinkedIn</span>
-              </a>
+                <Linkedin className="social-icon" size={24} />
+              </motion.a>
             )}
             {aboutData.social.dribbble && (
-              <a
+              <motion.a
                 href={aboutData.social.dribbble}
                 className="social-link"
                 target="_blank"
                 rel="noopener noreferrer"
+                variants={socialVariants}
+                whileHover={{ scale: 1.1 }}
               >
-                <span className="social-icon">dr</span>
-                <span className="social-label">Dribbble</span>
-              </a>
+                <Dribbble className="social-icon" size={24} />
+              </motion.a>
             )}
-            {aboutData.social.behance && (
-              <a
-                href={aboutData.social.behance}
-                className="social-link"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <span className="social-icon">be</span>
-                <span className="social-label">Behance</span>
-              </a>
-            )}
-            {aboutData.social.twitter && (
-              <a
-                href={aboutData.social.twitter}
-                className="social-link"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <span className="social-icon">𝕏</span>
-                <span className="social-label">Twitter</span>
-              </a>
-            )}
-          </div>
-        </motion.section>
+          </motion.div>
+        </AnimatedSection>
       )}
-    </motion.div>
+    </div>
   );
 }

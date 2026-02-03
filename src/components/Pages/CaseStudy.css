@@ -34,8 +34,8 @@
 }
 
 .info-card {
-  background: rgba(0, 212, 255, 0.05);
-  border: 1px solid rgba(0, 212, 255, 0.2);
+  background: rgba(var(--planet-color-rgb, 168, 85, 247), 0.05);
+  border: 1px solid rgba(var(--planet-color-rgb, 168, 85, 247), 0.2);
   border-radius: 12px;
   padding: 1.25rem 1.5rem;
   display: flex;
@@ -43,32 +43,6 @@
   gap: 0.5rem;
   position: relative;
   overflow: visible;
-}
-
-.card-accent.top-left {
-  position: absolute;
-  top: -8px;
-  left: -8px;
-  z-index: 1;
-}
-
-.card-accent.bottom-right {
-  position: absolute;
-  bottom: -8px;
-  right: -8px;
-  z-index: 1;
-}
-
-/* Diagonal accent line */
-.info-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 3px;
-  height: 40px;
-  background: linear-gradient(180deg, #00d4ff, transparent);
-  transform: translateX(-10px);
 }
 
 .info-label {
@@ -91,18 +65,19 @@
   margin-bottom: 3rem;
   position: relative;
   padding: 1.5rem;
-  border-left: 1px solid rgba(0, 212, 255, 0.1);
-  background: linear-gradient(90deg, rgba(0, 212, 255, 0.02) 0%, transparent 100%);
+  background: linear-gradient(90deg, rgba(var(--planet-color-rgb, 168, 85, 247), 0.02) 0%, transparent 100%);
 }
 
-.case-study-section::before {
-  content: '';
+/* Animated left border (replaces static border-left) */
+.section-border-line {
   position: absolute;
   top: 0;
   left: 0;
-  width: 4px;
-  height: 60px;
-  background: linear-gradient(180deg, #00d4ff, transparent);
+  width: 1px;
+  height: 100%;
+  background: rgba(var(--planet-color-rgb, 168, 85, 247), 0.1);
+  transform-origin: top;
+  display: block;
 }
 
 .section-title {
@@ -119,15 +94,20 @@
   padding-bottom: 0.75rem;
 }
 
-/* Technical underline */
-.section-title::after {
-  content: '';
+/* Animated title underline (replaces static ::after) */
+.section-title-underline {
   position: absolute;
   bottom: 0;
   left: 0;
   width: 100%;
   height: 1px;
   background: linear-gradient(90deg, #00d4ff 0%, rgba(0, 212, 255, 0.2) 50%, transparent 100%);
+  transform-origin: left;
+  display: block;
+}
+
+.section-title-text {
+  display: inline;
 }
 
 .title-accent {
@@ -145,28 +125,6 @@
   font-family: monospace;
   position: relative;
   box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
-}
-
-/* Corner dots for technical HUD feel */
-.title-accent::before,
-.title-accent::after {
-  content: '';
-  position: absolute;
-  width: 4px;
-  height: 4px;
-  background: #00d4ff;
-  border-radius: 50%;
-  box-shadow: 0 0 6px #00d4ff;
-}
-
-.title-accent::before {
-  top: 2px;
-  left: 2px;
-}
-
-.title-accent::after {
-  bottom: 2px;
-  right: 2px;
 }
 
 .section-text {
@@ -196,8 +154,8 @@
   position: relative;
   border-radius: 12px;
   overflow: hidden;
-  background: rgba(0, 212, 255, 0.05);
-  border: 1px solid rgba(0, 212, 255, 0.2);
+  background: rgba(var(--planet-color-rgb, 168, 85, 247), 0.05);
+  border: 1px solid rgba(var(--planet-color-rgb, 168, 85, 247), 0.2);
   aspect-ratio: 16 / 10;
 }
 
@@ -207,7 +165,7 @@
   position: absolute;
   width: 20px;
   height: 20px;
-  border: 2px solid rgba(0, 212, 255, 0.5);
+  border: 2px solid rgba(var(--planet-color-rgb, 168, 85, 247), 0.5);
   z-index: 2;
   transition: all 0.3s ease;
 }
@@ -230,7 +188,7 @@
 
 .gallery-item:hover::before,
 .gallery-item:hover::after {
-  border-color: #00d4ff;
+  border-color: var(--planet-color, #a855f7);
   width: 30px;
   height: 30px;
 }
@@ -246,16 +204,27 @@
   transform: scale(1.05);
 }
 
-/* Placeholder for images */
-.gallery-item:empty::before {
-  content: 'Image Placeholder';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  color: rgba(255, 255, 255, 0.3);
-  font-size: 0.875rem;
-  text-align: center;
+.gallery-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: monospace;
+  font-size: 1rem;
+  font-weight: 500;
+  letter-spacing: 2px;
+  color: rgba(var(--planet-color-rgb, 168, 85, 247), 0.4);
+  border: 1px dashed rgba(var(--planet-color-rgb, 168, 85, 247), 0.2);
+  border-radius: 8px;
+}
+
+/* Comparisons Grid */
+.comparisons-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
 }
 
 /* Tools Grid */

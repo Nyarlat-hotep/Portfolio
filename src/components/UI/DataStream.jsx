@@ -3,9 +3,9 @@ import './DataStream.css';
 
 export default function DataStream() {
   const streams = useMemo(() => {
-    return Array.from({ length: 5 }, (_, i) => ({
+    return Array.from({ length: 2 }, (_, i) => ({
       id: i,
-      left: `${15 + i * 20}%`,
+      left: `${25 + i * 30}%`,
       delay: `${i * 0.5}s`,
       duration: `${3 + Math.random() * 2}s`
     }));

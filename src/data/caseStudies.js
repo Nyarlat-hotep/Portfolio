@@ -12,10 +12,9 @@ export const caseStudies = {
     solution: 'How did you approach solving this problem? What methods, processes, or design decisions did you make?',
     impact: 'What were the results? Include metrics if possible (increased conversion, improved user satisfaction, etc.)',
     tools: ['Figma', 'Adobe XD', 'Miro', 'UserTesting'],
-    images: [
-      // Add image paths here
-      // '/assets/case-study-1/hero.jpg',
-      // '/assets/case-study-1/wireframes.jpg',
+    images: [null, null, null],
+    comparisons: [
+      { before: null, after: null, beforeLabel: 'Before', afterLabel: 'After' }
     ],
     links: {
       // prototype: 'https://figma.com/...',
@@ -34,7 +33,10 @@ export const caseStudies = {
     solution: 'Solution approach...',
     impact: 'Results and impact...',
     tools: ['Figma', 'Sketch', 'InVision'],
-    images: [],
+    images: [null, null, null],
+    comparisons: [
+      { before: null, after: null, beforeLabel: 'Before', afterLabel: 'After' }
+    ],
     links: {}
   },
   'case-study-3': {
@@ -49,7 +51,10 @@ export const caseStudies = {
     solution: 'Solution approach...',
     impact: 'Results and impact...',
     tools: ['Figma', 'Optimal Workshop', 'Maze'],
-    images: [],
+    images: [null, null, null],
+    comparisons: [
+      { before: null, after: null, beforeLabel: 'Before', afterLabel: 'After' }
+    ],
     links: {}
   }
 };
@@ -87,10 +92,8 @@ export const aboutContent = {
     // Add other contact methods if desired
   },
   social: {
-    linkedin: 'https://linkedin.com/in/yourprofile',
-    dribbble: 'https://dribbble.com/yourprofile',
-    behance: 'https://behance.net/yourprofile',
-    twitter: 'https://twitter.com/yourhandle'
+    linkedin: 'https://www.linkedin.com/in/taylorcornelius/',
+    dribbble: 'https://dribbble.com/TCorn',
   },
   resumeUrl: '/resume.pdf' // Place your resume in the public folder
 };

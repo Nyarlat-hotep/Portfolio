@@ -1,11 +1,12 @@
-import { useEffect } from 'react';
+import { useEffect, useRef, Children, cloneElement, isValidElement } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { X } from 'lucide-react';
 import DataStream from './DataStream';
-import HexAccent from './HexAccent';
-import OctagonAccent from './OctagonAccent';
 import './PageOverlay.css';
 
-export default function PageOverlay({ isOpen, onClose, children, title }) {
+export default function PageOverlay({ isOpen, onClose, children, title, planetColor = '#00d4ff' }) {
+  const contentRef = useRef(null);
+
   // Close on ESC key
   useEffect(() => {
     const handleEscape = (e) => {
@@ -56,23 +57,19 @@ export default function PageOverlay({ isOpen, onClose, children, title }) {
             }}
             style={{
               position: 'fixed',
-              top: '7.5vh',
-              left: '5%',
-              right: '5%',
-              bottom: '7.5vh',
-              margin: '0 auto',
-              maxWidth: '1200px',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
               zIndex: 2001,
               background: `
-                linear-gradient(90deg, rgba(0, 212, 255, 0.03) 1px, transparent 1px),
-                linear-gradient(rgba(0, 212, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, ${planetColor}08 1px, transparent 1px),
+                linear-gradient(${planetColor}08 1px, transparent 1px),
                 rgba(26, 29, 58, 0.9)
               `,
               backgroundSize: '20px 20px, 20px 20px, 100% 100%',
-              borderRadius: '24px',
-              backdropFilter: 'blur(40px)',
-              border: '1px solid rgba(0, 212, 255, 0.2)',
-              boxShadow: '0 0 0 1px rgba(0, 212, 255, 0.1) inset, 0 8px 32px rgba(0, 0, 0, 0.6), 0 0 60px rgba(0, 212, 255, 0.15)',
+              borderRadius: 0,
+              backdropFilter: 'blur(20px)',
               display: 'flex',
               flexDirection: 'column',
               overflow: 'hidden'
@@ -80,120 +77,6 @@ export default function PageOverlay({ isOpen, onClose, children, title }) {
           >
             {/* Data Stream Background Animation */}
             <DataStream />
-
-            {/* Floating Geometric Elements */}
-            <HexAccent size={60} opacity={0.15} className="floating" style={{ top: '15%', left: '8%' }} />
-            <HexAccent size={40} opacity={0.2} className="floating" style={{ top: '45%', right: '10%' }} />
-            <HexAccent size={50} opacity={0.12} className="floating" style={{ bottom: '20%', left: '12%' }} />
-            <OctagonAccent size={70} opacity={0.15} className="floating" style={{ top: '25%', right: '15%' }} />
-            <OctagonAccent size={45} opacity={0.18} className="floating" style={{ bottom: '30%', right: '8%' }} />
-            <OctagonAccent size={55} opacity={0.1} className="floating" style={{ top: '60%', left: '15%' }} />
-
-            {/* Decorative corner accents */}
-            <div
-              className="corner-accent top-left"
-              style={{
-                position: 'absolute',
-                width: '40px',
-                height: '40px',
-                border: '2px solid rgba(0, 212, 255, 0.6)',
-                borderRight: 'none',
-                borderBottom: 'none',
-                borderTopLeftRadius: '4px',
-                top: '16px',
-                left: '16px',
-                zIndex: 1
-              }}
-            >
-              <div style={{
-                position: 'absolute',
-                width: '6px',
-                height: '6px',
-                background: '#00d4ff',
-                borderRadius: '50%',
-                boxShadow: '0 0 10px #00d4ff',
-                top: '-3px',
-                left: '-3px'
-              }}></div>
-            </div>
-            <div
-              className="corner-accent top-right"
-              style={{
-                position: 'absolute',
-                width: '40px',
-                height: '40px',
-                border: '2px solid rgba(0, 212, 255, 0.6)',
-                borderLeft: 'none',
-                borderBottom: 'none',
-                borderTopRightRadius: '4px',
-                top: '16px',
-                right: '16px',
-                zIndex: 1
-              }}
-            >
-              <div style={{
-                position: 'absolute',
-                width: '6px',
-                height: '6px',
-                background: '#00d4ff',
-                borderRadius: '50%',
-                boxShadow: '0 0 10px #00d4ff',
-                top: '-3px',
-                right: '-3px'
-              }}></div>
-            </div>
-            <div
-              className="corner-accent bottom-left"
-              style={{
-                position: 'absolute',
-                width: '40px',
-                height: '40px',
-                border: '2px solid rgba(0, 212, 255, 0.6)',
-                borderRight: 'none',
-                borderTop: 'none',
-                borderBottomLeftRadius: '4px',
-                bottom: '16px',
-                left: '16px',
-                zIndex: 1
-              }}
-            >
-              <div style={{
-                position: 'absolute',
-                width: '6px',
-                height: '6px',
-                background: '#00d4ff',
-                borderRadius: '50%',
-                boxShadow: '0 0 10px #00d4ff',
-                bottom: '-3px',
-                left: '-3px'
-              }}></div>
-            </div>
-            <div
-              className="corner-accent bottom-right"
-              style={{
-                position: 'absolute',
-                width: '40px',
-                height: '40px',
-                border: '2px solid rgba(0, 212, 255, 0.6)',
-                borderLeft: 'none',
-                borderTop: 'none',
-                borderBottomRightRadius: '4px',
-                bottom: '16px',
-                right: '16px',
-                zIndex: 1
-              }}
-            >
-              <div style={{
-                position: 'absolute',
-                width: '6px',
-                height: '6px',
-                background: '#00d4ff',
-                borderRadius: '50%',
-                boxShadow: '0 0 10px #00d4ff',
-                bottom: '-3px',
-                right: '-3px'
-              }}></div>
-            </div>
 
             {/* Header */}
             <div
@@ -203,8 +86,8 @@ export default function PageOverlay({ isOpen, onClose, children, title }) {
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 padding: '2rem 3rem',
-                borderBottom: '1px solid rgba(0, 212, 255, 0.15)',
-                background: 'linear-gradient(180deg, rgba(0, 212, 255, 0.05) 0%, rgba(0, 212, 255, 0) 100%)',
+                borderBottom: `1px solid ${planetColor}26`,
+                background: `linear-gradient(180deg, ${planetColor}0d 0%, ${planetColor}00 100%)`,
                 flexShrink: 0,
                 position: 'relative',
                 zIndex: 2
@@ -222,7 +105,7 @@ export default function PageOverlay({ isOpen, onClose, children, title }) {
                       fontWeight: 200,
                       letterSpacing: '2px',
                       margin: 0,
-                      background: 'linear-gradient(135deg, #00d4ff 0%, #a855f7 100%)',
+                      // background: `linear-gradient(135deg, ${planetColor} 0%, #00d4ff 100%)`,
                       WebkitBackgroundClip: 'text',
                       WebkitTextFillColor: 'transparent',
                       backgroundClip: 'text'
@@ -242,10 +125,10 @@ export default function PageOverlay({ isOpen, onClose, children, title }) {
                   alignItems: 'center',
                   gap: '0.5rem',
                   padding: '0.75rem 1.25rem',
-                  background: 'rgba(0, 212, 255, 0.1)',
-                  border: '1px solid rgba(0, 212, 255, 0.3)',
+                  background: `${planetColor}1a`,
+                  border: `1px solid ${planetColor}4d`,
                   borderRadius: '12px',
-                  color: '#00d4ff',
+                  color: planetColor,
                   fontSize: '14px',
                   cursor: 'pointer',
                   transition: 'all 0.3s ease',
@@ -253,26 +136,13 @@ export default function PageOverlay({ isOpen, onClose, children, title }) {
                   letterSpacing: '1px'
                 }}
               >
-                <span className="close-icon" style={{ fontSize: '24px', lineHeight: 1, fontWeight: 300 }}>×</span>
-                <span
-                  className="close-text"
-                  style={{
-                    fontFamily: 'monospace',
-                    fontSize: '11px',
-                    opacity: 0.7,
-                    background: 'rgba(0, 212, 255, 0.2)',
-                    padding: '2px 6px',
-                    borderRadius: '4px',
-                    border: '1px solid rgba(0, 212, 255, 0.3)'
-                  }}
-                >
-                  ESC
-                </span>
+                <X className="close-icon" size={24} />
               </button>
             </div>
 
             {/* Scrollable Content */}
             <motion.div
+              ref={contentRef}
               className="overlay-content"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -286,7 +156,11 @@ export default function PageOverlay({ isOpen, onClose, children, title }) {
                 zIndex: 1
               }}
             >
-              {children}
+              {Children.map(children, child =>
+                isValidElement(child)
+                  ? cloneElement(child, { scrollContainerRef: contentRef })
+                  : child
+              )}
             </motion.div>
 
             {/* Bottom gradient fade */}

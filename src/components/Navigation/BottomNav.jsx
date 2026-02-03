@@ -1,30 +1,42 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { Palette, Banana, Briefcase, Rocket, User, FlaskConical, FileText, Menu, X, Linkedin, Dribbble } from 'lucide-react';
 import './BottomNav.css';
 import { planetsData } from '../../data/planets';
 import { aboutContent } from '../../data/caseStudies';
-import HexAccent from '../UI/HexAccent';
 
 export default function BottomNav({ activePlanetId, onNavigate }) {
   const [isExpanded, setIsExpanded] = useState(false);
 
+  // Keyboard shortcut: 'm' to toggle menu
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'm' || e.key === 'M') {
+        // Don't trigger if user is typing in an input
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+        setIsExpanded(prev => !prev);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   const navItems = [
-    { id: 'case-study-1', label: 'Project 1', icon: '🎨' },
-    { id: 'case-study-2', label: 'Project 2', icon: '💼' },
-    { id: 'case-study-3', label: 'Project 3', icon: '🚀' },
-    { id: 'about', label: 'About', icon: '👤' },
+    { id: 'case-study-1', label: 'Banana Phone', icon: <Banana size={18} /> },
+    { id: 'case-study-2', label: 'Project 2', icon: <Briefcase size={18} /> },
+    { id: 'case-study-3', label: 'Project 3', icon: <Rocket size={18} /> },
+    { id: 'about', label: 'About', icon: <User size={18} /> },
+    { id: 'experiments', label: 'ERR_X.0', icon: <FlaskConical size={18} /> },
   ];
 
   const socialLinks = [
-    { name: 'LinkedIn', url: aboutContent.social.linkedin, icon: 'in' },
-    { name: 'Dribbble', url: aboutContent.social.dribbble, icon: 'dr' },
-    { name: 'Behance', url: aboutContent.social.behance, icon: 'be' },
+    { name: 'LinkedIn', url: aboutContent.social.linkedin, icon: <Linkedin size={16} /> },
+    { name: 'Dribbble', url: aboutContent.social.dribbble, icon: <Dribbble size={16} /> },
   ];
 
   const handleNavClick = (itemId) => {
     const planet = planetsData.find(p => p.id === itemId);
-    if (planet) {
-      onNavigate?.(planet);
-    }
+    onNavigate?.(planet || { id: itemId, name: itemId, color: '#6b2fa0' });
   };
 
   return (
@@ -37,7 +49,10 @@ export default function BottomNav({ activePlanetId, onNavigate }) {
             onClick={() => setIsExpanded(!isExpanded)}
             aria-label="Toggle navigation"
           >
-            <span className="nav-toggle-icon">{isExpanded ? '×' : '☰'}</span>
+            <span className="nav-toggle-icon">{isExpanded ? <X size={20} /> : <Menu size={20} />}</span>
+            <span className="nav-tooltip">
+              <span className="tooltip-key">Press m</span>
+            </span>
           </button>
           <span className="nav-title">Navigate</span>
         </div>
@@ -51,12 +66,6 @@ export default function BottomNav({ activePlanetId, onNavigate }) {
                   className={`nav-button ${isActive ? 'active' : ''}`}
                   onClick={() => handleNavClick(item.id)}
                 >
-                  <HexAccent
-                    size={16}
-                    color={isActive ? '#00d4ff' : '#00d4ff'}
-                    opacity={isActive ? 0.8 : 0.3}
-                    className="nav-hex-accent"
-                  />
                   <span className="nav-icon">{item.icon}</span>
                   <span className="nav-label">{item.label}</span>
                   {isActive && <span className="nav-indicator"></span>}
@@ -74,7 +83,7 @@ export default function BottomNav({ activePlanetId, onNavigate }) {
             target="_blank"
             rel="noopener noreferrer"
           >
-            <span className="nav-icon">📄</span>
+            <span className="nav-icon"><FileText size={18} /></span>
             <span className="nav-label">Resume</span>
           </a>
         </div>

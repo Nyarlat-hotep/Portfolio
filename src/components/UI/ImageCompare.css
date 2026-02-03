@@ -1,0 +1,126 @@
+.image-compare {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: ew-resize;
+  user-select: none;
+  touch-action: none;
+  background: rgba(var(--compare-color-rgb, 168, 85, 247), 0.05);
+  border: 1px solid rgba(var(--compare-color-rgb, 168, 85, 247), 0.2);
+}
+
+/* Layers */
+.compare-layer {
+  position: absolute;
+  inset: 0;
+}
+
+.compare-layer img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  pointer-events: none;
+}
+
+/* Placeholder when no image */
+.compare-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.compare-placeholder-text {
+  font-family: monospace;
+  font-size: 1rem;
+  font-weight: 500;
+  letter-spacing: 2px;
+  color: rgba(var(--compare-color-rgb, 168, 85, 247), 0.35);
+}
+
+/* Before layer gets a slightly different tint so the two sides are distinguishable */
+.compare-before .compare-placeholder {
+  background: rgba(var(--compare-color-rgb, 168, 85, 247), 0.06);
+}
+
+.compare-after .compare-placeholder {
+  background: rgba(var(--compare-color-rgb, 168, 85, 247), 0.02);
+}
+
+/* Labels */
+.compare-label {
+  position: absolute;
+  bottom: 12px;
+  padding: 4px 10px;
+  font-family: monospace;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+.compare-label-before {
+  left: 12px;
+  background: rgba(var(--compare-color-rgb, 168, 85, 247), 0.2);
+  color: var(--compare-color, #a855f7);
+  border: 1px solid rgba(var(--compare-color-rgb, 168, 85, 247), 0.4);
+}
+
+.compare-label-after {
+  right: 12px;
+  background: rgba(0, 212, 255, 0.15);
+  color: #00d4ff;
+  border: 1px solid rgba(0, 212, 255, 0.35);
+}
+
+/* Divider */
+.compare-divider {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 0;
+  transform: translateX(-50%);
+  z-index: 2;
+  pointer-events: none;
+}
+
+.compare-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 2px;
+  transform: translateX(-50%);
+  background: var(--compare-color, #a855f7);
+  box-shadow: 0 0 8px rgba(var(--compare-color-rgb, 168, 85, 247), 0.6);
+}
+
+.compare-handle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(10, 14, 39, 0.85);
+  border: 2px solid var(--compare-color, #a855f7);
+  box-shadow: 0 0 12px rgba(var(--compare-color-rgb, 168, 85, 247), 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--compare-color, #a855f7);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.image-compare:hover .compare-handle,
+.image-compare.is-dragging .compare-handle {
+  transform: translate(-50%, -50%) scale(1.15);
+  box-shadow: 0 0 20px rgba(var(--compare-color-rgb, 168, 85, 247), 0.7);
+}
