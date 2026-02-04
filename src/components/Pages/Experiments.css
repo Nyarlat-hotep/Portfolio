@@ -1,48 +1,198 @@
+/* ============================================
+   EXPERIMENTS PAGE - Void/Lovecraftian Theme
+   ============================================ */
+
 .experiments-page {
   max-width: 900px;
   margin: 0 auto;
 }
 
+.experiments-page.void-mode {
+  /* Void mode specific overrides */
+}
+
+/* Header */
 .experiments-header {
   margin-bottom: 3rem;
   text-align: center;
 }
 
 .experiments-tagline {
-  font-size: 1.25rem;
+  font-size: 1.15rem;
   font-weight: 300;
-  color: rgba(255, 255, 255, 0.7);
-  margin: 0;
-  line-height: 1.6;
+  color: rgba(155, 77, 202, 0.9);
+  margin: 0 0 1rem 0;
+  line-height: 1.7;
   letter-spacing: 0.5px;
+  font-family: monospace;
 }
 
+.corrupted-text {
+  display: inline;
+}
+
+/* Warning badge */
+.void-warning {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: rgba(0, 255, 106, 0.08);
+  border: 1px solid rgba(0, 255, 106, 0.3);
+  border-radius: 4px;
+  font-size: 0.7rem;
+  color: #00ff6a;
+  font-family: monospace;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  animation: warningPulse 3s ease-in-out infinite;
+}
+
+@keyframes warningPulse {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+
+/* Grid */
 .experiments-section {
   margin-bottom: 3rem;
 }
 
 .experiments-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 1.5rem;
 }
 
+/* Cards - organic, alien styling */
 .experiment-card {
-  background: rgba(var(--planet-color-rgb, 107, 47, 160), 0.08);
-  border: 1px solid rgba(var(--planet-color-rgb, 107, 47, 160), 0.25);
-  border-radius: 16px;
+  background: linear-gradient(
+    135deg,
+    rgba(10, 5, 20, 0.9) 0%,
+    rgba(20, 10, 35, 0.8) 50%,
+    rgba(10, 5, 20, 0.9) 100%
+  );
+  border: 1px solid rgba(107, 47, 160, 0.3);
+  border-radius: 8px;
   padding: 1.5rem;
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  transition: all 0.3s ease;
+  transition: all 0.4s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.experiment-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(
+    ellipse at 50% 0%,
+    rgba(0, 255, 106, 0.05) 0%,
+    transparent 60%
+  );
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+
+.experiment-card:hover::before {
+  opacity: 1;
 }
 
 .experiment-card:hover {
-  border-color: rgba(var(--planet-color-rgb, 107, 47, 160), 0.5);
-  box-shadow: 0 8px 24px rgba(var(--planet-color-rgb, 107, 47, 160), 0.2);
+  border-color: rgba(0, 255, 106, 0.4);
 }
 
+/* Border glow effect */
+.card-border-glow {
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  right: -1px;
+  bottom: -1px;
+  border-radius: 8px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  background: linear-gradient(
+    45deg,
+    transparent 0%,
+    rgba(0, 255, 106, 0.1) 25%,
+    transparent 50%,
+    rgba(107, 47, 160, 0.1) 75%,
+    transparent 100%
+  );
+  background-size: 200% 200%;
+  animation: borderShift 4s linear infinite;
+}
+
+.experiment-card:hover .card-border-glow {
+  opacity: 1;
+}
+
+@keyframes borderShift {
+  0% { background-position: 0% 0%; }
+  100% { background-position: 200% 200%; }
+}
+
+/* Status indicator */
+.card-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.65rem;
+  font-family: monospace;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 0.25rem;
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  animation: statusBlink 2s ease-in-out infinite;
+}
+
+.status-corrupted .status-dot {
+  background: #ff4444;
+  box-shadow: 0 0 8px #ff4444;
+}
+
+.status-corrupted .status-text {
+  color: #ff6666;
+}
+
+.status-unstable .status-dot {
+  background: #ffaa00;
+  box-shadow: 0 0 8px #ffaa00;
+  animation: statusBlink 1s ease-in-out infinite;
+}
+
+.status-unstable .status-text {
+  color: #ffcc44;
+}
+
+.status-active .status-dot {
+  background: #00ff6a;
+  box-shadow: 0 0 8px #00ff6a;
+}
+
+.status-active .status-text {
+  color: #00ff6a;
+}
+
+@keyframes statusBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* Card header */
 .card-header {
   display: flex;
   align-items: center;
@@ -50,32 +200,44 @@
 }
 
 .card-icon {
-  color: var(--planet-color, #6b2fa0);
+  color: #9b4dca;
   opacity: 0.8;
+  transition: all 0.3s ease;
+}
+
+.experiment-card:hover .card-icon {
+  color: #00ff6a;
+  opacity: 1;
 }
 
 .card-title {
-  font-size: 1.125rem;
-  font-weight: 400;
-  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #e0e0e0;
   margin: 0;
-  letter-spacing: 0.5px;
+  letter-spacing: 2px;
+  font-family: monospace;
+  text-transform: uppercase;
 }
 
+/* Card description */
 .card-description {
-  font-size: 0.9375rem;
-  line-height: 1.6;
-  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.875rem;
+  line-height: 1.7;
+  color: rgba(200, 180, 220, 0.7);
   margin: 0;
   font-weight: 300;
   flex: 1;
+  font-style: italic;
 }
 
+/* Card footer */
 .card-footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
+  margin-top: 0.5rem;
 }
 
 .card-tags {
@@ -85,43 +247,84 @@
 }
 
 .card-tag {
-  padding: 0.25rem 0.75rem;
-  background: rgba(var(--planet-color-rgb, 107, 47, 160), 0.15);
-  border: 1px solid rgba(var(--planet-color-rgb, 107, 47, 160), 0.3);
-  border-radius: 20px;
-  font-size: 0.75rem;
-  color: var(--planet-color, #6b2fa0);
-  font-weight: 500;
+  padding: 0.2rem 0.6rem;
+  background: rgba(0, 255, 106, 0.08);
+  border: 1px solid rgba(0, 255, 106, 0.25);
+  border-radius: 3px;
+  font-size: 0.65rem;
+  color: rgba(0, 255, 106, 0.8);
+  font-family: monospace;
   letter-spacing: 0.5px;
+  text-transform: uppercase;
+  transition: all 0.3s ease;
 }
 
+.experiment-card:hover .card-tag {
+  border-color: rgba(0, 255, 106, 0.5);
+  color: #00ff6a;
+}
+
+/* Card link */
 .card-link {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 32px;
   height: 32px;
-  background: rgba(var(--planet-color-rgb, 107, 47, 160), 0.1);
-  border: 1px solid rgba(var(--planet-color-rgb, 107, 47, 160), 0.3);
-  border-radius: 8px;
-  color: var(--planet-color, #6b2fa0);
+  background: rgba(107, 47, 160, 0.15);
+  border: 1px solid rgba(107, 47, 160, 0.4);
+  border-radius: 6px;
+  color: #9b4dca;
   text-decoration: none;
   transition: all 0.3s ease;
   flex-shrink: 0;
 }
 
 .card-link:hover {
-  background: rgba(var(--planet-color-rgb, 107, 47, 160), 0.2);
-  border-color: var(--planet-color, #6b2fa0);
+  background: rgba(0, 255, 106, 0.15);
+  border-color: #00ff6a;
+  color: #00ff6a;
   transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 255, 106, 0.2);
 }
 
+/* Bottom void message */
+.void-message {
+  text-align: center;
+  padding: 2rem 0;
+}
+
+.void-message-text {
+  font-size: 0.75rem;
+  font-family: monospace;
+  letter-spacing: 3px;
+  color: rgba(107, 47, 160, 0.5);
+  animation: messageFlicker 4s ease-in-out infinite;
+}
+
+@keyframes messageFlicker {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 0.8; }
+  52% { opacity: 0.3; }
+  54% { opacity: 0.8; }
+}
+
+/* Mobile adjustments */
 @media (max-width: 768px) {
   .experiments-tagline {
-    font-size: 1.1rem;
+    font-size: 1rem;
   }
 
   .experiments-grid {
     grid-template-columns: 1fr;
+  }
+
+  .void-warning {
+    font-size: 0.6rem;
+    padding: 0.4rem 0.8rem;
+  }
+
+  .card-title {
+    font-size: 0.9rem;
   }
 }

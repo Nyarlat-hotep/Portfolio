@@ -1,0 +1,339 @@
+/* ============================================
+   VOID OVERLAY - Lovecraftian Horror Theme
+   ============================================ */
+
+/* Backdrop - pure darkness */
+.void-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #000000;
+  z-index: 2000;
+}
+
+/* Main container */
+.void-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2001;
+  background: radial-gradient(ellipse at center, #0a0510 0%, #050208 50%, #000000 100%);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Animated noise overlay */
+.void-noise {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  opacity: 0.04;
+  pointer-events: none;
+  z-index: 10;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  animation: noiseShift 0.5s steps(10) infinite;
+}
+
+@keyframes noiseShift {
+  0%, 100% { transform: translate(0, 0); }
+  10% { transform: translate(-5%, -5%); }
+  20% { transform: translate(5%, 5%); }
+  30% { transform: translate(-3%, 3%); }
+  40% { transform: translate(3%, -3%); }
+  50% { transform: translate(-5%, 5%); }
+  60% { transform: translate(5%, -5%); }
+  70% { transform: translate(-3%, -3%); }
+  80% { transform: translate(3%, 3%); }
+  90% { transform: translate(-5%, -5%); }
+}
+
+/* Breathing vignette */
+.void-vignette {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 5;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 0%,
+    transparent 30%,
+    rgba(10, 5, 16, 0.4) 60%,
+    rgba(5, 2, 8, 0.8) 80%,
+    rgba(0, 0, 0, 0.95) 100%
+  );
+  animation: vignetteBreathe 8s ease-in-out infinite;
+}
+
+@keyframes vignetteBreathe {
+  0%, 100% {
+    background: radial-gradient(
+      ellipse at center,
+      transparent 0%,
+      transparent 30%,
+      rgba(10, 5, 16, 0.4) 60%,
+      rgba(5, 2, 8, 0.8) 80%,
+      rgba(0, 0, 0, 0.95) 100%
+    );
+  }
+  50% {
+    background: radial-gradient(
+      ellipse at center,
+      transparent 0%,
+      transparent 25%,
+      rgba(10, 5, 16, 0.5) 55%,
+      rgba(5, 2, 8, 0.85) 75%,
+      rgba(0, 0, 0, 0.98) 100%
+    );
+  }
+}
+
+/* Floating particles */
+.void-particles {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 3;
+  overflow: hidden;
+}
+
+.void-particle {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle, #00ff6a 0%, transparent 70%);
+  filter: blur(1px);
+}
+
+/* Tentacle silhouettes */
+.void-tentacles {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 2;
+  opacity: 0.15;
+}
+
+.void-tentacles svg {
+  width: 100%;
+  height: 100%;
+}
+
+.tentacle {
+  fill: none;
+  stroke: #6b2fa0;
+  stroke-width: 3;
+  stroke-linecap: round;
+  filter: blur(2px);
+}
+
+.tentacle.t1 {
+  animation: tentacleWave1 12s ease-in-out infinite;
+}
+
+.tentacle.t2 {
+  animation: tentacleWave2 15s ease-in-out infinite;
+  stroke: #00ff6a;
+  opacity: 0.5;
+}
+
+.tentacle.t3 {
+  animation: tentacleWave3 10s ease-in-out infinite;
+}
+
+@keyframes tentacleWave1 {
+  0%, 100% { d: path("M-10,100 Q20,80 15,60 T25,20 T10,-10"); }
+  50% { d: path("M-10,100 Q30,85 20,55 T30,25 T15,-10"); }
+}
+
+@keyframes tentacleWave2 {
+  0%, 100% { d: path("M110,100 Q80,75 90,50 T75,20 T95,-10"); }
+  50% { d: path("M110,100 Q70,70 85,45 T70,15 T90,-10"); }
+}
+
+@keyframes tentacleWave3 {
+  0%, 100% { d: path("M-10,50 Q10,40 5,20 T15,-10"); }
+  50% { d: path("M-10,50 Q15,35 10,15 T20,-10"); }
+}
+
+/* Header */
+.void-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2rem 3rem;
+  position: relative;
+  z-index: 20;
+  flex-shrink: 0;
+}
+
+.void-header-content {
+  flex: 1;
+}
+
+/* Glitch text effect */
+.glitch-text {
+  position: relative;
+  display: inline-block;
+}
+
+.void-title {
+  font-size: 2.5rem;
+  font-weight: 200;
+  letter-spacing: 4px;
+  margin: 0;
+  color: #00ff6a;
+  text-shadow:
+    0 0 10px rgba(0, 255, 106, 0.5),
+    0 0 20px rgba(0, 255, 106, 0.3),
+    0 0 40px rgba(0, 255, 106, 0.2);
+  font-family: monospace;
+  text-transform: uppercase;
+  animation: titleFlicker 4s ease-in-out infinite;
+}
+
+@keyframes titleFlicker {
+  0%, 100% { opacity: 1; }
+  92% { opacity: 1; }
+  93% { opacity: 0.8; }
+  94% { opacity: 1; }
+  95% { opacity: 0.9; }
+  96% { opacity: 1; }
+}
+
+/* Eye close button */
+.void-close-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  background: rgba(107, 47, 160, 0.2);
+  border: 2px solid rgba(107, 47, 160, 0.5);
+  border-radius: 50%;
+  color: #9b4dca;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.void-close-button::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: radial-gradient(circle, rgba(0, 255, 106, 0.3) 0%, transparent 70%);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: all 0.4s ease;
+}
+
+.void-close-button:hover {
+  border-color: #00ff6a;
+  color: #00ff6a;
+  box-shadow:
+    0 0 20px rgba(0, 255, 106, 0.3),
+    inset 0 0 20px rgba(0, 255, 106, 0.1);
+}
+
+.void-close-button:hover::before {
+  width: 100%;
+  height: 100%;
+}
+
+/* Scrollable content area */
+.void-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0 3rem 3rem;
+  position: relative;
+  z-index: 15;
+}
+
+/* Custom scrollbar for void */
+.void-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.void-content::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.void-content::-webkit-scrollbar-thumb {
+  background: rgba(107, 47, 160, 0.5);
+  border-radius: 3px;
+}
+
+.void-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 255, 106, 0.5);
+}
+
+/* Bottom fade */
+.void-bottom-fade {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 120px;
+  background: linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.9) 100%);
+  pointer-events: none;
+  z-index: 18;
+}
+
+/* Chromatic aberration on hover for interactive elements */
+.void-container *:focus-visible {
+  outline: 2px solid #00ff6a;
+  outline-offset: 2px;
+}
+
+/* Occasional screen shake */
+@keyframes microShake {
+  0%, 100% { transform: translate(0, 0); }
+  25% { transform: translate(-1px, 1px); }
+  50% { transform: translate(1px, -1px); }
+  75% { transform: translate(-1px, -1px); }
+}
+
+.void-container:hover {
+  animation: microShake 0.1s ease-in-out;
+  animation-iteration-count: 1;
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  .void-header {
+    padding: 1.5rem;
+  }
+
+  .void-title {
+    font-size: 1.75rem;
+    letter-spacing: 2px;
+  }
+
+  .void-close-button {
+    width: 48px;
+    height: 48px;
+  }
+
+  .void-content {
+    padding: 0 1.5rem 2rem;
+  }
+}

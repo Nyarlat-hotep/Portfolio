@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import Galaxy from './components/Galaxy/Galaxy';
 import PageOverlay from './components/UI/PageOverlay';
+import VoidOverlay from './components/UI/VoidOverlay';
 import ErrorBoundary from './components/UI/ErrorBoundary';
 import CaseStudy from './components/Pages/CaseStudy';
 import About from './components/Pages/About';
@@ -58,14 +59,25 @@ function App() {
         />
       </ErrorBoundary>
 
-      <PageOverlay
-        isOpen={isOverlayOpen}
-        onClose={handleCloseOverlay}
-        title={activePlanet?.id === 'about' ? aboutContent.name : activePlanet?.id === 'experiments' ? 'Experiments' : caseStudies[activePlanet?.id]?.title}
-        planetColor={activePlanet?.color}
-      >
-        {getOverlayContent()}
-      </PageOverlay>
+      {/* Void overlay for experiments */}
+      {activePlanet?.id === 'experiments' ? (
+        <VoidOverlay
+          isOpen={isOverlayOpen}
+          onClose={handleCloseOverlay}
+          title="ERR_X.0"
+        >
+          <Experiments />
+        </VoidOverlay>
+      ) : (
+        <PageOverlay
+          isOpen={isOverlayOpen}
+          onClose={handleCloseOverlay}
+          title={activePlanet?.id === 'about' ? aboutContent.name : caseStudies[activePlanet?.id]?.title}
+          planetColor={activePlanet?.color}
+        >
+          {getOverlayContent()}
+        </PageOverlay>
+      )}
     </div>
   );
 }
