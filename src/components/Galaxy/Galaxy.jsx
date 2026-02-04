@@ -1,6 +1,6 @@
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import Planet from './Planet';
@@ -9,12 +9,91 @@ import CosmicVoid from './CosmicVoid';
 import VoidVignette from './VoidVignette';
 import BottomNav from '../Navigation/BottomNav';
 import { planetsData, getAdjacentPlanet } from '../../data/planets';
+import { isWebGLSupported } from '../../utils/webglDetect';
+
+// Check WebGL support once on module load
+const webGLSupported = isWebGLSupported();
+
+// Fallback UI for browsers without WebGL
+function WebGLFallback() {
+  return (
+    <div style={{
+      width: '100vw',
+      height: '100vh',
+      background: '#0a0e27',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      color: '#ffffff',
+      fontFamily: 'monospace',
+      padding: '20px',
+      boxSizing: 'border-box'
+    }}>
+      <div style={{
+        fontSize: '48px',
+        marginBottom: '20px',
+        color: '#a855f7'
+      }}>
+        3D
+      </div>
+      <h1 style={{
+        fontSize: '24px',
+        marginBottom: '16px',
+        color: '#00d4ff'
+      }}>
+        WebGL Not Supported
+      </h1>
+      <p style={{
+        fontSize: '14px',
+        color: 'rgba(255, 255, 255, 0.7)',
+        marginBottom: '24px',
+        textAlign: 'center',
+        maxWidth: '400px'
+      }}>
+        This portfolio uses 3D graphics that require WebGL. Please try using a modern browser like Chrome, Firefox, or Safari with hardware acceleration enabled.
+      </p>
+    </div>
+  );
+}
 
 export default function Galaxy({ onPlanetClick, activePlanetId }) {
   const [hoveredPlanet, setHoveredPlanet] = useState(null);
   const [hoveredPlanetPosition, setHoveredPlanetPosition] = useState(null);
   const [currentPlanetIndex, setCurrentPlanetIndex] = useState(0);
   const [vignetteIntensity, setVignetteIntensity] = useState(0);
+
+  // Memoized hover handler - same for all planets
+  const handleHover = useCallback((name, screenPosition) => {
+    setHoveredPlanet(name);
+    setHoveredPlanetPosition(screenPosition);
+  }, []);
+
+  // Memoized vignette handler
+  const handleVignetteChange = useCallback((intensity) => {
+    setVignetteIntensity(intensity);
+  }, []);
+
+  // Memoized click handlers per planet
+  const planetClickHandlers = useMemo(() => {
+    return planetsData.reduce((handlers, planet, index) => {
+      handlers[planet.id] = () => {
+        setCurrentPlanetIndex(index);
+        onPlanetClick?.(planet);
+      };
+      return handlers;
+    }, {});
+  }, [onPlanetClick]);
+
+  // Memoized void click handler
+  const handleVoidClick = useCallback(() => {
+    onPlanetClick?.({ id: 'experiments', name: 'Experiments', color: '#6b2fa0' });
+  }, [onPlanetClick]);
+
+  // Return fallback UI if WebGL is not supported
+  if (!webGLSupported) {
+    return <WebGLFallback />;
+  }
 
   // Void position - behind the user's starting camera angle (camera faces -Z, void is at +Z)
   const voidPosition = [0, 0, 80];
@@ -47,7 +126,11 @@ export default function Galaxy({ onPlanetClick, activePlanetId }) {
 
   return (
     <div style={{ width: '100vw', height: '100vh', background: '#0a0e27' }}>
-      <Canvas>
+      <Canvas
+        dpr={[1, 2]}
+        performance={{ min: 0.5 }}
+        gl={{ antialias: true, powerPreference: 'high-performance' }}
+      >
         {/* Camera setup */}
         <PerspectiveCamera makeDefault position={[0, 5, 20]} fov={60} />
 
@@ -74,14 +157,14 @@ export default function Galaxy({ onPlanetClick, activePlanetId }) {
         {/* Cosmic horror elements */}
         <CosmicVoid
           position={voidPosition}
-          onClick={() => onPlanetClick?.({ id: 'experiments', name: 'Experiments', color: '#6b2fa0' })}
+          onClick={handleVoidClick}
         />
 
         {/* Vignette tracker */}
         <VoidVignette
           voidPosition={voidPosition}
           threshold={35}
-          onDistanceChange={(intensity) => setVignetteIntensity(intensity)}
+          onDistanceChange={handleVignetteChange}
         />
 
         {/* Planets - wrapped in Suspense for texture loading */}
@@ -90,15 +173,8 @@ export default function Galaxy({ onPlanetClick, activePlanetId }) {
             <Planet
               key={planet.id}
               {...planet}
-              onClick={() => {
-                const index = planetsData.findIndex(p => p.id === planet.id);
-                setCurrentPlanetIndex(index);
-                onPlanetClick?.(planet);
-              }}
-              onHover={(name, screenPosition) => {
-                setHoveredPlanet(name);
-                setHoveredPlanetPosition(screenPosition);
-              }}
+              onClick={planetClickHandlers[planet.id]}
+              onHover={handleHover}
               isActive={activePlanetId === planet.id}
             />
           ))}

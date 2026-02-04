@@ -1,10 +1,28 @@
-import { useRef, useState, useMemo } from 'react';
+import { useRef, useState, useMemo, useEffect, memo } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
-import { Sphere, useTexture } from '@react-three/drei';
+import { useTexture } from '@react-three/drei';
 import * as THREE from 'three';
 import Moon from './Moon';
 
-export default function Planet({
+// Dispose of Three.js objects to prevent VRAM leaks
+function disposeObject(obj) {
+  if (obj.geometry) {
+    obj.geometry.dispose();
+  }
+  if (obj.material) {
+    if (Array.isArray(obj.material)) {
+      obj.material.forEach(mat => {
+        if (mat.map) mat.map.dispose();
+        mat.dispose();
+      });
+    } else {
+      if (obj.material.map) obj.material.map.dispose();
+      obj.material.dispose();
+    }
+  }
+}
+
+function Planet({
   position,
   scale,
   color,
@@ -26,6 +44,15 @@ export default function Planet({
   const particlesRef = useRef();
   const [hovered, setHovered] = useState(false);
   const { camera, size } = useThree();
+
+  // Cleanup geometry and materials on unmount to prevent VRAM leaks
+  useEffect(() => {
+    return () => {
+      if (meshRef.current) {
+        disposeObject(meshRef.current);
+      }
+    };
+  }, []);
 
   // Determine which texture to use based on planet properties
   const textureUrl = useMemo(() => {
@@ -241,3 +268,6 @@ export default function Planet({
     </group>
   );
 }
+
+// Memoize to prevent re-renders when parent state changes but planet props don't
+export default memo(Planet);

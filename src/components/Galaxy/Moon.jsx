@@ -1,4 +1,4 @@
-import { useRef, useMemo } from 'react';
+import { useRef, useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { createRockyTexture, createIcyTexture, createAlienTexture } from '../../utils/planetTextures';
 
@@ -6,6 +6,23 @@ const noRaycast = () => null;
 
 export default function Moon({ scale = 0.1, orbitRadius = 2, orbitSpeed = 0.05, orbitTilt = 0, textureType = 'rocky' }) {
   const meshRef = useRef();
+
+  // Cleanup geometry and materials on unmount to prevent VRAM leaks
+  useEffect(() => {
+    return () => {
+      if (meshRef.current) {
+        if (meshRef.current.geometry) {
+          meshRef.current.geometry.dispose();
+        }
+        if (meshRef.current.material) {
+          if (meshRef.current.material.map) {
+            meshRef.current.material.map.dispose();
+          }
+          meshRef.current.material.dispose();
+        }
+      }
+    };
+  }, []);
 
   const proceduralTexture = useMemo(() => {
     if (textureType === 'icy') return createIcyTexture(128);

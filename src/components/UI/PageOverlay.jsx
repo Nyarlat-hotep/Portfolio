@@ -6,6 +6,14 @@ import './PageOverlay.css';
 
 export default function PageOverlay({ isOpen, onClose, children, title, planetColor = '#00d4ff' }) {
   const contentRef = useRef(null);
+  const closeButtonRef = useRef(null);
+
+  // Focus close button when overlay opens for accessibility
+  useEffect(() => {
+    if (isOpen && closeButtonRef.current) {
+      closeButtonRef.current.focus();
+    }
+  }, [isOpen]);
 
   // Close on ESC key
   useEffect(() => {
@@ -48,6 +56,9 @@ export default function PageOverlay({ isOpen, onClose, children, title, planetCo
           {/* Main Overlay Container */}
           <motion.div
             className="overlay-container"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={title ? "overlay-title" : undefined}
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
@@ -96,6 +107,7 @@ export default function PageOverlay({ isOpen, onClose, children, title, planetCo
               <div className="header-content" style={{ flex: 1 }}>
                 {title && (
                   <motion.h1
+                    id="overlay-title"
                     className="overlay-title"
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -117,6 +129,7 @@ export default function PageOverlay({ isOpen, onClose, children, title, planetCo
               </div>
 
               <button
+                ref={closeButtonRef}
                 className="close-button"
                 onClick={onClose}
                 aria-label="Close overlay"

@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import Galaxy from './components/Galaxy/Galaxy';
 import PageOverlay from './components/UI/PageOverlay';
+import ErrorBoundary from './components/UI/ErrorBoundary';
 import CaseStudy from './components/Pages/CaseStudy';
 import About from './components/Pages/About';
 import Experiments from './components/Pages/Experiments';
@@ -11,7 +12,7 @@ function App() {
   const [activePlanet, setActivePlanet] = useState(null);
   const [isOverlayOpen, setIsOverlayOpen] = useState(false);
 
-  const handlePlanetClick = (planet) => {
+  const handlePlanetClick = useCallback((planet) => {
     setActivePlanet(planet);
 
     // Don't open overlay for home planet
@@ -20,12 +21,12 @@ function App() {
     } else {
       setIsOverlayOpen(false);
     }
-  };
+  }, []);
 
-  const handleCloseOverlay = () => {
+  const handleCloseOverlay = useCallback(() => {
     setIsOverlayOpen(false);
     setActivePlanet(null);
-  };
+  }, []);
 
   // Determine what content to show in overlay
   const getOverlayContent = () => {
@@ -50,10 +51,12 @@ function App() {
 
   return (
     <div className="App">
-      <Galaxy
-        onPlanetClick={handlePlanetClick}
-        activePlanetId={activePlanet?.id}
-      />
+      <ErrorBoundary>
+        <Galaxy
+          onPlanetClick={handlePlanetClick}
+          activePlanetId={activePlanet?.id}
+        />
+      </ErrorBoundary>
 
       <PageOverlay
         isOpen={isOverlayOpen}

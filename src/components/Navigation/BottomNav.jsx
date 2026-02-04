@@ -47,7 +47,9 @@ export default function BottomNav({ activePlanetId, onNavigate }) {
           <button
             className="nav-toggle"
             onClick={() => setIsExpanded(!isExpanded)}
-            aria-label="Toggle navigation"
+            aria-label={isExpanded ? "Close navigation menu" : "Open navigation menu"}
+            aria-expanded={isExpanded}
+            aria-controls="nav-list"
           >
             <span className="nav-toggle-icon">{isExpanded ? <X size={20} /> : <Menu size={20} />}</span>
             <span className="nav-tooltip">
@@ -57,14 +59,16 @@ export default function BottomNav({ activePlanetId, onNavigate }) {
           <span className="nav-title">Navigate</span>
         </div>
 
-        <ul className={`nav-list ${isExpanded ? 'expanded' : ''}`}>
+        <ul id="nav-list" className={`nav-list ${isExpanded ? 'expanded' : ''}`} role="menu">
           {navItems.map((item) => {
             const isActive = activePlanetId === item.id;
             return (
-              <li key={item.id} className="nav-item">
+              <li key={item.id} className="nav-item" role="none">
                 <button
                   className={`nav-button ${isActive ? 'active' : ''}`}
                   onClick={() => handleNavClick(item.id)}
+                  role="menuitem"
+                  aria-current={isActive ? 'page' : undefined}
                 >
                   <span className="nav-icon">{item.icon}</span>
                   <span className="nav-label">{item.label}</span>
