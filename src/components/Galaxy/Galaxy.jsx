@@ -10,14 +10,13 @@ import VoidVignette from './VoidVignette';
 import BottomNav from '../Navigation/BottomNav';
 import { planetsData, getAdjacentPlanet } from '../../data/planets';
 import { isWebGLSupported } from '../../utils/webglDetect';
-import { isTouchDevice, isMobileScreen } from '../../utils/isTouchDevice';
+import { isTouchDevice } from '../../utils/isTouchDevice';
 
 // Check WebGL support once on module load
 const webGLSupported = isWebGLSupported();
 
-// Check touch/mobile once on module load for performance optimizations
+// Check touch once on module load for UI hints
 const isTouch = isTouchDevice();
-const isMobile = isMobileScreen();
 
 // Fallback UI for browsers without WebGL
 function WebGLFallback() {
@@ -132,9 +131,9 @@ export default function Galaxy({ onPlanetClick, activePlanetId }) {
   return (
     <div style={{ width: '100vw', height: '100vh', background: '#0a0e27' }}>
       <Canvas
-        dpr={isMobile ? [1, 1.5] : [1, 2]}
+        dpr={[1, 2]}
         performance={{ min: 0.5 }}
-        gl={{ antialias: !isMobile, powerPreference: 'high-performance' }}
+        gl={{ antialias: true, powerPreference: 'high-performance' }}
       >
         {/* Camera setup */}
         <PerspectiveCamera makeDefault position={[0, 5, 20]} fov={60} />
@@ -156,8 +155,8 @@ export default function Galaxy({ onPlanetClick, activePlanetId }) {
         <pointLight position={[-10, -10, -10]} intensity={1.2} color="#00d4ff" />
         <pointLight position={[0, 15, 0]} intensity={0.8} color="#a855f7" />
 
-        {/* Starfield background - reduced on mobile for performance */}
-        <Starfield count={isMobile ? 600 : 1200} />
+        {/* Starfield background */}
+        <Starfield count={1200} />
 
         {/* Cosmic horror elements */}
         <CosmicVoid
