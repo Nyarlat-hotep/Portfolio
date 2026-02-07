@@ -2,7 +2,7 @@ import { Canvas } from '@react-three/fiber';
 import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
 import { useState, useEffect, Suspense, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Move, ZoomIn } from 'lucide-react';
 import Planet from './Planet';
 import Starfield from './Starfield';
 import CosmicVoid from './CosmicVoid';
@@ -10,9 +10,14 @@ import VoidVignette from './VoidVignette';
 import BottomNav from '../Navigation/BottomNav';
 import { planetsData, getAdjacentPlanet } from '../../data/planets';
 import { isWebGLSupported } from '../../utils/webglDetect';
+import { isTouchDevice, isMobileScreen } from '../../utils/isTouchDevice';
 
 // Check WebGL support once on module load
 const webGLSupported = isWebGLSupported();
+
+// Check touch/mobile once on module load for performance optimizations
+const isTouch = isTouchDevice();
+const isMobile = isMobileScreen();
 
 // Fallback UI for browsers without WebGL
 function WebGLFallback() {
@@ -127,9 +132,9 @@ export default function Galaxy({ onPlanetClick, activePlanetId }) {
   return (
     <div style={{ width: '100vw', height: '100vh', background: '#0a0e27' }}>
       <Canvas
-        dpr={[1, 2]}
+        dpr={isMobile ? [1, 1.5] : [1, 2]}
         performance={{ min: 0.5 }}
-        gl={{ antialias: true, powerPreference: 'high-performance' }}
+        gl={{ antialias: !isMobile, powerPreference: 'high-performance' }}
       >
         {/* Camera setup */}
         <PerspectiveCamera makeDefault position={[0, 5, 20]} fov={60} />
@@ -151,8 +156,8 @@ export default function Galaxy({ onPlanetClick, activePlanetId }) {
         <pointLight position={[-10, -10, -10]} intensity={1.2} color="#00d4ff" />
         <pointLight position={[0, 15, 0]} intensity={0.8} color="#a855f7" />
 
-        {/* Starfield background */}
-        <Starfield count={1200} />
+        {/* Starfield background - reduced on mobile for performance */}
+        <Starfield count={isMobile ? 600 : 1200} />
 
         {/* Cosmic horror elements */}
         <CosmicVoid
@@ -330,7 +335,7 @@ export default function Galaxy({ onPlanetClick, activePlanetId }) {
         )}
       </AnimatePresence>
 
-      {/* Navigation hint */}
+      {/* Navigation hint - different for touch vs keyboard */}
       <div
         style={{
           position: 'absolute',
@@ -340,13 +345,30 @@ export default function Galaxy({ onPlanetClick, activePlanetId }) {
           fontSize: '12px',
           fontFamily: 'monospace',
           textAlign: 'right',
-          pointerEvents: 'none'
+          pointerEvents: 'none',
+          paddingBottom: 'env(safe-area-inset-bottom, 0px)'
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'flex-end' }}><ArrowLeft size={12} /> <ArrowRight size={12} /> Arrow keys to navigate</div>
-        <div>Click and drag to orbit</div>
-        <div>Scroll to zoom</div>
-        <div>ESC to return home</div>
+        {isTouch ? (
+          <>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'flex-end' }}>
+              <Move size={12} /> Drag to orbit
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'flex-end' }}>
+              <ZoomIn size={12} /> Pinch to zoom
+            </div>
+            <div>Tap planets to explore</div>
+          </>
+        ) : (
+          <>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'flex-end' }}>
+              <ArrowLeft size={12} /> <ArrowRight size={12} /> Arrow keys to navigate
+            </div>
+            <div>Click and drag to orbit</div>
+            <div>Scroll to zoom</div>
+            <div>ESC to return home</div>
+          </>
+        )}
       </div>
 
       {/* Bottom Navigation */}

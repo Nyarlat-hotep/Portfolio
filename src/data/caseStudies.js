@@ -95,5 +95,5 @@ export const aboutContent = {
     linkedin: 'https://www.linkedin.com/in/taylorcornelius/',
     dribbble: 'https://dribbble.com/TCorn',
   },
-  resumeUrl: '/resume.pdf' // Place your resume in the public folder
+  resumeUrl: 'https://docs.google.com/document/d/1MZpPM44NnQ5yHdLSswazOjt50sq1u0D3/edit?usp=sharing&ouid=103186051145042843959&rtpof=true&sd=true' // Place your resume in the public folder
 };

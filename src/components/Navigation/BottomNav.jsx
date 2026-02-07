@@ -1,8 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Palette, Banana, Briefcase, Rocket, User, FlaskConical, FileText, Menu, X, Linkedin, Dribbble } from 'lucide-react';
+import { Banana, Briefcase, Rocket, User, FlaskConical, FileText, Menu, X, Linkedin, Dribbble } from 'lucide-react';
 import './BottomNav.css';
 import { planetsData } from '../../data/planets';
 import { aboutContent } from '../../data/caseStudies';
+import { isTouchDevice } from '../../utils/isTouchDevice';
+
+// Check touch once on module load
+const isTouch = isTouchDevice();
 
 export default function BottomNav({ activePlanetId, onNavigate }) {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -52,9 +56,12 @@ export default function BottomNav({ activePlanetId, onNavigate }) {
             aria-controls="nav-list"
           >
             <span className="nav-toggle-icon">{isExpanded ? <X size={20} /> : <Menu size={20} />}</span>
-            <span className="nav-tooltip">
-              <span className="tooltip-key">Press m</span>
-            </span>
+            {/* Hide keyboard tooltip on touch devices */}
+            {!isTouch && (
+              <span className="nav-tooltip">
+                <span className="tooltip-key">Press m</span>
+              </span>
+            )}
           </button>
           <span className="nav-title">Navigate</span>
         </div>
