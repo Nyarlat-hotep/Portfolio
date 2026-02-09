@@ -471,50 +471,47 @@ export default function Galaxy({ onPlanetClick, activePlanetId }) {
       </AnimatePresence>
 
       {/* Navigation hint - different for touch vs keyboard */}
-      <div
-        style={{
-          position: 'absolute',
-          bottom: '20px',
-          right: '20px',
-          color: 'rgba(255, 255, 255, 0.5)',
-          fontSize: '12px',
-          fontFamily: 'monospace',
-          textAlign: 'right',
-          pointerEvents: 'none',
-          paddingBottom: 'env(safe-area-inset-bottom, 0px)',
-          opacity: sceneReady ? 1 : 0,
-          transition: 'opacity 0.5s ease-in'
-        }}
-      >
-        {isTouch ? (
-          <>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'flex-end' }}>
-              <Move size={12} /> Drag to orbit
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'flex-end' }}>
-              <ZoomIn size={12} /> Pinch to zoom
-            </div>
-            <div>Tap planets to explore</div>
-          </>
-        ) : (
-          <>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'flex-end' }}>
-              <ArrowLeft size={12} /> <ArrowRight size={12} /> Arrow keys to navigate
-            </div>
-            <div>Click and drag to orbit</div>
-            <div>Scroll to zoom</div>
-            <div>ESC to return home</div>
-          </>
-        )}
-      </div>
+      {sceneReady && (
+        <div
+          style={{
+            position: 'absolute',
+            bottom: '20px',
+            right: '20px',
+            color: 'rgba(255, 255, 255, 0.5)',
+            fontSize: '12px',
+            fontFamily: 'monospace',
+            textAlign: 'right',
+            pointerEvents: 'none',
+            paddingBottom: 'env(safe-area-inset-bottom, 0px)'
+          }}
+        >
+          {isTouch ? (
+            <>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'flex-end' }}>
+                <Move size={12} /> Drag to orbit
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'flex-end' }}>
+                <ZoomIn size={12} /> Pinch to zoom
+              </div>
+              <div>Tap planets to explore</div>
+            </>
+          ) : (
+            <>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'flex-end' }}>
+                <ArrowLeft size={12} /> <ArrowRight size={12} /> Arrow keys to navigate
+              </div>
+              <div>Click and drag to orbit</div>
+              <div>Scroll to zoom</div>
+              <div>ESC to return home</div>
+            </>
+          )}
+        </div>
+      )}
 
       {/* Bottom Navigation */}
-      <div style={{
-        opacity: sceneReady ? 1 : 0,
-        transition: 'opacity 0.5s ease-in'
-      }}>
+      {sceneReady && (
         <BottomNav activePlanetId={activePlanetId} onNavigate={onPlanetClick} />
-      </div>
+      )}
     </div>
   );
 }
