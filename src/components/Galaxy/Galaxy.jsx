@@ -19,8 +19,8 @@ const webGLSupported = isWebGLSupported();
 // Check touch once on module load for UI hints
 const isTouch = isTouchDevice();
 
-// Intro animation duration (5 seconds for smooth zoom)
-const INTRO_DURATION = 5;
+// Intro animation duration (8 seconds for cinematic zoom)
+const INTRO_DURATION = 8;
 const WELCOME_DISPLAY_DURATION = 5000;
 
 // Component that signals when scene is ready (placed inside Suspense)
