@@ -219,6 +219,21 @@
   border-radius: 8px;
 }
 
+/* Process Phase Image */
+.process-image {
+  margin-top: 1.5rem;
+  border-radius: 12px;
+  overflow: hidden;
+  background: rgba(var(--planet-color-rgb, 168, 85, 247), 0.05);
+  border: 1px solid rgba(var(--planet-color-rgb, 168, 85, 247), 0.2);
+}
+
+.process-image img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
 /* Comparisons Grid */
 .comparisons-grid {
   display: flex;

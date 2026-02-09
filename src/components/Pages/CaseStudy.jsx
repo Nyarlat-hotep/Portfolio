@@ -203,6 +203,28 @@ export default function CaseStudy({ caseStudy, planetColor = '#a855f7', scrollCo
         </motion.p>
       </AnimatedSection>
 
+      {/* Process Phases — each phase gets its own section */}
+      {caseStudy.process && caseStudy.process.map((phase, index) => (
+        <AnimatedSection
+          key={phase.title || index}
+          number={sectionNum()}
+          title={phase.title}
+          viewport={viewport}
+        >
+          <motion.p className="section-text" variants={contentVariants}>
+            {phase.description}
+          </motion.p>
+          {phase.image && (
+            <motion.div
+              className="process-image"
+              variants={galleryItemVariants}
+            >
+              <img src={phase.image} alt={phase.title} />
+            </motion.div>
+          )}
+        </AnimatedSection>
+      ))}
+
       {/* Images Gallery — staggered scale-in */}
       {caseStudy.images && caseStudy.images.length > 0 && (
         <AnimatedSection number={sectionNum()} title="Visuals" viewport={viewport}>
