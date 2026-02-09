@@ -84,13 +84,13 @@ export default function Galaxy({ onPlanetClick, activePlanetId }) {
   const [sceneReady, setSceneReady] = useState(false);
   const [isIntroActive, setIsIntroActive] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
+  const introCompletedRef = useRef(false);
   const welcomeTimeoutRef = useRef(null);
   const controlsRef = useRef(null);
 
-  // Start intro only after scene is ready
+  // Start intro only after scene is ready (runs once)
   useEffect(() => {
-    if (sceneReady && !isIntroActive) {
-      // Small delay to ensure everything is rendered
+    if (sceneReady && !introCompletedRef.current && !isIntroActive) {
       const timer = setTimeout(() => {
         setIsIntroActive(true);
       }, 100);
@@ -132,14 +132,16 @@ export default function Galaxy({ onPlanetClick, activePlanetId }) {
     welcomeTimeoutRef.current = setTimeout(() => {
       setShowWelcome(false);
       setIsIntroActive(false);
+      introCompletedRef.current = true;
     }, WELCOME_DISPLAY_DURATION);
   }, []);
 
   // Cancel intro on user interaction
   const cancelIntro = useCallback(() => {
-    if (isIntroActive) {
+    if (isIntroActive || !introCompletedRef.current) {
       setIsIntroActive(false);
       setShowWelcome(false);
+      introCompletedRef.current = true;
       if (welcomeTimeoutRef.current) {
         clearTimeout(welcomeTimeoutRef.current);
       }
