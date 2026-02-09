@@ -6,12 +6,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Portfolio - Product Designer</title>
 
+    <!-- Critical CSS - prevents white flash before stylesheets load -->
+    <style>
+      html, body, #root {
+        margin: 0;
+        padding: 0;
+        background: #0a0e27;
+        min-height: 100vh;
+      }
+    </style>
+
     <!-- HUD/Cyberpunk Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
   </head>
-  <body style="background: #0a0e27;">
+  <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
