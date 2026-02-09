@@ -1,6 +1,27 @@
-.case-study {
-  max-width: 900px;
+/* Layout wrapper for sidebar + main content */
+.case-study-layout {
+  display: flex;
+  gap: 2rem;
+  max-width: 1100px;
   margin: 0 auto;
+  position: relative;
+  overflow: visible;
+}
+
+/* Sidebar container for Journey Map */
+.case-study-sidebar {
+  flex-shrink: 0;
+  align-self: flex-start;
+  position: sticky;
+  top: 0rem;
+  overflow: visible;
+}
+
+/* Main content area */
+.case-study {
+  flex: 1;
+  max-width: 900px;
+  min-width: 0;
 }
 
 /* Meta Information */
@@ -132,7 +153,7 @@
   line-height: 1.8;
   color: rgba(255, 255, 255, 0.85);
   margin: 0;
-  font-weight: 300;
+  font-weight: 400;
 }
 
 .impact-text {
@@ -337,6 +358,16 @@
 }
 
 /* Responsive */
+@media (max-width: 1024px) {
+  .case-study-layout {
+    flex-direction: column;
+  }
+
+  .case-study-sidebar {
+    display: none;
+  }
+}
+
 @media (max-width: 768px) {
   .case-study-meta {
     font-size: 0.75rem;

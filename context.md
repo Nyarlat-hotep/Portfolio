@@ -375,6 +375,14 @@ When handling requests, follow this decision framework:
 2. **Moderate probability of solving the request** → Always ask clarifying questions first to improve the probability of success
 3. **Low probability of solving the request** → Do not attempt those things; discuss alternatives or limitations instead
 
+### CSS Protection Rule
+
+**IMPORTANT:** If the user makes manual CSS changes to any file, do NOT override or update those changes in any way unless explicitly given permission. If changes to user-modified CSS are necessary for a task, you MUST ask for approval before making any edits to that CSS.
+
+### Commit Rule
+
+**IMPORTANT:** Make a git commit after every change or set of related changes. Do NOT push to remote unless the user explicitly requests it.
+
 ---
 
 **Note:** This document is a living file that should be updated as the project evolves. Any major decisions, architecture changes, or new features should be documented here for future reference.

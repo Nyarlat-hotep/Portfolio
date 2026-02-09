@@ -1,6 +1,8 @@
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 import ImageCompare from '../UI/ImageCompare';
+import JourneyMap from '../UI/JourneyMap';
 import './CaseStudy.css';
 
 // --- Variant definitions ---
@@ -120,6 +122,101 @@ function AnimatedSection({ number, title, children, viewport }) {
 
 // --- Main component ---
 export default function CaseStudy({ caseStudy, planetColor = '#a855f7', scrollContainerRef }) {
+  const [currentPhaseIndex, setCurrentPhaseIndex] = useState(-1);
+  const phaseRefs = useRef([]);
+  const lastScrollY = useRef(0);
+  const scrollDirection = useRef('down');
+  const visibleSections = useRef(new Set());
+
+  // Track which process phase is currently in view
+  useEffect(() => {
+    if (!caseStudy?.process || caseStudy.process.length === 0) return;
+
+    const root = scrollContainerRef?.current || null;
+
+    // Track scroll direction
+    const handleScroll = () => {
+      const currentScrollY = root ? root.scrollTop : window.scrollY;
+      scrollDirection.current = currentScrollY > lastScrollY.current ? 'down' : 'up';
+      lastScrollY.current = currentScrollY;
+    };
+
+    const scrollTarget = root || window;
+    scrollTarget.addEventListener('scroll', handleScroll, { passive: true });
+
+    // Single observer for all sections
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          const index = phaseRefs.current.indexOf(entry.target);
+          if (index === -1) return;
+
+          if (entry.isIntersecting) {
+            visibleSections.current.add(index);
+          } else {
+            visibleSections.current.delete(index);
+          }
+        });
+
+        // Determine active section based on visible sections and scroll direction
+        if (visibleSections.current.size > 0) {
+          const visibleArray = Array.from(visibleSections.current).sort((a, b) => a - b);
+          const viewportHeight = root ? root.clientHeight : window.innerHeight;
+
+          let activeIndex = visibleArray[0];
+
+          if (scrollDirection.current === 'down') {
+            // Scrolling DOWN: activate the highest-indexed section that has entered viewport
+            // This makes the beam move forward as soon as a new section appears
+            activeIndex = visibleArray[visibleArray.length - 1];
+          } else {
+            // Scrolling UP: activate section whose top is above the 40% trigger point
+            // This makes the beam move back when you scroll up past a section
+            const triggerPoint = viewportHeight * 0.4;
+
+            for (const idx of visibleArray) {
+              const el = phaseRefs.current[idx];
+              if (el) {
+                const rect = el.getBoundingClientRect();
+                const containerRect = root ? root.getBoundingClientRect() : { top: 0 };
+                const relativeTop = rect.top - containerRect.top;
+
+                if (relativeTop <= triggerPoint) {
+                  activeIndex = idx;
+                }
+              }
+            }
+          }
+
+          setCurrentPhaseIndex(activeIndex);
+        }
+      },
+      {
+        root,
+        rootMargin: '0px 0px 0px 0px',
+        threshold: [0, 0.05, 0.1]
+      }
+    );
+
+    // Observe all phase sections
+    phaseRefs.current.forEach((ref) => {
+      if (ref) observer.observe(ref);
+    });
+
+    return () => {
+      observer.disconnect();
+      scrollTarget.removeEventListener('scroll', handleScroll);
+    };
+  }, [caseStudy?.process, scrollContainerRef]);
+
+  // Handle click on journey map waypoint - scroll to that phase
+  const handlePhaseClick = (index) => {
+    const phaseElement = phaseRefs.current[index];
+    if (phaseElement) {
+      phaseElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  };
+
   if (!caseStudy) return null;
 
   const viewport = {
@@ -132,55 +229,68 @@ export default function CaseStudy({ caseStudy, planetColor = '#a855f7', scrollCo
   let _sectionCounter = 0;
   const sectionNum = () => String(++_sectionCounter).padStart(2, '0');
 
-  return (
-    <div
-      className="case-study"
-      style={{
-        '--planet-color': planetColor,
-        '--planet-color-rgb': planetColor
-          .replace('#', '')
-          .match(/.{2}/g)
-          .map((x) => parseInt(x, 16))
-          .join(', ')
-      }}
-    >
-      {/* Meta — slides in from left */}
-      <motion.div
-        className="case-study-meta"
-        initial={{ opacity: 0, x: -40 }}
-        whileInView={{ opacity: 1, x: 0 }}
-        viewport={viewport}
-        transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
-      >
-        <span className="meta-item">{caseStudy.subtitle}</span>
-        {caseStudy.duration && (
-          <>
-            <span className="meta-divider">&bull;</span>
-            <span className="meta-item">{caseStudy.duration}</span>
-          </>
-        )}
-      </motion.div>
+  const cssVars = {
+    '--planet-color': planetColor,
+    '--planet-color-rgb': planetColor
+      .replace('#', '')
+      .match(/.{2}/g)
+      .map((x) => parseInt(x, 16))
+      .join(', ')
+  };
 
-      {/* Info Cards — staggered reveal */}
-      <motion.div
-        className="case-study-info"
-        initial="hidden"
-        whileInView="visible"
-        viewport={viewport}
-        variants={{
-          hidden: {},
-          visible: { transition: { staggerChildren: 0.15, delayChildren: 0.1 } }
-        }}
-      >
-        <motion.div className="info-card" variants={cardVariants}>
-          <span className="info-label">Role</span>
-          <span className="info-value">{caseStudy.role}</span>
+  return (
+    <div className="case-study-layout" style={cssVars}>
+      {/* Sidebar with Journey Map */}
+      {caseStudy.process && caseStudy.process.length > 0 && (
+        <aside className="case-study-sidebar">
+          <JourneyMap
+            phases={caseStudy.process}
+            currentPhaseIndex={currentPhaseIndex}
+            planetColor={planetColor}
+            onPhaseClick={handlePhaseClick}
+          />
+        </aside>
+      )}
+
+      {/* Main Content */}
+      <div className="case-study">
+        {/* Meta — slides in from left */}
+        <motion.div
+          className="case-study-meta"
+          initial={{ opacity: 0, x: -40 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={viewport}
+          transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
+        >
+          <span className="meta-item">{caseStudy.subtitle}</span>
+          {caseStudy.duration && (
+            <>
+              <span className="meta-divider">&bull;</span>
+              <span className="meta-item">{caseStudy.duration}</span>
+            </>
+          )}
         </motion.div>
-        <motion.div className="info-card" variants={cardVariants}>
-          <span className="info-label">Company</span>
-          <span className="info-value">{caseStudy.company}</span>
+
+        {/* Info Cards — staggered reveal */}
+        <motion.div
+          className="case-study-info"
+          initial="hidden"
+          whileInView="visible"
+          viewport={viewport}
+          variants={{
+            hidden: {},
+            visible: { transition: { staggerChildren: 0.15, delayChildren: 0.1 } }
+          }}
+        >
+          <motion.div className="info-card" variants={cardVariants}>
+            <span className="info-label">Role</span>
+            <span className="info-value">{caseStudy.role}</span>
+          </motion.div>
+          <motion.div className="info-card" variants={cardVariants}>
+            <span className="info-label">Company</span>
+            <span className="info-value">{caseStudy.company}</span>
+          </motion.div>
         </motion.div>
-      </motion.div>
 
       {/* Overview */}
       <AnimatedSection number={sectionNum()} title="Overview" viewport={viewport}>
@@ -205,24 +315,28 @@ export default function CaseStudy({ caseStudy, planetColor = '#a855f7', scrollCo
 
       {/* Process Phases — each phase gets its own section */}
       {caseStudy.process && caseStudy.process.map((phase, index) => (
-        <AnimatedSection
+        <div
           key={phase.title || index}
-          number={sectionNum()}
-          title={phase.title}
-          viewport={viewport}
+          ref={(el) => (phaseRefs.current[index] = el)}
         >
-          <motion.p className="section-text" variants={contentVariants}>
-            {phase.description}
-          </motion.p>
-          {phase.image && (
-            <motion.div
-              className="process-image"
-              variants={galleryItemVariants}
-            >
-              <img src={phase.image} alt={phase.title} />
-            </motion.div>
-          )}
-        </AnimatedSection>
+          <AnimatedSection
+            number={sectionNum()}
+            title={phase.title}
+            viewport={viewport}
+          >
+            <motion.p className="section-text" variants={contentVariants}>
+              {phase.description}
+            </motion.p>
+            {phase.image && (
+              <motion.div
+                className="process-image"
+                variants={galleryItemVariants}
+              >
+                <img src={phase.image} alt={phase.title} />
+              </motion.div>
+            )}
+          </AnimatedSection>
+        </div>
       ))}
 
       {/* Images Gallery — staggered scale-in */}
@@ -354,6 +468,7 @@ export default function CaseStudy({ caseStudy, planetColor = '#a855f7', scrollCo
           </div>
         </motion.section>
       )}
+      </div>
     </div>
   );
 }

@@ -1,0 +1,190 @@
+.journey-map {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem;
+  background: transparent;
+  overflow: visible;
+  background: rgba(var(--planet-color-rgb, 168, 85, 247), 0.05);
+  border: 1px solid rgba(var(--planet-color-rgb, 168, 85, 247), 0.2);
+  border-radius: 12px;
+}
+
+.journey-label {
+  font-family: 'Orbitron', monospace;
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 0.75rem;
+  white-space: nowrap;
+}
+
+.journey-track {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  gap: 8px;
+  flex: 1;
+  overflow: visible;
+}
+
+/* Animated beam that travels between waypoints */
+.journey-beam {
+  position: absolute;
+  left: calc(50% - 2px); /* Center the 4px wide beam */
+  width: 4px;
+  height: 24px;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    #00d4ff 30%,
+    #00d4ff 70%,
+    transparent 100%
+  );
+  border-radius: 2px;
+  box-shadow:
+    0 0 10px #00d4ff,
+    0 0 20px #00d4ff,
+    0 0 30px rgba(0, 212, 255, 0.5);
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* Individual waypoint - now a button */
+.journey-waypoint {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+  padding: 0.6rem 0.5rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  overflow: visible;
+  width: 100%;
+}
+
+.journey-waypoint:hover {
+  transition: .3s ease-in-out;
+}
+
+.journey-waypoint:hover .waypoint-dot {
+  transform: scale(1.15);
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.4);
+}
+
+.journey-waypoint:focus {
+  outline: none;
+}
+
+.journey-waypoint:focus-visible .waypoint-dot {
+  box-shadow: 0 0 0 2px rgba(0, 212, 255, 0.5);
+}
+
+.waypoint-marker {
+  position: relative;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+}
+
+.waypoint-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  transition: all 0.3s ease;
+}
+
+/* Past waypoints */
+.journey-waypoint.past .waypoint-dot {
+  background: var(--planet-color, #a855f7);
+  border-color: var(--planet-color, #a855f7);
+  box-shadow: 0 0 8px var(--planet-color, #a855f7);
+}
+
+/* Active waypoint */
+.journey-waypoint.active .waypoint-dot {
+  width: 10px;
+  height: 10px;
+  background: #00d4ff;
+  border-color: #00d4ff;
+  box-shadow: 0 0 12px #00d4ff;
+}
+
+/* Pulsing ring for active waypoint - CSS animation for stability */
+.waypoint-pulse {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1px solid #00d4ff;
+  pointer-events: none;
+  animation: pulse-ring 2s ease-out infinite;
+}
+
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.5);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1.8);
+    opacity: 0;
+  }
+}
+
+/* Burst effect when beam arrives */
+.waypoint-burst {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(0, 212, 255, 0.6) 0%,
+    rgba(0, 212, 255, 0.3) 40%,
+    transparent 70%
+  );
+  pointer-events: none;
+}
+
+.waypoint-label {
+  margin-top: 0.75rem;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.25px;
+  color: rgba(255, 255, 255, 0.7);
+  text-align: center;
+  text-transform: uppercase;
+  transition: color 0.3s ease;
+  line-height: 1.2;
+}
+
+.journey-waypoint.past .waypoint-label {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.journey-waypoint.active .waypoint-label {
+  color: #00d4ff;
+}
+
+.journey-waypoint:hover .waypoint-label {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* Responsive - hide on smaller screens */
+@media (max-width: 1024px) {
+  .journey-map {
+    display: none;
+  }
+}
