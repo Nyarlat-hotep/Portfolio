@@ -19,9 +19,17 @@ const webGLSupported = isWebGLSupported();
 // Check touch once on module load for UI hints
 const isTouch = isTouchDevice();
 
-// Intro animation duration
-const INTRO_DURATION = 2.5;
+// Intro animation duration (5 seconds for smooth zoom)
+const INTRO_DURATION = 5;
 const WELCOME_DISPLAY_DURATION = 5000;
+
+// Component that signals when scene is ready (placed inside Suspense)
+function SceneReadySignal({ onReady }) {
+  useEffect(() => {
+    onReady?.();
+  }, [onReady]);
+  return null;
+}
 
 // Fallback UI for browsers without WebGL
 function WebGLFallback() {
@@ -73,10 +81,22 @@ export default function Galaxy({ onPlanetClick, activePlanetId }) {
   const [vignetteIntensity, setVignetteIntensity] = useState(0);
 
   // Intro animation state
-  const [isIntroActive, setIsIntroActive] = useState(true);
+  const [sceneReady, setSceneReady] = useState(false);
+  const [isIntroActive, setIsIntroActive] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
   const welcomeTimeoutRef = useRef(null);
   const controlsRef = useRef(null);
+
+  // Start intro only after scene is ready
+  useEffect(() => {
+    if (sceneReady && !isIntroActive) {
+      // Small delay to ensure everything is rendered
+      const timer = setTimeout(() => {
+        setIsIntroActive(true);
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [sceneReady, isIntroActive]);
 
   // Memoized hover handler - same for all planets
   const handleHover = useCallback((name, screenPosition) => {
@@ -232,6 +252,8 @@ export default function Galaxy({ onPlanetClick, activePlanetId }) {
               isActive={activePlanetId === planet.id}
             />
           ))}
+          {/* Signal when planets are loaded */}
+          <SceneReadySignal onReady={() => setSceneReady(true)} />
         </Suspense>
       </Canvas>
 
@@ -269,9 +291,11 @@ export default function Galaxy({ onPlanetClick, activePlanetId }) {
             }}
             style={{
               position: 'absolute',
-              bottom: '15%',
-              left: '50%',
-              transform: 'translateX(-50%)',
+              bottom: '8%',
+              left: 0,
+              right: 0,
+              display: 'flex',
+              justifyContent: 'center',
               pointerEvents: 'none',
               zIndex: 15
             }}
@@ -285,7 +309,7 @@ export default function Galaxy({ onPlanetClick, activePlanetId }) {
                 letterSpacing: '3px',
                 textTransform: 'uppercase',
                 textShadow: '0 0 20px rgba(0, 212, 255, 0.5), 0 0 40px rgba(168, 85, 247, 0.3)',
-                whiteSpace: 'nowrap'
+                textAlign: 'center'
               }}
             >
               Welcome traveller.
