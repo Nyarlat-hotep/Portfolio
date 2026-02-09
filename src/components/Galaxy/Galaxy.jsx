@@ -341,9 +341,9 @@ export default function Galaxy({ onPlanetClick, activePlanetId }) {
         )}
       </AnimatePresence>
 
-      {/* Planet name label - futuristic HUD style */}
+      {/* Planet name label - futuristic HUD style (hide for Home planet) */}
       <AnimatePresence>
-        {hoveredPlanet && hoveredPlanetPosition && (
+        {hoveredPlanet && hoveredPlanet !== 'Home' && hoveredPlanetPosition && (
           <motion.div
             key={hoveredPlanet}
             initial={{ opacity: 0 }}
