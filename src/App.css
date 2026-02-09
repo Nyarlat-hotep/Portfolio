@@ -25,18 +25,4 @@
   html, body {
     overscroll-behavior: none;
   }
-
-  /* Prevent text selection on UI elements */
-  .App {
-    -webkit-user-select: none;
-    user-select: none;
-    -webkit-touch-callout: none;
-  }
-
-  /* Allow text selection in content areas */
-  .overlay-content,
-  .void-content {
-    -webkit-user-select: text;
-    user-select: text;
-  }
 }
