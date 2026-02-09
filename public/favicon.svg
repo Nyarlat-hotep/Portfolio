@@ -14,10 +14,19 @@
       <stop offset="70%" stop-color="#050510"/>
       <stop offset="100%" stop-color="#0a0e27"/>
     </radialGradient>
+    <!-- Orange ring gradient for home planet accent -->
+    <linearGradient id="orangeRing" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ff6b00"/>
+      <stop offset="50%" stop-color="#ff8c00"/>
+      <stop offset="100%" stop-color="#ffaa00"/>
+    </linearGradient>
   </defs>
 
   <!-- Outer glow ring -->
   <circle cx="16" cy="16" r="16" fill="url(#voidGlow)"/>
+
+  <!-- Orange accent ring -->
+  <circle cx="16" cy="16" r="14.5" fill="none" stroke="url(#orangeRing)" stroke-width="1.5" opacity="0.85"/>
 
   <!-- Dark void center -->
   <circle cx="16" cy="16" r="12" fill="url(#voidCore)"/>
