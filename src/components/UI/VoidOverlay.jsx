@@ -12,9 +12,9 @@ function GlitchText({ children, intensity = 0.3 }) {
     if (typeof children !== 'string') return;
 
     const interval = setInterval(() => {
-      if (Math.random() > 0.7) {
+      if (Math.random() > 0.3) {
         const chars = children.split('');
-        const numGlitches = Math.floor(Math.random() * 3 * intensity) + 1;
+        const numGlitches = Math.floor(Math.random() * 4 * intensity) + 1;
 
         for (let i = 0; i < numGlitches; i++) {
           const idx = Math.floor(Math.random() * chars.length);
@@ -24,9 +24,9 @@ function GlitchText({ children, intensity = 0.3 }) {
         setText(chars.join(''));
 
         // Reset after brief moment
-        setTimeout(() => setText(children), 50 + Math.random() * 100);
+        setTimeout(() => setText(children), 80 + Math.random() * 120);
       }
-    }, 2000 + Math.random() * 3000);
+    }, 800 + Math.random() * 1200);
 
     return () => clearInterval(interval);
   }, [children, intensity]);
@@ -201,7 +201,7 @@ export default function VoidOverlay({ isOpen, onClose, children, title }) {
                 onHoverStart={() => setIsEyeOpen(false)}
                 onHoverEnd={() => setIsEyeOpen(true)}
               >
-                {isEyeOpen ? <Eye size={28} /> : <EyeOff size={28} />}
+                {isEyeOpen ? <Eye size={24} /> : <EyeOff size={24} />}
               </motion.button>
             </motion.div>
 
