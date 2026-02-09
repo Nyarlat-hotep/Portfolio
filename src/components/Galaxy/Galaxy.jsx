@@ -481,7 +481,9 @@ export default function Galaxy({ onPlanetClick, activePlanetId }) {
           fontFamily: 'monospace',
           textAlign: 'right',
           pointerEvents: 'none',
-          paddingBottom: 'env(safe-area-inset-bottom, 0px)'
+          paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+          opacity: sceneReady ? 1 : 0,
+          transition: 'opacity 0.5s ease-in'
         }}
       >
         {isTouch ? (
@@ -507,7 +509,12 @@ export default function Galaxy({ onPlanetClick, activePlanetId }) {
       </div>
 
       {/* Bottom Navigation */}
-      <BottomNav activePlanetId={activePlanetId} onNavigate={onPlanetClick} />
+      <div style={{
+        opacity: sceneReady ? 1 : 0,
+        transition: 'opacity 0.5s ease-in'
+      }}>
+        <BottomNav activePlanetId={activePlanetId} onNavigate={onPlanetClick} />
+      </div>
     </div>
   );
 }
