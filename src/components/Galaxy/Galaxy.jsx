@@ -202,7 +202,13 @@ export default function Galaxy({ onPlanetClick, activePlanetId }) {
   }, [currentPlanetIndex, onPlanetClick]);
 
   return (
-    <div style={{ width: '100vw', height: '100vh', background: '#0a0e27' }}>
+    <div style={{
+      width: '100vw',
+      height: '100vh',
+      background: '#0a0e27',
+      opacity: sceneReady ? 1 : 0,
+      transition: 'opacity 0.5s ease-in'
+    }}>
       <Canvas
         dpr={[1, 2]}
         performance={{ min: 0.5 }}
