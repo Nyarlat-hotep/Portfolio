@@ -84,7 +84,7 @@ export default function Experiments({ planetColor = '#6b2fa0', scrollContainerRe
           </CorruptedText>
         </p>
         <div className="void-warning">
-          <Eye size={14} />
+          <Eye size={16} />
           <span>OBSERVATION MAY ALTER RESULTS</span>
         </div>
       </motion.div>
