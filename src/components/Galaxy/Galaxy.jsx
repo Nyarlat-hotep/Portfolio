@@ -300,11 +300,11 @@ export default function Galaxy({ onPlanetClick, activePlanetId }) {
         }}
       />
 
-      {/* Welcome text - appears after intro zoom */}
+      {/* Welcome text - appears after intro zoom (top on mobile, bottom on desktop) */}
       <AnimatePresence>
         {showWelcome && (
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: isTouch ? -30 : 30 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
             transition={{
@@ -314,7 +314,7 @@ export default function Galaxy({ onPlanetClick, activePlanetId }) {
             }}
             style={{
               position: 'absolute',
-              bottom: '8%',
+              ...(isTouch ? { top: '15%' } : { bottom: '8%' }),
               left: 0,
               right: 0,
               display: 'flex',
