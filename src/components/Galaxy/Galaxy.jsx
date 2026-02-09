@@ -314,7 +314,7 @@ export default function Galaxy({ onPlanetClick, activePlanetId }) {
             }}
             style={{
               position: 'absolute',
-              ...(isTouch ? { top: '15%' } : { bottom: '8%' }),
+              ...(isTouch ? { top: '8%' } : { bottom: '5%' }),
               left: 0,
               right: 0,
               display: 'flex',
