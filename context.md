@@ -367,6 +367,14 @@ Each case study should include:
 - **Product Designer:** [Your Name] - Vision, design decisions, content
 - **Developer:** Claude (AI Assistant) - Implementation, technical decisions, coding
 
+## AI Assistant Guidelines
+
+When handling requests, follow this decision framework:
+
+1. **High probability of solving the request** → Go ahead and implement the solution directly
+2. **Moderate probability of solving the request** → Always ask clarifying questions first to improve the probability of success
+3. **Low probability of solving the request** → Do not attempt those things; discuss alternatives or limitations instead
+
 ---
 
 **Note:** This document is a living file that should be updated as the project evolves. Any major decisions, architecture changes, or new features should be documented here for future reference.

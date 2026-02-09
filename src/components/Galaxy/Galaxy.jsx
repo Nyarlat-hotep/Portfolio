@@ -328,6 +328,7 @@ export default function Galaxy({ onPlanetClick, activePlanetId }) {
                 color: 'rgba(255, 255, 255, 0.85)',
                 fontSize: '1.25rem',
                 fontWeight: 300,
+                opacity: 0.75,
                 fontFamily: 'monospace',
                 letterSpacing: '3px',
                 textTransform: 'uppercase',
@@ -335,7 +336,7 @@ export default function Galaxy({ onPlanetClick, activePlanetId }) {
                 textAlign: 'center'
               }}
             >
-              Welcome traveller.
+              Welcome traveller
             </div>
           </motion.div>
         )}
