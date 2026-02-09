@@ -141,6 +141,9 @@ export default function Galaxy({ onPlanetClick, activePlanetId }) {
   const cancelIntro = useCallback(() => {
     // Only act if intro hasn't fully completed
     if (!introCompletedRef.current) {
+      // Mark as completed immediately to prevent restart
+      introCompletedRef.current = true;
+
       // Stop the camera animation
       setIsIntroActive(false);
 
@@ -149,7 +152,6 @@ export default function Galaxy({ onPlanetClick, activePlanetId }) {
         setShowWelcome(true);
         welcomeTimeoutRef.current = setTimeout(() => {
           setShowWelcome(false);
-          introCompletedRef.current = true;
         }, WELCOME_DISPLAY_DURATION);
       }
       // If welcome is already showing, let it continue naturally
