@@ -1,6 +1,7 @@
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
 import { useState, useEffect, Suspense, useMemo, useCallback, useRef } from 'react';
+import * as THREE from 'three';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, ArrowRight, Move, ZoomIn } from 'lucide-react';
 import Planet from './Planet';
@@ -136,17 +137,24 @@ export default function Galaxy({ onPlanetClick, activePlanetId }) {
     }, WELCOME_DISPLAY_DURATION);
   }, []);
 
-  // Cancel intro on user interaction
+  // Cancel intro zoom on user interaction (but still show welcome)
   const cancelIntro = useCallback(() => {
-    if (isIntroActive || !introCompletedRef.current) {
+    // Only act if intro hasn't fully completed
+    if (!introCompletedRef.current) {
+      // Stop the camera animation
       setIsIntroActive(false);
-      setShowWelcome(false);
-      introCompletedRef.current = true;
-      if (welcomeTimeoutRef.current) {
-        clearTimeout(welcomeTimeoutRef.current);
+
+      // If welcome isn't showing yet, show it now and set the fade timeout
+      if (!showWelcome) {
+        setShowWelcome(true);
+        welcomeTimeoutRef.current = setTimeout(() => {
+          setShowWelcome(false);
+          introCompletedRef.current = true;
+        }, WELCOME_DISPLAY_DURATION);
       }
+      // If welcome is already showing, let it continue naturally
     }
-  }, [isIntroActive]);
+  }, [showWelcome]);
 
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -219,6 +227,11 @@ export default function Galaxy({ onPlanetClick, activePlanetId }) {
           maxPolarAngle={Math.PI / 1.5}
           minPolarAngle={Math.PI / 3}
           onStart={cancelIntro}
+          mouseButtons={{
+            LEFT: THREE.MOUSE.ROTATE,
+            MIDDLE: THREE.MOUSE.DOLLY,
+            RIGHT: null // Allow right-click context menu
+          }}
         />
 
         {/* Lighting */}
