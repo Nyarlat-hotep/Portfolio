@@ -1,12 +1,13 @@
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
-import { useState, useEffect, Suspense, useMemo, useCallback } from 'react';
+import { useState, useEffect, Suspense, useMemo, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, ArrowRight, Move, ZoomIn } from 'lucide-react';
 import Planet from './Planet';
 import Starfield from './Starfield';
 import CosmicVoid from './CosmicVoid';
 import VoidVignette from './VoidVignette';
+import CameraController from './CameraController';
 import BottomNav from '../Navigation/BottomNav';
 import { planetsData, getAdjacentPlanet } from '../../data/planets';
 import { isWebGLSupported } from '../../utils/webglDetect';
@@ -17,6 +18,10 @@ const webGLSupported = isWebGLSupported();
 
 // Check touch once on module load for UI hints
 const isTouch = isTouchDevice();
+
+// Intro animation duration
+const INTRO_DURATION = 2.5;
+const WELCOME_DISPLAY_DURATION = 5000;
 
 // Fallback UI for browsers without WebGL
 function WebGLFallback() {
@@ -67,6 +72,12 @@ export default function Galaxy({ onPlanetClick, activePlanetId }) {
   const [currentPlanetIndex, setCurrentPlanetIndex] = useState(0);
   const [vignetteIntensity, setVignetteIntensity] = useState(0);
 
+  // Intro animation state
+  const [isIntroActive, setIsIntroActive] = useState(true);
+  const [showWelcome, setShowWelcome] = useState(false);
+  const welcomeTimeoutRef = useRef(null);
+  const controlsRef = useRef(null);
+
   // Memoized hover handler - same for all planets
   const handleHover = useCallback((name, screenPosition) => {
     setHoveredPlanet(name);
@@ -93,6 +104,36 @@ export default function Galaxy({ onPlanetClick, activePlanetId }) {
   const handleVoidClick = useCallback(() => {
     onPlanetClick?.({ id: 'experiments', name: 'Experiments', color: '#6b2fa0' });
   }, [onPlanetClick]);
+
+  // Handle intro zoom complete - show welcome text
+  const handleIntroComplete = useCallback(() => {
+    setShowWelcome(true);
+    // Hide welcome after duration
+    welcomeTimeoutRef.current = setTimeout(() => {
+      setShowWelcome(false);
+      setIsIntroActive(false);
+    }, WELCOME_DISPLAY_DURATION);
+  }, []);
+
+  // Cancel intro on user interaction
+  const cancelIntro = useCallback(() => {
+    if (isIntroActive) {
+      setIsIntroActive(false);
+      setShowWelcome(false);
+      if (welcomeTimeoutRef.current) {
+        clearTimeout(welcomeTimeoutRef.current);
+      }
+    }
+  }, [isIntroActive]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (welcomeTimeoutRef.current) {
+        clearTimeout(welcomeTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Return fallback UI if WebGL is not supported
   if (!webGLSupported) {
@@ -135,11 +176,19 @@ export default function Galaxy({ onPlanetClick, activePlanetId }) {
         performance={{ min: 0.5 }}
         gl={{ antialias: true, powerPreference: 'high-performance' }}
       >
-        {/* Camera setup */}
-        <PerspectiveCamera makeDefault position={[0, 5, 20]} fov={60} />
+        {/* Camera setup - starts zoomed out for intro */}
+        <PerspectiveCamera makeDefault position={[0, 8, 55]} fov={60} />
 
-        {/* Controls */}
+        {/* Intro camera animation */}
+        <CameraController
+          isIntroActive={isIntroActive}
+          onIntroComplete={handleIntroComplete}
+          introDuration={INTRO_DURATION}
+        />
+
+        {/* Controls - cancel intro on any interaction */}
         <OrbitControls
+          ref={controlsRef}
           enablePan={true}
           enableZoom={true}
           enableRotate={true}
@@ -147,6 +196,7 @@ export default function Galaxy({ onPlanetClick, activePlanetId }) {
           maxDistance={120}
           maxPolarAngle={Math.PI / 1.5}
           minPolarAngle={Math.PI / 3}
+          onStart={cancelIntro}
         />
 
         {/* Lighting */}
@@ -204,6 +254,45 @@ export default function Galaxy({ onPlanetClick, activePlanetId }) {
           zIndex: 10
         }}
       />
+
+      {/* Welcome text - appears after intro zoom */}
+      <AnimatePresence>
+        {showWelcome && (
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{
+              duration: 0.8,
+              ease: [0.4, 0, 0.2, 1],
+              exit: { duration: 0.5 }
+            }}
+            style={{
+              position: 'absolute',
+              bottom: '15%',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              pointerEvents: 'none',
+              zIndex: 15
+            }}
+          >
+            <div
+              style={{
+                color: 'rgba(255, 255, 255, 0.85)',
+                fontSize: '1.25rem',
+                fontWeight: 300,
+                fontFamily: 'monospace',
+                letterSpacing: '3px',
+                textTransform: 'uppercase',
+                textShadow: '0 0 20px rgba(0, 212, 255, 0.5), 0 0 40px rgba(168, 85, 247, 0.3)',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              Welcome traveller.
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Planet name label - futuristic HUD style */}
       <AnimatePresence>
