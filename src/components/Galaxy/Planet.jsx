@@ -242,12 +242,13 @@ function Planet({
             </bufferGeometry>
             <pointsMaterial
               map={particleTexture}
-              size={0.05}
+              size={0.1}
               color={color}
               transparent
-              opacity={0.6}
+              opacity={0.9}
               sizeAttenuation
               depthWrite={false}
+              blending={THREE.AdditiveBlending}
             />
           </points>
         )}
