@@ -20,7 +20,7 @@ class ErrorBoundary extends Component {
         <div style={{
           width: '100vw',
           height: '100vh',
-          background: '#0a0e27',
+          background: 'var(--space-dark)',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',

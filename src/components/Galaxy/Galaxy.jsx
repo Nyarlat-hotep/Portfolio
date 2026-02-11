@@ -38,7 +38,7 @@ function WebGLFallback() {
     <div style={{
       width: '100vw',
       height: '100vh',
-      background: '#0a0e27',
+      // background: '#0a0e27',
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
@@ -205,7 +205,7 @@ export default function Galaxy({ onPlanetClick, activePlanetId }) {
     <div style={{
       width: '100vw',
       height: '100vh',
-      background: '#0a0e27',
+      background: 'var(--space-dark)',
       opacity: sceneReady ? 1 : 0,
       transition: 'opacity 0.5s ease-in'
     }}>
