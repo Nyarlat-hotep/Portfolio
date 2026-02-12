@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, ArrowRight, Move, ZoomIn } from 'lucide-react';
 import Planet from './Planet';
+import CustomPlanet from './CustomPlanet';
 import Starfield from './Starfield';
 import CosmicVoid from './CosmicVoid';
 import VoidVignette from './VoidVignette';
@@ -75,7 +76,7 @@ function WebGLFallback() {
   );
 }
 
-export default function Galaxy({ onPlanetClick, activePlanetId }) {
+export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, onCreatePlanet }) {
   const [hoveredPlanet, setHoveredPlanet] = useState(null);
   const [hoveredPlanetPosition, setHoveredPlanetPosition] = useState(null);
   const [currentPlanetIndex, setCurrentPlanetIndex] = useState(0);
@@ -275,6 +276,13 @@ export default function Galaxy({ onPlanetClick, activePlanetId }) {
               isActive={activePlanetId === planet.id}
             />
           ))}
+          {/* Custom user-created planet */}
+          {customPlanet && (
+            <CustomPlanet
+              {...customPlanet}
+              onHover={handleHover}
+            />
+          )}
           {/* Signal when planets are loaded */}
           <SceneReadySignal onReady={() => setSceneReady(true)} />
         </Suspense>
@@ -511,7 +519,12 @@ export default function Galaxy({ onPlanetClick, activePlanetId }) {
 
       {/* Bottom Navigation */}
       {sceneReady && (
-        <BottomNav activePlanetId={activePlanetId} onNavigate={onPlanetClick} />
+        <BottomNav
+          activePlanetId={activePlanetId}
+          onNavigate={onPlanetClick}
+          onCreatePlanet={onCreatePlanet}
+          hasCustomPlanet={!!customPlanet}
+        />
       )}
     </div>
   );

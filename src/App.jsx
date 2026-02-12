@@ -3,6 +3,7 @@ import Galaxy from './components/Galaxy/Galaxy';
 import PageOverlay from './components/UI/PageOverlay';
 import VoidOverlay from './components/UI/VoidOverlay';
 import ErrorBoundary from './components/UI/ErrorBoundary';
+import PlanetCreator from './components/UI/PlanetCreator';
 import CaseStudy from './components/Pages/CaseStudy';
 import About from './components/Pages/About';
 import Experiments from './components/Pages/Experiments';
@@ -12,6 +13,8 @@ import './App.css';
 function App() {
   const [activePlanet, setActivePlanet] = useState(null);
   const [isOverlayOpen, setIsOverlayOpen] = useState(false);
+  const [showPlanetCreator, setShowPlanetCreator] = useState(false);
+  const [customPlanet, setCustomPlanet] = useState(null);
 
   const handlePlanetClick = useCallback((planet) => {
     setActivePlanet(planet);
@@ -27,6 +30,36 @@ function App() {
   const handleCloseOverlay = useCallback(() => {
     setIsOverlayOpen(false);
     setActivePlanet(null);
+  }, []);
+
+  const handleOpenPlanetCreator = useCallback(() => {
+    setShowPlanetCreator(true);
+  }, []);
+
+  const handleClosePlanetCreator = useCallback(() => {
+    setShowPlanetCreator(false);
+  }, []);
+
+  const handleSavePlanet = useCallback((planetData) => {
+    // Generate random position for the custom planet
+    const angle = Math.random() * Math.PI * 2;
+    const distance = 8 + Math.random() * 6; // Between 8 and 14 units from center
+    const position = [
+      Math.cos(angle) * distance,
+      (Math.random() - 0.5) * 4, // Random Y between -2 and 2
+      Math.sin(angle) * distance
+    ];
+
+    setCustomPlanet({
+      id: 'custom-planet',
+      name: planetData.name,
+      position,
+      scale: planetData.scale,
+      textureUrl: planetData.textureUrl,
+      color: planetData.color,
+      rotationSpeed: 0.15,
+    });
+    setShowPlanetCreator(false);
   }, []);
 
   // Determine what content to show in overlay
@@ -56,8 +89,17 @@ function App() {
         <Galaxy
           onPlanetClick={handlePlanetClick}
           activePlanetId={activePlanet?.id}
+          customPlanet={customPlanet}
+          onCreatePlanet={handleOpenPlanetCreator}
         />
       </ErrorBoundary>
+
+      {/* Planet Creator Overlay */}
+      <PlanetCreator
+        isOpen={showPlanetCreator}
+        onClose={handleClosePlanetCreator}
+        onSave={handleSavePlanet}
+      />
 
       {/* Void overlay for experiments */}
       {activePlanet?.id === 'experiments' ? (

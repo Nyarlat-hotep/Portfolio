@@ -246,6 +246,13 @@
   background: rgba(0, 212, 255, 0.2);
 }
 
+/* Bottom Row - Social Links + Create Planet */
+.nav-bottom-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 /* Social Links */
 .nav-social {
   display: flex;
@@ -258,6 +265,13 @@
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
   position: relative;
   width: fit-content;
+}
+
+/* Create Planet Button - disabled state */
+.create-planet-btn.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
 }
 
 .social-link {
