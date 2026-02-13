@@ -9,20 +9,28 @@ export default function CustomPlanet({
   textureUrl,
   color,
   name,
+  tintIntensity = 0.3,
   rotationSpeed = 0.15,
-  onHover
+  onHover,
+  isDeleting = false
 }) {
   const meshRef = useRef();
   const floatingRef = useRef();
   const particlesRef = useRef();
+  const deletionParticlesRef = useRef();
   const [hovered, setHovered] = useState(false);
+  const [deletionProgress, setDeletionProgress] = useState(0);
   const { camera, size } = useThree();
 
   // Load the planet texture
   const planetTexture = useTexture(textureUrl);
 
-  // Parse color for tinting
-  const tintColor = useMemo(() => new THREE.Color(color), [color]);
+  // Parse color for tinting - blend with white based on intensity
+  const tintColor = useMemo(() => {
+    const baseColor = new THREE.Color(color);
+    const white = new THREE.Color('#ffffff');
+    return white.lerp(baseColor, tintIntensity);
+  }, [color, tintIntensity]);
 
   // Circular particle texture
   const particleTexture = useMemo(() => {
@@ -55,8 +63,55 @@ export default function CustomPlanet({
     return positions;
   }, []);
 
+  // Create deletion explosion particles
+  const deletionParticleCount = 80;
+  const deletionParticles = useMemo(() => {
+    const positions = new Float32Array(deletionParticleCount * 3);
+    const velocities = new Float32Array(deletionParticleCount * 3);
+    for (let i = 0; i < deletionParticleCount; i++) {
+      // Start near center
+      positions[i * 3] = (Math.random() - 0.5) * 0.3;
+      positions[i * 3 + 1] = (Math.random() - 0.5) * 0.3;
+      positions[i * 3 + 2] = (Math.random() - 0.5) * 0.3;
+
+      // Random outward velocity
+      const theta = Math.random() * Math.PI * 2;
+      const phi = Math.random() * Math.PI;
+      const speed = 2 + Math.random() * 3;
+      velocities[i * 3] = Math.sin(phi) * Math.cos(theta) * speed;
+      velocities[i * 3 + 1] = Math.sin(phi) * Math.sin(theta) * speed;
+      velocities[i * 3 + 2] = Math.cos(phi) * speed;
+    }
+    return { positions, velocities };
+  }, []);
+
   // Animate the planet
   useFrame((state, delta) => {
+    // Handle deletion animation
+    if (isDeleting) {
+      setDeletionProgress(prev => Math.min(prev + delta * 1.5, 1));
+
+      // Shrink the planet rapidly
+      if (meshRef.current) {
+        const shrinkScale = scale * Math.max(0, 1 - deletionProgress * 1.5);
+        meshRef.current.scale.setScalar(shrinkScale);
+        meshRef.current.rotation.y += delta * (rotationSpeed + deletionProgress * 10);
+      }
+
+      // Animate explosion particles outward
+      if (deletionParticlesRef.current) {
+        const positions = deletionParticlesRef.current.geometry.attributes.position;
+        for (let i = 0; i < deletionParticleCount; i++) {
+          positions.array[i * 3] += deletionParticles.velocities[i * 3] * delta;
+          positions.array[i * 3 + 1] += deletionParticles.velocities[i * 3 + 1] * delta;
+          positions.array[i * 3 + 2] += deletionParticles.velocities[i * 3 + 2] * delta;
+        }
+        positions.needsUpdate = true;
+      }
+
+      return;
+    }
+
     // Gentle floating animation
     if (floatingRef.current) {
       floatingRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * 0.5) * 0.1;
@@ -137,14 +192,14 @@ export default function CustomPlanet({
             map={planetTexture}
             color={tintColor}
             emissive={tintColor}
-            emissiveIntensity={0.2}
+            emissiveIntensity={0.1 * tintIntensity}
             roughness={0.7}
             metalness={0.1}
           />
         </mesh>
 
         {/* Particle system - appear on hover */}
-        {hovered && (
+        {hovered && !isDeleting && (
           <points ref={particlesRef}>
             <bufferGeometry>
               <bufferAttribute
@@ -160,6 +215,30 @@ export default function CustomPlanet({
               color={color}
               transparent
               opacity={0.9}
+              sizeAttenuation
+              depthWrite={false}
+              blending={THREE.AdditiveBlending}
+            />
+          </points>
+        )}
+
+        {/* Deletion explosion particles */}
+        {isDeleting && (
+          <points ref={deletionParticlesRef}>
+            <bufferGeometry>
+              <bufferAttribute
+                attach="attributes-position"
+                count={deletionParticleCount}
+                array={deletionParticles.positions}
+                itemSize={3}
+              />
+            </bufferGeometry>
+            <pointsMaterial
+              map={particleTexture}
+              size={0.15}
+              color={color}
+              transparent
+              opacity={Math.max(0, 1 - deletionProgress)}
               sizeAttenuation
               depthWrite={false}
               blending={THREE.AdditiveBlending}

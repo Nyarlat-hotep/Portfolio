@@ -267,11 +267,18 @@
   width: fit-content;
 }
 
-/* Create Planet Button - disabled state */
-.create-planet-btn.disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-  pointer-events: none;
+/* Create Planet Button - delete mode */
+.create-planet-btn.delete-mode {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.5);
+  color: #ef4444;
+}
+
+.create-planet-btn.delete-mode:hover {
+  background: rgba(239, 68, 68, 0.25);
+  border-color: #ef4444;
+  color: #ef4444;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
 }
 
 .social-link {
@@ -289,6 +296,12 @@
   text-transform: uppercase;
   transition: all 0.3s ease;
   text-decoration: none;
+}
+
+.create-planet-btn {
+  width: auto;
+  height: auto;
+  padding: 0.8rem;
 }
 
 .social-link:hover {

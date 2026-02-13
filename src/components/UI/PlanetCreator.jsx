@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { useTexture } from '@react-three/drei';
 import * as THREE from 'three';
-import { X, Circle } from 'lucide-react';
+import { X } from 'lucide-react';
 import DataStream from './DataStream';
 import './PlanetCreator.css';
 
@@ -26,7 +26,7 @@ const SIZES = [
 ];
 
 // Rotating preview planet
-function PreviewPlanet({ textureUrl, color, scale }) {
+function PreviewPlanet({ textureUrl, color, scale, tintIntensity = 0.3 }) {
   const meshRef = useRef();
   const texture = useTexture(textureUrl);
 
@@ -36,17 +36,22 @@ function PreviewPlanet({ textureUrl, color, scale }) {
     }
   });
 
-  // Parse color for tinting
-  const tintColor = useMemo(() => new THREE.Color(color), [color]);
+  // Parse color for tinting - blend with white based on intensity
+  const tintColor = useMemo(() => {
+    const baseColor = new THREE.Color(color);
+    const white = new THREE.Color('#ffffff');
+    // Lerp from white (no tint) to the color based on intensity
+    return white.lerp(baseColor, tintIntensity);
+  }, [color, tintIntensity]);
 
   return (
-    <mesh ref={meshRef} scale={scale * 1.5}>
+    <mesh ref={meshRef} scale={scale * 1.1}>
       <sphereGeometry args={[1, 64, 64]} />
       <meshStandardMaterial
         map={texture}
         color={tintColor}
         emissive={tintColor}
-        emissiveIntensity={0.15}
+        emissiveIntensity={0.1 * tintIntensity}
         roughness={0.7}
         metalness={0.1}
       />
@@ -104,8 +109,9 @@ function ColorWheel({ value, onChange }) {
     const distance = Math.min(Math.sqrt(dx * dx + dy * dy), centerX);
     const saturation = distance / centerX;
 
-    // Convert to HSL then RGB
-    const hue = ((angle * 180 / Math.PI) + 180) / 360;
+    // Convert angle from [-π, π] to [0, 2π], then to hue [0, 1]
+    const normalizedAngle = angle < 0 ? angle + Math.PI * 2 : angle;
+    const hue = normalizedAngle / (Math.PI * 2);
     const rgb = hslToRgb(hue, saturation, 0.5);
     const hex = rgbToHex(rgb[0], rgb[1], rgb[2]);
 
@@ -177,10 +183,11 @@ function ColorWheel({ value, onChange }) {
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
       />
-      <div
-        className="color-preview"
-        style={{ backgroundColor: value }}
-      >
+      <div className="color-preview-wrapper">
+        <div
+          className="color-preview"
+          style={{ backgroundColor: value }}
+        />
         <span className="color-hex">{value.toUpperCase()}</span>
       </div>
     </div>
@@ -225,6 +232,7 @@ export default function PlanetCreator({ isOpen, onClose, onSave }) {
   const [size, setSize] = useState('small');
   const [texture, setTexture] = useState(TEXTURES[0]);
   const [color, setColor] = useState('#ffffff');
+  const [tintIntensity, setTintIntensity] = useState(0.3);
   const closeButtonRef = useRef(null);
 
   const MAX_NAME_LENGTH = 20;
@@ -236,12 +244,14 @@ export default function PlanetCreator({ isOpen, onClose, onSave }) {
       scale: selectedSize.scale,
       textureUrl: texture.url,
       color: color,
+      tintIntensity: tintIntensity,
     });
     // Reset form
     setName('');
     setSize('small');
     setTexture(TEXTURES[0]);
     setColor('#ffffff');
+    setTintIntensity(0.3);
   };
 
   const handleNameChange = (e) => {
@@ -298,17 +308,17 @@ export default function PlanetCreator({ isOpen, onClose, onSave }) {
             <div className="creator-content">
               {/* Left: 3D Preview */}
               <div className="creator-preview">
-                <div className="preview-label">Preview</div>
                 <div className="preview-canvas">
-                  <Canvas camera={{ position: [0, 0, 4], fov: 50 }}>
-                    <ambientLight intensity={0.4} />
-                    <directionalLight position={[5, 5, 5]} intensity={1} />
-                    <pointLight position={[-5, -5, -5]} intensity={0.5} color="#a855f7" />
+                  <Canvas camera={{ position: [0, 0, 4], fov: 50 }} style={{ width: '100%', height: '100%' }}>
+                    <ambientLight intensity={0.6} />
+                    <directionalLight position={[5, 5, 5]} intensity={1.2} />
+                    <pointLight position={[-5, -5, -5]} intensity={0.6} color="#00d4ff" />
                     <Suspense fallback={null}>
                       <PreviewPlanet
                         textureUrl={texture.url}
                         color={color}
                         scale={SIZES.find(s => s.id === size).scale}
+                        tintIntensity={tintIntensity}
                       />
                     </Suspense>
                   </Canvas>
@@ -345,14 +355,11 @@ export default function PlanetCreator({ isOpen, onClose, onSave }) {
                     {SIZES.map((s) => (
                       <button
                         key={s.id}
-                        className={`size-button ${size === s.id ? 'active' : ''}`}
+                        className={`size-button size-button-${s.id} ${size === s.id ? 'active' : ''}`}
                         onClick={() => setSize(s.id)}
                         aria-label={`Size ${s.label}`}
                       >
-                        <Circle
-                          size={s.id === 'small' ? 14 : s.id === 'medium' ? 20 : 26}
-                          strokeWidth={2}
-                        />
+                        <span className="size-dot" />
                       </button>
                     ))}
                   </div>
@@ -369,7 +376,7 @@ export default function PlanetCreator({ isOpen, onClose, onSave }) {
                         onClick={() => setTexture(t)}
                       >
                         <div className="texture-preview">
-                          <Canvas camera={{ position: [0, 0, 3], fov: 50 }}>
+                          <Canvas camera={{ position: [0, 0, 3], fov: 50 }} style={{ width: '100%', height: '100%' }}>
                             <ambientLight intensity={0.6} />
                             <directionalLight position={[2, 2, 2]} intensity={0.8} />
                             <Suspense fallback={null}>
@@ -391,6 +398,20 @@ export default function PlanetCreator({ isOpen, onClose, onSave }) {
                 <div className="control-group">
                   <label className="control-label">Chromatic Tint</label>
                   <ColorWheel value={color} onChange={setColor} />
+                  <div className="tint-intensity">
+                    <div className="intensity-row">
+                      <input
+                        type="range"
+                        min="0"
+                        max="1"
+                        step="0.05"
+                        value={tintIntensity}
+                        onChange={(e) => setTintIntensity(parseFloat(e.target.value))}
+                        className="intensity-slider"
+                      />
+                      <span className="intensity-value">{Math.round(tintIntensity * 100)}%</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Banana, Briefcase, Rocket, User, FlaskConical, FileText, Menu, X, Linkedin, Dribbble, Orbit } from 'lucide-react';
+import { Banana, Briefcase, Rocket, User, FlaskConical, FileText, Menu, X, Linkedin, Dribbble, Orbit, Trash2 } from 'lucide-react';
 import './BottomNav.css';
 import { planetsData } from '../../data/planets';
 import { aboutContent } from '../../data/caseStudies';
@@ -8,7 +8,7 @@ import { isTouchDevice } from '../../utils/isTouchDevice';
 // Check touch once on module load
 const isTouch = isTouchDevice();
 
-export default function BottomNav({ activePlanetId, onNavigate, onCreatePlanet, hasCustomPlanet = false }) {
+export default function BottomNav({ activePlanetId, onNavigate, onCreatePlanet, onDeletePlanet, hasCustomPlanet = false }) {
   const [isExpanded, setIsExpanded] = useState(false);
 
   // Keyboard shortcut: 'm' to toggle menu
@@ -118,15 +118,14 @@ export default function BottomNav({ activePlanetId, onNavigate, onCreatePlanet, 
           ))}
         </div>
 
-        {/* Create Planet Button */}
+        {/* Create/Delete Planet Button */}
         <button
-          className={`social-link create-planet-btn ${hasCustomPlanet ? 'disabled' : ''}`}
-          onClick={() => !hasCustomPlanet && onCreatePlanet?.()}
-          disabled={hasCustomPlanet}
-          aria-label="Create your own planet"
-          title={hasCustomPlanet ? "Planet already created" : "Create your planet"}
+          className={`social-link create-planet-btn ${hasCustomPlanet ? 'delete-mode' : ''}`}
+          onClick={() => hasCustomPlanet ? onDeletePlanet?.() : onCreatePlanet?.()}
+          aria-label={hasCustomPlanet ? "Delete your planet" : "Create your own planet"}
+          title={hasCustomPlanet ? "Delete planet" : "Create your planet"}
         >
-          <Orbit size={16} />
+          {hasCustomPlanet ? <Trash2 size={16} /> : <Orbit size={16} />}
         </button>
       </div>
     </nav>

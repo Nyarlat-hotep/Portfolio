@@ -76,7 +76,7 @@ function WebGLFallback() {
   );
 }
 
-export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, onCreatePlanet }) {
+export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, onCreatePlanet, onDeletePlanet, isCustomPlanetDeleting }) {
   const [hoveredPlanet, setHoveredPlanet] = useState(null);
   const [hoveredPlanetPosition, setHoveredPlanetPosition] = useState(null);
   const [currentPlanetIndex, setCurrentPlanetIndex] = useState(0);
@@ -281,6 +281,7 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
             <CustomPlanet
               {...customPlanet}
               onHover={handleHover}
+              isDeleting={isCustomPlanetDeleting}
             />
           )}
           {/* Signal when planets are loaded */}
@@ -523,6 +524,7 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
           activePlanetId={activePlanetId}
           onNavigate={onPlanetClick}
           onCreatePlanet={onCreatePlanet}
+          onDeletePlanet={onDeletePlanet}
           hasCustomPlanet={!!customPlanet}
         />
       )}

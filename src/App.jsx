@@ -15,6 +15,7 @@ function App() {
   const [isOverlayOpen, setIsOverlayOpen] = useState(false);
   const [showPlanetCreator, setShowPlanetCreator] = useState(false);
   const [customPlanet, setCustomPlanet] = useState(null);
+  const [isCustomPlanetDeleting, setIsCustomPlanetDeleting] = useState(false);
 
   const handlePlanetClick = useCallback((planet) => {
     setActivePlanet(planet);
@@ -57,9 +58,21 @@ function App() {
       scale: planetData.scale,
       textureUrl: planetData.textureUrl,
       color: planetData.color,
+      tintIntensity: planetData.tintIntensity,
       rotationSpeed: 0.15,
     });
     setShowPlanetCreator(false);
+  }, []);
+
+  const handleDeletePlanet = useCallback(() => {
+    // Start deletion animation
+    setIsCustomPlanetDeleting(true);
+
+    // After animation completes, remove the planet
+    setTimeout(() => {
+      setCustomPlanet(null);
+      setIsCustomPlanetDeleting(false);
+    }, 800);
   }, []);
 
   // Determine what content to show in overlay
@@ -91,6 +104,8 @@ function App() {
           activePlanetId={activePlanet?.id}
           customPlanet={customPlanet}
           onCreatePlanet={handleOpenPlanetCreator}
+          onDeletePlanet={handleDeletePlanet}
+          isCustomPlanetDeleting={isCustomPlanetDeleting}
         />
       </ErrorBoundary>
 
