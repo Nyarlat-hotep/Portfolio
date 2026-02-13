@@ -267,6 +267,21 @@
   width: fit-content;
 }
 
+/* Create Planet Button - orbit spin on hover */
+.create-planet-btn:not(.delete-mode) svg {
+  display: block;
+  transition: none !important;
+}
+
+.create-planet-btn:not(.delete-mode):hover svg {
+  animation: orbit-spin 1s linear infinite !important;
+}
+
+@keyframes orbit-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 /* Create Planet Button - delete mode */
 .create-planet-btn.delete-mode {
   background: rgba(239, 68, 68, 0.15);
