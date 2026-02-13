@@ -5,7 +5,11 @@ import { useTexture } from '@react-three/drei';
 import * as THREE from 'three';
 import { X } from 'lucide-react';
 import DataStream from './DataStream';
+import { isTouchDevice } from '../../utils/isTouchDevice';
 import './PlanetCreator.css';
+
+// Check touch once on module load
+const isTouch = isTouchDevice();
 
 // Available textures
 const TEXTURES = [
@@ -376,17 +380,27 @@ export default function PlanetCreator({ isOpen, onClose, onSave }) {
                         onClick={() => setTexture(t)}
                       >
                         <div className="texture-preview">
-                          <Canvas camera={{ position: [0, 0, 3], fov: 50 }} style={{ width: '100%', height: '100%' }}>
-                            <ambientLight intensity={0.6} />
-                            <directionalLight position={[2, 2, 2]} intensity={0.8} />
-                            <Suspense fallback={null}>
-                              <TextureSphere
-                                textureUrl={t.url}
-                                isSelected={texture.id === t.id}
-                                onClick={() => setTexture(t)}
-                              />
-                            </Suspense>
-                          </Canvas>
+                          {isTouch ? (
+                            // Static image on mobile to avoid WebGL context limits
+                            <img
+                              src={t.url}
+                              alt={t.name}
+                              className="texture-preview-img"
+                            />
+                          ) : (
+                            // 3D rotating sphere on desktop
+                            <Canvas camera={{ position: [0, 0, 3], fov: 50 }} style={{ width: '100%', height: '100%' }}>
+                              <ambientLight intensity={0.6} />
+                              <directionalLight position={[2, 2, 2]} intensity={0.8} />
+                              <Suspense fallback={null}>
+                                <TextureSphere
+                                  textureUrl={t.url}
+                                  isSelected={texture.id === t.id}
+                                  onClick={() => setTexture(t)}
+                                />
+                              </Suspense>
+                            </Canvas>
+                          )}
                         </div>
                         <span className="texture-name">{t.name}</span>
                       </div>

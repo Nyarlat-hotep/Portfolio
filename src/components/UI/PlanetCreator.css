@@ -354,6 +354,14 @@
   height: 100% !important;
 }
 
+/* Static texture image for mobile */
+.texture-preview-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
 .texture-option:hover .texture-preview {
   border-color: rgba(0, 212, 255, 0.5);
   transform: scale(1.05);
