@@ -1,29 +1,29 @@
-import { useRef, useMemo } from 'react';
+import { useRef, useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
+import { createCircularParticleTexture } from '../../utils/threeUtils';
 
 export default function Starfield({ count = 5000 }) {
   const pointsRef = useRef();
   const brightRef = useRef();
   const featureRef = useRef();
 
-  // Create circular star texture (prevents square points)
-  const starTexture = useMemo(() => {
-    const canvas = document.createElement('canvas');
-    canvas.width = 32;
-    canvas.height = 32;
-    const ctx = canvas.getContext('2d');
+  // Use shared circular particle texture (cached globally)
+  const starTexture = useMemo(() => createCircularParticleTexture(), []);
 
-    const gradient = ctx.createRadialGradient(16, 16, 0, 16, 16, 16);
-    gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
-    gradient.addColorStop(0.4, 'rgba(255, 255, 255, 0.8)');
-    gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
-
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, 32, 32);
-
-    const texture = new THREE.CanvasTexture(canvas);
-    return texture;
+  // Cleanup geometry and materials on unmount
+  useEffect(() => {
+    return () => {
+      // Dispose materials from refs
+      [pointsRef, brightRef, featureRef].forEach(ref => {
+        if (ref.current?.material) {
+          ref.current.material.dispose();
+        }
+        if (ref.current?.geometry) {
+          ref.current.geometry.dispose();
+        }
+      });
+    };
   }, []);
 
   // Background stars (majority)

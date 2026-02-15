@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, Children, cloneElement, isValidElement } from 'react';
+import { useEffect, useRef, useState, useMemo, Children, cloneElement, isValidElement } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Eye, EyeOff } from 'lucide-react';
 import './VoidOverlay.css';
@@ -34,16 +34,19 @@ function GlitchText({ children, intensity = 0.3 }) {
   return <span className="glitch-text">{text}</span>;
 }
 
-// Floating void particles
+// Floating void particles - memoized to prevent recreation on every render
 function VoidParticles({ count = 50 }) {
-  const particles = Array.from({ length: count }, (_, i) => ({
-    id: i,
-    x: Math.random() * 100,
-    y: Math.random() * 100,
-    size: Math.random() * 3 + 1,
-    duration: 10 + Math.random() * 20,
-    delay: Math.random() * 10
-  }));
+  const particles = useMemo(() =>
+    Array.from({ length: count }, (_, i) => ({
+      id: i,
+      x: Math.random() * 100,
+      y: Math.random() * 100,
+      size: Math.random() * 3 + 1,
+      duration: 10 + Math.random() * 20,
+      delay: Math.random() * 10
+    })),
+    [count]
+  );
 
   return (
     <div className="void-particles">

@@ -3,24 +3,7 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { useTexture } from '@react-three/drei';
 import * as THREE from 'three';
 import Moon from './Moon';
-
-// Dispose of Three.js objects to prevent VRAM leaks
-function disposeObject(obj) {
-  if (obj.geometry) {
-    obj.geometry.dispose();
-  }
-  if (obj.material) {
-    if (Array.isArray(obj.material)) {
-      obj.material.forEach(mat => {
-        if (mat.map) mat.map.dispose();
-        mat.dispose();
-      });
-    } else {
-      if (obj.material.map) obj.material.map.dispose();
-      obj.material.dispose();
-    }
-  }
-}
+import { disposeObject, createCircularParticleTexture } from '../../utils/threeUtils';
 
 function Planet({
   position,
@@ -76,20 +59,8 @@ function Planet({
   // Load the planet texture
   const planetTexture = useTexture(textureUrl);
 
-  // Circular particle texture (prevents square points)
-  const particleTexture = useMemo(() => {
-    const canvas = document.createElement('canvas');
-    canvas.width = 32;
-    canvas.height = 32;
-    const ctx = canvas.getContext('2d');
-    const gradient = ctx.createRadialGradient(16, 16, 0, 16, 16, 16);
-    gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
-    gradient.addColorStop(0.4, 'rgba(255, 255, 255, 0.8)');
-    gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, 32, 32);
-    return new THREE.CanvasTexture(canvas);
-  }, []);
+  // Use shared circular particle texture (cached globally)
+  const particleTexture = useMemo(() => createCircularParticleTexture(), []);
 
   // Create particle positions around the planet
   const particleCount = 30;

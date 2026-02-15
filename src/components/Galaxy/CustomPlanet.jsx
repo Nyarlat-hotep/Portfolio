@@ -1,7 +1,8 @@
-import { useRef, useState, useMemo } from 'react';
+import { useRef, useState, useMemo, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useTexture } from '@react-three/drei';
 import * as THREE from 'three';
+import { disposeObject, createCircularParticleTexture } from '../../utils/threeUtils';
 
 export default function CustomPlanet({
   position,
@@ -32,19 +33,16 @@ export default function CustomPlanet({
     return white.lerp(baseColor, tintIntensity);
   }, [color, tintIntensity]);
 
-  // Circular particle texture
-  const particleTexture = useMemo(() => {
-    const canvas = document.createElement('canvas');
-    canvas.width = 32;
-    canvas.height = 32;
-    const ctx = canvas.getContext('2d');
-    const gradient = ctx.createRadialGradient(16, 16, 0, 16, 16, 16);
-    gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
-    gradient.addColorStop(0.4, 'rgba(255, 255, 255, 0.8)');
-    gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, 32, 32);
-    return new THREE.CanvasTexture(canvas);
+  // Use shared circular particle texture (cached globally)
+  const particleTexture = useMemo(() => createCircularParticleTexture(), []);
+
+  // Cleanup geometry and materials on unmount to prevent VRAM leaks
+  useEffect(() => {
+    return () => {
+      if (meshRef.current) {
+        disposeObject(meshRef.current);
+      }
+    };
   }, []);
 
   // Create particle positions around the planet

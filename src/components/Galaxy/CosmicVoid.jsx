@@ -449,6 +449,18 @@ function VoidParticles({ count = 150, radius = 25, hovered }) {
   const pointsRef = useRef();
   const hoverRef = useRef(0);
 
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (pointsRef.current?.geometry) {
+        pointsRef.current.geometry.dispose();
+      }
+      if (pointsRef.current?.material) {
+        pointsRef.current.material.dispose();
+      }
+    };
+  }, []);
+
   const { positions, colors } = useMemo(() => {
     const pos = new Float32Array(count * 3);
     const col = new Float32Array(count * 3);
