@@ -181,11 +181,11 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
   useEffect(() => {
     // Only trigger on first nav open, and only once per session
     if (isNavExpanded && !hasShownWelcomeRef.current) {
-      // Nav animation ends at ~2.9s, add 0.3s delay = 3.2s total
+      // Nav animation ends at ~3.25s (with width pre-animation), add 0.3s delay = 3.55s total
       welcomeTimeoutRef.current = setTimeout(() => {
         setShowWelcome(true);
         hasShownWelcomeRef.current = true;
-      }, 3200);
+      }, 3550);
     }
 
     // Cleanup timeout on unmount or if nav closes before timeout fires
