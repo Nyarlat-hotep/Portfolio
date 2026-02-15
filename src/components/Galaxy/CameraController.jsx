@@ -2,9 +2,9 @@ import { useRef, useEffect } from 'react';
 import { useThree, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
-// Easing function for smooth animation
-function easeOutCubic(t) {
-  return 1 - Math.pow(1 - t, 3);
+// Easing function - mild ease-out for snappier feel
+function easeOutQuad(t) {
+  return 1 - Math.pow(1 - t, 2);
 }
 
 export default function CameraController({
@@ -37,7 +37,7 @@ export default function CameraController({
 
     const elapsed = state.clock.elapsedTime - startTime.current;
     const progress = Math.min(elapsed / introDuration, 1);
-    const easedProgress = easeOutCubic(progress);
+    const easedProgress = easeOutQuad(progress);
 
     // Lerp camera position
     camera.position.lerpVectors(

@@ -8,8 +8,14 @@ import { isTouchDevice } from '../../utils/isTouchDevice';
 // Check touch once on module load
 const isTouch = isTouchDevice();
 
-export default function BottomNav({ activePlanetId, onNavigate, onCreatePlanet, onDeletePlanet, hasCustomPlanet = false }) {
+export default function BottomNav({ activePlanetId, onNavigate, onCreatePlanet, onDeletePlanet, hasCustomPlanet = false, onExpandChange }) {
   const [isExpanded, setIsExpanded] = useState(false);
+
+  // Notify parent when expanded state changes
+  const handleToggle = (expanded) => {
+    setIsExpanded(expanded);
+    onExpandChange?.(expanded);
+  };
 
   // Keyboard shortcut: 'm' to toggle menu
   useEffect(() => {
@@ -17,13 +23,13 @@ export default function BottomNav({ activePlanetId, onNavigate, onCreatePlanet, 
       if (e.key === 'm' || e.key === 'M') {
         // Don't trigger if user is typing in an input
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-        setIsExpanded(prev => !prev);
+        handleToggle(!isExpanded);
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [isExpanded]);
 
   const navItems = [
     { id: 'case-study-1', label: 'Banana Phone', icon: <Banana size={18} /> },
@@ -50,7 +56,7 @@ export default function BottomNav({ activePlanetId, onNavigate, onCreatePlanet, 
         <div className="nav-header">
           <button
             className="nav-toggle"
-            onClick={() => setIsExpanded(!isExpanded)}
+            onClick={() => handleToggle(!isExpanded)}
             aria-label={isExpanded ? "Close navigation menu" : "Open navigation menu"}
             aria-expanded={isExpanded}
             aria-controls="nav-list"

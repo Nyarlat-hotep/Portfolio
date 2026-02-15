@@ -21,9 +21,8 @@ const webGLSupported = isWebGLSupported();
 // Check touch once on module load for UI hints
 const isTouch = isTouchDevice();
 
-// Intro animation duration (8 seconds for cinematic zoom)
-const INTRO_DURATION = 8;
-const WELCOME_DISPLAY_DURATION = 5000;
+// Intro animation duration (4 seconds for snappy zoom)
+const INTRO_DURATION = 4;
 
 // Component that signals when scene is ready (placed inside Suspense)
 function SceneReadySignal({ onReady }) {
@@ -76,6 +75,36 @@ function WebGLFallback() {
   );
 }
 
+// Glitchy text effect - randomly corrupts characters
+function GlitchText({ children, active = true }) {
+  const [text, setText] = useState(children);
+  const glitchChars = '!@#$%^&*_+-=|;:<>?/\\~`01';
+
+  useEffect(() => {
+    if (!active || typeof children !== 'string') return;
+
+    const interval = setInterval(() => {
+      // More frequent glitches (60% chance each interval)
+      if (Math.random() > 0.4) {
+        const chars = children.split('');
+        // Glitch 1-2 characters at a time
+        const numGlitches = Math.random() > 0.5 ? 2 : 1;
+        for (let g = 0; g < numGlitches; g++) {
+          const idx = Math.floor(Math.random() * chars.length);
+          chars[idx] = glitchChars[Math.floor(Math.random() * glitchChars.length)];
+        }
+        setText(chars.join(''));
+        // Restore after brief glitch
+        setTimeout(() => setText(children), 60);
+      }
+    }, 800);
+
+    return () => clearInterval(interval);
+  }, [children, active]);
+
+  return <span>{text}</span>;
+}
+
 export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, onCreatePlanet, onDeletePlanet, isCustomPlanetDeleting }) {
   const [hoveredPlanet, setHoveredPlanet] = useState(null);
   const [hoveredPlanetPosition, setHoveredPlanetPosition] = useState(null);
@@ -85,8 +114,10 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
   // Intro animation state
   const [sceneReady, setSceneReady] = useState(false);
   const [isIntroActive, setIsIntroActive] = useState(false);
+  const [isNavExpanded, setIsNavExpanded] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
   const introCompletedRef = useRef(false);
+  const hasShownWelcomeRef = useRef(false);
   const welcomeTimeoutRef = useRef(null);
   const controlsRef = useRef(null);
 
@@ -127,46 +158,43 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
     onPlanetClick?.({ id: 'experiments', name: 'Experiments', color: '#6b2fa0' });
   }, [onPlanetClick]);
 
-  // Handle intro zoom complete - show welcome text
+  // Handle intro zoom complete
   const handleIntroComplete = useCallback(() => {
-    setShowWelcome(true);
-    // Hide welcome after duration
-    welcomeTimeoutRef.current = setTimeout(() => {
-      setShowWelcome(false);
-      setIsIntroActive(false);
-      introCompletedRef.current = true;
-    }, WELCOME_DISPLAY_DURATION);
+    setIsIntroActive(false);
+    introCompletedRef.current = true;
   }, []);
 
-  // Cancel intro zoom on user interaction (but still show welcome)
+  // Cancel intro zoom on user interaction
   const cancelIntro = useCallback(() => {
-    // Only act if intro hasn't fully completed
     if (!introCompletedRef.current) {
-      // Mark as completed immediately to prevent restart
       introCompletedRef.current = true;
-
-      // Stop the camera animation
       setIsIntroActive(false);
-
-      // If welcome isn't showing yet, show it now and set the fade timeout
-      if (!showWelcome) {
-        setShowWelcome(true);
-        welcomeTimeoutRef.current = setTimeout(() => {
-          setShowWelcome(false);
-        }, WELCOME_DISPLAY_DURATION);
-      }
-      // If welcome is already showing, let it continue naturally
     }
-  }, [showWelcome]);
+  }, []);
 
-  // Cleanup timeout on unmount
+  // Handle nav expansion change from BottomNav
+  const handleNavExpandChange = useCallback((expanded) => {
+    setIsNavExpanded(expanded);
+  }, []);
+
+  // Show welcome text once per session after nav animation completes
   useEffect(() => {
+    // Only trigger on first nav open, and only once per session
+    if (isNavExpanded && !hasShownWelcomeRef.current) {
+      // Nav animation ends at ~2.9s, add 0.3s delay = 3.2s total
+      welcomeTimeoutRef.current = setTimeout(() => {
+        setShowWelcome(true);
+        hasShownWelcomeRef.current = true;
+      }, 3200);
+    }
+
+    // Cleanup timeout on unmount or if nav closes before timeout fires
     return () => {
       if (welcomeTimeoutRef.current) {
         clearTimeout(welcomeTimeoutRef.current);
       }
     };
-  }, []);
+  }, [isNavExpanded]);
 
   // Return fallback UI if WebGL is not supported
   if (!webGLSupported) {
@@ -309,17 +337,17 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
         }}
       />
 
-      {/* Welcome text - appears after intro zoom (top on mobile, bottom on desktop) */}
+      {/* Welcome text - appears once per session after nav animation completes */}
       <AnimatePresence>
-        {showWelcome && (
+        {showWelcome && isNavExpanded && (
           <motion.div
-            initial={{ opacity: 0, y: isTouch ? -30 : 30 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{
-              duration: 0.8,
+              duration: 0.4,
               ease: [0.4, 0, 0.2, 1],
-              exit: { duration: 0.5 }
+              exit: { duration: 0.15 }
             }}
             style={{
               position: 'absolute',
@@ -332,7 +360,14 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
               zIndex: 15
             }}
           >
-            <div
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: 'auto' }}
+              transition={{
+                duration: 0.8,
+                delay: 0.1,
+                ease: 'easeOut'
+              }}
               style={{
                 color: 'rgba(255, 255, 255, 0.85)',
                 fontSize: '1.25rem',
@@ -342,11 +377,13 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
                 letterSpacing: '3px',
                 textTransform: 'uppercase',
                 textShadow: '0 0 20px rgba(0, 212, 255, 0.5), 0 0 40px rgba(168, 85, 247, 0.3)',
-                textAlign: 'center'
+                textAlign: 'center',
+                overflow: 'hidden',
+                whiteSpace: 'nowrap'
               }}
             >
-              Welcome traveller
-            </div>
+              <GlitchText active={showWelcome && isNavExpanded}>Welcome traveller</GlitchText>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -526,6 +563,7 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
           onCreatePlanet={onCreatePlanet}
           onDeletePlanet={onDeletePlanet}
           hasCustomPlanet={!!customPlanet}
+          onExpandChange={handleNavExpandChange}
         />
       )}
     </div>

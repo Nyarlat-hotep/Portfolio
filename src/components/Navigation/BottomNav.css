@@ -138,6 +138,60 @@
 
 .nav-item {
   position: relative;
+  opacity: 0;
+}
+
+/* Staggered terminal-style animation when menu expands */
+.nav-list.expanded .nav-item {
+  animation: itemFadeIn 0.15s ease-out forwards;
+}
+
+/* Slower stagger for dramatic sci-fi effect - 400ms between items */
+.nav-list.expanded .nav-item:nth-child(1) { animation-delay: 0.2s; }
+.nav-list.expanded .nav-item:nth-child(2) { animation-delay: 0.6s; }
+.nav-list.expanded .nav-item:nth-child(3) { animation-delay: 1.0s; }
+.nav-list.expanded .nav-item:nth-child(4) { animation-delay: 1.4s; }
+.nav-list.expanded .nav-item:nth-child(5) { animation-delay: 1.8s; }
+.nav-list.expanded .nav-item:nth-child(6) { animation-delay: 2.2s; }
+
+@keyframes itemFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Typewriter effect for nav labels */
+.nav-label {
+  font-weight: 400;
+  letter-spacing: 0.5px;
+  overflow: hidden;
+  white-space: nowrap;
+  width: 0;
+}
+
+/* Animate the typewriter when item is visible */
+.nav-list.expanded .nav-item .nav-label {
+  animation: typewriter 0.8s steps(12, end) forwards;
+}
+
+/* Stagger typewriter to start after item appears */
+.nav-list.expanded .nav-item:nth-child(1) .nav-label { animation-delay: 0.3s; }
+.nav-list.expanded .nav-item:nth-child(2) .nav-label { animation-delay: 0.7s; }
+.nav-list.expanded .nav-item:nth-child(3) .nav-label { animation-delay: 1.1s; }
+.nav-list.expanded .nav-item:nth-child(4) .nav-label { animation-delay: 1.5s; }
+.nav-list.expanded .nav-item:nth-child(5) .nav-label { animation-delay: 1.9s; }
+.nav-list.expanded .nav-item:nth-child(6) .nav-label { animation-delay: 2.3s; }
+
+@keyframes typewriter {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
 }
 
 /* Navigation Buttons */
@@ -200,10 +254,7 @@
   filter: drop-shadow(0 0 4px currentColor);
 }
 
-.nav-label {
-  font-weight: 400;
-  letter-spacing: 0.5px;
-}
+/* nav-label styles moved to typewriter section above */
 
 .nav-indicator {
   position: absolute;
@@ -229,10 +280,25 @@
   }
 }
 
-/* Resume Button */
+/* Resume Button - Hidden when menu closed */
 .nav-resume {
   margin-top: 0.5rem;
   padding-top: 0.5rem;
+  display: none;
+  opacity: 0;
+}
+
+/* Only show resume when menu is expanded */
+.nav-list.expanded ~ .nav-resume {
+  display: block;
+  animation: itemFadeIn 0.15s ease-out forwards;
+  animation-delay: 2.2s;
+}
+
+/* Typewriter for resume label */
+.nav-list.expanded ~ .nav-resume .nav-label {
+  animation: typewriter 0.6s steps(8, end) forwards;
+  animation-delay: 2.3s;
 }
 
 .resume-button {
