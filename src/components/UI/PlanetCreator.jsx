@@ -16,9 +16,11 @@ const TEXTURES = [
   { id: 'earth', url: '/textures/earth.jpg', name: 'Terra' },
   { id: 'mars', url: '/textures/mars.jpg', name: 'Crimson' },
   { id: 'jupiter', url: '/textures/jupiter.jpg', name: 'Storm' },
+  { id: 'saturn', url: '/textures/saturn.jpg', name: 'Ringed' },
   { id: 'neptune', url: '/textures/neptune.jpg', name: 'Azure' },
   { id: 'venus', url: '/textures/venus.jpg', name: 'Haze' },
   { id: 'uranus', url: '/textures/uranus.jpg', name: 'Frost' },
+  { id: 'mercury', url: '/textures/mercury.jpg', name: 'Cratered' },
   { id: 'sun', url: '/textures/sun.jpg', name: 'Solar' },
 ];
 
@@ -40,24 +42,16 @@ function PreviewPlanet({ textureUrl, color, scale, tintIntensity = 0.3 }) {
     }
   });
 
-  // Parse color for tinting - blend with white based on intensity
-  const tintColor = useMemo(() => {
-    const baseColor = new THREE.Color(color);
-    const white = new THREE.Color('#ffffff');
-    // Lerp from white (no tint) to the color based on intensity
-    return white.lerp(baseColor, tintIntensity);
-  }, [color, tintIntensity]);
-
   return (
     <mesh ref={meshRef} scale={scale * 1.1}>
       <sphereGeometry args={[1, 64, 64]} />
       <meshStandardMaterial
         map={texture}
-        color={tintColor}
-        emissive={tintColor}
-        emissiveIntensity={0.1 * tintIntensity}
+        emissive={color}
+        emissiveIntensity={tintIntensity * 0.6}
         roughness={0.7}
-        metalness={0.1}
+        metalness={0.2}
+        toneMapped={false}
       />
     </mesh>
   );
@@ -85,7 +79,10 @@ function TextureSphere({ textureUrl, isSelected, onClick }) {
       <meshStandardMaterial
         map={texture}
         emissive={isSelected ? '#a855f7' : '#000000'}
-        emissiveIntensity={isSelected ? 0.3 : 0}
+        emissiveIntensity={isSelected ? 0.4 : 0}
+        roughness={0.5}
+        metalness={0.2}
+        toneMapped={false}
       />
     </mesh>
   );
@@ -236,7 +233,7 @@ export default function PlanetCreator({ isOpen, onClose, onSave }) {
   const [size, setSize] = useState('small');
   const [texture, setTexture] = useState(TEXTURES[0]);
   const [color, setColor] = useState('#ffffff');
-  const [tintIntensity, setTintIntensity] = useState(0.3);
+  const [tintIntensity, setTintIntensity] = useState(0);
   const closeButtonRef = useRef(null);
 
   const MAX_NAME_LENGTH = 20;
@@ -314,9 +311,9 @@ export default function PlanetCreator({ isOpen, onClose, onSave }) {
               <div className="creator-preview">
                 <div className="preview-canvas">
                   <Canvas camera={{ position: [0, 0, 4], fov: 50 }} style={{ width: '100%', height: '100%' }}>
-                    <ambientLight intensity={0.6} />
-                    <directionalLight position={[5, 5, 5]} intensity={1.2} />
-                    <pointLight position={[-5, -5, -5]} intensity={0.6} color="#00d4ff" />
+                    <ambientLight intensity={0.35} />
+                    <directionalLight position={[5, 5, 5]} intensity={1.6} />
+                    <pointLight position={[-5, -5, -5]} intensity={0.8} color="#00d4ff" />
                     <Suspense fallback={null}>
                       <PreviewPlanet
                         textureUrl={texture.url}
@@ -390,8 +387,8 @@ export default function PlanetCreator({ isOpen, onClose, onSave }) {
                           ) : (
                             // 3D rotating sphere on desktop
                             <Canvas camera={{ position: [0, 0, 3], fov: 50 }} style={{ width: '100%', height: '100%' }}>
-                              <ambientLight intensity={0.6} />
-                              <directionalLight position={[2, 2, 2]} intensity={0.8} />
+                              <ambientLight intensity={0.3} />
+                              <directionalLight position={[2, 2, 2]} intensity={1.4} />
                               <Suspense fallback={null}>
                                 <TextureSphere
                                   textureUrl={t.url}

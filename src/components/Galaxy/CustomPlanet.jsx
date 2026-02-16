@@ -26,12 +26,6 @@ export default function CustomPlanet({
   // Load the planet texture
   const planetTexture = useTexture(textureUrl);
 
-  // Parse color for tinting - blend with white based on intensity
-  const tintColor = useMemo(() => {
-    const baseColor = new THREE.Color(color);
-    const white = new THREE.Color('#ffffff');
-    return white.lerp(baseColor, tintIntensity);
-  }, [color, tintIntensity]);
 
   // Use shared circular particle texture (cached globally)
   const particleTexture = useMemo(() => createCircularParticleTexture(), []);
@@ -188,9 +182,8 @@ export default function CustomPlanet({
           <sphereGeometry args={[1, 32, 32]} />
           <meshStandardMaterial
             map={planetTexture}
-            color={tintColor}
-            emissive={tintColor}
-            emissiveIntensity={0.1 * tintIntensity}
+            emissive={color}
+            emissiveIntensity={tintIntensity * 0.6}
             roughness={0.7}
             metalness={0.1}
           />

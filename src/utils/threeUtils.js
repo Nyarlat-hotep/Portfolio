@@ -71,12 +71,14 @@ export function createCircularParticleTexture() {
  */
 export const PLANET_TEXTURES = {
   star: '/textures/sun.jpg',
+  mercury: '/textures/mercury.jpg',
   venus: '/textures/venus.jpg',
-  uranus: '/textures/uranus.jpg',
-  mars: '/textures/mars.jpg',
-  neptune: '/textures/neptune.jpg',
-  jupiter: '/textures/jupiter.jpg',
   earth: '/textures/earth.jpg',
+  mars: '/textures/mars.jpg',
+  jupiter: '/textures/jupiter.jpg',
+  saturn: '/textures/saturn.jpg',
+  uranus: '/textures/uranus.jpg',
+  neptune: '/textures/neptune.jpg',
 };
 
 /**

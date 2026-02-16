@@ -117,7 +117,6 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
   const [isNavExpanded, setIsNavExpanded] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
   const introCompletedRef = useRef(false);
-  const hasShownWelcomeRef = useRef(false);
   const welcomeTimeoutRef = useRef(null);
   const controlsRef = useRef(null);
 
@@ -179,12 +178,15 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
 
   // Show welcome text once per session after nav animation completes
   useEffect(() => {
+    // Check sessionStorage for persistence across component remounts
+    const hasShown = sessionStorage.getItem('welcomeShown') === 'true';
+
     // Only trigger on first nav open, and only once per session
-    if (isNavExpanded && !hasShownWelcomeRef.current) {
+    if (isNavExpanded && !hasShown) {
       // Nav animation ends at ~3.25s (with width pre-animation), add 0.3s delay = 3.55s total
       welcomeTimeoutRef.current = setTimeout(() => {
         setShowWelcome(true);
-        hasShownWelcomeRef.current = true;
+        sessionStorage.setItem('welcomeShown', 'true');
       }, 3550);
     }
 
