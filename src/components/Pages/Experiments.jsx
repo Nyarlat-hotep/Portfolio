@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Skull, ExternalLink, Eye } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Skull, ExternalLink, Eye, Image, X } from 'lucide-react';
 import './Experiments.css';
 
 // Card variants for staggered animation
@@ -43,6 +43,34 @@ export default function Experiments({ planetColor = '#6b2fa0', scrollContainerRe
     amount: 0.15
   };
 
+  const [galleryOpen, setGalleryOpen] = useState(false);
+  const touchStartY = useRef(0);
+  const panelRef = useRef(null);
+
+  // Placeholder gallery items (will be replaced with real images)
+  const galleryItems = [
+    { id: 1, aspectRatio: 1.5 },
+    { id: 2, aspectRatio: 0.8 },
+    { id: 3, aspectRatio: 1.2 },
+    { id: 4, aspectRatio: 1.0 },
+    { id: 5, aspectRatio: 0.75 },
+    { id: 6, aspectRatio: 1.3 },
+    { id: 7, aspectRatio: 1.1 },
+    { id: 8, aspectRatio: 0.9 },
+  ];
+
+  // Handle swipe down to close
+  const handleTouchStart = (e) => {
+    touchStartY.current = e.touches[0].clientY;
+  };
+
+  const handleTouchEnd = (e) => {
+    const deltaY = e.changedTouches[0].clientY - touchStartY.current;
+    if (deltaY > 80) {
+      setGalleryOpen(false);
+    }
+  };
+
   // Experiments data - themed for the void
   const experiments = [
     {
@@ -50,21 +78,24 @@ export default function Experiments({ planetColor = '#6b2fa0', scrollContainerRe
       description: 'Transmission intercepted from beyond the threshold. Contents: fragmented. Origin: unknown.',
       tags: ['Three.js', 'WebGL', 'Noise'],
       link: null,
-      status: 'CORRUPTED'
+      status: 'CORRUPTED',
+      action: null
     },
     {
-      title: 'MEMBRANE_BREACH',
-      description: 'Attempting to visualize the boundary between spaces. Results inconclusive. Side effects reported.',
-      tags: ['Shaders', 'GLSL'],
+      title: 'VISUAL_ARCHIVE',
+      description: 'Fragments of creation. Images pulled from the spaces between projects. Handle with care.',
+      tags: ['Gallery', 'Art'],
       link: null,
-      status: 'UNSTABLE'
+      status: 'ACTIVE',
+      action: () => setGalleryOpen(true)
     },
     {
       title: 'ECHO_CHAMBER',
       description: 'Sounds from nowhere. Voices that speak in geometries. Do not listen for too long.',
       tags: ['Web Audio', 'Generative'],
       link: null,
-      status: 'ACTIVE'
+      status: 'UNSTABLE',
+      action: null
     }
   ];
 
@@ -104,12 +135,13 @@ export default function Experiments({ planetColor = '#6b2fa0', scrollContainerRe
           {experiments.map((exp, index) => (
             <motion.div
               key={index}
-              className="experiment-card"
+              className={`experiment-card ${exp.action ? 'clickable' : ''}`}
               variants={cardVariants}
               whileHover={{
                 y: -6,
                 boxShadow: '0 0 30px rgba(0, 255, 106, 0.2), inset 0 0 20px rgba(0, 255, 106, 0.05)'
               }}
+              onClick={exp.action}
             >
               {/* Status indicator */}
               <div className={`card-status status-${exp.status.toLowerCase()}`}>
@@ -163,6 +195,70 @@ export default function Experiments({ planetColor = '#6b2fa0', scrollContainerRe
           [ MORE TRANSMISSIONS INCOMING ]
         </span>
       </motion.div>
+
+      {/* Gallery Panel - slides up from bottom */}
+      <AnimatePresence>
+        {galleryOpen && (
+          <>
+            {/* Click-outside area (top 25%) */}
+            <motion.div
+              className="gallery-backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              onClick={() => setGalleryOpen(false)}
+            />
+
+            {/* Gallery panel */}
+            <motion.div
+              ref={panelRef}
+              className="gallery-panel"
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+              onTouchStart={handleTouchStart}
+              onTouchEnd={handleTouchEnd}
+            >
+              {/* Swipe indicator */}
+              <div className="gallery-swipe-indicator">
+                <div className="swipe-bar" />
+              </div>
+
+              {/* Gallery header */}
+              <div className="gallery-header">
+                <div className="gallery-title-group">
+                  <h2 className="gallery-title">VISUAL_ARCHIVE</h2>
+                </div>
+              </div>
+
+              {/* Masonry grid */}
+              <div className="gallery-grid">
+                {galleryItems.map((item) => (
+                  <motion.div
+                    key={item.id}
+                    className="gallery-item"
+                    style={{ aspectRatio: item.aspectRatio }}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: item.id * 0.05 }}
+                    whileHover={{ scale: 1.02 }}
+                  >
+                    <div className="gallery-placeholder">
+                      <span className="placeholder-id">#{String(item.id).padStart(3, '0')}</span>
+                      <span className="placeholder-text">AWAITING_DATA</span>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+
+              {/* Bottom fade */}
+              <div className="gallery-bottom-fade" />
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
