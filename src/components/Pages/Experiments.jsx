@@ -66,7 +66,8 @@ export default function Experiments({ planetColor = '#6b2fa0', scrollContainerRe
 
   const handleTouchEnd = (e) => {
     const deltaY = e.changedTouches[0].clientY - touchStartY.current;
-    if (deltaY > 80) {
+    // Require a more deliberate swipe (150px) to close
+    if (deltaY > 150) {
       setGalleryOpen(false);
     }
   };
