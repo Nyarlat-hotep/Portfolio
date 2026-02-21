@@ -4,12 +4,14 @@ import { useState, useEffect, Suspense, useMemo, useCallback, useRef } from 'rea
 import * as THREE from 'three';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, ArrowRight, Move, ZoomIn } from 'lucide-react';
+import './Galaxy.css';
 import Planet from './Planet';
 import CustomPlanet from './CustomPlanet';
 import Starfield from './Starfield';
 import CosmicVoid from './CosmicVoid';
 import VoidVignette from './VoidVignette';
 import CameraController from './CameraController';
+import Constellation from './Constellation';
 import BottomNav from '../Navigation/BottomNav';
 import { planetsData, getAdjacentPlanet } from '../../data/planets';
 import { isWebGLSupported } from '../../utils/webglDetect';
@@ -110,6 +112,8 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
   const [hoveredPlanetPosition, setHoveredPlanetPosition] = useState(null);
   const [currentPlanetIndex, setCurrentPlanetIndex] = useState(0);
   const [vignetteIntensity, setVignetteIntensity] = useState(0);
+  const [constellationModal, setConstellationModal] = useState(null); // { name, wikiKey, text, loading }
+  const wikiCacheRef = useRef({});
 
   // Intro animation state
   const [sceneReady, setSceneReady] = useState(false);
@@ -156,6 +160,26 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
   const handleVoidClick = useCallback(() => {
     onPlanetClick?.({ id: 'experiments', name: 'Experiments', color: '#6b2fa0' });
   }, [onPlanetClick]);
+
+  // Constellation select — fetch Wikipedia summary, cache per session
+  const handleConstellationSelect = useCallback(async (constellation) => {
+    setConstellationModal({ name: constellation.name, wikiKey: constellation.wikiKey, text: null, loading: true });
+
+    if (wikiCacheRef.current[constellation.wikiKey]) {
+      setConstellationModal({ name: constellation.name, wikiKey: constellation.wikiKey, text: wikiCacheRef.current[constellation.wikiKey], loading: false });
+      return;
+    }
+
+    try {
+      const res = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${constellation.wikiKey}`);
+      const data = await res.json();
+      const text = data.extract || 'No information available.';
+      wikiCacheRef.current[constellation.wikiKey] = text;
+      setConstellationModal({ name: constellation.name, wikiKey: constellation.wikiKey, text, loading: false });
+    } catch {
+      setConstellationModal({ name: constellation.name, wikiKey: constellation.wikiKey, text: 'Could not retrieve data.', loading: false });
+    }
+  }, []);
 
   // Handle intro zoom complete
   const handleIntroComplete = useCallback(() => {
@@ -281,6 +305,9 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
 
         {/* Starfield background */}
         <Starfield count={1200} />
+
+        {/* Daily constellation — opposite side of planet cluster from Cosmic Void */}
+        <Constellation position={[0, 2, -55]} onSelect={handleConstellationSelect} />
 
         {/* Cosmic horror elements */}
         <CosmicVoid
@@ -556,6 +583,40 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
           )}
         </div>
       )}
+
+      {/* Constellation modal — bottom-right corner */}
+      <AnimatePresence>
+        {constellationModal && (
+          <motion.div
+            className="constellation-modal"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+          >
+            <div className="constellation-modal-header">
+              <div className="constellation-modal-title-group">
+                <span className="constellation-modal-label">CONSTELLATION</span>
+                <h3 className="constellation-modal-name">{constellationModal.name}</h3>
+              </div>
+              <button
+                className="constellation-modal-close"
+                onClick={() => setConstellationModal(null)}
+                aria-label="Close"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="constellation-modal-body">
+              {constellationModal.loading ? (
+                <span className="constellation-modal-loading">RETRIEVING DATA...</span>
+              ) : (
+                <p className="constellation-modal-text">{constellationModal.text}</p>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Bottom Navigation */}
       {sceneReady && (
