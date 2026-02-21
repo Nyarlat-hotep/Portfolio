@@ -1,37 +1,36 @@
 import { useRef, useState, useMemo, useEffect } from 'react';
-import { useFrame } from '@react-three/fiber';
-import { Html } from '@react-three/drei';
+import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { CONSTELLATIONS } from '../../data/constellations';
 
 const SCALE = 1.6;
-const STAR_SIZE = 1.0;
-const HITBOX_RADIUS = 0.9;
+const STAR_SIZE = 3.0;
+const TUBE_RADIUS = 0.018;
+const TOOLTIP_COLOR = '#b8b0d8';
 
-// Creates a circular glow texture for stars — soft purple-white radial gradient
+// Soft lavender-white glow texture for stars
 function createGlowTexture() {
-  const size = 64;
+  const size = 128;
   const canvas = document.createElement('canvas');
   canvas.width = size;
   canvas.height = size;
   const ctx = canvas.getContext('2d');
   const center = size / 2;
 
-  // Outer soft glow
   const glow = ctx.createRadialGradient(center, center, 0, center, center, center);
-  glow.addColorStop(0,    'rgba(220, 200, 255, 1.0)');
-  glow.addColorStop(0.15, 'rgba(200, 170, 255, 0.95)');
-  glow.addColorStop(0.35, 'rgba(160, 120, 220, 0.6)');
-  glow.addColorStop(0.6,  'rgba(107, 47, 160, 0.25)');
-  glow.addColorStop(1.0,  'rgba(80, 20, 120, 0)');
-
+  glow.addColorStop(0,    'rgba(220, 215, 255, 0.9)');
+  glow.addColorStop(0.2,  'rgba(200, 192, 255, 0.7)');
+  glow.addColorStop(0.45, 'rgba(170, 160, 240, 0.35)');
+  glow.addColorStop(0.7,  'rgba(140, 130, 210, 0.12)');
+  glow.addColorStop(1.0,  'rgba(110, 100, 180, 0)');
   ctx.fillStyle = glow;
   ctx.fillRect(0, 0, size, size);
 
-  // Bright white core
-  const core = ctx.createRadialGradient(center, center, 0, center, center, center * 0.18);
-  core.addColorStop(0,   'rgba(255, 255, 255, 1)');
-  core.addColorStop(1,   'rgba(255, 255, 255, 0)');
+  const core = ctx.createRadialGradient(center, center, 0, center, center, center * 0.25);
+  core.addColorStop(0,   'rgba(255, 252, 255, 0.95)');
+  core.addColorStop(0.5, 'rgba(240, 235, 255, 0.5)');
+  core.addColorStop(1,   'rgba(220, 215, 255, 0)');
   ctx.fillStyle = core;
   ctx.fillRect(0, 0, size, size);
 
@@ -47,18 +46,18 @@ function getTodayConstellation() {
   return CONSTELLATIONS[dayOfYear % CONSTELLATIONS.length];
 }
 
-export default function Constellation({ position = [0, 2, -55], onSelect }) {
+export default function Constellation({ position = [0, 2, -55], onSelect, onHover }) {
   const starMatRef = useRef();
   const lineMatRef = useRef();
-  const [isVisible, setIsVisible] = useState(false);
+  const _projVec = useRef(new THREE.Vector3());
   const [hovered, setHovered] = useState(false);
-  const opacityRef = useRef(0);
+  const hoveredRef = useRef(false);
+  const { camera, size } = useThree();
 
   const constellation = useMemo(() => getTodayConstellation(), []);
   const glowTexture = useMemo(() => createGlowTexture(), []);
 
-  // Build Three.js geometry from constellation data
-  const { scaledStars, starGeo, lineGeo, centroid } = useMemo(() => {
+  const { starGeo, mergedLineGeo, bounds } = useMemo(() => {
     const scaledStars = constellation.stars.map(([x, y]) => new THREE.Vector3(x * SCALE, y * SCALE, 0));
 
     // Points geometry
@@ -71,113 +70,106 @@ export default function Constellation({ position = [0, 2, -55], onSelect }) {
     const starGeo = new THREE.BufferGeometry();
     starGeo.setAttribute('position', new THREE.BufferAttribute(posArr, 3));
 
-    // Line geometry
-    const lineArr = [];
+    // Tube + sphere-cap geometry, merged into one mesh
+    const pieces = [];
     constellation.lines.forEach(([a, b]) => {
-      const va = scaledStars[a], vb = scaledStars[b];
-      lineArr.push(va.x, va.y, va.z, vb.x, vb.y, vb.z);
+      const curve = new THREE.LineCurve3(scaledStars[a], scaledStars[b]);
+      pieces.push(new THREE.TubeGeometry(curve, 1, TUBE_RADIUS, 12, false));
     });
-    const lineGeo = new THREE.BufferGeometry();
-    lineGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(lineArr), 3));
+    scaledStars.forEach(v => {
+      const sphere = new THREE.SphereGeometry(TUBE_RADIUS, 12, 12);
+      sphere.translate(v.x, v.y, v.z);
+      pieces.push(sphere);
+    });
+    const mergedLineGeo = mergeGeometries(pieces);
+    pieces.forEach(g => g.dispose());
 
-    // Centroid for tooltip anchor
-    const cx = scaledStars.reduce((s, v) => s + v.x, 0) / scaledStars.length;
-    const maxY = Math.max(...scaledStars.map(v => v.y));
-    const centroid = [cx, maxY + 2.5, 0];
+    // Bounding box for the hover plane
+    const xs = scaledStars.map(v => v.x);
+    const ys = scaledStars.map(v => v.y);
+    const minX = Math.min(...xs), maxX = Math.max(...xs);
+    const minY = Math.min(...ys), maxY = Math.max(...ys);
+    const pad = 1.5;
+    const bounds = {
+      width:  maxX - minX + pad * 2,
+      height: maxY - minY + pad * 2,
+      cx: (minX + maxX) / 2,
+      cy: (minY + maxY) / 2,
+      topY: maxY,
+    };
 
-    return { scaledStars, starGeo, lineGeo, centroid };
+    return { starGeo, mergedLineGeo, bounds };
   }, [constellation]);
 
-  // Cleanup geometry and texture on unmount
   useEffect(() => {
     return () => {
       starGeo.dispose();
-      lineGeo.dispose();
       glowTexture.dispose();
+      mergedLineGeo?.dispose();
     };
-  }, [starGeo, lineGeo, glowTexture]);
+  }, [starGeo, glowTexture, mergedLineGeo]);
 
-  // Fade in as camera orbits to the far side (negative Z)
-  useFrame(({ camera }) => {
-    const newOpacity = THREE.MathUtils.clamp(
-      THREE.MathUtils.mapLinear(camera.position.z, 5, -8, 0, 1),
-      0, 1
+  // Project world-space tooltip anchor to screen every frame while hovered
+  useFrame(() => {
+    if (!hoveredRef.current) return;
+    const [px, py, pz] = position;
+    _projVec.current.set(
+      px + bounds.cx,
+      py + bounds.topY + 2.5,
+      pz
     );
-
-    opacityRef.current = newOpacity;
-
-    if (starMatRef.current) {
-      starMatRef.current.opacity = newOpacity * (hovered ? 1.0 : 0.9);
-    }
-    if (lineMatRef.current) {
-      lineMatRef.current.opacity = newOpacity * (hovered ? 0.8 : 0.5);
-    }
-
-    // Gate React state updates to threshold crossings only
-    const visible = newOpacity > 0.05;
-    if (visible !== isVisible) setIsVisible(visible);
+    _projVec.current.project(camera);
+    const x = (_projVec.current.x *  0.5 + 0.5) * size.width;
+    const y = (_projVec.current.y * -0.5 + 0.5) * size.height;
+    onHover?.(constellation.name, { x, y, radius: 20, color: TOOLTIP_COLOR });
   });
 
-  // Sync hover color directly on material without re-render
+  const handlePointerOut = () => {
+    hoveredRef.current = false;
+    setHovered(false);
+    onHover?.(null, null);
+  };
+
+  // Sync material colors on hover
   useEffect(() => {
-    if (starMatRef.current) {
-      starMatRef.current.color.set(hovered ? '#c8ffdf' : '#d4c0f0');
-      starMatRef.current.size = hovered ? STAR_SIZE * 1.5 : STAR_SIZE;
-    }
-    if (lineMatRef.current) {
-      lineMatRef.current.color.set(hovered ? '#9b4dca' : '#6b2fa0');
-    }
+    if (starMatRef.current) starMatRef.current.color.set(hovered ? '#f0ecff' : '#d8d4f0');
+    if (lineMatRef.current) lineMatRef.current.color.set(hovered ? '#d4d0ee' : '#9890c0');
   }, [hovered]);
 
   return (
     <group position={position}>
-      {/* Visual stars — circular glow texture */}
+      {/* Stars */}
       <points geometry={starGeo}>
         <pointsMaterial
           ref={starMatRef}
           size={STAR_SIZE}
           map={glowTexture}
-          color="#d4c0f0"
+          color="#d8d4f0"
           transparent
-          opacity={0}
+          opacity={0.55}
           alphaTest={0.01}
           sizeAttenuation
           depthWrite={false}
         />
       </points>
 
-      {/* Connecting lines */}
-      <lineSegments geometry={lineGeo}>
-        <lineBasicMaterial
-          ref={lineMatRef}
-          color="#9b4dca"
-          transparent
-          opacity={0}
-        />
-      </lineSegments>
-
-      {/* Invisible hitboxes per star — only active when visible */}
-      {isVisible && scaledStars.map((pos, i) => (
-        <mesh
-          key={i}
-          position={[pos.x, pos.y, pos.z]}
-          onPointerOver={(e) => { e.stopPropagation(); setHovered(true); }}
-          onPointerOut={() => setHovered(false)}
-          onClick={(e) => { e.stopPropagation(); onSelect(constellation); }}
-        >
-          <sphereGeometry args={[HITBOX_RADIUS, 8, 8]} />
-          <meshBasicMaterial visible={false} />
+      {/* Single merged line mesh */}
+      {mergedLineGeo && (
+        <mesh geometry={mergedLineGeo}>
+          <meshBasicMaterial ref={lineMatRef} color="#9890c0" transparent opacity={0.2} />
         </mesh>
-      ))}
-
-      {/* Tooltip — appears above the constellation on hover */}
-      {hovered && isVisible && (
-        <Html position={centroid} center distanceFactor={40}>
-          <div className="constellation-tooltip">
-            {constellation.name}
-          </div>
-        </Html>
       )}
+
+      {/* Invisible bounding rectangle — single hover/click surface for the whole constellation */}
+      <mesh
+        position={[bounds.cx, bounds.cy, 0]}
+        onPointerOver={(e) => { e.stopPropagation(); hoveredRef.current = true; setHovered(true); }}
+        onPointerOut={handlePointerOut}
+        onClick={(e) => { e.stopPropagation(); onSelect(constellation); }}
+      >
+        <planeGeometry args={[bounds.width, bounds.height]} />
+        <meshBasicMaterial visible={false} side={THREE.DoubleSide} />
+      </mesh>
     </group>
   );
 }

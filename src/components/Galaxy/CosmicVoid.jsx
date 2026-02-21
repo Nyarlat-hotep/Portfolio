@@ -445,21 +445,35 @@ function BlackHoleCore({ position, onClick, onHoverChange }) {
 // ============================================================
 // Void Particles (atmospheric dust around the void)
 // ============================================================
+function createCircleTexture() {
+  const size = 32;
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  const center = size / 2;
+  const grad = ctx.createRadialGradient(center, center, 0, center, center, center);
+  grad.addColorStop(0,   'rgba(255,255,255,1)');
+  grad.addColorStop(0.4, 'rgba(255,255,255,0.6)');
+  grad.addColorStop(1,   'rgba(255,255,255,0)');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, size, size);
+  return new THREE.CanvasTexture(canvas);
+}
+
 function VoidParticles({ count = 150, radius = 25, hovered }) {
   const pointsRef = useRef();
   const hoverRef = useRef(0);
+  const circleTexture = useMemo(() => createCircleTexture(), []);
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      if (pointsRef.current?.geometry) {
-        pointsRef.current.geometry.dispose();
-      }
-      if (pointsRef.current?.material) {
-        pointsRef.current.material.dispose();
-      }
+      if (pointsRef.current?.geometry) pointsRef.current.geometry.dispose();
+      if (pointsRef.current?.material) pointsRef.current.material.dispose();
+      circleTexture.dispose();
     };
-  }, []);
+  }, [circleTexture]);
 
   const { positions, colors } = useMemo(() => {
     const pos = new Float32Array(count * 3);
@@ -504,9 +518,11 @@ function VoidParticles({ count = 150, radius = 25, hovered }) {
       </bufferGeometry>
       <pointsMaterial
         size={0.15}
+        map={circleTexture}
         vertexColors
         transparent
         opacity={0.4}
+        alphaTest={0.05}
         sizeAttenuation
         depthWrite={false}
       />
