@@ -30,8 +30,8 @@
 /* Modal card — fixed bottom-right */
 .constellation-modal {
   position: fixed;
-  bottom: 80px;
-  right: 20px;
+  bottom: 18px;
+  right: 18px;
   width: 300px;
   max-height: 320px;
   background: linear-gradient(
