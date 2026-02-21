@@ -135,7 +135,7 @@
 .constellation-modal-text {
   font-size: 0.8rem;
   line-height: 1.7;
-  color: rgba(200, 180, 220, 0.75);
+  color: rgba(200, 180, 220, 1);
   margin: 0;
   font-weight: 300;
 }
