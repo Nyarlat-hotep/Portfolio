@@ -305,7 +305,7 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
         <Starfield count={1200} />
 
         {/* Daily constellation — opposite side of planet cluster from Cosmic Void */}
-        <Constellation position={[0, 2, -55]} onSelect={handleConstellationSelect} onHover={handleHover} />
+        <Constellation position={[-28, 18, -55]} onSelect={handleConstellationSelect} onHover={handleHover} />
 
         {/* Cosmic horror elements */}
         <CosmicVoid
