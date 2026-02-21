@@ -200,21 +200,19 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
     setIsNavExpanded(expanded);
   }, []);
 
-  // Show welcome text once per session after nav animation completes
+  // Show welcome text once per page load — only on first nav open, never again
   useEffect(() => {
-    // Check sessionStorage for persistence across component remounts
-    const hasShown = sessionStorage.getItem('welcomeShown') === 'true';
-
-    // Only trigger on first nav open, and only once per session
-    if (isNavExpanded && !hasShown) {
-      // Nav animation ends at ~3.25s (with width pre-animation), add 0.3s delay = 3.55s total
+    if (isNavExpanded && !welcomeTimeoutRef._triggered) {
+      welcomeTimeoutRef._triggered = true; // mark immediately so re-opens don't re-trigger
       welcomeTimeoutRef.current = setTimeout(() => {
         setShowWelcome(true);
-        sessionStorage.setItem('welcomeShown', 'true');
-      }, 3550);
+      }, 1600);
     }
 
-    // Cleanup timeout on unmount or if nav closes before timeout fires
+    if (!isNavExpanded) {
+      setShowWelcome(false); // hide when nav closes
+    }
+
     return () => {
       if (welcomeTimeoutRef.current) {
         clearTimeout(welcomeTimeoutRef.current);
@@ -368,7 +366,7 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
 
       {/* Welcome text - appears once per session after nav animation completes */}
       <AnimatePresence>
-        {showWelcome && isNavExpanded && (
+        {showWelcome && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -411,7 +409,7 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
                 whiteSpace: 'nowrap'
               }}
             >
-              <GlitchText active={showWelcome && isNavExpanded}>Welcome traveller</GlitchText>
+              <GlitchText active={showWelcome}>Welcome traveller</GlitchText>
             </motion.div>
           </motion.div>
         )}

@@ -157,7 +157,7 @@
 /* Mobile adjustments */
 @media (max-width: 768px) {
   .constellation-modal {
-    bottom: 90px;
+    bottom: 186px;
     right: 12px;
     left: 12px;
     width: auto;
