@@ -125,12 +125,12 @@ export default function Starfield({ count = 5000 }) {
     if (brightRef.current) {
       brightRef.current.rotation.y += rot;
       brightRef.current.rotation.x += rotX;
-      brightRef.current.material.opacity = 0.85 + Math.sin(state.clock.elapsedTime * 0.5) * 0.15;
+      brightRef.current.material.opacity = 0.45 + Math.sin(state.clock.elapsedTime * 0.5) * 0.1;
     }
     if (featureRef.current) {
       featureRef.current.rotation.y += rot;
       featureRef.current.rotation.x += rotX;
-      featureRef.current.material.opacity = 0.8 + Math.sin(state.clock.elapsedTime * 0.3 + 1.5) * 0.2;
+      featureRef.current.material.opacity = 0.4 + Math.sin(state.clock.elapsedTime * 0.3 + 1.5) * 0.12;
     }
   });
 
@@ -184,7 +184,7 @@ export default function Starfield({ count = 5000 }) {
           size={0.5}
           vertexColors
           transparent
-          opacity={1}
+          opacity={0.45}
           sizeAttenuation
           depthWrite={false}
         />
@@ -211,7 +211,7 @@ export default function Starfield({ count = 5000 }) {
           size={1.0}
           vertexColors
           transparent
-          opacity={1}
+          opacity={0.4}
           sizeAttenuation
           depthWrite={false}
         />
