@@ -517,7 +517,7 @@ function VoidParticles({ count = 150, radius = 25, hovered }) {
         <bufferAttribute attach="attributes-color" count={count} array={colors} itemSize={3} />
       </bufferGeometry>
       <pointsMaterial
-        size={0.15}
+        size={0.5}
         map={circleTexture}
         vertexColors
         transparent

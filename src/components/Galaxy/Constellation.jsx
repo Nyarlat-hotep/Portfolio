@@ -50,6 +50,8 @@ export default function Constellation({ position = [0, 2, -55], onSelect, onHove
   const starMatRef = useRef();
   const lineMatRef = useRef();
   const _projVec = useRef(new THREE.Vector3());
+  const _starOpacity = useRef(0.55);
+  const _starSize = useRef(STAR_SIZE);
   const [hovered, setHovered] = useState(false);
   const hoveredRef = useRef(false);
   const { camera, size } = useThree();
@@ -109,15 +111,26 @@ export default function Constellation({ position = [0, 2, -55], onSelect, onHove
     };
   }, [starGeo, glowTexture, mergedLineGeo]);
 
-  // Project world-space tooltip anchor to screen every frame while hovered
-  useFrame(() => {
-    if (!hoveredRef.current) return;
+  // Smooth star glow + tooltip projection every frame
+  useFrame((_, delta) => {
+    const isHovered = hoveredRef.current;
+
+    // Delta-based lerp — speed 2.5 gives ~0.8s transition, frame-rate independent
+    const speed = delta * 2.5;
+    const targetOpacity = isHovered ? 0.9 : 0.55;
+    const targetSize    = isHovered ? STAR_SIZE * 1.4 : STAR_SIZE;
+    _starOpacity.current += (targetOpacity - _starOpacity.current) * speed;
+    _starSize.current    += (targetSize    - _starSize.current)    * speed;
+
+    if (starMatRef.current) {
+      starMatRef.current.opacity = _starOpacity.current;
+      starMatRef.current.size    = _starSize.current;
+    }
+
+    // Tooltip projection — only while hovered
+    if (!isHovered) return;
     const [px, py, pz] = position;
-    _projVec.current.set(
-      px + bounds.cx,
-      py + bounds.topY + 2.5,
-      pz
-    );
+    _projVec.current.set(px + bounds.cx, py + bounds.topY + 2.5, pz);
     _projVec.current.project(camera);
     const x = (_projVec.current.x *  0.5 + 0.5) * size.width;
     const y = (_projVec.current.y * -0.5 + 0.5) * size.height;
@@ -130,10 +143,11 @@ export default function Constellation({ position = [0, 2, -55], onSelect, onHove
     onHover?.(null, null);
   };
 
-  // Sync material colors on hover
+  // Sync star color on hover only — opacity/size handled in useFrame
   useEffect(() => {
-    if (starMatRef.current) starMatRef.current.color.set(hovered ? '#f0ecff' : '#d8d4f0');
-    if (lineMatRef.current) lineMatRef.current.color.set(hovered ? '#d4d0ee' : '#9890c0');
+    if (starMatRef.current) {
+      starMatRef.current.color.set(hovered ? '#ffffff' : '#d8d4f0');
+    }
   }, [hovered]);
 
   return (
