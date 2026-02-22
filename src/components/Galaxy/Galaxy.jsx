@@ -81,9 +81,9 @@ function WebGLFallback() {
 }
 
 // Alien transmission glitch text generator
-const ALIEN_CHARS = '░▒▓│┤╣║╗╝╜╛┐└┴┬├─┼╚╔╩╦╠═╬╧╙╘╒╓╪┘┌█▄▌▐▀∑∏∫∂∇⊗⊕⊖⊘⊙◊●◐◑◒◓◔⍟⍩⍪⍫⍬⍭⍮⍯⍰ΨΩΞΔΛΦΣΘ';
+// const ALIEN_CHARS = '░▒▓│┤╣║╗╝╜╛┐└┴┬├─┼╚╔╩╦╠═╬╧╙╘╒╓╪┘┌█▄▌▐▀∑∏∫∂∇⊗⊕⊖⊘⊙◊●◐◑◒◓◔⍟⍩⍪⍫⍬⍭⍮⍯⍰ΨΩΞΔΛΦΣΘ';
 function generateAlienText() {
-  return "Ph'nglui mglw'nafh Cthulhu R'lyeh wgah'nagl fhtagn";
+  return "Ph'nglui mglw'nafh Cthulhu R'lyeh wgah'nagl fhtagn.";
 }
 
 // Glitchy text effect - randomly corrupts characters
@@ -132,6 +132,7 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
   const introCompletedRef = useRef(false);
   const welcomeTimeoutRef = useRef(null);
   const controlsRef = useRef(null);
+  const shootingStarsRef = useRef();
   const [asteroidMessage, setAsteroidMessage] = useState(null);
 
   // Ref-stable wrapper — prevents handler useMemo/useCallback deps from invalidating
@@ -165,6 +166,10 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
   // Memoized vignette handler
   const handleVignetteChange = useCallback((intensity) => {
     setVignetteIntensity(intensity);
+  }, []);
+
+  const handleDoubleClick = useCallback(() => {
+    shootingStarsRef.current?.trigger();
   }, []);
 
   // Asteroid click — show alien transmission, dismiss via close button only
@@ -282,13 +287,16 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
   }, [currentPlanetIndex, onPlanetClick]);
 
   return (
-    <div style={{
-      width: '100vw',
-      height: '100vh',
-      background: 'var(--space-dark)',
-      opacity: sceneReady ? 1 : 0,
-      transition: 'opacity 0.5s ease-in'
-    }}>
+    <div
+      onDoubleClick={handleDoubleClick}
+      style={{
+        width: '100vw',
+        height: '100vh',
+        background: 'var(--space-dark)',
+        opacity: sceneReady ? 1 : 0,
+        transition: 'opacity 0.5s ease-in'
+      }}
+    >
       <Canvas
         dpr={[1, 2]}
         performance={{ min: 0.5 }}
@@ -332,7 +340,7 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
         <Starfield count={1200} />
 
         {/* Shooting stars — rare streaks every ~60s */}
-        <ShootingStars />
+        <ShootingStars ref={shootingStarsRef} />
 
         {/* Distant galaxy — discovered by orbiting east */}
         <DistantGalaxy />

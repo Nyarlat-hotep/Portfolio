@@ -8,8 +8,8 @@ const VELOCITY = new THREE.Vector3(0.55, 0.04, -0.38);
 const FADE_START       = 40;
 const DORMANT_DURATION = 18;
 
-// Elongation ratios — classic asteroid proportions
-const EX = 1.9, EY = 0.65, EZ = 0.82;
+// Elongation ratios — slightly lumpy but mostly spherical
+const EX = 1.25, EY = 0.85, EZ = 0.95;
 
 const RESPAWN_ORIGINS = [
   new THREE.Vector3(-32, 2,   14),
@@ -82,20 +82,23 @@ function createAsteroidTextures() {
       const zoneDetail = fbm(x / size * 9   + 2,  y / size * 9   + 4,  3);
       const zone = Math.max(0, Math.min(1, zoneLarge * 0.72 + zoneDetail * 0.28));
 
-      // Green family: dark forest → mossy olive
-      const gR = 14 + heightNorm * 48;
-      const gG = 34 + heightNorm * 62;
-      const gB = 12 + heightNorm * 20;
+      // Brown family: warm earth → rusty amber (dominant)
+      const bR = 62 + heightNorm * 95;
+      const bG = 32 + heightNorm * 48;
+      const bB =  8 + heightNorm * 14;
 
-      // Brown family: dark earth → khaki
-      const bR = 38 + heightNorm * 54;
-      const bG = 22 + heightNorm * 44;
-      const bB =  6 + heightNorm * 18;
+      // Green family: dark moss → olive (secondary accent)
+      const gR = 18 + heightNorm * 38;
+      const gG = 42 + heightNorm * 52;
+      const gB = 12 + heightNorm * 16;
 
-      // Blend: zone≈0 → brown, zone≈1 → green
-      ad[i]   = Math.min(255, Math.max(0, bR + (gR - bR) * zone));
-      ad[i+1] = Math.min(255, Math.max(0, bG + (gG - bG) * zone));
-      ad[i+2] = Math.min(255, Math.max(0, bB + (gB - bB) * zone));
+      // Bias zone toward brown — multiply noise so ≈65% of surface is brown-dominant
+      const brownZone = Math.max(0, Math.min(1, zone * 0.6));
+
+      // Blend: brownZone≈0 → warm brown, brownZone≈1 → mossy green
+      ad[i]   = Math.min(255, Math.max(0, bR + (gR - bR) * brownZone));
+      ad[i+1] = Math.min(255, Math.max(0, bG + (gG - bG) * brownZone));
+      ad[i+2] = Math.min(255, Math.max(0, bB + (gB - bB) * brownZone));
       ad[i+3] = 255;
     }
   }
@@ -294,8 +297,14 @@ export default function Asteroid({ onAsteroidClick }) {
 
     s.fadeOpacity += (s.fadeTarget - s.fadeOpacity) * Math.min(delta * 1.2, 1);
 
-    if (mainMatRef.current) mainMatRef.current.opacity = s.fadeOpacity;
-    if (rimMatRef.current)  rimMatRef.current.opacity  = 0.2  * s.fadeOpacity;
+    if (mainMatRef.current) {
+      // Toggle transparent only when actually fading — keeps it opaque (and properly depth-sorted) at full opacity
+      const fading = s.fadeOpacity < 0.99;
+      mainMatRef.current.transparent = fading;
+      mainMatRef.current.opacity     = fading ? s.fadeOpacity : 1;
+      mainMatRef.current.needsUpdate = true;
+    }
+    if (rimMatRef.current)  rimMatRef.current.opacity  = 0.07 * s.fadeOpacity;
     if (wispMatRef.current) wispMatRef.current.opacity = 0.7  * s.fadeOpacity;
 
     // Animate wisps along an ellipse matching the asteroid's elongation
@@ -331,7 +340,6 @@ export default function Asteroid({ onAsteroidClick }) {
           emissiveIntensity={0.12}
           roughness={0.92}
           metalness={0.05}
-          transparent
         />
       </mesh>
 
@@ -342,7 +350,7 @@ export default function Asteroid({ onAsteroidClick }) {
           color="#00ffcc"
           side={THREE.BackSide}
           transparent
-          opacity={0.2}
+          opacity={0.07}
           depthWrite={false}
           blending={THREE.AdditiveBlending}
         />

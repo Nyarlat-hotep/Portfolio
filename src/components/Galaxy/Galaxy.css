@@ -13,7 +13,7 @@
   transform: translateX(-50%);
   width: 340px;
   background: linear-gradient(135deg, rgba(4, 0, 18, 0.97) 0%, rgba(10, 2, 30, 0.97) 100%);
-  border: 1px solid rgba(0, 212, 255, 0.4);
+  border: 1px solid rgba(0, 255, 106, 0.7);
   border-radius: 12px;
   overflow: hidden;
   z-index: 50;
@@ -28,7 +28,7 @@
   position: absolute;
   top: 0; left: 0; right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.7), rgba(85, 0, 187, 0.5), transparent);
+  background: linear-gradient(90deg, transparent, rgba(0, 255, 106, 0.7), rgba(85, 0, 187, 0.5), transparent);
 }
 
 .asteroid-message-header {
@@ -54,19 +54,19 @@
   justify-content: center;
   padding: 0.35rem 0.6rem;
   background: rgba(0, 212, 255, 0.08);
-  border: 1px solid rgba(0, 212, 255, 0.3);
+  border: 1px solid rgba(0, 255, 106, 0.7);
   border-radius: 8px;
-  color: rgba(0, 212, 255, 0.7);
+  color: rgba(0, 255, 106, 0.7);
   cursor: pointer;
   transition: all 0.3s ease;
   flex-shrink: 0;
 }
 
 .asteroid-message-close:hover {
-  background: rgba(0, 212, 255, 0.18);
-  border-color: #00d4ff;
-  color: #00d4ff;
-  box-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
+  background: rgba(0, 255, 106, 0.2);
+  border-color: rgba(0, 255, 106, 0.7);
+  color: rgba(0, 255, 106, 1);
+  box-shadow: 0 0 10px rgba(0, 255, 106, 0.3);
 }
 
 .asteroid-message-body {
