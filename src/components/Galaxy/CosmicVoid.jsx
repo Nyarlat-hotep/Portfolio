@@ -73,6 +73,71 @@ const glslNoise = `
 `;
 
 // ============================================================
+// Ring Shaders — animated plasma texture on accretion rings
+// ============================================================
+const ringVertexShader = `
+  varying vec2 vUv;
+  void main() {
+    vUv = uv;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  }
+`;
+
+const ringFragmentShader = `
+  uniform float uTime;
+  uniform float uHover;
+  uniform vec3  uColorHot;
+  uniform vec3  uColorMid;
+  uniform vec3  uColorCool;
+  uniform float uFlowSpeed;
+
+  varying vec2 vUv;
+
+  ${glslNoise}
+
+  void main() {
+    float angle = vUv.x; // 0–1 around the ring circumference
+    float side  = vUv.y; // 0–1 around the tube cross-section
+
+    // Proximity to tube equator (1 = centre face, 0 = tube edges)
+    float equator = 1.0 - abs(side - 0.5) * 2.0;
+
+    // Animated flow — texture streams around the ring over time
+    float flowAngle = angle - uTime * uFlowSpeed;
+
+    // Multi-octave plasma turbulence
+    float n1 = snoise(vec3(flowAngle * 10.0,  side * 6.0,  uTime * 0.25));
+    float n2 = snoise(vec3(flowAngle * 24.0,  side * 11.0, uTime * 0.35 + 5.0));
+    float n3 = snoise(vec3(flowAngle * 50.0,  side * 20.0, uTime * 0.15 + 10.0));
+    float turb = n1 * 0.55 + n2 * 0.30 + n3 * 0.15;
+    turb = turb * 0.5 + 0.5; // remap to 0–1
+
+    // Bright plasma hotspots — clumps of superheated material
+    float hotspot = smoothstep(0.62, 0.90, turb) * equator;
+
+    // Colour: blend hot→mid→cool across tube cross-section, modulated by turbulence
+    vec3 col = mix(uColorCool, uColorMid, equator);
+    col = mix(col, uColorHot, equator * equator * turb);
+
+    // Turbulent brightness variation
+    col *= (0.5 + turb * 0.6);
+
+    // Bright plasma clumps overlay
+    col = mix(col, uColorHot * 1.9, hotspot * 0.75);
+
+    // Hover brightening
+    col *= (1.0 + uHover * 0.55);
+
+    // Alpha: fade at tube edges, boosted by turbulence and hotspots
+    float edgeFade = smoothstep(0.0, 0.12, side) * smoothstep(1.0, 0.88, side);
+    float alpha = edgeFade * (0.55 + turb * 0.3 + hotspot * 0.12);
+    alpha = clamp(alpha, 0.0, 0.95);
+
+    gl_FragColor = vec4(col, alpha);
+  }
+`;
+
+// ============================================================
 // Tentacle Shaders
 // ============================================================
 const tentacleVertexShader = `
@@ -299,6 +364,9 @@ function BlackHoleCore({ position, onClick, onHoverChange }) {
   const diskRef = useRef();
   const innerRingRef = useRef();
   const outerRingRef = useRef();
+  const diskMatRef = useRef();
+  const innerMatRef = useRef();
+  const outerMatRef = useRef();
   const rimGlowMaterial = useRef();
   const hoverRef = useRef(0);
   const isHovered = useRef(false);
@@ -318,18 +386,24 @@ function BlackHoleCore({ position, onClick, onHoverChange }) {
       diskRef.current.rotation.z += 0.008 + h * 0.02;
       const pulse = Math.sin(time * 0.5) * (0.08 + h * 0.06) + 1;
       diskRef.current.scale.setScalar(pulse);
-      diskRef.current.material.emissiveIntensity = 1.0 + h * 1.5;
-      diskRef.current.material.opacity = 0.5 + h * 0.3;
+    }
+    if (diskMatRef.current) {
+      diskMatRef.current.uniforms.uTime.value  = time;
+      diskMatRef.current.uniforms.uHover.value = h;
     }
     if (innerRingRef.current) {
       innerRingRef.current.rotation.z += 0.003 + h * 0.015;
-      innerRingRef.current.material.emissiveIntensity = 1.5 + h * 2.0;
-      innerRingRef.current.material.opacity = 0.6 + h * 0.3;
+    }
+    if (innerMatRef.current) {
+      innerMatRef.current.uniforms.uTime.value  = time;
+      innerMatRef.current.uniforms.uHover.value = h;
     }
     if (outerRingRef.current) {
       outerRingRef.current.rotation.z -= 0.002 + h * 0.01;
-      outerRingRef.current.material.emissiveIntensity = 0.4 + h * 0.8;
-      outerRingRef.current.material.opacity = 0.25 + h * 0.25;
+    }
+    if (outerMatRef.current) {
+      outerMatRef.current.uniforms.uTime.value  = time;
+      outerMatRef.current.uniforms.uHover.value = h;
     }
     if (rimGlowMaterial.current) {
       rimGlowMaterial.current.uniforms.uHover.value = h;
@@ -402,40 +476,63 @@ function BlackHoleCore({ position, onClick, onHoverChange }) {
       {/* Accretion disk - main */}
       <mesh ref={diskRef} rotation={[Math.PI / 2, 0, 0]}>
         <torusGeometry args={[7, 0.35, 16, 64]} />
-        <meshStandardMaterial
-          color="#1a0a2e"
-          emissive="#6b2fa0"
-          emissiveIntensity={1.0}
+        <shaderMaterial
+          ref={diskMatRef}
+          uniforms={{
+            uTime:      { value: 0 },
+            uHover:     { value: 0 },
+            uColorHot:  { value: new THREE.Color('#ffeebb') },
+            uColorMid:  { value: new THREE.Color('#cc3388') },
+            uColorCool: { value: new THREE.Color('#5a1a8b') },
+            uFlowSpeed: { value: 0.12 },
+          }}
+          vertexShader={ringVertexShader}
+          fragmentShader={ringFragmentShader}
           transparent
-          opacity={0.5}
           side={THREE.DoubleSide}
-          roughness={0.4}
-          metalness={0.3}
+          depthWrite={false}
         />
       </mesh>
 
       {/* Accretion disk - inner bright ring */}
       <mesh ref={innerRingRef} rotation={[Math.PI / 2, 0, 0]}>
         <torusGeometry args={[5.2, 0.3, 8, 64]} />
-        <meshStandardMaterial
-          color="#2a0a4e"
-          emissive="#9b4dca"
-          emissiveIntensity={1.5}
+        <shaderMaterial
+          ref={innerMatRef}
+          uniforms={{
+            uTime:      { value: 0 },
+            uHover:     { value: 0 },
+            uColorHot:  { value: new THREE.Color('#ccddff') },
+            uColorMid:  { value: new THREE.Color('#8855ee') },
+            uColorCool: { value: new THREE.Color('#2a0a5e') },
+            uFlowSpeed: { value: 0.20 },
+          }}
+          vertexShader={ringVertexShader}
+          fragmentShader={ringFragmentShader}
           transparent
-          opacity={0.6}
-          roughness={0.2}
+          side={THREE.DoubleSide}
+          depthWrite={false}
         />
       </mesh>
 
       {/* Outer accent ring */}
       <mesh ref={outerRingRef} rotation={[Math.PI / 2, 0, 0]}>
         <torusGeometry args={[9, 0.25, 8, 64]} />
-        <meshStandardMaterial
-          color="#0a2a1a"
-          emissive="#00ff6a"
-          emissiveIntensity={0.4}
+        <shaderMaterial
+          ref={outerMatRef}
+          uniforms={{
+            uTime:      { value: 0 },
+            uHover:     { value: 0 },
+            uColorHot:  { value: new THREE.Color('#44aa77') },
+            uColorMid:  { value: new THREE.Color('#1a6640') },
+            uColorCool: { value: new THREE.Color('#001a0d') },
+            uFlowSpeed: { value: 0.06 },
+          }}
+          vertexShader={ringVertexShader}
+          fragmentShader={ringFragmentShader}
           transparent
-          opacity={0.25}
+          side={THREE.DoubleSide}
+          depthWrite={false}
         />
       </mesh>
     </group>
