@@ -66,6 +66,31 @@ export function createCircularParticleTexture() {
 }
 
 /**
+ * Shared nebula splat texture — large soft particles that accumulate into haze.
+ * Cached at module level so Constellation and DistantGalaxy share one instance.
+ */
+let cachedNebulaSplatTexture = null;
+
+export function createNebulaSplatTexture() {
+  if (cachedNebulaSplatTexture) return cachedNebulaSplatTexture;
+  const size = 128;
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  const center = size / 2;
+  const grad = ctx.createRadialGradient(center, center, 0, center, center, center);
+  grad.addColorStop(0,    'rgba(255,255,255,0.3)');
+  grad.addColorStop(0.2,  'rgba(255,255,255,0.18)');
+  grad.addColorStop(0.45, 'rgba(255,255,255,0.08)');
+  grad.addColorStop(0.7,  'rgba(255,255,255,0.02)');
+  grad.addColorStop(1,    'rgba(255,255,255,0)');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, size, size);
+  cachedNebulaSplatTexture = new THREE.CanvasTexture(canvas);
+  return cachedNebulaSplatTexture;
+}
+
+/**
  * Map planet color to texture URL.
  * More maintainable than color string matching.
  */

@@ -1,4 +1,4 @@
-import { useRef, useState, useMemo, useEffect } from 'react';
+import { useRef, useState, useMemo, useEffect, useCallback } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useTexture } from '@react-three/drei';
 import * as THREE from 'three';
@@ -38,6 +38,9 @@ export default function CustomPlanet({
       }
     };
   }, []);
+
+  // Stable geometry reference — memoized to prevent GPU object recreation on re-render
+  const sphereGeo = useMemo(() => new THREE.SphereGeometry(1, 32, 32), []);
 
   // Create particle positions around the planet
   const particleCount = 30;
@@ -127,7 +130,7 @@ export default function CustomPlanet({
     }
   });
 
-  const handlePointerOver = (e) => {
+  const handlePointerOver = useCallback((e) => {
     e.stopPropagation();
     setHovered(true);
 
@@ -150,14 +153,14 @@ export default function CustomPlanet({
     }
 
     document.body.style.cursor = 'pointer';
-  };
+  }, [camera, size, name, color, onHover]);
 
-  const handlePointerOut = (e) => {
+  const handlePointerOut = useCallback((e) => {
     e.stopPropagation();
     setHovered(false);
     onHover?.(null, null);
     document.body.style.cursor = 'auto';
-  };
+  }, [onHover]);
 
   return (
     <group position={position}>
@@ -176,10 +179,10 @@ export default function CustomPlanet({
         {/* Main planet sphere with color tinting */}
         <mesh
           ref={meshRef}
+          geometry={sphereGeo}
           onPointerOver={handlePointerOver}
           onPointerOut={handlePointerOut}
         >
-          <sphereGeometry args={[1, 32, 32]} />
           <meshStandardMaterial
             map={planetTexture}
             emissive={color}

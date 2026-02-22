@@ -1,7 +1,7 @@
 import { useRef, useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
-import { createCircularParticleTexture } from '../../utils/threeUtils';
+import { createCircularParticleTexture, createNebulaSplatTexture } from '../../utils/threeUtils';
 
 // Positioned east of the planet cluster — discovered by orbiting right
 const GALAXY_RADIUS  = 9;
@@ -97,24 +97,6 @@ function buildGalaxyGeometry() {
 
 // ── Nebula haze ───────────────────────────────────────────────────────────────
 
-// Very soft splat texture — large particles accumulate into a continuous haze
-function createNebulaSplatTexture() {
-  const size = 128;
-  const canvas = document.createElement('canvas');
-  canvas.width = canvas.height = size;
-  const ctx = canvas.getContext('2d');
-  const center = size / 2;
-  const grad = ctx.createRadialGradient(center, center, 0, center, center, center);
-  grad.addColorStop(0,    'rgba(255,255,255,0.28)');
-  grad.addColorStop(0.2,  'rgba(255,255,255,0.15)');
-  grad.addColorStop(0.45, 'rgba(255,255,255,0.06)');
-  grad.addColorStop(0.7,  'rgba(255,255,255,0.02)');
-  grad.addColorStop(1,    'rgba(255,255,255,0)');
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, size, size);
-  return new THREE.CanvasTexture(canvas);
-}
-
 function buildNebulaGeometry() {
   const count     = 315;
   const positions = new Float32Array(count * 3);
@@ -164,7 +146,7 @@ export default function DistantGalaxy() {
   const groupRef  = useRef();
   const nebulaRef = useRef();
   const texture     = useMemo(() => createCircularParticleTexture(), []);
-  const nebulaTex   = useMemo(() => createNebulaSplatTexture(), []);
+  const nebulaTex   = createNebulaSplatTexture(); // module-level cache — stable reference
   const geometry    = useMemo(() => buildGalaxyGeometry(), []);
   const nebulaGeo   = useMemo(() => buildNebulaGeometry(), []);
 
@@ -173,9 +155,9 @@ export default function DistantGalaxy() {
       geometry.dispose();
       nebulaGeo.dispose();
       texture.dispose();
-      nebulaTex.dispose();
+      // nebulaTex is a module-level cache shared with Constellation — not disposed here
     };
-  }, [geometry, nebulaGeo, texture, nebulaTex]);
+  }, [geometry, nebulaGeo, texture]);
 
   useFrame((_, delta) => {
     // Stars rotate at base speed

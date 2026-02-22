@@ -12,16 +12,12 @@ export default function Starfield({ count = 5000 }) {
   const starTexture = useMemo(() => createCircularParticleTexture(), []);
 
   // Cleanup geometry and materials on unmount
+  // Note: starTexture is a shared module-level cache — do NOT dispose it here
   useEffect(() => {
     return () => {
-      // Dispose materials from refs
       [pointsRef, brightRef, featureRef].forEach(ref => {
-        if (ref.current?.material) {
-          ref.current.material.dispose();
-        }
-        if (ref.current?.geometry) {
-          ref.current.geometry.dispose();
-        }
+        if (ref.current?.material) ref.current.material.dispose();
+        if (ref.current?.geometry) ref.current.geometry.dispose();
       });
     };
   }, []);

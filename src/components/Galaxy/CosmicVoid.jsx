@@ -1,4 +1,4 @@
-import { useRef, useState, useMemo, useEffect } from 'react';
+import { useRef, useState, useMemo, useEffect, useCallback } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
@@ -371,6 +371,25 @@ function BlackHoleCore({ position, onClick, onHoverChange }) {
   const hoverRef = useRef(0);
   const isHovered = useRef(false);
 
+  // Memoized geometries — prevent GPU object recreation when parent state changes
+  const clickTargetGeo = useMemo(() => new THREE.SphereGeometry(6, 16, 16), []);
+  const horizonGeo     = useMemo(() => new THREE.SphereGeometry(4, 32, 32), []);
+  const rimGeo         = useMemo(() => new THREE.SphereGeometry(4.3, 32, 32), []);
+  const diskGeo        = useMemo(() => new THREE.TorusGeometry(7, 0.35, 16, 64), []);
+  const innerRingGeo   = useMemo(() => new THREE.TorusGeometry(5.2, 0.3, 8, 64), []);
+  const outerRingGeo   = useMemo(() => new THREE.TorusGeometry(9, 0.25, 8, 64), []);
+
+  useEffect(() => {
+    return () => {
+      clickTargetGeo.dispose();
+      horizonGeo.dispose();
+      rimGeo.dispose();
+      diskGeo.dispose();
+      innerRingGeo.dispose();
+      outerRingGeo.dispose();
+    };
+  }, [clickTargetGeo, horizonGeo, rimGeo, diskGeo, innerRingGeo, outerRingGeo]);
+
   useFrame((state, delta) => {
     const time = state.clock.elapsedTime;
 
@@ -426,23 +445,21 @@ function BlackHoleCore({ position, onClick, onHoverChange }) {
     <group position={position}>
       {/* Invisible click target - larger for easier clicking */}
       <mesh
+        geometry={clickTargetGeo}
         onClick={(e) => { e.stopPropagation(); onClick?.(); }}
         onPointerOver={handlePointerOver}
         onPointerOut={handlePointerOut}
       >
-        <sphereGeometry args={[6, 16, 16]} />
         <meshBasicMaterial visible={false} />
       </mesh>
 
       {/* Event horizon - pure black sphere */}
-      <mesh ref={eventHorizonRef}>
-        <sphereGeometry args={[4, 32, 32]} />
+      <mesh ref={eventHorizonRef} geometry={horizonGeo}>
         <meshBasicMaterial color="#000000" />
       </mesh>
 
       {/* Event horizon rim glow - Fresnel edge light */}
-      <mesh>
-        <sphereGeometry args={[4.3, 32, 32]} />
+      <mesh geometry={rimGeo}>
         <shaderMaterial
           ref={rimGlowMaterial}
           uniforms={{ uHover: { value: 0 } }}
@@ -474,8 +491,7 @@ function BlackHoleCore({ position, onClick, onHoverChange }) {
       </mesh>
 
       {/* Accretion disk - main */}
-      <mesh ref={diskRef} rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[7, 0.35, 16, 64]} />
+      <mesh ref={diskRef} geometry={diskGeo} rotation={[Math.PI / 2, 0, 0]}>
         <shaderMaterial
           ref={diskMatRef}
           uniforms={{
@@ -495,8 +511,7 @@ function BlackHoleCore({ position, onClick, onHoverChange }) {
       </mesh>
 
       {/* Accretion disk - inner bright ring */}
-      <mesh ref={innerRingRef} rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[5.2, 0.3, 8, 64]} />
+      <mesh ref={innerRingRef} geometry={innerRingGeo} rotation={[Math.PI / 2, 0, 0]}>
         <shaderMaterial
           ref={innerMatRef}
           uniforms={{
@@ -516,8 +531,7 @@ function BlackHoleCore({ position, onClick, onHoverChange }) {
       </mesh>
 
       {/* Outer accent ring */}
-      <mesh ref={outerRingRef} rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[9, 0.25, 8, 64]} />
+      <mesh ref={outerRingRef} geometry={outerRingGeo} rotation={[Math.PI / 2, 0, 0]}>
         <shaderMaterial
           ref={outerMatRef}
           uniforms={{

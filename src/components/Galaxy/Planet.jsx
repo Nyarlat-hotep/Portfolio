@@ -1,4 +1,4 @@
-import { useRef, useState, useMemo, useEffect, memo } from 'react';
+import { useRef, useState, useMemo, useEffect, useCallback, memo } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useTexture } from '@react-three/drei';
 import * as THREE from 'three';
@@ -28,15 +28,6 @@ function Planet({
   const [hovered, setHovered] = useState(false);
   const { camera, size } = useThree();
 
-  // Cleanup geometry and materials on unmount to prevent VRAM leaks
-  useEffect(() => {
-    return () => {
-      if (meshRef.current) {
-        disposeObject(meshRef.current);
-      }
-    };
-  }, []);
-
   // Determine which texture to use based on planet properties
   const textureUrl = useMemo(() => {
     const colorValue = color.toLowerCase();
@@ -61,6 +52,20 @@ function Planet({
 
   // Use shared circular particle texture (cached globally)
   const particleTexture = useMemo(() => createCircularParticleTexture(), []);
+
+  // Stable geometry references — memoized to prevent GPU object recreation on re-render
+  const sphereGeo = useMemo(() => new THREE.SphereGeometry(1, 32, 32), []);
+  const ringGeo   = useMemo(() => new THREE.RingGeometry(1.5, 2, 64), []);
+
+  // Cleanup geometry and materials on unmount to prevent VRAM leaks
+  useEffect(() => {
+    return () => {
+      ringGeo.dispose();
+      if (meshRef.current) {
+        disposeObject(meshRef.current);
+      }
+    };
+  }, [ringGeo]);
 
   // Create particle positions around the planet
   const particleCount = 30;
@@ -111,7 +116,7 @@ function Planet({
     }
   });
 
-  const handlePointerOver = (e) => {
+  const handlePointerOver = useCallback((e) => {
     e.stopPropagation();
     setHovered(true);
 
@@ -138,19 +143,19 @@ function Planet({
     }
 
     document.body.style.cursor = 'pointer';
-  };
+  }, [camera, size, name, tooltipColor, color, onHover]);
 
-  const handlePointerOut = (e) => {
+  const handlePointerOut = useCallback((e) => {
     e.stopPropagation();
     setHovered(false);
     onHover?.(null, null);
     document.body.style.cursor = 'auto';
-  };
+  }, [onHover]);
 
-  const handleClick = (e) => {
+  const handleClick = useCallback((e) => {
     e.stopPropagation();
     onClick?.();
-  };
+  }, [onClick]);
 
   return (
     <group position={position}>
@@ -169,11 +174,11 @@ function Planet({
         {/* Main planet sphere */}
         <mesh
           ref={meshRef}
+          geometry={sphereGeo}
           onClick={handleClick}
           onPointerOver={handlePointerOver}
           onPointerOut={handlePointerOut}
         >
-          <sphereGeometry args={[1, 32, 32]} />
           {type === 'star' ? (
             // Sun - bright and emissive
             <meshStandardMaterial
@@ -226,8 +231,7 @@ function Planet({
 
         {/* Optional ring for certain planets (like Saturn) */}
         {type === 'ringed' && (
-          <mesh rotation={[Math.PI / 2, 0, 0]}>
-            <ringGeometry args={[1.5, 2, 64]} />
+          <mesh geometry={ringGeo} rotation={[Math.PI / 2, 0, 0]}>
             <meshBasicMaterial
               color={color}
               transparent

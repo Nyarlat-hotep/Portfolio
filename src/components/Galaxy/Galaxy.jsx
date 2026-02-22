@@ -141,6 +141,11 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
   const [asteroidMessage, setAsteroidMessage] = useState(null);
   const asteroidDismissRef = useRef(null);
 
+  // Ref-stable wrapper — prevents handler useMemo/useCallback deps from invalidating
+  // when parent passes a new onPlanetClick function reference on each render
+  const onPlanetClickRef = useRef(onPlanetClick);
+  onPlanetClickRef.current = onPlanetClick;
+
   // Start intro only after scene is ready (runs once)
   useEffect(() => {
     if (sceneReady && !introCompletedRef.current && !isIntroActive) {
@@ -157,6 +162,13 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
     setHoveredPlanetPosition(screenPosition);
   }, []);
 
+  // Pre-compute planet label color values — avoids hex parsing on every render
+  const hoveredColor    = hoveredPlanetPosition?.color || '#00d4ff';
+  const hoveredColorRgb = useMemo(() => {
+    const c = hoveredPlanetPosition?.color || '#00d4ff';
+    return c.replace('#', '').match(/.{2}/g).map(x => parseInt(x, 16)).join(', ');
+  }, [hoveredPlanetPosition?.color]);
+
   // Memoized vignette handler
   const handleVignetteChange = useCallback((intensity) => {
     setVignetteIntensity(intensity);
@@ -169,21 +181,21 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
     asteroidDismissRef.current = setTimeout(() => setAsteroidMessage(null), 5000);
   }, []);
 
-  // Memoized click handlers per planet
+  // Memoized click handlers per planet — stable forever via ref, no dep on onPlanetClick
   const planetClickHandlers = useMemo(() => {
     return planetsData.reduce((handlers, planet, index) => {
       handlers[planet.id] = () => {
         setCurrentPlanetIndex(index);
-        onPlanetClick?.(planet);
+        onPlanetClickRef.current?.(planet);
       };
       return handlers;
     }, {});
-  }, [onPlanetClick]);
+  }, []);
 
-  // Memoized void click handler
+  // Memoized void click handler — stable via ref
   const handleVoidClick = useCallback(() => {
-    onPlanetClick?.({ id: 'experiments', name: 'Experiments', color: '#6b2fa0' });
-  }, [onPlanetClick]);
+    onPlanetClickRef.current?.({ id: 'experiments', name: 'Experiments', color: '#6b2fa0' });
+  }, []);
 
   // Constellation select — fetch Wikipedia summary, cache per session
   const handleConstellationSelect = useCallback(async (constellation) => {
@@ -491,11 +503,6 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
               gap: '8px'
             }}
           >
-            {(() => {
-              const c = hoveredPlanetPosition.color || '#00d4ff';
-              const rgb = c.replace('#', '').match(/.{2}/g).map(x => parseInt(x, 16)).join(', ');
-              return (
-                <>
                   {/* Connection dot */}
                   <motion.div
                     initial={{ scale: 0 }}
@@ -513,9 +520,9 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
                       style={{
                         width: '6px',
                         height: '6px',
-                        background: c,
+                        background: hoveredColor,
                         borderRadius: '50%',
-                        boxShadow: `0 0 8px rgba(${rgb}, 0.8)`
+                        boxShadow: `0 0 8px rgba(${hoveredColorRgb}, 0.8)`
                       }}
                     />
                   </motion.div>
@@ -529,7 +536,7 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
                     style={{
                       width: '24px',
                       height: '1px',
-                      background: `linear-gradient(90deg, rgba(${rgb}, 0.8), rgba(${rgb}, 0.3))`,
+                      background: `linear-gradient(90deg, rgba(${hoveredColorRgb}, 0.8), rgba(${hoveredColorRgb}, 0.3))`,
                       transformOrigin: 'left',
                       flexShrink: 0
                     }}
@@ -542,8 +549,8 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
                     exit={{ opacity: 0, x: -6 }}
                     transition={{ duration: 0.2, delay: 0.06, ease: [0.4, 0, 0.2, 1] }}
                     style={{
-                      background: `linear-gradient(135deg, rgba(${rgb}, 0.15), rgba(${rgb}, 0.05))`,
-                      border: `1px solid rgba(${rgb}, 0.5)`,
+                      background: `linear-gradient(135deg, rgba(${hoveredColorRgb}, 0.15), rgba(${hoveredColorRgb}, 0.05))`,
+                      border: `1px solid rgba(${hoveredColorRgb}, 0.5)`,
                       borderRadius: '4px',
                       padding: '8px 16px',
                       position: 'relative',
@@ -559,8 +566,8 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
                         left: '-1px',
                         width: '12px',
                         height: '12px',
-                        borderTop: `2px solid ${c}`,
-                        borderLeft: `2px solid ${c}`,
+                        borderTop: `2px solid ${hoveredColor}`,
+                        borderLeft: `2px solid ${hoveredColor}`,
                         borderTopLeftRadius: '4px'
                       }}
                     />
@@ -571,8 +578,8 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
                         right: '-1px',
                         width: '12px',
                         height: '12px',
-                        borderBottom: `2px solid ${c}`,
-                        borderRight: `2px solid ${c}`,
+                        borderBottom: `2px solid ${hoveredColor}`,
+                        borderRight: `2px solid ${hoveredColor}`,
                         borderBottomRightRadius: '4px'
                       }}
                     />
@@ -580,22 +587,19 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
                     {/* Text */}
                     <div
                       style={{
-                        color: c,
+                        color: hoveredColor,
                         fontSize: '14px',
                         fontWeight: '500',
                         fontFamily: 'monospace',
                         letterSpacing: '1.5px',
                         textTransform: 'uppercase',
-                        textShadow: `0 0 10px rgba(${rgb}, 0.5)`,
+                        textShadow: `0 0 10px rgba(${hoveredColorRgb}, 0.5)`,
                         whiteSpace: 'nowrap'
                       }}
                     >
                       {hoveredPlanet}
                     </div>
                   </motion.div>
-                </>
-              );
-            })()}
           </motion.div>
         )}
       </AnimatePresence>

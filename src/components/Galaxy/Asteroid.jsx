@@ -1,6 +1,7 @@
 import { useRef, useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
+import { fbm } from '../../utils/noise';
 
 const START    = new THREE.Vector3(-32, 2, 14);
 const VELOCITY = new THREE.Vector3(0.55, 0.04, -0.38);
@@ -20,33 +21,6 @@ const RESPAWN_VELS = [
   new THREE.Vector3(0.50, -0.03, -0.42),
   new THREE.Vector3(0.60,  0.06, -0.35),
 ];
-
-// ── Noise ─────────────────────────────────────────────────────────────────────
-
-function hash(x, y) {
-  const n = Math.sin(x * 127.1 + y * 311.7) * 43758.5453123;
-  return n - Math.floor(n);
-}
-
-function smoothNoise(x, y) {
-  const ix = Math.floor(x), iy = Math.floor(y);
-  const fx = x - ix, fy = y - iy;
-  const ux = fx * fx * (3 - 2 * fx);
-  const uy = fy * fy * (3 - 2 * fy);
-  return hash(ix,   iy)   * (1 - ux) * (1 - uy) +
-         hash(ix+1, iy)   *      ux  * (1 - uy) +
-         hash(ix,   iy+1) * (1 - ux) *      uy  +
-         hash(ix+1, iy+1) *      ux  *      uy;
-}
-
-function fbm(x, y, octaves = 6) {
-  let v = 0, amp = 0.5, freq = 1;
-  for (let o = 0; o < octaves; o++) {
-    v += smoothNoise(x * freq, y * freq) * amp;
-    amp *= 0.5; freq *= 2;
-  }
-  return v;
-}
 
 // ── Craters ───────────────────────────────────────────────────────────────────
 
@@ -187,6 +161,22 @@ function createWispGlowTexture() {
   return new THREE.CanvasTexture(canvas);
 }
 
+// ── Module-level texture cache ────────────────────────────────────────────────
+// Computed once per page load — persists across remounts, avoids 500ms+ canvas work
+
+let _asteroidTextureCache = null;
+let _wispTextureCache = null;
+
+function getAsteroidTextures() {
+  if (!_asteroidTextureCache) _asteroidTextureCache = createAsteroidTextures();
+  return _asteroidTextureCache;
+}
+
+function getWispTexture() {
+  if (!_wispTextureCache) _wispTextureCache = createWispGlowTexture();
+  return _wispTextureCache;
+}
+
 // ── Geometry builder ──────────────────────────────────────────────────────────
 // SphereGeometry gives a dense, indexed mesh — smooth normals + no polygon silhouette
 
@@ -245,8 +235,8 @@ export default function Asteroid({ onAsteroidClick }) {
   }, []);
 
   const wispData                = useMemo(() => buildWispData(), []);
-  const { albedo, normalMap }   = useMemo(() => createAsteroidTextures(), []);
-  const wispTexture             = useMemo(() => createWispGlowTexture(), []);
+  const { albedo, normalMap }   = useMemo(() => getAsteroidTextures(), []);
+  const wispTexture             = useMemo(() => getWispTexture(), []);
   const normalScale             = useMemo(() => new THREE.Vector2(2.2, 2.2), []);
 
   const stateRef = useRef({
@@ -264,11 +254,9 @@ export default function Asteroid({ onAsteroidClick }) {
       geometry.dispose();
       rimGeo.dispose();
       wispGeo.dispose();
-      albedo.dispose();
-      normalMap.dispose();
-      wispTexture.dispose();
+      // albedo, normalMap, wispTexture are module-level caches — not disposed here
     };
-  }, [geometry, rimGeo, wispGeo, albedo, normalMap, wispTexture]);
+  }, [geometry, rimGeo, wispGeo]);
 
   useFrame((state, delta) => {
     const s = stateRef.current;

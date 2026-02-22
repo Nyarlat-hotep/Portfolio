@@ -3,7 +3,7 @@ import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { CONSTELLATIONS } from '../../data/constellations';
-import { createCircularParticleTexture } from '../../utils/threeUtils';
+import { createCircularParticleTexture, createNebulaSplatTexture } from '../../utils/threeUtils';
 
 const SCALE = 1.6;
 const STAR_SIZE = 3.0;
@@ -38,25 +38,6 @@ function createGlowTexture() {
   return new THREE.CanvasTexture(canvas);
 }
 
-// Very soft haze splat — extremely gradual falloff so particles blend into fog
-function createNebulaSplatTexture() {
-  const size = 128;
-  const canvas = document.createElement('canvas');
-  canvas.width = size;
-  canvas.height = size;
-  const ctx = canvas.getContext('2d');
-  const center = size / 2;
-  const grad = ctx.createRadialGradient(center, center, 0, center, center, center);
-  grad.addColorStop(0,   'rgba(255,255,255,0.3)');
-  grad.addColorStop(0.2, 'rgba(255,255,255,0.18)');
-  grad.addColorStop(0.45,'rgba(255,255,255,0.08)');
-  grad.addColorStop(0.7, 'rgba(255,255,255,0.02)');
-  grad.addColorStop(1,   'rgba(255,255,255,0)');
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, size, size);
-  return new THREE.CanvasTexture(canvas);
-}
-
 // Deterministic daily selection — same for all visitors per UTC day
 function getTodayConstellation() {
   const now = new Date();
@@ -65,6 +46,9 @@ function getTodayConstellation() {
   const dayOfYear = Math.floor((today - startOfYear) / 86400000);
   return CONSTELLATIONS[dayOfYear % CONSTELLATIONS.length];
 }
+
+// Computed once at module load — deterministic per UTC day, no side effects
+const todayConstellation = getTodayConstellation();
 
 export default function Constellation({ position = [0, 2, -55], onSelect, onHover }) {
   const starMatRef    = useRef();
@@ -78,13 +62,12 @@ export default function Constellation({ position = [0, 2, -55], onSelect, onHove
   const hoveredRef    = useRef(false);
   const { camera, size } = useThree();
 
-  const constellation     = useMemo(() => getTodayConstellation(), []);
   const glowTexture       = useMemo(() => createGlowTexture(), []);
-  const nebulaSplatTex    = useMemo(() => createNebulaSplatTexture(), []);
+  const nebulaSplatTex    = createNebulaSplatTexture(); // module-level cache — stable reference
   const haloTexture       = useMemo(() => createCircularParticleTexture(), []);
 
   const { starGeo, mergedLineGeo, bounds, haloGeo, nebulaCloudGeo } = useMemo(() => {
-    const scaledStars = constellation.stars.map(([x, y]) => new THREE.Vector3(x * SCALE, y * SCALE, 0));
+    const scaledStars = todayConstellation.stars.map(([x, y]) => new THREE.Vector3(x * SCALE, y * SCALE, 0));
 
     // Star points geometry
     const posArr = new Float32Array(scaledStars.length * 3);
@@ -98,7 +81,7 @@ export default function Constellation({ position = [0, 2, -55], onSelect, onHove
 
     // Tube + sphere-cap line geometry merged into one mesh
     const pieces = [];
-    constellation.lines.forEach(([a, b]) => {
+    todayConstellation.lines.forEach(([a, b]) => {
       const curve = new THREE.LineCurve3(scaledStars[a], scaledStars[b]);
       pieces.push(new THREE.TubeGeometry(curve, 1, TUBE_RADIUS, 12, false));
     });
@@ -177,18 +160,19 @@ export default function Constellation({ position = [0, 2, -55], onSelect, onHove
     nebulaCloudGeo.setAttribute('color',    new THREE.BufferAttribute(nColors, 3));
 
     return { starGeo, mergedLineGeo, bounds, haloGeo, nebulaCloudGeo };
-  }, [constellation]);
+  }, []);
 
   useEffect(() => {
     return () => {
       starGeo.dispose();
       glowTexture.dispose();
-      nebulaSplatTex.dispose();
+      haloTexture.dispose();
       haloGeo.dispose();
       nebulaCloudGeo.dispose();
       mergedLineGeo?.dispose();
+      // nebulaSplatTex is a module-level cache shared with DistantGalaxy — not disposed here
     };
-  }, [starGeo, glowTexture, nebulaSplatTex, haloGeo, nebulaCloudGeo, mergedLineGeo]);
+  }, [starGeo, glowTexture, haloTexture, haloGeo, nebulaCloudGeo, mergedLineGeo]);
 
   useFrame((_, delta) => {
     const isHovered = hoveredRef.current;
@@ -220,7 +204,7 @@ export default function Constellation({ position = [0, 2, -55], onSelect, onHove
     _projVec.current.project(camera);
     const x = (_projVec.current.x *  0.5 + 0.5) * size.width;
     const y = (_projVec.current.y * -0.5 + 0.5) * size.height;
-    onHover?.(constellation.name, { x, y, radius: 20, color: TOOLTIP_COLOR });
+    onHover?.(todayConstellation.name, { x, y, radius: 20, color: TOOLTIP_COLOR });
   });
 
   const handlePointerOut = () => {
@@ -292,7 +276,7 @@ export default function Constellation({ position = [0, 2, -55], onSelect, onHove
         position={[bounds.cx, bounds.cy, 0]}
         onPointerOver={(e) => { e.stopPropagation(); hoveredRef.current = true; setHovered(true); }}
         onPointerOut={handlePointerOut}
-        onClick={(e) => { e.stopPropagation(); onSelect(constellation); }}
+        onClick={(e) => { e.stopPropagation(); onSelect(todayConstellation); }}
       >
         <planeGeometry args={[bounds.width, bounds.height]} />
         <meshBasicMaterial visible={false} side={THREE.DoubleSide} />

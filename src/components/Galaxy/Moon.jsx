@@ -1,5 +1,6 @@
 import { useRef, useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
+import * as THREE from 'three';
 import { createRockyTexture, createIcyTexture, createAlienTexture } from '../../utils/planetTextures';
 
 const noRaycast = () => null;
@@ -32,6 +33,9 @@ export default function Moon({ scale = 0.1, orbitRadius = 2, orbitSpeed = 0.05, 
 
   const texture = proceduralTexture;
 
+  // Stable geometry reference — memoized to prevent GPU object recreation on re-render
+  const sphereGeo = useMemo(() => new THREE.SphereGeometry(1, 16, 16), []);
+
   useFrame((state) => {
     if (meshRef.current) {
       const t = state.clock.elapsedTime * orbitSpeed;
@@ -43,8 +47,7 @@ export default function Moon({ scale = 0.1, orbitRadius = 2, orbitSpeed = 0.05, 
   });
 
   return (
-    <mesh ref={meshRef} scale={scale} raycast={noRaycast}>
-      <sphereGeometry args={[1, 16, 16]} />
+    <mesh ref={meshRef} geometry={sphereGeo} scale={scale} raycast={noRaycast}>
       <meshStandardMaterial
         map={texture}
         roughness={0.9}
