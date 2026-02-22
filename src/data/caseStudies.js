@@ -88,7 +88,7 @@ export const caseStudies = {
 
 // About me content
 export const aboutContent = {
-  name: 'Your Name',
+  name: 'I.x35',
   tagline: 'Product Designer crafting meaningful digital experiences',
   bio: [
     'First paragraph about your background, experience, and what drives you as a designer.',
