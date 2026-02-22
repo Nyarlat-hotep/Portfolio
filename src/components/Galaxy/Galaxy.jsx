@@ -12,6 +12,9 @@ import CosmicVoid from './CosmicVoid';
 import VoidVignette from './VoidVignette';
 import CameraController from './CameraController';
 import Constellation from './Constellation';
+import ShootingStars from './ShootingStars';
+import DistantGalaxy from './DistantGalaxy';
+import Asteroid from './Asteroid';
 import BottomNav from '../Navigation/BottomNav';
 import { planetsData, getAdjacentPlanet } from '../../data/planets';
 import { isWebGLSupported } from '../../utils/webglDetect';
@@ -77,6 +80,18 @@ function WebGLFallback() {
   );
 }
 
+// Alien transmission glitch text generator
+const ALIEN_CHARS = '░▒▓│┤╣║╗╝╜╛┐└┴┬├─┼╚╔╩╦╠═╬╧╙╘╒╓╪┘┌█▄▌▐▀∑∏∫∂∇⊗⊕⊖⊘⊙◊●◐◑◒◓◔⍟⍩⍪⍫⍬⍭⍮⍯⍰ΨΩΞΔΛΦΣΘ';
+function generateAlienText() {
+  const rand = (n) => Math.floor(Math.random() * n);
+  const chars = (len) => Array.from({ length: len }, () => ALIEN_CHARS[rand(ALIEN_CHARS.length)]).join('');
+  return [
+    chars(6) + ' ' + rand(9999).toString().padStart(4,'0') + ':' + rand(9999).toString().padStart(4,'0') + ' ' + chars(4),
+    chars(30),
+    chars(8) + ' ΨΩ ' + chars(12) + ' ' + chars(4),
+  ].join('\n');
+}
+
 // Glitchy text effect - randomly corrupts characters
 function GlitchText({ children, active = true }) {
   const [text, setText] = useState(children);
@@ -123,6 +138,8 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
   const introCompletedRef = useRef(false);
   const welcomeTimeoutRef = useRef(null);
   const controlsRef = useRef(null);
+  const [asteroidMessage, setAsteroidMessage] = useState(null);
+  const asteroidDismissRef = useRef(null);
 
   // Start intro only after scene is ready (runs once)
   useEffect(() => {
@@ -143,6 +160,13 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
   // Memoized vignette handler
   const handleVignetteChange = useCallback((intensity) => {
     setVignetteIntensity(intensity);
+  }, []);
+
+  // Asteroid click — show alien transmission, auto-dismiss after 5s
+  const handleAsteroidClick = useCallback(() => {
+    setAsteroidMessage(generateAlienText());
+    if (asteroidDismissRef.current) clearTimeout(asteroidDismissRef.current);
+    asteroidDismissRef.current = setTimeout(() => setAsteroidMessage(null), 5000);
   }, []);
 
   // Memoized click handlers per planet
@@ -304,6 +328,15 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
         {/* Starfield background */}
         <Starfield count={1200} />
 
+        {/* Shooting stars — rare streaks every ~60s */}
+        <ShootingStars />
+
+        {/* Distant galaxy — discovered by orbiting east */}
+        <DistantGalaxy />
+
+        {/* Drifting alien asteroid — clickable */}
+        <Asteroid onAsteroidClick={handleAsteroidClick} />
+
         {/* Daily constellation — opposite side of planet cluster from Cosmic Void */}
         <Constellation position={[-28, 18, -55]} onSelect={handleConstellationSelect} onHover={handleHover} />
 
@@ -411,6 +444,29 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
             >
               <GlitchText active={showWelcome}>Welcome traveller</GlitchText>
             </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Asteroid alien transmission message */}
+      <AnimatePresence>
+        {asteroidMessage && (
+          <motion.div
+            key="asteroid-msg"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 8 }}
+            transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
+            className="asteroid-message"
+          >
+            <div className="asteroid-message-header">
+              <span className="asteroid-message-label">SIGNAL INTERCEPTED</span>
+              <button
+                className="asteroid-message-close"
+                onClick={() => { setAsteroidMessage(null); clearTimeout(asteroidDismissRef.current); }}
+              >✕</button>
+            </div>
+            <pre className="asteroid-message-body">{asteroidMessage}</pre>
           </motion.div>
         )}
       </AnimatePresence>
