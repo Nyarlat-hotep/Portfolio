@@ -352,3 +352,9 @@
   opacity: 0.4;
   z-index: 10;
 }
+
+@media (max-width: 768px) {
+  .overlay-title {
+    font-size: 2rem;
+  }
+}

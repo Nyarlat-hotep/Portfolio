@@ -113,7 +113,6 @@ export default function PageOverlay({ isOpen, onClose, children, title, planetCo
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.2 }}
                     style={{
-                      fontSize: '2.5rem',
                       fontWeight: 200,
                       letterSpacing: '2px',
                       margin: 0,
