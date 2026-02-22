@@ -2,18 +2,18 @@ import { useRef, useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
-const START    = new THREE.Vector3(-22, 1.5, 8);
+const START    = new THREE.Vector3(-32, 2, 14);
 const VELOCITY = new THREE.Vector3(0.55, 0.04, -0.38);
-const FADE_START       = 28;
+const FADE_START       = 40;
 const DORMANT_DURATION = 18;
 
 // Elongation ratios — classic asteroid proportions
 const EX = 1.9, EY = 0.65, EZ = 0.82;
 
 const RESPAWN_ORIGINS = [
-  new THREE.Vector3(-22, 2,   8),
-  new THREE.Vector3(-18, -1,  12),
-  new THREE.Vector3(-20, 3,   3),
+  new THREE.Vector3(-32, 2,   14),
+  new THREE.Vector3(-28, -2,  18),
+  new THREE.Vector3(-30, 4,    6),
 ];
 const RESPAWN_VELS = [
   new THREE.Vector3(0.55,  0.04, -0.38),

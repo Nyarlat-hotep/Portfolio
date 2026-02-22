@@ -5,9 +5,9 @@ import { createCircularParticleTexture } from '../../utils/threeUtils';
 
 // Positioned east of the planet cluster — discovered by orbiting right
 const GALAXY_RADIUS  = 9;
-const BULGE_COUNT    = 350;
-const ARM_COUNT      = 720; // per arm, 2 arms total
-const HALO_COUNT     = 180;
+const BULGE_COUNT    = 315;
+const ARM_COUNT      = 648; // per arm, 2 arms total
+const HALO_COUNT     = 162;
 
 function buildGalaxyGeometry() {
   const total     = BULGE_COUNT + ARM_COUNT * 2 + HALO_COUNT;
@@ -32,7 +32,7 @@ function buildGalaxyGeometry() {
     positions[idx * 3]     = r * Math.sin(phi) * Math.cos(theta);
     positions[idx * 3 + 1] = r * Math.sin(phi) * Math.sin(theta) * 0.35; // flatten
     positions[idx * 3 + 2] = r * Math.cos(phi);
-    const brightness = 0.65 + Math.random() * 0.35;
+    const brightness = 0.28 + Math.random() * 0.22;
     colors[idx * 3]     = bulgeColor.r * brightness;
     colors[idx * 3 + 1] = bulgeColor.g * brightness;
     colors[idx * 3 + 2] = bulgeColor.b * brightness;
@@ -116,11 +116,11 @@ function createNebulaSplatTexture() {
 }
 
 function buildNebulaGeometry() {
-  const count     = 350;
+  const count     = 315;
   const positions = new Float32Array(count * 3);
   const colors    = new Float32Array(count * 3);
 
-  const coreCol  = new THREE.Color('#ffcc77'); // warm amber — galactic core
+  const coreCol  = new THREE.Color('#cc9944'); // muted amber — galactic core
   const midCol   = new THREE.Color('#cc88aa'); // dusty rose — arm haze
   const outerCol = new THREE.Color('#7755bb'); // violet — outer disc
 

@@ -239,4 +239,11 @@
     left: 12px;
     width: auto;
   }
+
+  .asteroid-message {
+    bottom: 186px;
+    left: 12px;
+    right: 12px;
+    width: auto;
+  }
 }
