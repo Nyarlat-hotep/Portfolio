@@ -3,7 +3,7 @@ import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
 import { useState, useEffect, Suspense, useMemo, useCallback, useRef } from 'react';
 import * as THREE from 'three';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, ArrowRight, Move, ZoomIn } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Move, ZoomIn, X } from 'lucide-react';
 import './Galaxy.css';
 import Planet from './Planet';
 import CustomPlanet from './CustomPlanet';
@@ -83,13 +83,7 @@ function WebGLFallback() {
 // Alien transmission glitch text generator
 const ALIEN_CHARS = '░▒▓│┤╣║╗╝╜╛┐└┴┬├─┼╚╔╩╦╠═╬╧╙╘╒╓╪┘┌█▄▌▐▀∑∏∫∂∇⊗⊕⊖⊘⊙◊●◐◑◒◓◔⍟⍩⍪⍫⍬⍭⍮⍯⍰ΨΩΞΔΛΦΣΘ';
 function generateAlienText() {
-  const rand = (n) => Math.floor(Math.random() * n);
-  const chars = (len) => Array.from({ length: len }, () => ALIEN_CHARS[rand(ALIEN_CHARS.length)]).join('');
-  return [
-    chars(6) + ' ' + rand(9999).toString().padStart(4,'0') + ':' + rand(9999).toString().padStart(4,'0') + ' ' + chars(4),
-    chars(30),
-    chars(8) + ' ΨΩ ' + chars(12) + ' ' + chars(4),
-  ].join('\n');
+  return "Ph'nglui mglw'nafh Cthulhu R'lyeh wgah'nagl fhtagn";
 }
 
 // Glitchy text effect - randomly corrupts characters
@@ -139,7 +133,6 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
   const welcomeTimeoutRef = useRef(null);
   const controlsRef = useRef(null);
   const [asteroidMessage, setAsteroidMessage] = useState(null);
-  const asteroidDismissRef = useRef(null);
 
   // Ref-stable wrapper — prevents handler useMemo/useCallback deps from invalidating
   // when parent passes a new onPlanetClick function reference on each render
@@ -174,11 +167,9 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
     setVignetteIntensity(intensity);
   }, []);
 
-  // Asteroid click — show alien transmission, auto-dismiss after 5s
+  // Asteroid click — show alien transmission, dismiss via close button only
   const handleAsteroidClick = useCallback(() => {
     setAsteroidMessage(generateAlienText());
-    if (asteroidDismissRef.current) clearTimeout(asteroidDismissRef.current);
-    asteroidDismissRef.current = setTimeout(() => setAsteroidMessage(null), 5000);
   }, []);
 
   // Memoized click handlers per planet — stable forever via ref, no dep on onPlanetClick
@@ -475,8 +466,9 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
               <span className="asteroid-message-label">SIGNAL INTERCEPTED</span>
               <button
                 className="asteroid-message-close"
-                onClick={() => { setAsteroidMessage(null); clearTimeout(asteroidDismissRef.current); }}
-              >✕</button>
+                onClick={() => setAsteroidMessage(null)}
+                aria-label="Close"
+              ><X size={16} /></button>
             </div>
             <pre className="asteroid-message-body">{asteroidMessage}</pre>
           </motion.div>
@@ -661,9 +653,7 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
                 className="constellation-modal-close"
                 onClick={() => setConstellationModal(null)}
                 aria-label="Close"
-              >
-                ✕
-              </button>
+              ><X size={16} /></button>
             </div>
             <div className="constellation-modal-body">
               {constellationModal.loading ? (
