@@ -3,13 +3,14 @@ import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { CONSTELLATIONS } from '../../data/constellations';
+import { createCircularParticleTexture } from '../../utils/threeUtils';
 
 const SCALE = 1.6;
 const STAR_SIZE = 3.0;
 const TUBE_RADIUS = 0.018;
-const TOOLTIP_COLOR = '#b8b0d8';
+const TOOLTIP_COLOR = '#00d4ff';
 
-// Soft lavender-white glow texture for stars
+// Cyan-white glow texture for stars — matches planet palette
 function createGlowTexture() {
   const size = 128;
   const canvas = document.createElement('canvas');
@@ -19,21 +20,40 @@ function createGlowTexture() {
   const center = size / 2;
 
   const glow = ctx.createRadialGradient(center, center, 0, center, center, center);
-  glow.addColorStop(0,    'rgba(220, 215, 255, 0.9)');
-  glow.addColorStop(0.2,  'rgba(200, 192, 255, 0.7)');
-  glow.addColorStop(0.45, 'rgba(170, 160, 240, 0.35)');
-  glow.addColorStop(0.7,  'rgba(140, 130, 210, 0.12)');
-  glow.addColorStop(1.0,  'rgba(110, 100, 180, 0)');
+  glow.addColorStop(0,    'rgba(160, 232, 255, 0.9)');
+  glow.addColorStop(0.2,  'rgba(0, 212, 255, 0.65)');
+  glow.addColorStop(0.45, 'rgba(0, 160, 220, 0.28)');
+  glow.addColorStop(0.7,  'rgba(0, 100, 180, 0.1)');
+  glow.addColorStop(1.0,  'rgba(0, 50, 140, 0)');
   ctx.fillStyle = glow;
   ctx.fillRect(0, 0, size, size);
 
   const core = ctx.createRadialGradient(center, center, 0, center, center, center * 0.25);
   core.addColorStop(0,   'rgba(255, 252, 255, 0.95)');
-  core.addColorStop(0.5, 'rgba(240, 235, 255, 0.5)');
-  core.addColorStop(1,   'rgba(220, 215, 255, 0)');
+  core.addColorStop(0.5, 'rgba(200, 242, 255, 0.5)');
+  core.addColorStop(1,   'rgba(0, 212, 255, 0)');
   ctx.fillStyle = core;
   ctx.fillRect(0, 0, size, size);
 
+  return new THREE.CanvasTexture(canvas);
+}
+
+// Very soft haze splat — extremely gradual falloff so particles blend into fog
+function createNebulaSplatTexture() {
+  const size = 128;
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  const center = size / 2;
+  const grad = ctx.createRadialGradient(center, center, 0, center, center, center);
+  grad.addColorStop(0,   'rgba(255,255,255,0.3)');
+  grad.addColorStop(0.2, 'rgba(255,255,255,0.18)');
+  grad.addColorStop(0.45,'rgba(255,255,255,0.08)');
+  grad.addColorStop(0.7, 'rgba(255,255,255,0.02)');
+  grad.addColorStop(1,   'rgba(255,255,255,0)');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, size, size);
   return new THREE.CanvasTexture(canvas);
 }
 
@@ -47,22 +67,26 @@ function getTodayConstellation() {
 }
 
 export default function Constellation({ position = [0, 2, -55], onSelect, onHover }) {
-  const starMatRef = useRef();
-  const lineMatRef = useRef();
-  const _projVec = useRef(new THREE.Vector3());
-  const _starOpacity = useRef(0.55);
-  const _starSize = useRef(STAR_SIZE);
+  const starMatRef    = useRef();
+  const lineMatRef    = useRef();
+  const haloRef       = useRef();
+  const nebulaRef     = useRef();
+  const _projVec      = useRef(new THREE.Vector3());
+  const _starOpacity  = useRef(0.55);
+  const _starSize     = useRef(STAR_SIZE);
   const [hovered, setHovered] = useState(false);
-  const hoveredRef = useRef(false);
+  const hoveredRef    = useRef(false);
   const { camera, size } = useThree();
 
-  const constellation = useMemo(() => getTodayConstellation(), []);
-  const glowTexture = useMemo(() => createGlowTexture(), []);
+  const constellation     = useMemo(() => getTodayConstellation(), []);
+  const glowTexture       = useMemo(() => createGlowTexture(), []);
+  const nebulaSplatTex    = useMemo(() => createNebulaSplatTexture(), []);
+  const haloTexture       = useMemo(() => createCircularParticleTexture(), []);
 
-  const { starGeo, mergedLineGeo, bounds } = useMemo(() => {
+  const { starGeo, mergedLineGeo, bounds, haloGeo, nebulaCloudGeo } = useMemo(() => {
     const scaledStars = constellation.stars.map(([x, y]) => new THREE.Vector3(x * SCALE, y * SCALE, 0));
 
-    // Points geometry
+    // Star points geometry
     const posArr = new Float32Array(scaledStars.length * 3);
     scaledStars.forEach((v, i) => {
       posArr[i * 3]     = v.x;
@@ -72,7 +96,7 @@ export default function Constellation({ position = [0, 2, -55], onSelect, onHove
     const starGeo = new THREE.BufferGeometry();
     starGeo.setAttribute('position', new THREE.BufferAttribute(posArr, 3));
 
-    // Tube + sphere-cap geometry, merged into one mesh
+    // Tube + sphere-cap line geometry merged into one mesh
     const pieces = [];
     constellation.lines.forEach(([a, b]) => {
       const curve = new THREE.LineCurve3(scaledStars[a], scaledStars[b]);
@@ -86,7 +110,7 @@ export default function Constellation({ position = [0, 2, -55], onSelect, onHove
     const mergedLineGeo = mergeGeometries(pieces);
     pieces.forEach(g => g.dispose());
 
-    // Bounding box for the hover plane
+    // Bounding box
     const xs = scaledStars.map(v => v.x);
     const ys = scaledStars.map(v => v.y);
     const minX = Math.min(...xs), maxX = Math.max(...xs);
@@ -100,22 +124,75 @@ export default function Constellation({ position = [0, 2, -55], onSelect, onHove
       topY: maxY,
     };
 
-    return { starGeo, mergedLineGeo, bounds };
+    // ── Halo particles — flat disc of purple/green specks ──
+    const haloCount  = 55;
+    const hPositions = new Float32Array(haloCount * 3);
+    const hColors    = new Float32Array(haloCount * 3);
+    const purpleCol  = new THREE.Color('#a855f7');
+    const greenCol   = new THREE.Color('#00ff7a');
+
+    for (let i = 0; i < haloCount; i++) {
+      const angle  = Math.random() * Math.PI * 2;
+      const radius = 1.5 + Math.random() * 5.5;
+      hPositions[i * 3]     = bounds.cx + Math.cos(angle) * radius;
+      hPositions[i * 3 + 1] = bounds.cy + Math.sin(angle) * radius * 0.65 + (Math.random() - 0.5) * 3;
+      hPositions[i * 3 + 2] = (Math.random() - 0.5) * 1.5;
+      const col = Math.random() > 0.5 ? purpleCol : greenCol;
+      hColors[i * 3] = col.r; hColors[i * 3 + 1] = col.g; hColors[i * 3 + 2] = col.b;
+    }
+    const haloGeo = new THREE.BufferGeometry();
+    haloGeo.setAttribute('position', new THREE.BufferAttribute(hPositions, 3));
+    haloGeo.setAttribute('color',    new THREE.BufferAttribute(hColors, 3));
+
+    // ── Volumetric nebula cloud — 3D particle distribution ──
+    // Two layers: dense inner core + sparse outer shell, both in 3D
+    const nebulaCount  = 280;
+    const nPositions   = new Float32Array(nebulaCount * 3);
+    const nColors      = new Float32Array(nebulaCount * 3);
+
+    const spreadX = bounds.width  * 0.65;
+    const spreadY = bounds.height * 0.65;
+    const spreadZ = 4.5; // real Z depth makes it 3D from any angle
+
+    for (let i = 0; i < nebulaCount; i++) {
+      // Gaussian-ish: average two randoms → natural density falloff toward edges
+      const rx = ((Math.random() + Math.random()) / 2 - 0.5) * 2;
+      const ry = ((Math.random() + Math.random()) / 2 - 0.5) * 2;
+      const rz = (Math.random() - 0.5) * 2;
+
+      nPositions[i * 3]     = bounds.cx + rx * spreadX;
+      nPositions[i * 3 + 1] = bounds.cy + ry * spreadY;
+      nPositions[i * 3 + 2] = rz * spreadZ;
+
+      // Purple core, green toward edges — three-way mix with occasional cyan bridge
+      const dist = Math.sqrt(rx * rx + ry * ry);
+      const edgeBias = Math.min(dist * 1.2, 1);
+      const col = new THREE.Color().lerpColors(purpleCol, greenCol, edgeBias * Math.random());
+      // Vary brightness so not all particles look the same intensity
+      col.multiplyScalar(0.5 + Math.random() * 0.5);
+      nColors[i * 3] = col.r; nColors[i * 3 + 1] = col.g; nColors[i * 3 + 2] = col.b;
+    }
+    const nebulaCloudGeo = new THREE.BufferGeometry();
+    nebulaCloudGeo.setAttribute('position', new THREE.BufferAttribute(nPositions, 3));
+    nebulaCloudGeo.setAttribute('color',    new THREE.BufferAttribute(nColors, 3));
+
+    return { starGeo, mergedLineGeo, bounds, haloGeo, nebulaCloudGeo };
   }, [constellation]);
 
   useEffect(() => {
     return () => {
       starGeo.dispose();
       glowTexture.dispose();
+      nebulaSplatTex.dispose();
+      haloGeo.dispose();
+      nebulaCloudGeo.dispose();
       mergedLineGeo?.dispose();
     };
-  }, [starGeo, glowTexture, mergedLineGeo]);
+  }, [starGeo, glowTexture, nebulaSplatTex, haloGeo, nebulaCloudGeo, mergedLineGeo]);
 
-  // Smooth star glow + tooltip projection every frame
   useFrame((_, delta) => {
     const isHovered = hoveredRef.current;
 
-    // Delta-based lerp — speed 2.5 gives ~0.8s transition, frame-rate independent
     const speed = delta * 2.5;
     const targetOpacity = isHovered ? 0.9 : 0.55;
     const targetSize    = isHovered ? STAR_SIZE * 1.4 : STAR_SIZE;
@@ -127,7 +204,16 @@ export default function Constellation({ position = [0, 2, -55], onSelect, onHove
       starMatRef.current.size    = _starSize.current;
     }
 
-    // Tooltip projection — only while hovered
+    // Halo slow z-rotation
+    if (haloRef.current) {
+      haloRef.current.rotation.z += delta * 0.025;
+    }
+
+    // Nebula slow y-rotation — different axis creates parallax depth illusion
+    if (nebulaRef.current) {
+      nebulaRef.current.rotation.y += delta * 0.015;
+    }
+
     if (!isHovered) return;
     const [px, py, pz] = position;
     _projVec.current.set(px + bounds.cx, py + bounds.topY + 2.5, pz);
@@ -143,22 +229,49 @@ export default function Constellation({ position = [0, 2, -55], onSelect, onHove
     onHover?.(null, null);
   };
 
-  // Sync star color on hover only — opacity/size handled in useFrame
   useEffect(() => {
     if (starMatRef.current) {
-      starMatRef.current.color.set(hovered ? '#ffffff' : '#d8d4f0');
+      starMatRef.current.color.set(hovered ? '#ffffff' : '#a0e8ff');
     }
   }, [hovered]);
 
   return (
     <group position={position}>
+      {/* Volumetric nebula cloud — large overlapping puffs accumulate into a haze */}
+      <points ref={nebulaRef} geometry={nebulaCloudGeo}>
+        <pointsMaterial
+          map={nebulaSplatTex}
+          size={5.5}
+          vertexColors
+          transparent
+          opacity={0.09}
+          depthWrite={false}
+          blending={THREE.AdditiveBlending}
+          sizeAttenuation
+        />
+      </points>
+
+      {/* Halo particles — slow rotating disc of specks */}
+      <points ref={haloRef} geometry={haloGeo}>
+        <pointsMaterial
+          map={haloTexture}
+          size={0.12}
+          vertexColors
+          transparent
+          opacity={0.55}
+          depthWrite={false}
+          blending={THREE.AdditiveBlending}
+          sizeAttenuation
+        />
+      </points>
+
       {/* Stars */}
       <points geometry={starGeo}>
         <pointsMaterial
           ref={starMatRef}
           size={STAR_SIZE}
           map={glowTexture}
-          color="#d8d4f0"
+          color="#a0e8ff"
           transparent
           opacity={0.55}
           alphaTest={0.01}
@@ -170,11 +283,11 @@ export default function Constellation({ position = [0, 2, -55], onSelect, onHove
       {/* Single merged line mesh */}
       {mergedLineGeo && (
         <mesh geometry={mergedLineGeo}>
-          <meshBasicMaterial ref={lineMatRef} color="#9890c0" transparent opacity={0.2} />
+          <meshBasicMaterial ref={lineMatRef} color="#a855f7" transparent opacity={0.25} />
         </mesh>
       )}
 
-      {/* Invisible bounding rectangle — single hover/click surface for the whole constellation */}
+      {/* Invisible bounding rectangle — hover/click surface */}
       <mesh
         position={[bounds.cx, bounds.cy, 0]}
         onPointerOver={(e) => { e.stopPropagation(); hoveredRef.current = true; setHovered(true); }}
