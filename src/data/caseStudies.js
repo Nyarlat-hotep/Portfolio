@@ -115,7 +115,7 @@ export const aboutContent = {
     'Maze'
   ],
   contact: {
-    email: 'your.email@example.com',
+    email: 'tcorneliusart@gmail.com',
     // Add other contact methods if desired
   },
   social: {

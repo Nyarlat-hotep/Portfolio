@@ -94,7 +94,6 @@ export default function PageOverlay({ isOpen, onClose, children, title, planetCo
               className="overlay-header"
               style={{
                 display: 'flex',
-                alignItems: 'center',
                 justifyContent: 'space-between',
                 padding: '2rem 3rem',
                 borderBottom: `1px solid ${planetColor}26`,
