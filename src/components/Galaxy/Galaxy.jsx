@@ -453,7 +453,7 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
                 whiteSpace: 'nowrap'
               }}
             >
-              <GlitchText active={showWelcome}>Welcome traveller</GlitchText>
+              <GlitchText active={showWelcome}>Welcome traveler</GlitchText>
             </motion.div>
           </motion.div>
         )}

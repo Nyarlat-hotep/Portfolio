@@ -8,9 +8,6 @@ const VELOCITY = new THREE.Vector3(0.55, 0.04, -0.38);
 const FADE_START       = 40;
 const DORMANT_DURATION = 18;
 
-// Elongation ratios — slightly lumpy but mostly spherical
-const EX = 1.25, EY = 0.85, EZ = 0.95;
-
 const RESPAWN_ORIGINS = [
   new THREE.Vector3(-32, 2,   14),
   new THREE.Vector3(-28, -2,  18),
@@ -22,121 +19,93 @@ const RESPAWN_VELS = [
   new THREE.Vector3(0.60,  0.06, -0.35),
 ];
 
-// ── Craters ───────────────────────────────────────────────────────────────────
+const NORMAL_SCALE = new THREE.Vector2(2.0, 2.0);
 
-const CRATERS = [
-  { cx: 0.30, cy: 0.40, r: 0.12 },
-  { cx: 0.70, cy: 0.62, r: 0.09 },
-  { cx: 0.55, cy: 0.18, r: 0.07 },
-  { cx: 0.14, cy: 0.72, r: 0.10 },
-  { cx: 0.82, cy: 0.30, r: 0.06 },
-  { cx: 0.45, cy: 0.80, r: 0.05 },
-  { cx: 0.65, cy: 0.48, r: 0.04 },
-  { cx: 0.25, cy: 0.55, r: 0.04 },
-];
+// ── Pyramid geometry ───────────────────────────────────────────────────────────
 
-function craterHeight(nx, ny) {
-  let h = 0;
-  for (const c of CRATERS) {
-    const dx = nx - c.cx, dy = ny - c.cy;
-    const dist = Math.sqrt(dx * dx + dy * dy) / c.r;
-    if (dist < 1.3) {
-      if (dist < 0.75) {
-        h -= (1 - dist / 0.75) * 0.55;
-      } else {
-        h += (1 - (dist - 0.75) / 0.55) * 0.2;
-      }
-    }
-  }
-  return h;
+function buildPyramidGeo(rimScale = 1) {
+  const geo = new THREE.ConeGeometry(rimScale * 0.85, rimScale * 1.7, 4);
+  geo.computeVertexNormals();
+  return geo;
 }
 
-function getHeight(x, y, size) {
-  const nx = x / size, ny = y / size;
-  return fbm(nx * 6, ny * 6) + craterHeight(nx, ny);
+// ── Procedural stone textures ─────────────────────────────────────────────────
+// sampleHeight combines two fbm layers — large cracks + fine grain
+
+function sampleHeight(nx, ny) {
+  return fbm(nx * 5, ny * 5, 5) * 0.65
+       + fbm(nx * 16 + 7.3, ny * 16 + 7.3, 3) * 0.35;
 }
 
-// ── Procedural textures ───────────────────────────────────────────────────────
-
-function createAsteroidTextures() {
-  const size = 512;
-
-  // Albedo
-  const albedoCanvas = document.createElement('canvas');
-  albedoCanvas.width = albedoCanvas.height = size;
-  const actx = albedoCanvas.getContext('2d');
-  const albedoImg = actx.createImageData(size, size);
-  const ad = albedoImg.data;
+function createStoneAlbedo(size = 256) {
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  const img = ctx.createImageData(size, size);
+  const d = img.data;
 
   for (let y = 0; y < size; y++) {
     for (let x = 0; x < size; x++) {
-      const h = getHeight(x, y, size);
+      const nx = x / size, ny = y / size;
+      // n in [0,1]
+      const n = Math.max(0, Math.min(1, sampleHeight(nx, ny)));
+
+      // Warm sandstone palette: dark crevice → mid brown → sandy highlight
+      const r = Math.round(52  + n * 118);
+      const g = Math.round(38  + n * 78);
+      const b = Math.round(22  + n * 42);
+
       const i = (y * size + x) * 4;
-
-      // 0–1: how far into shadow vs highlight (crater floors dark, ridges lighter)
-      const heightNorm = Math.max(0, Math.min(1, (h + 0.55) / 1.2));
-
-      // Large-scale zone noise → which color family dominates this region
-      const zoneLarge  = fbm(x / size * 2.5 + 5,  y / size * 2.5 + 9,  4);
-      // Fine detail noise → texture within each zone
-      const zoneDetail = fbm(x / size * 9   + 2,  y / size * 9   + 4,  3);
-      const zone = Math.max(0, Math.min(1, zoneLarge * 0.72 + zoneDetail * 0.28));
-
-      // Brown family: warm earth → rusty amber (dominant)
-      const bR = 62 + heightNorm * 95;
-      const bG = 32 + heightNorm * 48;
-      const bB =  8 + heightNorm * 14;
-
-      // Green family: dark moss → olive (secondary accent)
-      const gR = 18 + heightNorm * 38;
-      const gG = 42 + heightNorm * 52;
-      const gB = 12 + heightNorm * 16;
-
-      // Bias zone toward brown — multiply noise so ≈65% of surface is brown-dominant
-      const brownZone = Math.max(0, Math.min(1, zone * 0.6));
-
-      // Blend: brownZone≈0 → warm brown, brownZone≈1 → mossy green
-      ad[i]   = Math.min(255, Math.max(0, bR + (gR - bR) * brownZone));
-      ad[i+1] = Math.min(255, Math.max(0, bG + (gG - bG) * brownZone));
-      ad[i+2] = Math.min(255, Math.max(0, bB + (gB - bB) * brownZone));
-      ad[i+3] = 255;
+      d[i] = r; d[i+1] = g; d[i+2] = b; d[i+3] = 255;
     }
   }
-  actx.putImageData(albedoImg, 0, 0);
 
-  // Normal map
-  const normalCanvas = document.createElement('canvas');
-  normalCanvas.width = normalCanvas.height = size;
-  const nctx = normalCanvas.getContext('2d');
-  const normalImg = nctx.createImageData(size, size);
-  const nd = normalImg.data;
-  const strength = 13;
+  ctx.putImageData(img, 0, 0);
+  return new THREE.CanvasTexture(canvas);
+}
+
+function createStoneNormal(size = 256) {
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  const img = ctx.createImageData(size, size);
+  const d = img.data;
+
+  const step = 1 / size;
+  const strength = 5.0;
 
   for (let y = 0; y < size; y++) {
     for (let x = 0; x < size; x++) {
+      const nx = x / size, ny = y / size;
+      const dx = sampleHeight(nx + step, ny) - sampleHeight(nx - step, ny);
+      const dy = sampleHeight(nx, ny + step) - sampleHeight(nx, ny - step);
+      const sx = -dx * strength;
+      const sy = -dy * strength;
+      const len = Math.sqrt(sx * sx + sy * sy + 1);
+
       const i = (y * size + x) * 4;
-      const hL = getHeight(Math.max(0,      x - 1), y,                  size);
-      const hR = getHeight(Math.min(size-1, x + 1), y,                  size);
-      const hD = getHeight(x,               Math.max(0,      y - 1),    size);
-      const hU = getHeight(x,               Math.min(size-1, y + 1),    size);
-      const dX = (hR - hL) * strength;
-      const dY = (hU - hD) * strength;
-      const len = Math.sqrt(dX * dX + dY * dY + 1);
-      nd[i]   = Math.round((-dX / len * 0.5 + 0.5) * 255);
-      nd[i+1] = Math.round((-dY / len * 0.5 + 0.5) * 255);
-      nd[i+2] = Math.round((  1 / len * 0.5 + 0.5) * 255);
-      nd[i+3] = 255;
+      d[i]   = Math.round((sx / len * 0.5 + 0.5) * 255);
+      d[i+1] = Math.round((sy / len * 0.5 + 0.5) * 255);
+      d[i+2] = Math.round((1  / len * 0.5 + 0.5) * 255);
+      d[i+3] = 255;
     }
   }
-  nctx.putImageData(normalImg, 0, 0);
 
-  return {
-    albedo:    new THREE.CanvasTexture(albedoCanvas),
-    normalMap: new THREE.CanvasTexture(normalCanvas),
-  };
+  ctx.putImageData(img, 0, 0);
+  return new THREE.CanvasTexture(canvas);
 }
 
-// Soft teal glow sprite for energy wisps
+// Module-level cache — generated once, reused forever
+let _stoneAlbedo = null;
+let _stoneNormal = null;
+function getStoneTextures() {
+  if (!_stoneAlbedo) _stoneAlbedo = createStoneAlbedo();
+  if (!_stoneNormal) _stoneNormal = createStoneNormal();
+  return { albedo: _stoneAlbedo, normal: _stoneNormal };
+}
+
+// ── Wisp glow sprite ──────────────────────────────────────────────────────────
+
 function createWispGlowTexture() {
   const size = 64;
   const canvas = document.createElement('canvas');
@@ -144,7 +113,6 @@ function createWispGlowTexture() {
   const ctx = canvas.getContext('2d');
   const c = size / 2;
 
-  // Outer halo
   const halo = ctx.createRadialGradient(c, c, 0, c, c, c);
   halo.addColorStop(0,    'rgba(180, 255, 240, 1.0)');
   halo.addColorStop(0.25, 'rgba(0,   255, 200, 0.7)');
@@ -153,7 +121,6 @@ function createWispGlowTexture() {
   ctx.fillStyle = halo;
   ctx.fillRect(0, 0, size, size);
 
-  // Bright white core
   const core = ctx.createRadialGradient(c, c, 0, c, c, c * 0.3);
   core.addColorStop(0,   'rgba(255, 255, 255, 0.95)');
   core.addColorStop(0.5, 'rgba(200, 255, 240, 0.4)');
@@ -164,40 +131,10 @@ function createWispGlowTexture() {
   return new THREE.CanvasTexture(canvas);
 }
 
-// ── Module-level texture cache ────────────────────────────────────────────────
-// Computed once per page load — persists across remounts, avoids 500ms+ canvas work
-
-let _asteroidTextureCache = null;
 let _wispTextureCache = null;
-
-function getAsteroidTextures() {
-  if (!_asteroidTextureCache) _asteroidTextureCache = createAsteroidTextures();
-  return _asteroidTextureCache;
-}
-
 function getWispTexture() {
   if (!_wispTextureCache) _wispTextureCache = createWispGlowTexture();
   return _wispTextureCache;
-}
-
-// ── Geometry builder ──────────────────────────────────────────────────────────
-// SphereGeometry gives a dense, indexed mesh — smooth normals + no polygon silhouette
-
-function buildAsteroidGeo(rimScale = 1, seg = 64) {
-  const geo = new THREE.SphereGeometry(1, seg, Math.round(seg * 0.75));
-  const pos = geo.attributes.position;
-  for (let i = 0; i < pos.count; i++) {
-    // Light noise — enough for rock irregularity, not enough to create hard edges
-    const noise = 0.03 + ((i * 137 + 29) % 100) / 100 * 0.11;
-    pos.setXYZ(i,
-      pos.getX(i) * EX * rimScale * (1 + noise),
-      pos.getY(i) * EY * rimScale * (1 + noise * 0.8),
-      pos.getZ(i) * EZ * rimScale * (1 + noise * 0.9),
-    );
-  }
-  pos.needsUpdate = true;
-  geo.computeVertexNormals();
-  return geo;
 }
 
 // ── Energy wisps ──────────────────────────────────────────────────────────────
@@ -224,9 +161,10 @@ export default function Asteroid({ onAsteroidClick }) {
   const rimMatRef  = useRef();
   const wispMatRef = useRef();
 
-  // High-res sphere for smooth surface; low-res copy for rim glow
-  const geometry = useMemo(() => buildAsteroidGeo(1,    64), []);
-  const rimGeo   = useMemo(() => buildAsteroidGeo(1.14, 32), []);
+  const geometry = useMemo(() => buildPyramidGeo(1),    []);
+  const rimGeo   = useMemo(() => buildPyramidGeo(1.14), []);
+
+  const { albedo, normal } = useMemo(() => getStoneTextures(), []);
 
   const wispGeo = useMemo(() => {
     const positions = new Float32Array(WISP_COUNT * 3);
@@ -237,10 +175,8 @@ export default function Asteroid({ onAsteroidClick }) {
     return geo;
   }, []);
 
-  const wispData                = useMemo(() => buildWispData(), []);
-  const { albedo, normalMap }   = useMemo(() => getAsteroidTextures(), []);
-  const wispTexture             = useMemo(() => getWispTexture(), []);
-  const normalScale             = useMemo(() => new THREE.Vector2(2.2, 2.2), []);
+  const wispData    = useMemo(() => buildWispData(), []);
+  const wispTexture = useMemo(() => getWispTexture(), []);
 
   const stateRef = useRef({
     pos:          START.clone(),
@@ -257,7 +193,7 @@ export default function Asteroid({ onAsteroidClick }) {
       geometry.dispose();
       rimGeo.dispose();
       wispGeo.dispose();
-      // albedo, normalMap, wispTexture are module-level caches — not disposed here
+      // albedo, normal, wispTexture are module-level caches — not disposed here
     };
   }, [geometry, rimGeo, wispGeo]);
 
@@ -298,7 +234,6 @@ export default function Asteroid({ onAsteroidClick }) {
     s.fadeOpacity += (s.fadeTarget - s.fadeOpacity) * Math.min(delta * 1.2, 1);
 
     if (mainMatRef.current) {
-      // Toggle transparent only when actually fading — keeps it opaque (and properly depth-sorted) at full opacity
       const fading = s.fadeOpacity < 0.99;
       mainMatRef.current.transparent = fading;
       mainMatRef.current.opacity     = fading ? s.fadeOpacity : 1;
@@ -307,16 +242,16 @@ export default function Asteroid({ onAsteroidClick }) {
     if (rimMatRef.current)  rimMatRef.current.opacity  = 0.07 * s.fadeOpacity;
     if (wispMatRef.current) wispMatRef.current.opacity = 0.7  * s.fadeOpacity;
 
-    // Animate wisps along an ellipse matching the asteroid's elongation
+    // Animate wisps orbiting the pyramid
     const t = state.clock.elapsedTime;
     const posAttr = wispGeo.attributes.position;
     wispData.forEach((w, i) => {
       w.theta += w.speed * delta;
       const r = w.radius + Math.sin(t * w.bobSpeed + w.bobPhase) * w.bobAmp;
       posAttr.setXYZ(i,
-        Math.sin(w.phi) * Math.cos(w.theta) * r * EX,
-        Math.cos(w.phi) * r * EY,
-        Math.sin(w.phi) * Math.sin(w.theta) * r * EZ,
+        Math.sin(w.phi) * Math.cos(w.theta) * r,
+        Math.cos(w.phi) * r,
+        Math.sin(w.phi) * Math.sin(w.theta) * r,
       );
     });
     posAttr.needsUpdate = true;
@@ -325,7 +260,7 @@ export default function Asteroid({ onAsteroidClick }) {
   return (
     <group ref={groupRef} position={START.toArray()} scale={0.5}>
 
-      {/* Main rock — dense sphere, writes depth so rim clips to silhouette */}
+      {/* Main pyramid — stone texture + normal map */}
       <mesh
         renderOrder={0}
         geometry={geometry}
@@ -334,16 +269,16 @@ export default function Asteroid({ onAsteroidClick }) {
         <meshStandardMaterial
           ref={mainMatRef}
           map={albedo}
-          normalMap={normalMap}
-          normalScale={normalScale}
+          normalMap={normal}
+          normalScale={NORMAL_SCALE}
           emissive="#00ccaa"
-          emissiveIntensity={0.12}
-          roughness={0.92}
-          metalness={0.05}
+          emissiveIntensity={0.08}
+          roughness={0.95}
+          metalness={0.02}
         />
       </mesh>
 
-      {/* Rim glow — slightly expanded BackSide copy, clips to rock silhouette */}
+      {/* Rim glow — slightly expanded BackSide copy */}
       <mesh renderOrder={1} geometry={rimGeo}>
         <meshBasicMaterial
           ref={rimMatRef}
@@ -356,7 +291,7 @@ export default function Asteroid({ onAsteroidClick }) {
         />
       </mesh>
 
-      {/* Energy wisps — glowing circular sprites orbiting the elongated shape */}
+      {/* Energy wisps — glowing sprites orbiting the pyramid */}
       <points renderOrder={2} geometry={wispGeo}>
         <pointsMaterial
           ref={wispMatRef}
