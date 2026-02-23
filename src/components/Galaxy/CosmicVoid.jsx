@@ -1,4 +1,4 @@
-import { useRef, useState, useMemo, useEffect, useCallback } from 'react';
+import { useRef, useState, useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
@@ -96,39 +96,26 @@ const ringFragmentShader = `
   ${glslNoise}
 
   void main() {
-    float angle = vUv.x; // 0–1 around the ring circumference
-    float side  = vUv.y; // 0–1 around the tube cross-section
+    float angle = vUv.x;
+    float side  = vUv.y;
 
-    // Proximity to tube equator (1 = centre face, 0 = tube edges)
     float equator = 1.0 - abs(side - 0.5) * 2.0;
-
-    // Animated flow — texture streams around the ring over time
     float flowAngle = angle - uTime * uFlowSpeed;
 
-    // Multi-octave plasma turbulence
     float n1 = snoise(vec3(flowAngle * 10.0,  side * 6.0,  uTime * 0.25));
     float n2 = snoise(vec3(flowAngle * 24.0,  side * 11.0, uTime * 0.35 + 5.0));
     float n3 = snoise(vec3(flowAngle * 50.0,  side * 20.0, uTime * 0.15 + 10.0));
     float turb = n1 * 0.55 + n2 * 0.30 + n3 * 0.15;
-    turb = turb * 0.5 + 0.5; // remap to 0–1
+    turb = turb * 0.5 + 0.5;
 
-    // Bright plasma hotspots — clumps of superheated material
     float hotspot = smoothstep(0.62, 0.90, turb) * equator;
 
-    // Colour: blend hot→mid→cool across tube cross-section, modulated by turbulence
     vec3 col = mix(uColorCool, uColorMid, equator);
     col = mix(col, uColorHot, equator * equator * turb);
-
-    // Turbulent brightness variation
     col *= (0.5 + turb * 0.6);
-
-    // Bright plasma clumps overlay
     col = mix(col, uColorHot * 1.9, hotspot * 0.75);
-
-    // Hover brightening
     col *= (1.0 + uHover * 0.55);
 
-    // Alpha: fade at tube edges, boosted by turbulence and hotspots
     float edgeFade = smoothstep(0.0, 0.12, side) * smoothstep(1.0, 0.88, side);
     float alpha = edgeFade * (0.55 + turb * 0.3 + hotspot * 0.12);
     alpha = clamp(alpha, 0.0, 0.95);
@@ -138,49 +125,25 @@ const ringFragmentShader = `
 `;
 
 // ============================================================
-// Tentacle Shaders
+// Void Tentacle Shaders
 // ============================================================
-const tentacleVertexShader = `
-  uniform float uTime;
-  uniform float uIndex;
-  uniform float uHover;
 
+// Simple passthrough — CPU handles all spine/tube animation
+const voidTentacleVertexShader = `
   varying vec2 vUv;
   varying vec3 vNormal;
   varying vec3 vWorldPosition;
 
-  ${glslNoise}
-
   void main() {
     vUv = uv;
-
-    // Displacement intensity increases toward the tip
-    float tipInfluence = pow(uv.x, 1.5);
-
-    // Amplify writhing on hover (no time scaling — that causes jitter)
-    float amp = 1.0 + uHover * 1.5;
-
-    // Multi-octave noise for organic writhing
-    float n1 = snoise(vec3(position * 0.08 + vec3(uTime * 0.3 + uIndex * 10.0)));
-    float n2 = snoise(vec3(position * 0.12 + vec3(100.0, uTime * 0.4 + uIndex * 10.0, 0.0)));
-    float n3 = snoise(vec3(position * 0.05 + vec3(uTime * 0.2, 200.0, uIndex * 10.0)));
-
-    // Displace along normal and lateral directions
-    vec3 displaced = position;
-    displaced += normal * n1 * tipInfluence * 1.5 * amp;
-    displaced.x += n2 * tipInfluence * 1.0 * amp;
-    displaced.y += n3 * tipInfluence * 0.8 * amp;
-
-    // World-space normal (approximate, no non-uniform scale)
     vNormal = normalize(mat3(modelMatrix) * normal);
-
-    vec4 worldPos = modelMatrix * vec4(displaced, 1.0);
+    vec4 worldPos = modelMatrix * vec4(position, 1.0);
     vWorldPosition = worldPos.xyz;
-
     gl_Position = projectionMatrix * viewMatrix * worldPos;
   }
 `;
 
+// Bioluminescent effect — unchanged visual language from original
 const tentacleFragmentShader = `
   uniform float uTime;
   uniform float uIndex;
@@ -193,15 +156,12 @@ const tentacleFragmentShader = `
   ${glslNoise}
 
   void main() {
-    // Base color: deep purple-black
     vec3 baseColor = vec3(0.06, 0.02, 0.12);
 
-    // Fresnel rim glow - more vivid purple on hover
     vec3 viewDir = normalize(cameraPosition - vWorldPosition);
     float fresnel = pow(1.0 - max(dot(viewDir, vNormal), 0.0), 3.0);
     vec3 rimColor = vec3(0.25 + uHover * 0.35, 0.05, 0.45 + uHover * 0.35);
 
-    // Bioluminescent vein pattern - constant speed, brighter on hover
     float veinNoise = snoise(vec3(
       vUv.x * 15.0 + uTime * 0.5,
       vUv.y * 8.0,
@@ -209,18 +169,14 @@ const tentacleFragmentShader = `
     ));
     float veinPattern = smoothstep(0.3, 0.6, veinNoise);
 
-    // Pulsing emission - constant frequency, brighter on hover
     float pulse = sin(uTime * 1.5 + uIndex * 2.0 + vUv.x * 8.0) * 0.5 + 0.5;
     vec3 veinColor = vec3(0.0, 0.8, 0.35) * veinPattern * pulse * (0.2 + uHover * 0.6);
 
-    // Darken toward tip
     float lengthGrad = 1.0 - vUv.x * 0.3;
     baseColor *= lengthGrad;
 
-    // Combine - brighter rim on hover
     vec3 color = baseColor + rimColor * fresnel * (0.6 + uHover * 0.8) + veinColor;
 
-    // Fade out at tip
     float alpha = 1.0 - smoothstep(0.85, 1.0, vUv.x);
 
     gl_FragColor = vec4(color, alpha);
@@ -228,114 +184,192 @@ const tentacleFragmentShader = `
 `;
 
 // ============================================================
-// Helper: Create tapered tube geometry (built once, never recreated)
+// Tentacle geometry constants & pre-allocated working vectors
 // ============================================================
-function createTaperedTube(curve, tubularSegments, baseRadius, tipRadius, radialSegments) {
-  const frames = curve.computeFrenetFrames(tubularSegments, false);
-  const positions = [];
-  const normals = [];
-  const uvs = [];
-  const indices = [];
 
-  for (let i = 0; i <= tubularSegments; i++) {
-    const t = i / tubularSegments;
-    const radius = THREE.MathUtils.lerp(baseRadius, tipRadius, t);
-    const point = curve.getPointAt(t);
-    const N = frames.normals[i];
-    const B = frames.binormals[i];
+const CV_SEGS   = 24;  // spine rings
+const CV_SIDES  = 10;  // tube cross-section vertices
+const CV_R_BASE = 0.4; // tube radius at root
+const CV_R_TIP  = 0.08; // blunt tip radius
 
-    for (let j = 0; j <= radialSegments; j++) {
-      const angle = (j / radialSegments) * Math.PI * 2;
-      const sin = Math.sin(angle);
-      const cos = Math.cos(angle);
+// Shared module-level vectors — zero heap allocation in useFrame
+const _cvSp      = Array.from({ length: CV_SEGS }, () => new THREE.Vector3());
+const _cvTan     = Array.from({ length: CV_SEGS }, () => new THREE.Vector3());
+const _cvNor     = Array.from({ length: CV_SEGS }, () => new THREE.Vector3());
+const _cvBin     = Array.from({ length: CV_SEGS }, () => new THREE.Vector3());
+const _cvInitUp  = new THREE.Vector3();
+const _cvRotAxis = new THREE.Vector3();
 
-      const nx = cos * N.x + sin * B.x;
-      const ny = cos * N.y + sin * B.y;
-      const nz = cos * N.z + sin * B.z;
-      const len = Math.sqrt(nx * nx + ny * ny + nz * nz);
+// ── Geometry builder ──────────────────────────────────────────────────────────
 
-      positions.push(
-        point.x + radius * nx / len,
-        point.y + radius * ny / len,
-        point.z + radius * nz / len
-      );
-      normals.push(nx / len, ny / len, nz / len);
-      uvs.push(t, j / radialSegments);
+function buildVoidTentGeo() {
+  const vCount = CV_SEGS * CV_SIDES;
+  const iCount = (CV_SEGS - 1) * CV_SIDES * 6;
+
+  const positions = new Float32Array(vCount * 3);
+  const normals   = new Float32Array(vCount * 3);
+  const uvs       = new Float32Array(vCount * 2); // static — only depends on s/r
+  const indices   = new Uint16Array(iCount);       // vCount=240 < 65535 ✓
+
+  // Static UVs: u=length position (0=root,1=tip), v=circumference (0-1)
+  for (let s = 0; s < CV_SEGS; s++) {
+    for (let r = 0; r < CV_SIDES; r++) {
+      const i = (s * CV_SIDES + r) * 2;
+      uvs[i]     = s / (CV_SEGS - 1);
+      uvs[i + 1] = r / CV_SIDES;
     }
   }
 
-  for (let i = 0; i < tubularSegments; i++) {
-    for (let j = 0; j < radialSegments; j++) {
-      const a = i * (radialSegments + 1) + j;
-      const b = (i + 1) * (radialSegments + 1) + j;
-      const c = (i + 1) * (radialSegments + 1) + (j + 1);
-      const d = i * (radialSegments + 1) + (j + 1);
-      indices.push(a, b, d);
-      indices.push(b, c, d);
+  // Static index buffer — topology never changes
+  let idx = 0;
+  for (let s = 0; s < CV_SEGS - 1; s++) {
+    for (let r = 0; r < CV_SIDES; r++) {
+      const a = s * CV_SIDES + r;
+      const b = s * CV_SIDES + (r + 1) % CV_SIDES;
+      const c = (s + 1) * CV_SIDES + r;
+      const d = (s + 1) * CV_SIDES + (r + 1) % CV_SIDES;
+      indices[idx++] = a; indices[idx++] = b; indices[idx++] = c;
+      indices[idx++] = b; indices[idx++] = d; indices[idx++] = c;
     }
   }
 
-  const geometry = new THREE.BufferGeometry();
-  geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-  geometry.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3));
-  geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
-  geometry.setIndex(indices);
-  return geometry;
+  const geo     = new THREE.BufferGeometry();
+  const posAttr = new THREE.BufferAttribute(positions, 3);
+  const norAttr = new THREE.BufferAttribute(normals, 3);
+  posAttr.usage = THREE.DynamicDrawUsage;
+  norAttr.usage = THREE.DynamicDrawUsage;
+  geo.setAttribute('position', posAttr);
+  geo.setAttribute('normal',   norAttr);
+  geo.setAttribute('uv',       new THREE.BufferAttribute(uvs, 2));
+  geo.setIndex(new THREE.BufferAttribute(indices, 1));
+  geo.boundingSphere = new THREE.Sphere(new THREE.Vector3(), 30);
+  return geo;
+}
+
+// ── Per-frame update ──────────────────────────────────────────────────────────
+
+function updateVoidTent(geo, config, time, hoverValue, length) {
+  const posArr = geo.attributes.position.array;
+  const norArr = geo.attributes.normal.array;
+
+  // Hover amplifies writhing
+  const effectiveAmp = config.amp * (1 + hoverValue * 1.5);
+
+  // ── 1. Spine positions ────────────────────────────────────────────────────
+  for (let s = 0; s < CV_SEGS; s++) {
+    const tt    = s / (CV_SEGS - 1);
+    const taper = tt * tt; // quadratic: tip moves far, root barely moves
+
+    const wx = Math.sin(tt * 2.5 - time * 1.2 + config.phaseX) * taper * effectiveAmp
+             + Math.sin(tt * 5.0 - time * 2.1 + config.phaseX + 1.0) * taper * effectiveAmp * 0.28;
+    const wz = Math.cos(tt * 2.2 - time * 0.9 + config.phaseZ) * taper * effectiveAmp
+             + Math.cos(tt * 4.8 - time * 1.8 + config.phaseZ + 0.7) * taper * effectiveAmp * 0.28;
+
+    _cvSp[s].set(
+      config.origin.x + config.dir.x * tt * length + config.right.x * wx + config.fwd.x * wz,
+      config.origin.y + config.dir.y * tt * length + config.right.y * wx + config.fwd.y * wz,
+      config.origin.z + config.dir.z * tt * length + config.right.z * wx + config.fwd.z * wz,
+    );
+  }
+
+  // ── 2. Tangents (central differences) ────────────────────────────────────
+  for (let s = 0; s < CV_SEGS; s++) {
+    if (s === 0)              _cvTan[s].subVectors(_cvSp[1], _cvSp[0]);
+    else if (s === CV_SEGS - 1) _cvTan[s].subVectors(_cvSp[s], _cvSp[s - 1]);
+    else                      _cvTan[s].subVectors(_cvSp[s + 1], _cvSp[s - 1]);
+    _cvTan[s].normalize();
+  }
+
+  // ── 3. Parallel-transport Frenet frames ───────────────────────────────────
+  if (Math.abs(_cvTan[0].y) < 0.9) _cvInitUp.set(0, 1, 0);
+  else                               _cvInitUp.set(1, 0, 0);
+  const dot0 = _cvInitUp.dot(_cvTan[0]);
+  _cvNor[0].copy(_cvInitUp).addScaledVector(_cvTan[0], -dot0).normalize();
+  _cvBin[0].crossVectors(_cvTan[0], _cvNor[0]).normalize();
+
+  for (let s = 1; s < CV_SEGS; s++) {
+    _cvRotAxis.crossVectors(_cvTan[s - 1], _cvTan[s]);
+    const axisLen = _cvRotAxis.length();
+    _cvNor[s].copy(_cvNor[s - 1]);
+    if (axisLen > 1e-6) {
+      _cvRotAxis.divideScalar(axisLen);
+      const cosA  = Math.max(-1, Math.min(1, _cvTan[s - 1].dot(_cvTan[s])));
+      _cvNor[s].applyAxisAngle(_cvRotAxis, Math.acos(cosA));
+    }
+    _cvBin[s].crossVectors(_cvTan[s], _cvNor[s]).normalize();
+  }
+
+  // ── 4. Vertex rings ───────────────────────────────────────────────────────
+  for (let s = 0; s < CV_SEGS; s++) {
+    const tt     = s / (CV_SEGS - 1);
+    const radius = CV_R_TIP + (CV_R_BASE - CV_R_TIP) * Math.pow(1 - tt, 0.6);
+
+    for (let r = 0; r < CV_SIDES; r++) {
+      const angle = (r / CV_SIDES) * Math.PI * 2;
+      const cosA  = Math.cos(angle);
+      const sinA  = Math.sin(angle);
+      const vIdx  = (s * CV_SIDES + r) * 3;
+
+      posArr[vIdx]     = _cvSp[s].x + cosA * _cvNor[s].x * radius + sinA * _cvBin[s].x * radius;
+      posArr[vIdx + 1] = _cvSp[s].y + cosA * _cvNor[s].y * radius + sinA * _cvBin[s].y * radius;
+      posArr[vIdx + 2] = _cvSp[s].z + cosA * _cvNor[s].z * radius + sinA * _cvBin[s].z * radius;
+
+      norArr[vIdx]     = cosA * _cvNor[s].x + sinA * _cvBin[s].x;
+      norArr[vIdx + 1] = cosA * _cvNor[s].y + sinA * _cvBin[s].y;
+      norArr[vIdx + 2] = cosA * _cvNor[s].z + sinA * _cvBin[s].z;
+    }
+  }
+
+  geo.attributes.position.needsUpdate = true;
+  geo.attributes.normal.needsUpdate   = true;
 }
 
 // ============================================================
-// Tentacle Component (shader-based animation, static geometry)
+// VoidTentacle Component
 // ============================================================
-function Tentacle({ basePosition, length, index, totalCount, hovered }) {
-  const meshRef = useRef();
+
+// Fixed Y offsets — one per tentacle, avoids Math.random instability
+const TENT_Y_OFFSETS = [0.15, -0.20, 0.30, -0.10, 0.20, -0.25];
+
+function VoidTentacle({ index, totalCount, length, hovered }) {
   const hoverRef = useRef(0);
 
-  const { geometry, material } = useMemo(() => {
-    // Generate an organic curved path for the tentacle
-    const angle = (index / totalCount) * Math.PI * 2;
-    const direction = new THREE.Vector3(
+  const geometry = useMemo(() => buildVoidTentGeo(), []);
+
+  // Tentacle direction + perpendicular axes — computed once
+  const config = useMemo(() => {
+    const angle  = (index / totalCount) * Math.PI * 2;
+    const dir    = new THREE.Vector3(
       Math.sin(angle + index * 0.3),
-      (Math.random() - 0.5) * 0.4,
-      Math.cos(angle + index * 0.3)
+      TENT_Y_OFFSETS[index] ?? 0,
+      Math.cos(angle + index * 0.3),
     ).normalize();
+    const up    = Math.abs(dir.y) < 0.9 ? new THREE.Vector3(0, 1, 0) : new THREE.Vector3(1, 0, 0);
+    const right = new THREE.Vector3().crossVectors(dir, up).normalize();
+    const fwd   = new THREE.Vector3().crossVectors(right, dir).normalize();
+    // Emerge from the event horizon surface (radius ~4.2)
+    const origin = dir.clone().multiplyScalar(4.2);
+    return {
+      dir, origin, right, fwd,
+      phaseX: index * 1.047,        // PI/3 intervals
+      phaseZ: index * 0.785 + 0.5,  // PI/4 intervals, offset
+      amp:    2.5 + index * 0.2,    // 2.5–3.5 units writhe
+    };
+  }, [index, totalCount]);
 
-    // Perpendicular direction for lateral bends
-    const up = new THREE.Vector3(0, 1, 0);
-    const perp = new THREE.Vector3().crossVectors(direction, up).normalize();
+  const material = useMemo(() => new THREE.ShaderMaterial({
+    uniforms: {
+      uTime:  { value: 0 },
+      uIndex: { value: index },
+      uHover: { value: 0 },
+    },
+    vertexShader:   voidTentacleVertexShader,
+    fragmentShader: tentacleFragmentShader,
+    transparent: true,
+    side:        THREE.DoubleSide,
+    depthWrite:  true,
+  }), [index]);
 
-    // Build control points with organic curves
-    const numPoints = 7;
-    const points = [];
-    for (let i = 0; i < numPoints; i++) {
-      const t = i / (numPoints - 1);
-      const curveFactor = Math.sin(t * Math.PI) * 3;
-      points.push(new THREE.Vector3(
-        basePosition[0] + direction.x * t * length + perp.x * curveFactor * Math.sin(index * 1.7 + t * 2),
-        basePosition[1] + direction.y * t * length + curveFactor * Math.cos(index * 1.3 + t) * 0.6,
-        basePosition[2] + direction.z * t * length + perp.z * curveFactor * Math.sin(index * 0.9 + t * 1.5)
-      ));
-    }
-
-    const curve = new THREE.CatmullRomCurve3(points);
-    const geo = createTaperedTube(curve, 40, 0.4, 0.02, 10);
-
-    const mat = new THREE.ShaderMaterial({
-      uniforms: {
-        uTime: { value: 0 },
-        uIndex: { value: index },
-        uHover: { value: 0 }
-      },
-      vertexShader: tentacleVertexShader,
-      fragmentShader: tentacleFragmentShader,
-      transparent: true,
-      side: THREE.DoubleSide,
-      depthWrite: true
-    });
-
-    return { geometry: geo, material: mat };
-  }, [basePosition, length, index, totalCount]);
-
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       geometry.dispose();
@@ -343,21 +377,18 @@ function Tentacle({ basePosition, length, index, totalCount, hovered }) {
     };
   }, [geometry, material]);
 
-  // Update time + smoothly lerp hover
   useFrame((state, delta) => {
-    if (meshRef.current) {
-      material.uniforms.uTime.value = state.clock.elapsedTime;
-      const target = hovered ? 1 : 0;
-      hoverRef.current += (target - hoverRef.current) * Math.min(delta * 3, 1);
-      material.uniforms.uHover.value = hoverRef.current;
-    }
+    hoverRef.current += ((hovered ? 1 : 0) - hoverRef.current) * Math.min(delta * 3, 1);
+    material.uniforms.uTime.value  = state.clock.elapsedTime;
+    material.uniforms.uHover.value = hoverRef.current;
+    updateVoidTent(geometry, config, state.clock.elapsedTime, hoverRef.current, length);
   });
 
-  return <mesh ref={meshRef} geometry={geometry} material={material} />;
+  return <mesh geometry={geometry} material={material} />;
 }
 
 // ============================================================
-// Black Hole Core (improved materials)
+// Black Hole Core
 // ============================================================
 function BlackHoleCore({ position, onClick, onHoverChange }) {
   const eventHorizonRef = useRef();
@@ -371,7 +402,6 @@ function BlackHoleCore({ position, onClick, onHoverChange }) {
   const hoverRef = useRef(0);
   const isHovered = useRef(false);
 
-  // Memoized geometries — prevent GPU object recreation when parent state changes
   const clickTargetGeo = useMemo(() => new THREE.SphereGeometry(6, 16, 16), []);
   const horizonGeo     = useMemo(() => new THREE.SphereGeometry(4, 32, 32), []);
   const rimGeo         = useMemo(() => new THREE.SphereGeometry(4.3, 32, 32), []);
@@ -393,7 +423,6 @@ function BlackHoleCore({ position, onClick, onHoverChange }) {
   useFrame((state, delta) => {
     const time = state.clock.elapsedTime;
 
-    // Smooth hover lerp
     const target = isHovered.current ? 1 : 0;
     hoverRef.current += (target - hoverRef.current) * Math.min(delta * 3, 1);
     const h = hoverRef.current;
@@ -443,7 +472,6 @@ function BlackHoleCore({ position, onClick, onHoverChange }) {
 
   return (
     <group position={position}>
-      {/* Invisible click target - larger for easier clicking */}
       <mesh
         geometry={clickTargetGeo}
         onClick={(e) => { e.stopPropagation(); onClick?.(); }}
@@ -453,12 +481,10 @@ function BlackHoleCore({ position, onClick, onHoverChange }) {
         <meshBasicMaterial visible={false} />
       </mesh>
 
-      {/* Event horizon - pure black sphere */}
       <mesh ref={eventHorizonRef} geometry={horizonGeo}>
         <meshBasicMaterial color="#000000" />
       </mesh>
 
-      {/* Event horizon rim glow - Fresnel edge light */}
       <mesh geometry={rimGeo}>
         <shaderMaterial
           ref={rimGlowMaterial}
@@ -490,7 +516,6 @@ function BlackHoleCore({ position, onClick, onHoverChange }) {
         />
       </mesh>
 
-      {/* Accretion disk - main */}
       <mesh ref={diskRef} geometry={diskGeo} rotation={[Math.PI / 2, 0, 0]}>
         <shaderMaterial
           ref={diskMatRef}
@@ -510,7 +535,6 @@ function BlackHoleCore({ position, onClick, onHoverChange }) {
         />
       </mesh>
 
-      {/* Accretion disk - inner bright ring */}
       <mesh ref={innerRingRef} geometry={innerRingGeo} rotation={[Math.PI / 2, 0, 0]}>
         <shaderMaterial
           ref={innerMatRef}
@@ -530,7 +554,6 @@ function BlackHoleCore({ position, onClick, onHoverChange }) {
         />
       </mesh>
 
-      {/* Outer accent ring */}
       <mesh ref={outerRingRef} geometry={outerRingGeo} rotation={[Math.PI / 2, 0, 0]}>
         <shaderMaterial
           ref={outerMatRef}
@@ -554,7 +577,7 @@ function BlackHoleCore({ position, onClick, onHoverChange }) {
 }
 
 // ============================================================
-// Void Particles (atmospheric dust around the void)
+// Void Particles
 // ============================================================
 function createCircleTexture() {
   const size = 32;
@@ -574,10 +597,9 @@ function createCircleTexture() {
 
 function VoidParticles({ count = 150, radius = 25, hovered }) {
   const pointsRef = useRef();
-  const hoverRef = useRef(0);
+  const hoverRef  = useRef(0);
   const circleTexture = useMemo(() => createCircleTexture(), []);
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (pointsRef.current?.geometry) pointsRef.current.geometry.dispose();
@@ -592,16 +614,15 @@ function VoidParticles({ count = 150, radius = 25, hovered }) {
 
     for (let i = 0; i < count; i++) {
       const theta = Math.random() * Math.PI * 2;
-      const phi = Math.acos(Math.random() * 2 - 1);
-      const r = 5 + Math.random() * radius;
+      const phi   = Math.acos(Math.random() * 2 - 1);
+      const r     = 5 + Math.random() * radius;
 
-      pos[i * 3] = r * Math.sin(phi) * Math.cos(theta);
+      pos[i * 3]     = r * Math.sin(phi) * Math.cos(theta);
       pos[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta) * 0.4;
       pos[i * 3 + 2] = r * Math.cos(phi);
 
-      // Dark purple/grey tones
       const brightness = 0.08 + Math.random() * 0.12;
-      col[i * 3] = brightness * 1.5;
+      col[i * 3]     = brightness * 1.5;
       col[i * 3 + 1] = brightness * 0.4;
       col[i * 3 + 2] = brightness * 2.2;
     }
@@ -625,7 +646,7 @@ function VoidParticles({ count = 150, radius = 25, hovered }) {
     <points ref={pointsRef}>
       <bufferGeometry>
         <bufferAttribute attach="attributes-position" count={count} array={positions} itemSize={3} />
-        <bufferAttribute attach="attributes-color" count={count} array={colors} itemSize={3} />
+        <bufferAttribute attach="attributes-color"    count={count} array={colors}    itemSize={3} />
       </bufferGeometry>
       <pointsMaterial
         size={0.5}
@@ -645,44 +666,25 @@ function VoidParticles({ count = 150, radius = 25, hovered }) {
 // Main Export
 // ============================================================
 export default function CosmicVoid({ position = [0, 0, -80], onClick }) {
-  const groupRef = useRef();
   const [hovered, setHovered] = useState(false);
 
-  const tentacleConfigs = useMemo(() => {
-    const count = 6;
-    return Array.from({ length: count }, (_, i) => ({
-      index: i,
-      length: 15 + Math.random() * 12,
-      offset: [
-        (Math.random() - 0.5) * 3,
-        (Math.random() - 0.5) * 3,
-        (Math.random() - 0.5) * 3
-      ]
-    }));
-  }, []);
+  const tentacleProps = useMemo(() => Array.from({ length: 6 }, (_, i) => ({
+    index:      i,
+    totalCount: 6,
+    length:     9 + i * 0.6, // 9.0 → 12.0 units
+  })), []);
 
   return (
-    <group ref={groupRef} position={position}>
-      {/* Black hole core */}
+    <group position={position}>
       <BlackHoleCore position={[0, 0, 0]} onClick={onClick} onHoverChange={setHovered} />
 
-      {/* Shader-based tentacles */}
-      {tentacleConfigs.map((config) => (
-        <Tentacle
-          key={config.index}
-          basePosition={config.offset}
-          length={config.length}
-          index={config.index}
-          totalCount={tentacleConfigs.length}
-          hovered={hovered}
-        />
+      {tentacleProps.map(p => (
+        <VoidTentacle key={p.index} hovered={hovered} {...p} />
       ))}
 
-      {/* Atmospheric particles */}
       <VoidParticles hovered={hovered} />
 
-      {/* Ambient void lighting */}
-      <pointLight position={[0, 0, 5]} color="#4a1a6b" intensity={2} distance={30} decay={2} />
+      <pointLight position={[0, 0, 5]}  color="#4a1a6b" intensity={2}   distance={30} decay={2} />
       <pointLight position={[0, 0, -5]} color="#00ff6a" intensity={0.5} distance={20} decay={2} />
     </group>
   );

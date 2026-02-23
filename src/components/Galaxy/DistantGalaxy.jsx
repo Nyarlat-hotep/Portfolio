@@ -140,6 +140,51 @@ function buildNebulaGeometry() {
   return geo;
 }
 
+// ── Galactic events (supernovas + star births) ────────────────────────────────
+
+const EVENT_COUNT = 6;
+
+const SUPERNOVA_COLOR = new THREE.Color('#ddeeff'); // white-blue flash
+const BIRTH_COLOR     = new THREE.Color('#ffdd88'); // warm amber emergence
+
+const MIN_GLOW = 0.09; // never goes fully dark — always a faint point
+
+const EVENT_DEFS = {
+  supernova: { color: SUPERNOVA_COLOR, riseTime: 0.5,  peakTime: 0.5,  fallTime: 5.0 },
+  birth:     { color: BIRTH_COLOR,     riseTime: 2.0,  peakTime: 0.8,  fallTime: 4.0 },
+};
+
+function randomEventPosition() {
+  // Scatter within the galaxy disc — bias away from exact center
+  const angle = Math.random() * Math.PI * 2;
+  const r     = GALAXY_RADIUS * (0.2 + Math.random() * 0.85);
+  return [r * Math.cos(angle), (Math.random() - 0.5) * 0.9, r * Math.sin(angle)];
+}
+
+function buildEventGeometry() {
+  const positions = new Float32Array(EVENT_COUNT * 3); // all at origin
+  const colors    = new Float32Array(EVENT_COUNT * 3); // all black = invisible
+  const geo = new THREE.BufferGeometry();
+  const posAttr = new THREE.BufferAttribute(positions, 3);
+  const colAttr = new THREE.BufferAttribute(colors, 3);
+  posAttr.usage = THREE.DynamicDrawUsage;
+  colAttr.usage = THREE.DynamicDrawUsage;
+  geo.setAttribute('position', posAttr);
+  geo.setAttribute('color',    colAttr);
+  return geo;
+}
+
+function initEventStates() {
+  const types = Object.keys(EVENT_DEFS);
+  return Array.from({ length: EVENT_COUNT }, (_, i) => ({
+    type:        types[i % types.length],
+    phase:       'dormant',    // dormant | rising | peak | falling
+    timer:       0,
+    dormantWait: 2 + i * 1.8 + Math.random() * 2, // stagger initial fires
+    position:    randomEventPosition(),
+  }));
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function DistantGalaxy() {
@@ -149,15 +194,18 @@ export default function DistantGalaxy() {
   const nebulaTex   = createNebulaSplatTexture(); // module-level cache — stable reference
   const geometry    = useMemo(() => buildGalaxyGeometry(), []);
   const nebulaGeo   = useMemo(() => buildNebulaGeometry(), []);
+  const eventsGeo   = useMemo(() => buildEventGeometry(), []);
+  const events      = useRef(initEventStates());
 
   useEffect(() => {
     return () => {
       geometry.dispose();
       nebulaGeo.dispose();
+      eventsGeo.dispose();
       texture.dispose();
       // nebulaTex is a module-level cache shared with Constellation — not disposed here
     };
-  }, [geometry, nebulaGeo, texture]);
+  }, [geometry, nebulaGeo, eventsGeo, texture]);
 
   useFrame((_, delta) => {
     // Stars rotate at base speed
@@ -168,6 +216,47 @@ export default function DistantGalaxy() {
     if (nebulaRef.current) {
       nebulaRef.current.rotation.y -= delta * 0.003;
     }
+
+    // Animate galactic events
+    const colAttr = eventsGeo.attributes.color;
+    const posAttr = eventsGeo.attributes.position;
+
+    events.current.forEach((ev, i) => {
+      const def = EVENT_DEFS[ev.type];
+      ev.timer += delta;
+
+      const setCol = (brightness) => {
+        const b = MIN_GLOW + brightness * (1 - MIN_GLOW);
+        colAttr.setXYZ(i, def.color.r * b, def.color.g * b, def.color.b * b);
+      };
+
+      if (ev.phase === 'dormant') {
+        setCol(0); // faint baseline glow — never fully dark
+        if (ev.timer >= ev.dormantWait) {
+          ev.phase    = 'rising';
+          ev.timer    = 0;
+          ev.position = randomEventPosition();
+          posAttr.setXYZ(i, ev.position[0], ev.position[1], ev.position[2]);
+        }
+      } else if (ev.phase === 'rising') {
+        setCol(Math.min(1, ev.timer / def.riseTime));
+        if (ev.timer >= def.riseTime) { ev.phase = 'peak'; ev.timer = 0; }
+      } else if (ev.phase === 'peak') {
+        setCol(1);
+        if (ev.timer >= def.peakTime) { ev.phase = 'falling'; ev.timer = 0; }
+      } else if (ev.phase === 'falling') {
+        setCol(Math.max(0, 1 - ev.timer / def.fallTime));
+        if (ev.timer >= def.fallTime) {
+          ev.phase       = 'dormant';
+          ev.timer       = 0;
+          ev.dormantWait = 3 + Math.random() * 4;
+          ev.type        = Math.random() < 0.4 ? 'supernova' : 'birth';
+        }
+      }
+    });
+
+    colAttr.needsUpdate = true;
+    posAttr.needsUpdate = true;
   });
 
   return (
@@ -181,7 +270,7 @@ export default function DistantGalaxy() {
           size={8}
           vertexColors
           transparent
-          opacity={0.09}
+          opacity={0.05}
           depthWrite={false}
           blending={THREE.AdditiveBlending}
           sizeAttenuation
@@ -195,7 +284,21 @@ export default function DistantGalaxy() {
           size={0.28}
           vertexColors
           transparent
-          opacity={0.55}
+          opacity={0.32}
+          depthWrite={false}
+          blending={THREE.AdditiveBlending}
+          sizeAttenuation
+        />
+      </points>
+
+      {/* Galactic events — supernovas (white-blue) and star births (amber) */}
+      <points geometry={eventsGeo}>
+        <pointsMaterial
+          map={texture}
+          size={0.36}
+          vertexColors
+          transparent
+          opacity={1}
           depthWrite={false}
           blending={THREE.AdditiveBlending}
           sizeAttenuation
