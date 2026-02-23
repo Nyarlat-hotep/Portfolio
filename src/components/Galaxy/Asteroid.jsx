@@ -21,6 +21,184 @@ const RESPAWN_VELS = [
 
 const NORMAL_SCALE = new THREE.Vector2(2.0, 2.0);
 
+// ── Tentacle constants ─────────────────────────────────────────────────────────
+
+const TENT_COUNT    = 4;
+const TENT_SEGMENTS = 22;  // spine rings
+const TENT_SIDES    = 8;   // tube cross-section vertices
+const TENT_LENGTH   = 1.3;
+const TENT_R_BASE   = 0.09; // radius at root (blunt)
+const TENT_R_TIP    = 0.032; // radius at tip (blunt, not zero)
+
+// One tentacle per pyramid face — direction = face outward normal with slight downward tilt
+const TENT_DEFS = (() => {
+  const rawDirs = [
+    [ 1, -0.3,  1],
+    [ 1, -0.3, -1],
+    [-1, -0.3, -1],
+    [-1, -0.3,  1],
+  ];
+  const phases = [
+    { phaseX: 0.00, phaseZ: 0.50, amp: 0.45 },
+    { phaseX: 1.57, phaseZ: 2.10, amp: 0.42 },
+    { phaseX: 3.14, phaseZ: 0.80, amp: 0.50 },
+    { phaseX: 4.71, phaseZ: 3.30, amp: 0.40 },
+  ];
+  return rawDirs.map(([dx, dy, dz], i) => {
+    const dir    = new THREE.Vector3(dx, dy, dz).normalize();
+    // Attachment point on cone surface near equator
+    const origin = new THREE.Vector3(dir.x * 0.35, -0.05, dir.z * 0.35);
+    // Writhing offset axes — perpendicular to the emergence direction
+    const up    = Math.abs(dir.y) < 0.9
+      ? new THREE.Vector3(0, 1, 0) : new THREE.Vector3(1, 0, 0);
+    const right = new THREE.Vector3().crossVectors(dir, up).normalize();
+    const fwd   = new THREE.Vector3().crossVectors(right, dir).normalize();
+    return { dir, origin, right, fwd, ...phases[i] };
+  });
+})();
+
+// Pre-allocated working vectors — zero heap allocation in useFrame
+const _sp      = Array.from({ length: TENT_SEGMENTS }, () => new THREE.Vector3());
+const _tan     = Array.from({ length: TENT_SEGMENTS }, () => new THREE.Vector3());
+const _nor     = Array.from({ length: TENT_SEGMENTS }, () => new THREE.Vector3());
+const _bin     = Array.from({ length: TENT_SEGMENTS }, () => new THREE.Vector3());
+const _initUp  = new THREE.Vector3();
+const _rotAxis = new THREE.Vector3();
+
+// ── Tentacle geometry ──────────────────────────────────────────────────────────
+
+function buildTentacleGeo() {
+  const vCount = TENT_COUNT * TENT_SEGMENTS * TENT_SIDES;
+  const iCount = TENT_COUNT * (TENT_SEGMENTS - 1) * TENT_SIDES * 6;
+
+  const positions = new Float32Array(vCount * 3);
+  const normals   = new Float32Array(vCount * 3);
+  // vCount = 4×22×8 = 704 — well within Uint16
+  const indices   = new Uint16Array(iCount);
+
+  // Build static index buffer — topology never changes
+  let idx = 0;
+  for (let t = 0; t < TENT_COUNT; t++) {
+    const base = t * TENT_SEGMENTS * TENT_SIDES;
+    for (let s = 0; s < TENT_SEGMENTS - 1; s++) {
+      for (let r = 0; r < TENT_SIDES; r++) {
+        const a = base + s * TENT_SIDES + r;
+        const b = base + s * TENT_SIDES + (r + 1) % TENT_SIDES;
+        const c = base + (s + 1) * TENT_SIDES + r;
+        const d = base + (s + 1) * TENT_SIDES + (r + 1) % TENT_SIDES;
+        indices[idx++] = a; indices[idx++] = b; indices[idx++] = c;
+        indices[idx++] = b; indices[idx++] = d; indices[idx++] = c;
+      }
+    }
+  }
+
+  const geo     = new THREE.BufferGeometry();
+  const posAttr = new THREE.BufferAttribute(positions, 3);
+  const norAttr = new THREE.BufferAttribute(normals, 3);
+  posAttr.usage = THREE.DynamicDrawUsage;
+  norAttr.usage = THREE.DynamicDrawUsage;
+  geo.setAttribute('position', posAttr);
+  geo.setAttribute('normal', norAttr);
+  geo.setIndex(new THREE.BufferAttribute(indices, 1));
+  // Pre-set bounding sphere so frustum culling doesn't fight dynamic positions
+  geo.boundingSphere = new THREE.Sphere(new THREE.Vector3(), 6);
+  return geo;
+}
+
+// Called every frame — updates spine + Frenet frames + writes to buffer
+function updateTentacles(geo, time) {
+  const posArr = geo.attributes.position.array;
+  const norArr = geo.attributes.normal.array;
+
+  for (let t = 0; t < TENT_COUNT; t++) {
+    const def = TENT_DEFS[t];
+
+    // ── 1. Compute spine positions ──────────────────────────────────────────
+    for (let s = 0; s < TENT_SEGMENTS; s++) {
+      const tt     = s / (TENT_SEGMENTS - 1); // 0 = root, 1 = tip
+      const taper  = tt * tt;                 // quadratic: tip moves more than root
+
+      // Two sine waves per axis, slightly different frequencies → organic writhe
+      const wx = Math.sin(tt * 3.5 - time * 1.9 + def.phaseX) * taper * def.amp
+               + Math.sin(tt * 7.2 - time * 3.1 + def.phaseX + 1.3) * taper * def.amp * 0.28;
+      const wz = Math.cos(tt * 3.0 - time * 1.5 + def.phaseZ) * taper * def.amp
+               + Math.cos(tt * 6.8 - time * 2.6 + def.phaseZ + 0.9) * taper * def.amp * 0.28;
+
+      _sp[s].set(
+        def.origin.x + def.dir.x * tt * TENT_LENGTH + def.right.x * wx + def.fwd.x * wz,
+        def.origin.y + def.dir.y * tt * TENT_LENGTH + def.right.y * wx + def.fwd.y * wz,
+        def.origin.z + def.dir.z * tt * TENT_LENGTH + def.right.z * wx + def.fwd.z * wz,
+      );
+    }
+
+    // ── 2. Tangents (central differences) ──────────────────────────────────
+    for (let s = 0; s < TENT_SEGMENTS; s++) {
+      if (s === 0) {
+        _tan[s].subVectors(_sp[1], _sp[0]);
+      } else if (s === TENT_SEGMENTS - 1) {
+        _tan[s].subVectors(_sp[s], _sp[s - 1]);
+      } else {
+        _tan[s].subVectors(_sp[s + 1], _sp[s - 1]);
+      }
+      _tan[s].normalize();
+    }
+
+    // ── 3. Parallel-transport Frenet frames ────────────────────────────────
+    // Initial normal: component of worldUp perpendicular to tangent[0]
+    if (Math.abs(_tan[0].y) < 0.9) {
+      _initUp.set(0, 1, 0);
+    } else {
+      _initUp.set(1, 0, 0);
+    }
+    const dot0 = _initUp.dot(_tan[0]);
+    _nor[0].copy(_initUp).addScaledVector(_tan[0], -dot0).normalize();
+    _bin[0].crossVectors(_tan[0], _nor[0]).normalize();
+
+    for (let s = 1; s < TENT_SEGMENTS; s++) {
+      // Rotate previous normal into the plane perpendicular to this tangent
+      _rotAxis.crossVectors(_tan[s - 1], _tan[s]);
+      const axisLen = _rotAxis.length();
+      _nor[s].copy(_nor[s - 1]);
+      if (axisLen > 1e-6) {
+        _rotAxis.divideScalar(axisLen);
+        const cosA  = Math.max(-1, Math.min(1, _tan[s - 1].dot(_tan[s])));
+        const theta = Math.acos(cosA);
+        _nor[s].applyAxisAngle(_rotAxis, theta);
+      }
+      _bin[s].crossVectors(_tan[s], _nor[s]).normalize();
+    }
+
+    // ── 4. Write vertex rings ───────────────────────────────────────────────
+    const baseOffset = t * TENT_SEGMENTS * TENT_SIDES;
+    for (let s = 0; s < TENT_SEGMENTS; s++) {
+      const tt     = s / (TENT_SEGMENTS - 1);
+      // Taper: cubic falloff so the tip stays blunt
+      const radius = TENT_R_TIP + (TENT_R_BASE - TENT_R_TIP) * Math.pow(1 - tt, 0.6);
+
+      for (let r = 0; r < TENT_SIDES; r++) {
+        const angle = (r / TENT_SIDES) * Math.PI * 2;
+        const cosA  = Math.cos(angle);
+        const sinA  = Math.sin(angle);
+
+        const vIdx = (baseOffset + s * TENT_SIDES + r) * 3;
+
+        // Tube vertex = spine point + radial offset in (normal, binormal) plane
+        posArr[vIdx]     = _sp[s].x + cosA * _nor[s].x * radius + sinA * _bin[s].x * radius;
+        posArr[vIdx + 1] = _sp[s].y + cosA * _nor[s].y * radius + sinA * _bin[s].y * radius;
+        posArr[vIdx + 2] = _sp[s].z + cosA * _nor[s].z * radius + sinA * _bin[s].z * radius;
+
+        // Outward tube normal
+        norArr[vIdx]     = cosA * _nor[s].x + sinA * _bin[s].x;
+        norArr[vIdx + 1] = cosA * _nor[s].y + sinA * _bin[s].y;
+        norArr[vIdx + 2] = cosA * _nor[s].z + sinA * _bin[s].z;
+      }
+    }
+  }
+
+  geo.attributes.position.needsUpdate = true;
+  geo.attributes.normal.needsUpdate   = true;
+}
+
 // ── Pyramid geometry ───────────────────────────────────────────────────────────
 
 function buildPyramidGeo(rimScale = 1) {
@@ -30,7 +208,6 @@ function buildPyramidGeo(rimScale = 1) {
 }
 
 // ── Procedural stone textures ─────────────────────────────────────────────────
-// sampleHeight combines two fbm layers — large cracks + fine grain
 
 function sampleHeight(nx, ny) {
   return fbm(nx * 5, ny * 5, 5) * 0.65
@@ -47,19 +224,14 @@ function createStoneAlbedo(size = 256) {
   for (let y = 0; y < size; y++) {
     for (let x = 0; x < size; x++) {
       const nx = x / size, ny = y / size;
-      // n in [0,1]
-      const n = Math.max(0, Math.min(1, sampleHeight(nx, ny)));
-
-      // Warm sandstone palette: dark crevice → mid brown → sandy highlight
-      const r = Math.round(52  + n * 118);
-      const g = Math.round(38  + n * 78);
-      const b = Math.round(22  + n * 42);
-
-      const i = (y * size + x) * 4;
-      d[i] = r; d[i+1] = g; d[i+2] = b; d[i+3] = 255;
+      const n  = Math.max(0, Math.min(1, sampleHeight(nx, ny)));
+      const i  = (y * size + x) * 4;
+      d[i]     = Math.round(52  + n * 118);
+      d[i + 1] = Math.round(38  + n * 78);
+      d[i + 2] = Math.round(22  + n * 42);
+      d[i + 3] = 255;
     }
   }
-
   ctx.putImageData(img, 0, 0);
   return new THREE.CanvasTexture(canvas);
 }
@@ -69,33 +241,27 @@ function createStoneNormal(size = 256) {
   canvas.width = canvas.height = size;
   const ctx = canvas.getContext('2d');
   const img = ctx.createImageData(size, size);
-  const d = img.data;
-
-  const step = 1 / size;
-  const strength = 5.0;
+  const d   = img.data;
+  const step = 1 / size, strength = 5.0;
 
   for (let y = 0; y < size; y++) {
     for (let x = 0; x < size; x++) {
       const nx = x / size, ny = y / size;
       const dx = sampleHeight(nx + step, ny) - sampleHeight(nx - step, ny);
       const dy = sampleHeight(nx, ny + step) - sampleHeight(nx, ny - step);
-      const sx = -dx * strength;
-      const sy = -dy * strength;
+      const sx = -dx * strength, sy = -dy * strength;
       const len = Math.sqrt(sx * sx + sy * sy + 1);
-
-      const i = (y * size + x) * 4;
-      d[i]   = Math.round((sx / len * 0.5 + 0.5) * 255);
-      d[i+1] = Math.round((sy / len * 0.5 + 0.5) * 255);
-      d[i+2] = Math.round((1  / len * 0.5 + 0.5) * 255);
-      d[i+3] = 255;
+      const i   = (y * size + x) * 4;
+      d[i]     = Math.round((sx / len * 0.5 + 0.5) * 255);
+      d[i + 1] = Math.round((sy / len * 0.5 + 0.5) * 255);
+      d[i + 2] = Math.round((1  / len * 0.5 + 0.5) * 255);
+      d[i + 3] = 255;
     }
   }
-
   ctx.putImageData(img, 0, 0);
   return new THREE.CanvasTexture(canvas);
 }
 
-// Module-level cache — generated once, reused forever
 let _stoneAlbedo = null;
 let _stoneNormal = null;
 function getStoneTextures() {
@@ -158,17 +324,19 @@ function buildWispData() {
 export default function Asteroid({ onAsteroidClick }) {
   const groupRef   = useRef();
   const mainMatRef = useRef();
+  const tentMatRef = useRef();
   const rimMatRef  = useRef();
   const wispMatRef = useRef();
 
   const geometry = useMemo(() => buildPyramidGeo(1),    []);
   const rimGeo   = useMemo(() => buildPyramidGeo(1.14), []);
+  const tentGeo  = useMemo(() => buildTentacleGeo(),    []);
 
   const { albedo, normal } = useMemo(() => getStoneTextures(), []);
 
   const wispGeo = useMemo(() => {
     const positions = new Float32Array(WISP_COUNT * 3);
-    const geo = new THREE.BufferGeometry();
+    const geo  = new THREE.BufferGeometry();
     const attr = new THREE.BufferAttribute(positions, 3);
     attr.usage = THREE.DynamicDrawUsage;
     geo.setAttribute('position', attr);
@@ -192,10 +360,11 @@ export default function Asteroid({ onAsteroidClick }) {
     return () => {
       geometry.dispose();
       rimGeo.dispose();
+      tentGeo.dispose();
       wispGeo.dispose();
       // albedo, normal, wispTexture are module-level caches — not disposed here
     };
-  }, [geometry, rimGeo, wispGeo]);
+  }, [geometry, rimGeo, tentGeo, wispGeo]);
 
   useFrame((state, delta) => {
     const s = stateRef.current;
@@ -239,11 +408,20 @@ export default function Asteroid({ onAsteroidClick }) {
       mainMatRef.current.opacity     = fading ? s.fadeOpacity : 1;
       mainMatRef.current.needsUpdate = true;
     }
+    if (tentMatRef.current) {
+      const fading = s.fadeOpacity < 0.99;
+      tentMatRef.current.transparent = fading;
+      tentMatRef.current.opacity     = fading ? s.fadeOpacity : 1;
+      tentMatRef.current.needsUpdate = true;
+    }
     if (rimMatRef.current)  rimMatRef.current.opacity  = 0.07 * s.fadeOpacity;
     if (wispMatRef.current) wispMatRef.current.opacity = 0.7  * s.fadeOpacity;
 
-    // Animate wisps orbiting the pyramid
-    const t = state.clock.elapsedTime;
+    // Animate tentacles
+    updateTentacles(tentGeo, state.clock.elapsedTime);
+
+    // Animate wisps
+    const t       = state.clock.elapsedTime;
     const posAttr = wispGeo.attributes.position;
     wispData.forEach((w, i) => {
       w.theta += w.speed * delta;
@@ -259,6 +437,18 @@ export default function Asteroid({ onAsteroidClick }) {
 
   return (
     <group ref={groupRef} position={START.toArray()} scale={0.5}>
+
+      {/* Tentacles — dynamic tube geometry, Frenet-framed spine */}
+      <mesh renderOrder={0} geometry={tentGeo}>
+        <meshStandardMaterial
+          ref={tentMatRef}
+          color="#060f07"
+          emissive="#000000"
+          emissiveIntensity={0}
+          roughness={0.95}
+          metalness={0.02}
+        />
+      </mesh>
 
       {/* Main pyramid — stone texture + normal map */}
       <mesh
@@ -291,7 +481,7 @@ export default function Asteroid({ onAsteroidClick }) {
         />
       </mesh>
 
-      {/* Energy wisps — glowing sprites orbiting the pyramid */}
+      {/* Energy wisps */}
       <points renderOrder={2} geometry={wispGeo}>
         <pointsMaterial
           ref={wispMatRef}
