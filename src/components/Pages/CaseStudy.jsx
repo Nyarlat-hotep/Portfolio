@@ -122,7 +122,7 @@ function AnimatedSection({ number, title, children, viewport }) {
 
 // --- Main component ---
 export default function CaseStudy({ caseStudy, planetColor = '#a855f7', scrollContainerRef }) {
-  const [currentPhaseIndex, setCurrentPhaseIndex] = useState(-1);
+  const [currentPhaseIndex, setCurrentPhaseIndex] = useState(0);
   const phaseRefs = useRef([]);
   const lastScrollY = useRef(0);
   const scrollDirection = useRef('down');

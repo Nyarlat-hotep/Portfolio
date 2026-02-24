@@ -26,42 +26,52 @@ export const caseStudies = {
     title: 'MyRocket Dashboard',
     subtitle: 'Product Design • 2022',
     company: 'Rocket Mortgage',
-    role: 'Senior Experience Designer',
+    role: 'Design Lead, Consumer Experience',
     duration: '6 months',
-    overview: 'The objective of this project was to design and develop a comprehensive financial dashboard that consolidates various products and tools related to client financial goals. The dashboard evolved the Rocket brand beyond personal loans and mortgages into a unified financial hub.',
-    challenge: 'Research identified three key challenges: Users lacked confidence making informed financial decisions with multiple options available. Financial information was scattered across accounts and devices, creating data disarray. Users sought clear, goal-oriented paths to specific objectives like home purchases rather than fragmented tools.',
-    solution: 'We created a personalized financial dashboard that consolidates accounts, spending habits, credit scores, and goal tracking into a single unified experience. The design emphasized story-driven information hierarchy to help users visualize their progress toward financial goals.',
-    impact: 'Achieved 2x increase in monthly visit rate, 61% CSAT score (increasing monthly), and 5.2% lead-to-close rate (1% improvement from pre-launch). Launched with over 500,000 active monthly visitors. Recognized with Hermes Gold Award (July 2023), GDUSA 60th Anniversary Digital Design Award, and Muse Creative Award.',
+
+    overview: 'MyRocket Dashboard was Rocket\'s first move beyond transactional finance — a platform designed to give clients a continuous, goal-oriented relationship with their money rather than a series of disconnected product interactions. As design lead on a cross-functional team of three, I set the product\'s information architecture, visual hierarchy, and interaction model from early concept through a live launch to 500,000+ monthly active users.',
+
+    challenge: 'Three tensions defined this project. Users were making major financial decisions without a coherent picture of their own financial situation. Two internal business units — Rocket Mortgage and Rocket Money — were competing for page real estate with conflicting priorities. And the product needed to surface features users hadn\'t yet activated without creating friction or a sense of exclusion. Resolving all three simultaneously, at scale, was the central design problem.',
+
+    solution: 'I defined an information architecture that could flex across radically different user states — from a first-time homebuyer with no connected accounts to a mortgage client actively tracking their payoff path. The existing mortgage relationship anchored the top of the page; Rocket Money\'s presence was negotiated down to its highest-signal modules. For features users hadn\'t yet activated, I introduced a locked state pattern — drawn from gaming and subscription UI — that showed the value and path to activation rather than hiding the capability. I faced significant pushback on this in a financial product context, but defended it as a well-established convention. It launched as a core onboarding mechanism. A progressive disclosure principle governed every hierarchy decision: orient and motivate first, invite depth on demand.',
+
+    impact: '2× increase in monthly visit rate. 61% CSAT, growing monthly at launch. 5.2% lead-to-close rate — a 1-point gain over pre-launch baseline. 500,000+ active monthly users at launch. Recognized with a Hermes Gold Award (July 2023), GDUSA 60th Anniversary Digital Design Award, and Muse Creative Award.',
+
     process: [
       {
-        title: 'Concept Testing',
-        description: 'Initial research validated dashboard utility and user desire for personalized, consolidated financial data with control over inputs. We tested multiple concepts to understand which approaches resonated most with users seeking financial clarity.',
+        title: 'Vision & Early Concept',
+        description: 'We opened with a high-fidelity vision artifact — a concept designed to test appetite, not feasibility. I co-directed the concept to surface what users actually wanted from a unified financial view, validate the dashboard\'s core utility, and establish a north star the team could pressure-test in every subsequent decision. Research confirmed strong user desire for personalized, consolidated financial data — and revealed that goal-oriented framing mattered more than feature breadth.',
         image: '/images/case-studies/myrocket/concept1.png'
       },
       {
-        title: 'Iteration',
-        description: 'Created priority guides and lower-fidelity designs emphasizing story-driven information hierarchy for goal progress visibility. This phase focused on establishing the right balance between comprehensive data and scannable insights.',
-        image: '/images/case-studies/myrocket/wireframe.png'
-      },
-      {
-        title: 'User Testing',
-        description: 'Conducted home-buyer focused tests revealing preferences for spending habits tracking, achievement celebrations, and detailed goal factors. Users wanted to feel a sense of progress and accomplishment as they moved toward their financial objectives.',
+        title: 'IA & Lo-fi Exploration',
+        description: 'Before any visual design, I mapped the information architecture across a wide range of user financial states — first-time homebuyers, existing mortgage clients, users with connected Rocket Money accounts, and those with none. The core challenge was designing a page hierarchy that felt coherent and personal regardless of how much data a user had connected. These lo-fi structures and priority guides became the foundation for every stakeholder alignment conversation that followed.',
         image: '/images/case-studies/myrocket/concept-analysis.png'
       },
       {
-        title: 'Design Iteration',
-        description: 'Narrowed focus to mortgage clients to meet Q4 launch deadline, with a roadmap for expanded features through 2024. This strategic decision allowed us to deliver maximum value to our core user segment while planning future growth.',
+        title: 'Scope Decision & Iteration',
+        description: 'With a Q4 deadline, the business decision was made to narrow scope to existing mortgage clients — a deliberate trade to go deep on one segment rather than thin across many. I aligned to this constraint and used it to sharpen the product\'s focus. This phase also saw the most stakeholder negotiation. The IA provoked real disagreement between mortgage servicing, Rocket Money, PM, and engineering — each advocating for their product\'s priority. I led multiple alignment sessions, making the case repeatedly for a structure that served users\' mental models rather than the org chart.',
         image: '/images/case-studies/myrocket/concept2.png'
       },
       {
         title: 'Launch',
-        description: 'Launched December 2022 with over 500,000 active monthly visitors. Key learnings addressed personalization complexity and the value of early technical involvement in the design process.',
-        image: '/images/case-studies/myrocket/dashboard-final.png'
+        description: 'Launched December 2022 with 500,000+ active monthly users. The shipped experience reflected a deliberate hierarchy: mortgage relationship at top, Rocket Money\'s essential modules below, and a locked state mechanism providing a clear activation path for unconnected features. One of my key learnings from this phase was the value of early engineering involvement — getting technical constraints on the table sooner would have protected more of the design intent through implementation.',
+        image: '/images/case-studies/myrocket/wireframe.png'
+      },
+      {
+        title: 'Design System Influence',
+        description: 'Working within Rocket\'s design system, I identified two gaps that required advocacy beyond the project itself. The first was a locked state variant for card components — the pattern I\'d championed for MyRocket needed a home in the system so other teams could use it. The second was a redesigned credit score dial with the visual weight and expressiveness the context required. I brought both through the DS team\'s review process. Both were adopted. Small contributions, but the kind that compound across a product organization.',
+        image: '/images/case-studies/myrocket/lockedstate.png'
+      },
+      {
+        title: 'Retrospective',
+        description: 'An early concept I pushed for — a mortgage component illustration that responded to time of day and season with character-driven animation — was scoped out during production. Two years later, the team that inherited the product is exploring precisely those concepts and generating significant internal momentum around them. The visuals in this case study represent the future-state concepts we envisioned but didn\'t ship. Delight isn\'t polish — it\'s a retention strategy, and it compounds. Being ahead of that curve is something I\'d push harder for earlier.',
+        image: '/images/case-studies/myrocket/dashboard-hero.png'
       }
     ],
-    tools: ['Figma', 'Adobe XD', 'Miro', 'UserTesting', 'Maze', 'Jira'],
+
+    tools: ['Figma', 'Miro', 'UserTesting', 'Maze', 'Jira'],
     images: [
-      '/images/case-studies/myrocket/dashboard-hero.png',
       '/images/case-studies/myrocket/dashboard-final.png'
     ],
     links: {}
