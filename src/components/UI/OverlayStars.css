@@ -1,0 +1,55 @@
+.overlay-stars {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 0;
+}
+
+/* Wrapper: holds position + CSS drift animation */
+.overlay-star-wrapper {
+  position: absolute;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+}
+
+/* Inner star: pure visual, receives JS pull transform */
+.overlay-star {
+  border-radius: 50%;
+  will-change: transform;
+}
+
+/* Four distinct drift paths */
+.overlay-star-drift1 { animation-name: star-drift-1; }
+.overlay-star-drift2 { animation-name: star-drift-2; }
+.overlay-star-drift3 { animation-name: star-drift-3; }
+.overlay-star-drift4 { animation-name: star-drift-4; }
+
+@keyframes star-drift-1 {
+  0%   { transform: translate(0px,   -14px); }
+  40%  { transform: translate(6px,   -4px);  }
+  70%  { transform: translate(-4px,  6px);   }
+  100% { transform: translate(2px,   14px);  }
+}
+
+@keyframes star-drift-2 {
+  0%   { transform: translate(-6px,  12px);  }
+  35%  { transform: translate(4px,   2px);   }
+  65%  { transform: translate(8px,  -8px);   }
+  100% { transform: translate(-3px, -14px);  }
+}
+
+@keyframes star-drift-3 {
+  0%   { transform: translate(8px,  -8px);   }
+  30%  { transform: translate(-5px, -16px);  }
+  70%  { transform: translate(-8px,  4px);   }
+  100% { transform: translate(4px,   14px);  }
+}
+
+@keyframes star-drift-4 {
+  0%   { transform: translate(-4px,  16px);  }
+  45%  { transform: translate(-10px,  0px);  }
+  75%  { transform: translate(6px,   -6px);  }
+  100% { transform: translate(5px,  -16px);  }
+}

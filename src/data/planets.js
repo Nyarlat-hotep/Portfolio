@@ -33,7 +33,7 @@ export const planetsData = [
   },
   {
     id: 'case-study-2',
-    name: 'Case Study 2',
+    name: 'Consumer Dashboard',
     type: 'planet',
     position: [-6, 4, -5],
     scale: 1.0,
@@ -47,7 +47,7 @@ export const planetsData = [
   },
   {
     id: 'case-study-3',
-    name: 'Case Study 3',
+    name: 'Enterprise AI',
     type: 'planet',
     position: [5, -3, -8],
     scale: 0.9,

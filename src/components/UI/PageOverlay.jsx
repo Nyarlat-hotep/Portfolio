@@ -2,6 +2,7 @@ import { useEffect, useRef, Children, cloneElement, isValidElement } from 'react
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 import DataStream from './DataStream';
+import OverlayStars from './OverlayStars';
 import './PageOverlay.css';
 
 export default function PageOverlay({ isOpen, onClose, children, title, planetColor = '#00d4ff' }) {
@@ -73,12 +74,7 @@ export default function PageOverlay({ isOpen, onClose, children, title, planetCo
               right: 0,
               bottom: 0,
               zIndex: 2001,
-              background: `
-                linear-gradient(90deg, ${planetColor}08 1px, transparent 1px),
-                linear-gradient(${planetColor}08 1px, transparent 1px),
-                rgba(26, 29, 58, 0.9)
-              `,
-              backgroundSize: '20px 20px, 20px 20px, 100% 100%',
+              background: 'rgba(6, 6, 10, 0.97)',
               borderRadius: 0,
               backdropFilter: 'blur(20px)',
               display: 'flex',
@@ -86,8 +82,9 @@ export default function PageOverlay({ isOpen, onClose, children, title, planetCo
               overflow: 'hidden'
             }}
           >
-            {/* Data Stream Background Animation */}
+            {/* Background effects */}
             <DataStream />
+            <OverlayStars planetColor={planetColor} />
 
             {/* Header */}
             <div

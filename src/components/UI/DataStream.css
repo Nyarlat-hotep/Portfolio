@@ -26,7 +26,7 @@
     rgba(0, 212, 255, 0.4) 50%,
     transparent 100%
   );
-  animation: streamFlow 4s linear infinite;
+  animation: streamFlow 4s linear 1 forwards;
 }
 
 @keyframes streamFlow {

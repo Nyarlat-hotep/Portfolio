@@ -20,7 +20,7 @@
   z-index: 2001;
 
   /* Glassmorphism */
-  background: rgba(26, 29, 58, 0.7);
+  background: rgba(6, 6, 10, 0.97);
   backdrop-filter: blur(40px) saturate(150%);
   border: none;
   border-radius: 0;
@@ -297,19 +297,24 @@
 /* Scan line animation - enhanced cyberpunk effect */
 @keyframes scanline {
   0% {
-    transform: translateY(-100%);
+    top: -2px;
+    opacity: 0.1;
+  }
+  90% {
+    top: 100%;
   }
   100% {
-    transform: translateY(100vh);
+    visibility: hidden;
+    opacity: 0;
   }
 }
 
 @keyframes scanline-slow {
   0% {
-    transform: translateY(100vh);
+    top: 100%;
   }
   100% {
-    transform: translateY(-100%);
+    top: -1px;
   }
 }
 
@@ -328,7 +333,7 @@
     transparent
   );
   box-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
-  animation: scanline 6s linear infinite;
+  animation: scanline 6s linear 1 forwards;
   pointer-events: none;
   opacity: 0.1;
 }
@@ -347,9 +352,9 @@
     rgba(168, 85, 247, 0.4),
     transparent
   );
-  animation: scanline-slow 10s linear infinite;
+  animation: scanline-slow 10s linear 1 forwards;
   pointer-events: none;
-  opacity: 0.4;
+  opacity: 0.1;
   z-index: 10;
 }
 

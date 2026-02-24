@@ -60,12 +60,12 @@
     rgba(0, 212, 255, 0.6),
     transparent
   );
-  animation: scanline 4s linear infinite;
+  animation: creator-scanline 4s linear infinite;
   pointer-events: none;
   opacity: 0.3;
 }
 
-@keyframes scanline {
+@keyframes creator-scanline {
   0% { transform: translateY(0); }
   100% { transform: translateY(calc(90vh - 2px)); }
 }
