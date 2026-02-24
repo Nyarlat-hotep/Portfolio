@@ -406,30 +406,6 @@ export default function CaseStudy({ caseStudy, planetColor = '#a855f7', scrollCo
         </motion.p>
       </AnimatedSection>
 
-      {/* Tools & Technologies — staggered pop-in */}
-      {caseStudy.tools && caseStudy.tools.length > 0 && (
-        <AnimatedSection
-          number={sectionNum()}
-          title="Tools & Technologies"
-          viewport={viewport}
-        >
-          <motion.div
-            className="tools-grid"
-            variants={{
-              hidden: {},
-              visible: {
-                transition: { staggerChildren: 0.06, delayChildren: 0.45 }
-              }
-            }}
-          >
-            {caseStudy.tools.map((tool, index) => (
-              <motion.div key={index} className="tool-chip" variants={toolChipVariants}>
-                {tool}
-              </motion.div>
-            ))}
-          </motion.div>
-        </AnimatedSection>
-      )}
 
       {/* Links */}
       {caseStudy.links && Object.keys(caseStudy.links).length > 0 && (

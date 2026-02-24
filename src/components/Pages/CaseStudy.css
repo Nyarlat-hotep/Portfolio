@@ -246,7 +246,6 @@
   border-radius: 12px;
   overflow: hidden;
   background: rgba(var(--planet-color-rgb, 168, 85, 247), 0.05);
-  border: 1px solid rgba(var(--planet-color-rgb, 168, 85, 247), 0.2);
 }
 
 .process-image img {
