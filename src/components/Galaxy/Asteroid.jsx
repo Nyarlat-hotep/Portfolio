@@ -265,14 +265,18 @@ export default function Asteroid({ onAsteroidClick }) {
   return (
     <group ref={groupRef} position={START.toArray()} scale={0.5}>
 
-      {/* Main pyramid — stone texture + normal map */}
+      {/* Invisible hover zone — larger sphere so pointer events fire before reaching the pyramid */}
       <mesh
-        renderOrder={0}
-        geometry={geometry}
         onClick={(e) => { e.stopPropagation(); onAsteroidClick?.(); }}
         onPointerOver={(e) => { e.stopPropagation(); document.body.style.cursor = 'pointer'; isHoveredRef.current = true; }}
         onPointerOut={() => { document.body.style.cursor = 'auto'; isHoveredRef.current = false; }}
       >
+        <sphereGeometry args={[2.8, 8, 8]} />
+        <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+      </mesh>
+
+      {/* Main pyramid — stone texture + normal map */}
+      <mesh renderOrder={0} geometry={geometry}>
         <meshStandardMaterial
           ref={mainMatRef}
           map={albedo}
