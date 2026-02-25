@@ -135,7 +135,6 @@ export default function PageOverlay({ isOpen, onClose, children, title, planetCo
                   display: 'flex',
                   alignItems: 'center',
                   gap: '0.5rem',
-                  padding: '0.75rem 1.25rem',
                   background: `${planetColor}1a`,
                   border: `1px solid ${planetColor}4d`,
                   borderRadius: '12px',

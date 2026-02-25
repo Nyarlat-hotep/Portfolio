@@ -1,8 +1,8 @@
-import { useState, useEffect, useRef } from 'react';
+import { useRef } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 import ImageCompare from '../UI/ImageCompare';
-import JourneyMap from '../UI/JourneyMap';
+import ScrollTracker from '../UI/ScrollTracker';
 import './CaseStudy.css';
 
 // --- Variant definitions ---
@@ -122,109 +122,21 @@ function AnimatedSection({ number, title, children, viewport }) {
 
 // --- Main component ---
 export default function CaseStudy({ caseStudy, planetColor = '#a855f7', scrollContainerRef }) {
-  const [currentPhaseIndex, setCurrentPhaseIndex] = useState(-1);
-
-  // Refs for the 5 fixed journey map sections
+  // Refs for the 3 scroll-tracker anchor sections
   const overviewRef = useRef(null);
-  const challengeRef = useRef(null);
   const solutionRef = useRef(null);
-  const phaseRefs = useRef([]);   // all process phase divs → waypoint index 3
   const impactRef = useRef(null);
 
-  const lastScrollY = useRef(0);
-  const scrollDirection = useRef('down');
-
-  // Track which of the 5 fixed waypoint sections is in view
-  useEffect(() => {
-    if (!caseStudy) return;
-
-    const root = scrollContainerRef?.current || null;
-
-    let hasScrolled = false;
-
-    const handleScroll = () => {
-      hasScrolled = true;
-      const currentScrollY = root ? root.scrollTop : window.scrollY;
-      scrollDirection.current = currentScrollY > lastScrollY.current ? 'down' : 'up';
-      lastScrollY.current = currentScrollY;
-    };
-
-    const scrollTarget = root || window;
-    scrollTarget.addEventListener('scroll', handleScroll, { passive: true });
-
-    // Map every observed element to its waypoint index (0–4)
-    // All process phase divs map to index 3 ("Process")
-    const sections = [
-      { el: overviewRef.current,  idx: 0 },
-      { el: challengeRef.current, idx: 1 },
-      { el: solutionRef.current,  idx: 2 },
-      ...(phaseRefs.current.filter(Boolean).map(el => ({ el, idx: 3 }))),
-      { el: impactRef.current,    idx: 4 }
-    ].filter(s => s.el);
-
-    const elementToIdx = new Map(sections.map(s => [s.el, s.idx]));
-    const visibleIndices = new Set();
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          const idx = elementToIdx.get(entry.target);
-          if (idx === undefined) return;
-          if (entry.isIntersecting) {
-            visibleIndices.add(idx);
-          } else {
-            visibleIndices.delete(idx);
-          }
-        });
-
-        if (visibleIndices.size > 0) {
-          const arr = Array.from(visibleIndices).sort((a, b) => a - b);
-          // Before any scroll: always show the topmost visible section (avoids false-activating
-          // lower sections that are all visible simultaneously on initial render)
-          // After scrolling: use direction to determine which section is "active"
-          const active = !hasScrolled
-            ? arr[0]
-            : scrollDirection.current === 'down' ? arr[arr.length - 1] : arr[0];
-          setCurrentPhaseIndex(active);
-        }
-      },
-      {
-        root,
-        // Trigger only when section enters top 85% of viewport (15% from bottom)
-        rootMargin: '0px 0px -15% 0px',
-        threshold: 0
-      }
-    );
-
-    sections.forEach(({ el }) => observer.observe(el));
-
-    return () => {
-      observer.disconnect();
-      scrollTarget.removeEventListener('scroll', handleScroll);
-    };
-  }, [caseStudy, scrollContainerRef]);
-
-  // Scroll to the section corresponding to the clicked waypoint index (0–4)
-  const handlePhaseClick = (index) => {
-    const targets = [
-      overviewRef.current,
-      challengeRef.current,
-      solutionRef.current,
-      phaseRefs.current[0],  // first process phase = top of Process section
-      impactRef.current
-    ];
-    targets[index]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  };
+  // Also keep phaseRefs / challengeRef for existing JSX markup (still rendered)
+  const challengeRef = useRef(null);
+  const phaseRefs = useRef([]);
 
   if (!caseStudy) return null;
 
-  // Fixed 5 waypoints — always correspond to the actual page sections
-  const journeyWaypoints = [
-    { title: 'Overview' },
-    { title: 'Challenge' },
-    { title: 'Solution' },
-    { title: 'Process' },
-    { title: 'Impact' }
+  const trackerSections = [
+    { label: 'Overview', ref: overviewRef },
+    { label: 'Solution', ref: solutionRef },
+    { label: 'Impact',   ref: impactRef },
   ];
 
   const viewport = {
@@ -249,17 +161,14 @@ export default function CaseStudy({ caseStudy, planetColor = '#a855f7', scrollCo
 
   return (
     <div className="case-study-layout" style={cssVars}>
-      {/* Sidebar with Journey Map */}
-      {journeyWaypoints.length > 0 && (
-        <aside className="case-study-sidebar">
-          <JourneyMap
-            phases={journeyWaypoints}
-            currentPhaseIndex={currentPhaseIndex}
-            planetColor={planetColor}
-            onPhaseClick={handlePhaseClick}
-          />
-        </aside>
-      )}
+      {/* Sidebar with Scroll Tracker */}
+      <aside className="case-study-sidebar">
+        <ScrollTracker
+          sections={trackerSections}
+          scrollContainerRef={scrollContainerRef}
+          planetColor={planetColor}
+        />
+      </aside>
 
       {/* Main Content */}
       <div className="case-study">

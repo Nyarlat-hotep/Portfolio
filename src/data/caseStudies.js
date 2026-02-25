@@ -56,7 +56,7 @@ export const caseStudies = {
   'case-study-2': {
     id: 'case-study-2',
     title: 'MyRocket Dashboard',
-    subtitle: 'Product Design • 2022',
+    subtitle: 'Product Design • 2023',
     company: 'Rocket Mortgage',
     role: 'Design Lead, Consumer Experience',
     duration: '6 months',

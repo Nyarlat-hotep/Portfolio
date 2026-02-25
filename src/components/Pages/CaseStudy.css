@@ -8,12 +8,16 @@
   overflow: visible;
 }
 
-/* Sidebar container for Journey Map */
+/* Sidebar container for Scroll Tracker */
 .case-study-sidebar {
   flex-shrink: 0;
+  width: 28px;
+  /* Do NOT use align-self: stretch — in a flex row it would set the item's
+     flex-allocated height to the full content height, and height: 100% inside
+     would then resolve to that (many screens tall) instead of 100vh. */
   align-self: flex-start;
   position: sticky;
-  top: 0rem;
+  top: 0;
   overflow: visible;
 }
 
