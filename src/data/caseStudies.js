@@ -120,20 +120,65 @@ export const caseStudies = {
   },
   'case-study-3': {
     id: 'case-study-3',
-    title: 'Project Title 3',
-    subtitle: 'UX Research • 2024',
-    company: 'Company Name',
-    role: 'UX Researcher & Designer',
-    duration: '3 months',
-    overview: 'Project overview goes here...',
-    challenge: 'Challenge description...',
-    solution: 'Solution approach...',
-    impact: 'Results and impact...',
-    tools: ['Figma', 'Optimal Workshop', 'Maze'],
-    images: [null, null, null],
-    comparisons: [
-      { before: null, after: null, beforeLabel: 'Before', afterLabel: 'After' }
+    title: 'Smart Replies',
+    subtitle: 'Enterprise AI • Banana Phone • 2025',
+    company: 'Rocket Mortgage',
+    role: 'Lead Product Designer',
+    duration: 'April – June 2025',
+
+    overview: 'Smart Replies is an AI-powered text drafting feature built inside Banana Phone, Rocket Mortgage\'s enterprise communication platform. When a regulatory change forced thousands of bankers off shortcode numbers and onto individual office lines, mass texting became impossible overnight — spam filters blocked everything. Bankers were left writing every client message by hand, one at a time, at scale. Smart Replies was the answer: an AI that drafts the right message for any point in the client relationship, so bankers can communicate at volume without sacrificing personalization.',
+
+    challenge: 'The problem started with a phone number migration. Rocket Mortgage moved bankers from shared shortcodes to individual office numbers — a compliance-driven change with an unintended consequence: text messages sent at scale now looked like spam. Filters flagged them. Delivery dropped. Bankers who had relied on coordinated outreach across their full client pipeline were suddenly limited to manually composing every message, one contact at a time. For a workforce of thousands handling dozens of active leads each, that\'s not a slowdown — it\'s a breakdown in the client communication model entirely.',
+
+    solution: 'I designed a drafting panel built into Banana Phone\'s existing text interface. A banker triggers the panel, selects from a list of message categories — first-time hello, credit pull objection, rate update, follow-up after no response — and the AI drafts an appropriate message instantly. They can send it as-is or edit before sending. In v1 we launched with approximately 10 categories per banker specialty, covering both purchase and refinance workflows. Categories weren\'t invented at a desk — I ran discovery sessions with banking leaders to map the real moments in a client relationship where language mattered most and where bankers were most likely to hesitate or get it wrong.\n\nThe hardest part of this project wasn\'t the concept — it was the execution. The engineering team had significant technical constraints that forced real compromises on the visual UX I\'d designed. The panel I shipped is not the panel I designed. We traded polish for stability and got to launch on schedule. The model quality improved substantially post-launch as it learned from millions of real interactions, which softened some of those tradeoffs over time.',
+
+    accentColor: '#ec4899',
+
+    impact: 'Launched June 2025. In the first ten weeks alone, bankers sent 1.8 million AI-drafted texts — a volume that would have been impossible to generate manually. By January 2026, 56% of all outbound texts across Rocket Mortgage were AI-generated, with only 13% edited before sending. The model learned fast and got significantly better. This was Rocket Mortgage\'s first major AI integration into the banker workflow — a proof point that changed the internal conversation about what AI assistance could look like in a high-stakes financial context.',
+
+    metrics: [
+      { value: '1.8M', label: 'AI Texts Sent', sublabel: 'first 10 weeks post-launch' },
+      { value: '$75M', label: 'Closing Volume', sublabel: 'monthly increase attributed' },
+      { value: '56%', label: 'AI-Generated', sublabel: 'of all outbound texts by Jan 2026' },
+      { value: '~10M', label: 'Total AI Texts', sublabel: 'sent through Jan 2026' },
+      { value: '87%', label: 'Sent As-Is', sublabel: 'no edits before sending' },
+      { value: '10', label: 'Launch Categories', sublabel: 'per banker specialty' },
     ],
+
+    process: [
+      {
+        title: 'The Breaking Point',
+        description: 'The number migration wasn\'t a design problem at first — it was a compliance decision made above the product layer. But its downstream consequences landed squarely in the product. Bankers went from coordinated, scalable text outreach to composing every message manually. Discovery made clear this wasn\'t a minor inconvenience. For bankers managing pipelines of dozens of active clients, the friction of manual composition at scale meant fewer touchpoints, slower follow-up, and measurable drops in conversion. The brief was simple: restore what was lost, and make it better.',
+        image: null
+      },
+      {
+        title: 'Category Discovery',
+        description: 'Before writing a single line of interface, I needed to understand what bankers were actually trying to say. I ran discovery sessions with banking leaders across purchase and refinance teams — not to validate assumptions, but to map the real communication moments that defined their workflows. What I found was a consistent set of high-stakes, high-frequency message types: the first hello to a new lead, the credit pull conversation, the rate update, the follow-up after silence. Each of these had a different emotional register and a different set of constraints. That map became the category architecture for v1: approximately 10 categories per banker specialty, covering the moments where language mattered most.',
+        image: null
+      },
+      {
+        title: 'Interface Design',
+        description: 'The core interaction is a drafting panel that lives inside Banana Phone\'s existing text interface. A banker triggers it, selects a category or requests the next logical message in a conversation thread, the AI drafts, and they send or edit. Simple. What made it hard was the engineering team\'s technical constraints, which required significant compromises on the visual design I\'d built. I designed for a particular UX. What launched was a more conservative version — less polished, more stable. That\'s a real tradeoff, and it\'s one I\'d revisit given more runway. The interaction model survived intact; some of the craft didn\'t.',
+        image: null
+      },
+      {
+        title: 'Pilot & Legal Review',
+        description: 'We started small — a controlled pilot with a subset of bankers to test message quality and gather signal before scaling. Alongside that, the legal team reviewed the backend prompts that were powering the AI drafts. Financial communications carry regulatory weight, and an AI generating client-facing messages at this scale required that scrutiny. My involvement in the legal review was limited; my involvement in reading the signal from early pilot users and iterating the category set and flow was not.',
+        image: null
+      },
+      {
+        title: 'Launch & Scale',
+        description: 'Full launch hit in June 2025. The growth curve was steep: 1.8 million AI-drafted texts in the first ten weeks, $75 million attributed to monthly closing volume increases. What surprised even the optimistic projections was the model quality at that scale. With millions of real message interactions as training signal, the AI improved substantially and quickly. By January 2026, 87% of AI drafts were sent exactly as written — bankers weren\'t editing them because they didn\'t need to. That\'s a quality bar that took serious data volume to reach.',
+        image: null
+      },
+      {
+        title: 'A First Step, Not a Finish Line',
+        description: 'Smart Replies is the first AI feature integrated into the banker workflow at Rocket Mortgage — and it\'s still an island. Today, bankers navigate to a separate page to use it. The vision is something more ambient: AI assistance surfaced at the right moment in a unified interface, not a feature you have to go find. That\'s the work still ahead. What this project proved is that bankers will trust AI-drafted communication at high volume when the quality is there — and that changes the internal conversation about what\'s possible next.',
+        image: null
+      }
+    ],
+
+    images: [],
     links: {}
   }
 };
