@@ -235,7 +235,8 @@ export default function CaseStudy({ caseStudy, planetColor = '#a855f7', scrollCo
       .replace('#', '')
       .match(/.{2}/g)
       .map((x) => parseInt(x, 16))
-      .join(', ')
+      .join(', '),
+    '--accent-color': caseStudy.accentColor || planetColor
   };
 
   return (
@@ -401,9 +402,30 @@ export default function CaseStudy({ caseStudy, planetColor = '#a855f7', scrollCo
         title="Impact"
         viewport={viewport}
       >
-        <motion.p className="section-text impact-text" variants={contentVariants}>
+        <motion.p className="section-text" variants={contentVariants}>
           {caseStudy.impact}
         </motion.p>
+
+        {/* Metric dashboard cards */}
+        {caseStudy.metrics && caseStudy.metrics.length > 0 && (
+          <motion.div
+            className="metrics-grid"
+            variants={{
+              hidden: {},
+              visible: { transition: { staggerChildren: 0.08, delayChildren: 0.55 } }
+            }}
+          >
+            {caseStudy.metrics.map((metric, index) => (
+              <motion.div key={index} className="metric-card" variants={cardVariants}>
+                <span className="metric-value">{metric.value}</span>
+                <span className="metric-label">{metric.label}</span>
+                {metric.sublabel && (
+                  <span className="metric-sublabel">{metric.sublabel}</span>
+                )}
+              </motion.div>
+            ))}
+          </motion.div>
+        )}
       </AnimatedSection>
 
 

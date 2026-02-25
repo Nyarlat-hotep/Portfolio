@@ -2,24 +2,66 @@
 export const caseStudies = {
   'case-study-1': {
     id: 'case-study-1',
-    title: 'Project Title 1',
-    subtitle: 'Product Design • 2025',
-    company: 'Company Name',
+    title: 'Banana Phone',
+    subtitle: 'Enterprise Product Design • 2024',
+    company: 'Rocket Mortgage',
     role: 'Lead Product Designer',
-    duration: '6 months',
-    overview: 'A brief overview of the project. This should be 2-3 sentences explaining what the project was about and your role in it.',
-    challenge: 'What problem were you solving? What were the constraints or challenges you faced?',
-    solution: 'How did you approach solving this problem? What methods, processes, or design decisions did you make?',
-    impact: 'What were the results? Include metrics if possible (increased conversion, improved user satisfaction, etc.)',
-    tools: ['Figma', 'Adobe XD', 'Miro', 'UserTesting'],
-    images: [null, null, null],
-    comparisons: [
-      { before: null, after: null, beforeLabel: 'Before', afterLabel: 'After' }
+    duration: '3–4 months to launch',
+
+    overview: 'Banana Phone is Rocket Mortgage\'s enterprise communication platform — the tool thousands of mortgage bankers rely on to call, text, and chat with clients throughout the loan process. I joined the project as lead product designer three months before a hard launch deadline, stepping into a product that had been through too many design iterations to count without a coherent strategy to show for it. My job was to stabilize the design direction, make the critical calls needed to ship, and lay the groundwork for what the product could become.',
+
+    challenge: 'The design had been fragmented across multiple product managers who each owned a communication channel — phone calls, texting, chat — and rarely coordinated. The accumulated iterations had produced an interface that prioritized visual minimalism at the expense of usability: important client context was buried behind clicks, the lead queue was hidden, and bankers constantly context-switched between Banana Phone and other internal tools. I inherited this fragmentation with a fixed deadline, a sole-designer scope, and no room to start over.',
+
+    solution: 'I made a foundational shift in design philosophy: enterprise is not consumer. A mortgage banker making dozens of client calls per day needs information surfaced, not hidden. I brought the lead queue — the daily roster of clients a banker works — to a persistent surface so it was never more than a glance away. I surfaced critical client context (address, timezone, loan purpose, loan stage) directly into the communication view rather than requiring navigation to find it. I unified call, text, and chat into a coherent interface that replaced the fragmented multi-system workflow bankers had been managing across separate tools and personal devices. And I served as the connective tissue between product managers who weren\'t talking to each other — establishing design language consistency and advocating for cross-channel coherence that no single PM had the incentive to own.',
+
+    accentColor: '#f5c842',
+
+    impact: 'Launched Q4 2024. Banana Phone became the communication layer for thousands of bankers across Rocket Mortgage — consolidating fragmented systems into a single interface and driving measurable results across every channel from day one.',
+
+    metrics: [
+      { value: '650K+', label: 'Client Calls', sublabel: 'made in 2025' },
+      { value: '15M+', label: 'Texts Sent', sublabel: 'since Nov 2025' },
+      { value: '37.28%', label: 'Response Rate', sublabel: 'client text replies' },
+      { value: '425K+', label: 'Online Chats', sublabel: 'completed last quarter' },
+      { value: '85%', label: 'Easy to Use', sublabel: 'peak satisfaction score' },
+      { value: '85%', label: 'Communication', sublabel: 'helps me communicate' },
     ],
-    links: {
-      // prototype: 'https://figma.com/...',
-      // live: 'https://example.com'
-    }
+
+    process: [
+      {
+        title: 'Assessment & Stabilization',
+        description: 'Joining three months before a fixed launch deadline left no room for a formal discovery phase. I did a rapid audit of every design iteration that had accumulated and made a quick call: what was sound, what needed to change before launch, and what would go on a prioritized debt list. The goal was to stop the churn — establish one authoritative direction the team could build against and stop relitigating decisions that had already cost the project months.',
+        image: null
+      },
+      {
+        title: 'Enterprise Design Principles',
+        description: 'The core insight that changed everything: Banana Phone had been designed with consumer UI conventions — minimal chrome, progressive disclosure, information behind clicks. That works for occasional users. It fails bankers who are in the tool all day, making dozens of calls, managing active leads, and needing client context immediately available. I reframed every subsequent design decision around this distinction: density and persistence over minimalism.',
+        image: null
+      },
+      {
+        title: 'UI Redesign',
+        description: 'Two changes defined the redesign. First: the lead queue — a banker\'s daily roster of active client communications — moved from a buried menu item to a persistent sidebar. It had received consistent negative feedback in its hidden state; surfacing it was the most direct usability fix available. Second: critical client context (address, timezone, loan purpose, loan stage) moved into the communication view itself, eliminating the mid-call navigation bankers had been doing to find information they needed to have the conversation.',
+        image: null
+      },
+      {
+        title: 'Cross-Team Alignment',
+        description: 'With ownership split across PMs who each managed a separate communication channel and rarely coordinated, there was no single person accountable for the coherence of the full experience. I became that connective layer. I established design language consistency across call, text, and chat surfaces, and made the case in every alignment conversation for decisions that served the whole experience rather than any one team\'s slice of it. The product felt disjointed because it was built that way — changing that required both design work and sustained advocacy.',
+        image: null
+      },
+      {
+        title: 'Launch & Adoption',
+        description: 'I flew to Rocket\'s headquarters on launch day to help bankers get Banana Phone installed and configured on their machines. I also produced the visual training materials the training organization used for their formal onboarding courses. Getting thousands of bankers from zero to productive in a new communication tool wasn\'t just a logistics problem — it required design judgment on what to explain, in what order, and how to frame a new workflow so it felt approachable rather than disruptive.',
+        image: null
+      },
+      {
+        title: 'Post-Launch & RocketOS Vision',
+        description: 'After launch I addressed prioritized design debt and shifted attention toward what Banana Phone could become. The long-term vision — RocketOS — is a single application that replaces the collection of siloed tools bankers currently use: one interface for cross-channel client communication, persistent client context, and AI assistance surfaced at the right moments in a workflow. Banana Phone\'s redesign established the structural and design language foundations that vision will build on. The best version of this product is still ahead.',
+        image: null
+      }
+    ],
+
+    images: [],
+    links: {}
   },
   'case-study-2': {
     id: 'case-study-2',

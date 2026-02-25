@@ -112,10 +112,7 @@ export default function PageOverlay({ isOpen, onClose, children, title, planetCo
                       fontWeight: 200,
                       letterSpacing: '2px',
                       margin: 0,
-                      // background: `linear-gradient(135deg, ${planetColor} 0%, #00d4ff 100%)`,
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
-                      backgroundClip: 'text'
+                      color: planetColor
                     }}
                   >
                     {title}

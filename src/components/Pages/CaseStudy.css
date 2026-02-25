@@ -356,6 +356,58 @@
   box-shadow: 0 8px 24px rgba(0, 212, 255, 0.3);
 }
 
+/* Metric Dashboard Cards */
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-top: 1.75rem;
+}
+
+.metric-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 1.25rem 1.5rem;
+  background: rgba(var(--planet-color-rgb, 168, 85, 247), 0.06);
+  border: 1px solid rgba(var(--planet-color-rgb, 168, 85, 247), 0.18);
+  border-top: 2px solid var(--accent-color, #f5c842);
+  border-radius: 10px;
+  position: relative;
+  overflow: hidden;
+}
+
+.metric-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(var(--accent-color, #f5c842), 0.04) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.metric-value {
+  font-size: 2rem;
+  font-weight: 300;
+  color: var(--accent-color, #f5c842);
+  letter-spacing: -0.5px;
+  line-height: 1;
+  font-family: monospace;
+}
+
+.metric-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+
+.metric-sublabel {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.4);
+  letter-spacing: 0.3px;
+}
+
 /* Responsive */
 @media (max-width: 1024px) {
   .case-study-layout {
@@ -386,6 +438,14 @@
 
   .image-gallery {
     grid-template-columns: 1fr;
+  }
+
+  .metrics-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .metric-value {
+    font-size: 1.6rem;
   }
 
   .link-button {
