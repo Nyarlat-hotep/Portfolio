@@ -122,20 +122,28 @@ function AnimatedSection({ number, title, children, viewport }) {
 
 // --- Main component ---
 export default function CaseStudy({ caseStudy, planetColor = '#a855f7', scrollContainerRef }) {
-  const [currentPhaseIndex, setCurrentPhaseIndex] = useState(0);
-  const phaseRefs = useRef([]);
+  const [currentPhaseIndex, setCurrentPhaseIndex] = useState(-1);
+
+  // Refs for the 5 fixed journey map sections
+  const overviewRef = useRef(null);
+  const challengeRef = useRef(null);
+  const solutionRef = useRef(null);
+  const phaseRefs = useRef([]);   // all process phase divs → waypoint index 3
+  const impactRef = useRef(null);
+
   const lastScrollY = useRef(0);
   const scrollDirection = useRef('down');
-  const visibleSections = useRef(new Set());
 
-  // Track which process phase is currently in view
+  // Track which of the 5 fixed waypoint sections is in view
   useEffect(() => {
-    if (!caseStudy?.process || caseStudy.process.length === 0) return;
+    if (!caseStudy) return;
 
     const root = scrollContainerRef?.current || null;
 
-    // Track scroll direction
+    let hasScrolled = false;
+
     const handleScroll = () => {
+      hasScrolled = true;
       const currentScrollY = root ? root.scrollTop : window.scrollY;
       scrollDirection.current = currentScrollY > lastScrollY.current ? 'down' : 'up';
       lastScrollY.current = currentScrollY;
@@ -144,80 +152,80 @@ export default function CaseStudy({ caseStudy, planetColor = '#a855f7', scrollCo
     const scrollTarget = root || window;
     scrollTarget.addEventListener('scroll', handleScroll, { passive: true });
 
-    // Single observer for all sections
+    // Map every observed element to its waypoint index (0–4)
+    // All process phase divs map to index 3 ("Process")
+    const sections = [
+      { el: overviewRef.current,  idx: 0 },
+      { el: challengeRef.current, idx: 1 },
+      { el: solutionRef.current,  idx: 2 },
+      ...(phaseRefs.current.filter(Boolean).map(el => ({ el, idx: 3 }))),
+      { el: impactRef.current,    idx: 4 }
+    ].filter(s => s.el);
+
+    const elementToIdx = new Map(sections.map(s => [s.el, s.idx]));
+    const visibleIndices = new Set();
+
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          const index = phaseRefs.current.indexOf(entry.target);
-          if (index === -1) return;
-
+          const idx = elementToIdx.get(entry.target);
+          if (idx === undefined) return;
           if (entry.isIntersecting) {
-            visibleSections.current.add(index);
+            visibleIndices.add(idx);
           } else {
-            visibleSections.current.delete(index);
+            visibleIndices.delete(idx);
           }
         });
 
-        // Determine active section based on visible sections and scroll direction
-        if (visibleSections.current.size > 0) {
-          const visibleArray = Array.from(visibleSections.current).sort((a, b) => a - b);
-          const viewportHeight = root ? root.clientHeight : window.innerHeight;
-
-          let activeIndex = visibleArray[0];
-
-          if (scrollDirection.current === 'down') {
-            // Scrolling DOWN: activate the highest-indexed section that has entered viewport
-            // This makes the beam move forward as soon as a new section appears
-            activeIndex = visibleArray[visibleArray.length - 1];
-          } else {
-            // Scrolling UP: activate section whose top is above the 40% trigger point
-            // This makes the beam move back when you scroll up past a section
-            const triggerPoint = viewportHeight * 0.4;
-
-            for (const idx of visibleArray) {
-              const el = phaseRefs.current[idx];
-              if (el) {
-                const rect = el.getBoundingClientRect();
-                const containerRect = root ? root.getBoundingClientRect() : { top: 0 };
-                const relativeTop = rect.top - containerRect.top;
-
-                if (relativeTop <= triggerPoint) {
-                  activeIndex = idx;
-                }
-              }
-            }
-          }
-
-          setCurrentPhaseIndex(activeIndex);
+        if (visibleIndices.size > 0) {
+          const arr = Array.from(visibleIndices).sort((a, b) => a - b);
+          // Before any scroll: always show the topmost visible section (avoids false-activating
+          // lower sections that are all visible simultaneously on initial render)
+          // After scrolling: use direction to determine which section is "active"
+          const active = !hasScrolled
+            ? arr[0]
+            : scrollDirection.current === 'down' ? arr[arr.length - 1] : arr[0];
+          setCurrentPhaseIndex(active);
         }
       },
       {
         root,
-        rootMargin: '0px 0px 0px 0px',
-        threshold: [0, 0.05, 0.1]
+        // Trigger only when section enters top 85% of viewport (15% from bottom)
+        rootMargin: '0px 0px -15% 0px',
+        threshold: 0
       }
     );
 
-    // Observe all phase sections
-    phaseRefs.current.forEach((ref) => {
-      if (ref) observer.observe(ref);
-    });
+    sections.forEach(({ el }) => observer.observe(el));
 
     return () => {
       observer.disconnect();
       scrollTarget.removeEventListener('scroll', handleScroll);
     };
-  }, [caseStudy?.process, scrollContainerRef]);
+  }, [caseStudy, scrollContainerRef]);
 
-  // Handle click on journey map waypoint - scroll to that phase
+  // Scroll to the section corresponding to the clicked waypoint index (0–4)
   const handlePhaseClick = (index) => {
-    const phaseElement = phaseRefs.current[index];
-    if (phaseElement) {
-      phaseElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
+    const targets = [
+      overviewRef.current,
+      challengeRef.current,
+      solutionRef.current,
+      phaseRefs.current[0],  // first process phase = top of Process section
+      impactRef.current
+    ];
+    targets[index]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   if (!caseStudy) return null;
+
+  // Fixed 5 waypoints — always correspond to the actual page sections
+  const journeyWaypoints = [
+    { title: 'Overview' },
+    { title: 'Challenge' },
+    { title: 'Solution' },
+    { title: 'Process' },
+    { title: 'Impact' }
+  ];
 
   const viewport = {
     root: scrollContainerRef,
@@ -242,10 +250,10 @@ export default function CaseStudy({ caseStudy, planetColor = '#a855f7', scrollCo
   return (
     <div className="case-study-layout" style={cssVars}>
       {/* Sidebar with Journey Map */}
-      {caseStudy.process && caseStudy.process.length > 0 && (
+      {journeyWaypoints.length > 0 && (
         <aside className="case-study-sidebar">
           <JourneyMap
-            phases={caseStudy.process}
+            phases={journeyWaypoints}
             currentPhaseIndex={currentPhaseIndex}
             planetColor={planetColor}
             onPhaseClick={handlePhaseClick}
@@ -294,25 +302,31 @@ export default function CaseStudy({ caseStudy, planetColor = '#a855f7', scrollCo
         </motion.div>
 
       {/* Overview */}
-      <AnimatedSection number={sectionNum()} title="Overview" viewport={viewport}>
-        <motion.p className="section-text" variants={contentVariants}>
-          {caseStudy.overview}
-        </motion.p>
-      </AnimatedSection>
+      <div ref={overviewRef}>
+        <AnimatedSection number={sectionNum()} title="Overview" viewport={viewport}>
+          <motion.p className="section-text" variants={contentVariants}>
+            {caseStudy.overview}
+          </motion.p>
+        </AnimatedSection>
+      </div>
 
       {/* Challenge */}
-      <AnimatedSection number={sectionNum()} title="Challenge" viewport={viewport}>
-        <motion.p className="section-text" variants={contentVariants}>
-          {caseStudy.challenge}
-        </motion.p>
-      </AnimatedSection>
+      <div ref={challengeRef}>
+        <AnimatedSection number={sectionNum()} title="Challenge" viewport={viewport}>
+          <motion.p className="section-text" variants={contentVariants}>
+            {caseStudy.challenge}
+          </motion.p>
+        </AnimatedSection>
+      </div>
 
       {/* Solution */}
-      <AnimatedSection number={sectionNum()} title="Solution" viewport={viewport}>
-        <motion.p className="section-text" variants={contentVariants}>
-          {caseStudy.solution}
-        </motion.p>
-      </AnimatedSection>
+      <div ref={solutionRef}>
+        <AnimatedSection number={sectionNum()} title="Solution" viewport={viewport}>
+          <motion.p className="section-text" variants={contentVariants}>
+            {caseStudy.solution}
+          </motion.p>
+        </AnimatedSection>
+      </div>
 
       {/* Process Phases — each phase gets its own section */}
       {caseStudy.process && caseStudy.process.map((phase, index) => (
@@ -397,6 +411,7 @@ export default function CaseStudy({ caseStudy, planetColor = '#a855f7', scrollCo
       )}
 
       {/* Impact */}
+      <div ref={impactRef}>
       <AnimatedSection
         number={sectionNum()}
         title="Impact"
@@ -427,7 +442,7 @@ export default function CaseStudy({ caseStudy, planetColor = '#a855f7', scrollCo
           </motion.div>
         )}
       </AnimatedSection>
-
+      </div>
 
       {/* Links */}
       {caseStudy.links && Object.keys(caseStudy.links).length > 0 && (

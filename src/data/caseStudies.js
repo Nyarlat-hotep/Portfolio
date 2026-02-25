@@ -29,13 +29,8 @@ export const caseStudies = {
 
     process: [
       {
-        title: 'Assessment & Stabilization',
-        description: 'Joining three months before a fixed launch deadline left no room for a formal discovery phase. I did a rapid audit of every design iteration that had accumulated and made a quick call: what was sound, what needed to change before launch, and what would go on a prioritized debt list. The goal was to stop the churn — establish one authoritative direction the team could build against and stop relitigating decisions that had already cost the project months.',
-        image: null
-      },
-      {
-        title: 'Enterprise Design Principles',
-        description: 'The core insight that changed everything: Banana Phone had been designed with consumer UI conventions — minimal chrome, progressive disclosure, information behind clicks. That works for occasional users. It fails bankers who are in the tool all day, making dozens of calls, managing active leads, and needing client context immediately available. I reframed every subsequent design decision around this distinction: density and persistence over minimalism.',
+        title: 'Audit & Direction',
+        description: 'Joining three months before a fixed launch deadline left no room for a formal discovery phase. I did a rapid audit of every design iteration that had accumulated and made a quick call: what was sound, what needed to change before launch, and what would go on a prioritized debt list. The core insight that shaped everything followed quickly: Banana Phone had been designed with consumer UI conventions — minimal chrome, progressive disclosure, information behind clicks. That works for occasional users. It fails bankers who are in the tool all day, making dozens of calls, managing active leads, and needing client context immediately available. I reframed every subsequent decision around that distinction: density and persistence over minimalism.',
         image: null
       },
       {
@@ -44,18 +39,13 @@ export const caseStudies = {
         image: null
       },
       {
-        title: 'Cross-Team Alignment',
+        title: 'Alignment',
         description: 'With ownership split across PMs who each managed a separate communication channel and rarely coordinated, there was no single person accountable for the coherence of the full experience. I became that connective layer. I established design language consistency across call, text, and chat surfaces, and made the case in every alignment conversation for decisions that served the whole experience rather than any one team\'s slice of it. The product felt disjointed because it was built that way — changing that required both design work and sustained advocacy.',
         image: null
       },
       {
-        title: 'Launch & Adoption',
-        description: 'I flew to Rocket\'s headquarters on launch day to help bankers get Banana Phone installed and configured on their machines. I also produced the visual training materials the training organization used for their formal onboarding courses. Getting thousands of bankers from zero to productive in a new communication tool wasn\'t just a logistics problem — it required design judgment on what to explain, in what order, and how to frame a new workflow so it felt approachable rather than disruptive.',
-        image: null
-      },
-      {
-        title: 'Post-Launch & RocketOS Vision',
-        description: 'After launch I addressed prioritized design debt and shifted attention toward what Banana Phone could become. The long-term vision — RocketOS — is a single application that replaces the collection of siloed tools bankers currently use: one interface for cross-channel client communication, persistent client context, and AI assistance surfaced at the right moments in a workflow. Banana Phone\'s redesign established the structural and design language foundations that vision will build on. The best version of this product is still ahead.',
+        title: 'Launch',
+        description: 'I flew to Rocket\'s headquarters on launch day to help bankers get Banana Phone installed and configured on their machines. I also produced the visual training materials the training organization used for their formal onboarding courses — because getting thousands of bankers from zero to productive in a new communication tool required design judgment on what to explain, in what order, and how to frame a new workflow so it felt approachable rather than disruptive. After launch I addressed prioritized design debt and shifted attention toward what Banana Phone could become. The long-term vision — RocketOS — is a single application that replaces the collection of siloed tools bankers currently use: one interface for cross-channel client communication, persistent client context, and AI assistance surfaced at the right moments in a workflow.',
         image: null
       }
     ],
@@ -81,33 +71,23 @@ export const caseStudies = {
 
     process: [
       {
-        title: 'Vision & Early Concept',
+        title: 'Vision',
         description: 'We opened with a high-fidelity vision artifact — a concept designed to test appetite, not feasibility. I co-directed the concept to surface what users actually wanted from a unified financial view, validate the dashboard\'s core utility, and establish a north star the team could pressure-test in every subsequent decision. Research confirmed strong user desire for personalized, consolidated financial data — and revealed that goal-oriented framing mattered more than feature breadth.',
         image: '/images/case-studies/myrocket/concept1.png'
       },
       {
-        title: 'IA & Lo-fi Exploration',
+        title: 'Research & IA',
         description: 'Before any visual design, I mapped the information architecture across a wide range of user financial states — first-time homebuyers, existing mortgage clients, users with connected Rocket Money accounts, and those with none. The core challenge was designing a page hierarchy that felt coherent and personal regardless of how much data a user had connected. These lo-fi structures and priority guides became the foundation for every stakeholder alignment conversation that followed.',
         image: '/images/case-studies/myrocket/concept-analysis.png'
       },
       {
-        title: 'Scope Decision & Iteration',
+        title: 'Scope & Iteration',
         description: 'With a Q4 deadline, the business decision was made to narrow scope to existing mortgage clients — a deliberate trade to go deep on one segment rather than thin across many. I aligned to this constraint and used it to sharpen the product\'s focus. This phase also saw the most stakeholder negotiation. The IA provoked real disagreement between mortgage servicing, Rocket Money, PM, and engineering — each advocating for their product\'s priority. I led multiple alignment sessions, making the case repeatedly for a structure that served users\' mental models rather than the org chart.',
         image: '/images/case-studies/myrocket/concept2.png'
       },
       {
         title: 'Launch',
-        description: 'Launched December 2022 with 500,000+ active monthly users. The shipped experience reflected a deliberate hierarchy: mortgage relationship at top, Rocket Money\'s essential modules below, and a locked state mechanism providing a clear activation path for unconnected features. One of my key learnings from this phase was the value of early engineering involvement — getting technical constraints on the table sooner would have protected more of the design intent through implementation.',
-        image: '/images/case-studies/myrocket/wireframe.png'
-      },
-      {
-        title: 'Design System Influence',
-        description: 'Working within Rocket\'s design system, I identified two gaps that required advocacy beyond the project itself. The first was a locked state variant for card components — the pattern I\'d championed for MyRocket needed a home in the system so other teams could use it. The second was a redesigned credit score dial with the visual weight and expressiveness the context required. I brought both through the DS team\'s review process. Both were adopted. Small contributions, but the kind that compound across a product organization.',
-        image: '/images/case-studies/myrocket/lockedstate.png'
-      },
-      {
-        title: 'Retrospective',
-        description: 'An early concept I pushed for — a mortgage component illustration that responded to time of day and season with character-driven animation — was scoped out during production. Two years later, the team that inherited the product is exploring precisely those concepts and generating significant internal momentum around them. The visuals in this case study represent the future-state concepts we envisioned but didn\'t ship. Delight isn\'t polish — it\'s a retention strategy, and it compounds. Being ahead of that curve is something I\'d push harder for earlier.',
+        description: 'Launched December 2022 with 500,000+ active monthly users. The shipped experience reflected a deliberate hierarchy: mortgage relationship at top, Rocket Money\'s essential modules below, and a locked state mechanism providing a clear activation path for unconnected features. Post-launch, I brought two design system contributions through review: a locked state variant for card components, and a redesigned credit score dial. Both were adopted. An early concept I pushed for — a mortgage component illustration that responded to time of day and season with character-driven animation — was scoped out during production. Two years later, the team that inherited the product is exploring precisely those concepts and generating significant internal momentum. Being ahead of that curve is something I\'d push harder for earlier.',
         image: '/images/case-studies/myrocket/dashboard-hero.png'
       }
     ],
@@ -147,33 +127,23 @@ export const caseStudies = {
 
     process: [
       {
-        title: 'The Breaking Point',
-        description: 'The number migration wasn\'t a design problem at first — it was a compliance decision made above the product layer. But its downstream consequences landed squarely in the product. Bankers went from coordinated, scalable text outreach to composing every message manually. Discovery made clear this wasn\'t a minor inconvenience. For bankers managing pipelines of dozens of active clients, the friction of manual composition at scale meant fewer touchpoints, slower follow-up, and measurable drops in conversion. The brief was simple: restore what was lost, and make it better.',
+        title: 'Problem & Discovery',
+        description: 'The number migration wasn\'t a design problem at first — it was a compliance decision made above the product layer. But its downstream consequences landed squarely in the product. Bankers went from coordinated, scalable text outreach to composing every message manually. For bankers managing pipelines of dozens of active clients, that meant fewer touchpoints, slower follow-up, and measurable drops in conversion. Before writing a single line of interface, I ran discovery sessions with banking leaders across purchase and refinance teams to map the real communication moments that defined their workflows — the first hello to a new lead, the credit pull conversation, the rate update, the follow-up after silence. That map became the category architecture for v1: approximately 10 categories per banker specialty.',
         image: null
       },
       {
-        title: 'Category Discovery',
-        description: 'Before writing a single line of interface, I needed to understand what bankers were actually trying to say. I ran discovery sessions with banking leaders across purchase and refinance teams — not to validate assumptions, but to map the real communication moments that defined their workflows. What I found was a consistent set of high-stakes, high-frequency message types: the first hello to a new lead, the credit pull conversation, the rate update, the follow-up after silence. Each of these had a different emotional register and a different set of constraints. That map became the category architecture for v1: approximately 10 categories per banker specialty, covering the moments where language mattered most.',
-        image: null
-      },
-      {
-        title: 'Interface Design',
+        title: 'Design',
         description: 'The core interaction is a drafting panel that lives inside Banana Phone\'s existing text interface. A banker triggers it, selects a category or requests the next logical message in a conversation thread, the AI drafts, and they send or edit. Simple. What made it hard was the engineering team\'s technical constraints, which required significant compromises on the visual design I\'d built. I designed for a particular UX. What launched was a more conservative version — less polished, more stable. That\'s a real tradeoff, and it\'s one I\'d revisit given more runway. The interaction model survived intact; some of the craft didn\'t.',
         image: null
       },
       {
-        title: 'Pilot & Legal Review',
+        title: 'Pilot',
         description: 'We started small — a controlled pilot with a subset of bankers to test message quality and gather signal before scaling. Alongside that, the legal team reviewed the backend prompts that were powering the AI drafts. Financial communications carry regulatory weight, and an AI generating client-facing messages at this scale required that scrutiny. My involvement in the legal review was limited; my involvement in reading the signal from early pilot users and iterating the category set and flow was not.',
         image: null
       },
       {
-        title: 'Launch & Scale',
-        description: 'Full launch hit in June 2025. The growth curve was steep: 1.8 million AI-drafted texts in the first ten weeks, $75 million attributed to monthly closing volume increases. What surprised even the optimistic projections was the model quality at that scale. With millions of real message interactions as training signal, the AI improved substantially and quickly. By January 2026, 87% of AI drafts were sent exactly as written — bankers weren\'t editing them because they didn\'t need to. That\'s a quality bar that took serious data volume to reach.',
-        image: null
-      },
-      {
-        title: 'A First Step, Not a Finish Line',
-        description: 'Smart Replies is the first AI feature integrated into the banker workflow at Rocket Mortgage — and it\'s still an island. Today, bankers navigate to a separate page to use it. The vision is something more ambient: AI assistance surfaced at the right moment in a unified interface, not a feature you have to go find. That\'s the work still ahead. What this project proved is that bankers will trust AI-drafted communication at high volume when the quality is there — and that changes the internal conversation about what\'s possible next.',
+        title: 'Launch',
+        description: 'Full launch hit in June 2025. The growth curve was steep: 1.8 million AI-drafted texts in the first ten weeks, $75 million attributed to monthly closing volume increases. With millions of real message interactions as training signal, the model improved substantially and quickly — by January 2026, 87% of AI drafts were sent exactly as written. Smart Replies is the first AI feature integrated into the banker workflow at Rocket Mortgage — and it\'s still an island. Today, bankers navigate to a separate page to use it. What this project proved is that bankers will trust AI-drafted communication at high volume when the quality is there, and that changes the internal conversation about what\'s possible next.',
         image: null
       }
     ],
