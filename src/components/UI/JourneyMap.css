@@ -40,15 +40,15 @@
   background: linear-gradient(
     180deg,
     transparent 0%,
-    #00d4ff 30%,
-    #00d4ff 70%,
+    var(--planet-color, #00d4ff) 30%,
+    var(--planet-color, #00d4ff) 70%,
     transparent 100%
   );
   border-radius: 2px;
   box-shadow:
-    0 0 10px #00d4ff,
-    0 0 20px #00d4ff,
-    0 0 30px rgba(0, 212, 255, 0.5);
+    0 0 10px var(--planet-color, #00d4ff),
+    0 0 20px var(--planet-color, #00d4ff),
+    0 0 30px rgba(var(--planet-color-rgb, 0, 212, 255), 0.5);
   pointer-events: none;
   z-index: 10;
 }
@@ -71,6 +71,8 @@
 
 .journey-waypoint:hover {
   transition: .3s ease-in-out;
+  background: rgba(var(--planet-color-rgb, 0, 212, 255), 0.08);
+  border-radius: 8px;
 }
 
 .journey-waypoint:hover .waypoint-dot {
@@ -83,7 +85,7 @@
 }
 
 .journey-waypoint:focus-visible .waypoint-dot {
-  box-shadow: 0 0 0 2px rgba(0, 212, 255, 0.5);
+  box-shadow: 0 0 0 2px rgba(var(--planet-color-rgb, 0, 212, 255), 0.5);
 }
 
 .waypoint-marker {
@@ -116,9 +118,9 @@
 .journey-waypoint.active .waypoint-dot {
   width: 10px;
   height: 10px;
-  background: #00d4ff;
-  border-color: #00d4ff;
-  box-shadow: 0 0 12px #00d4ff;
+  background: var(--planet-color, #00d4ff);
+  border-color: var(--planet-color, #00d4ff);
+  box-shadow: 0 0 12px var(--planet-color, #00d4ff);
 }
 
 /* Pulsing ring for active waypoint - CSS animation for stability */
@@ -127,7 +129,7 @@
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  border: 1px solid #00d4ff;
+  border: 1px solid var(--planet-color, #00d4ff);
   pointer-events: none;
   animation: pulse-ring 2s ease-out infinite;
 }
@@ -151,8 +153,8 @@
   border-radius: 50%;
   background: radial-gradient(
     circle,
-    rgba(0, 212, 255, 0.6) 0%,
-    rgba(0, 212, 255, 0.3) 40%,
+    rgba(var(--planet-color-rgb, 0, 212, 255), 0.6) 0%,
+    rgba(var(--planet-color-rgb, 0, 212, 255), 0.3) 40%,
     transparent 70%
   );
   pointer-events: none;
@@ -175,7 +177,7 @@
 }
 
 .journey-waypoint.active .waypoint-label {
-  color: #00d4ff;
+  color: var(--planet-color, #00d4ff);
 }
 
 .journey-waypoint:hover .waypoint-label {

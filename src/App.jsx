@@ -75,6 +75,10 @@ function App() {
     }, 800);
   }, []);
 
+  // Overlay color: use case study's accentColor when defined, else the planet's color
+  const activeCaseStudy = activePlanet ? caseStudies[activePlanet.id] : null;
+  const overlayColor = activeCaseStudy?.accentColor || activePlanet?.color;
+
   // Determine what content to show in overlay
   const getOverlayContent = () => {
     if (!activePlanet) return null;
@@ -90,7 +94,7 @@ function App() {
     // Case study pages
     const caseStudy = caseStudies[activePlanet.id];
     if (caseStudy) {
-      return <CaseStudy caseStudy={caseStudy} planetColor={activePlanet.color} />;
+      return <CaseStudy caseStudy={caseStudy} planetColor={overlayColor} />;
     }
 
     return null;
@@ -130,7 +134,8 @@ function App() {
           isOpen={isOverlayOpen}
           onClose={handleCloseOverlay}
           title={activePlanet?.id === 'about' ? aboutContent.name : caseStudies[activePlanet?.id]?.title}
-          planetColor={activePlanet?.color}
+          planetColor={overlayColor}
+          planetId={activePlanet?.id}
         >
           {getOverlayContent()}
         </PageOverlay>

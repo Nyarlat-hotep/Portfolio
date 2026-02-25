@@ -5,7 +5,7 @@ import DataStream from './DataStream';
 import OverlayStars from './OverlayStars';
 import './PageOverlay.css';
 
-export default function PageOverlay({ isOpen, onClose, children, title, planetColor = '#00d4ff' }) {
+export default function PageOverlay({ isOpen, onClose, children, title, planetColor = '#00d4ff', planetId }) {
   const contentRef = useRef(null);
   const closeButtonRef = useRef(null);
 
@@ -56,7 +56,7 @@ export default function PageOverlay({ isOpen, onClose, children, title, planetCo
 
           {/* Main Overlay Container */}
           <motion.div
-            className="overlay-container"
+            className={`overlay-container${planetId ? ` overlay--${planetId}` : ''}`}
             role="dialog"
             aria-modal="true"
             aria-labelledby={title ? "overlay-title" : undefined}
@@ -79,7 +79,13 @@ export default function PageOverlay({ isOpen, onClose, children, title, planetCo
               backdropFilter: 'blur(20px)',
               display: 'flex',
               flexDirection: 'column',
-              overflow: 'hidden'
+              overflow: 'hidden',
+              '--overlay-color': planetColor,
+              '--overlay-color-rgb': planetColor
+                .replace('#', '')
+                .match(/.{2}/g)
+                .map((x) => parseInt(x, 16))
+                .join(', ')
             }}
           >
             {/* Background effects */}

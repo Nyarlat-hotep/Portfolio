@@ -161,6 +161,16 @@
   text-shadow: 0 0 30px rgba(0, 212, 255, 0.3);
 }
 
+/* Per-planet title color overrides */
+.overlay--case-study-1 .overlay-title {
+  background: linear-gradient(135deg, #f5c842 0%, #f0a500 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: none;
+}
+
+
 /* Close Button */
 .close-button {
   display: flex;
@@ -179,10 +189,10 @@
 }
 
 .close-button:hover {
-  background: rgba(0, 212, 255, 0.2);
-  border-color: #00d4ff;
+  background: rgba(var(--overlay-color-rgb, 0, 212, 255), 0.2);
+  border-color: var(--overlay-color, #00d4ff);
   transform: translateY(-2px);
-  box-shadow: 0 4px 16px rgba(0, 212, 255, 0.3);
+  box-shadow: 0 4px 16px rgba(var(--overlay-color-rgb, 0, 212, 255), 0.4);
 }
 
 .close-icon {
