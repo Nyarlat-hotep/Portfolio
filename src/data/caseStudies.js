@@ -67,7 +67,18 @@ export const caseStudies = {
 
     solution: 'I defined an information architecture that could flex across radically different user states — from a first-time homebuyer with no connected accounts to a mortgage client actively tracking their payoff path. The existing mortgage relationship anchored the top of the page; Rocket Money\'s presence was negotiated down to its highest-signal modules. For features users hadn\'t yet activated, I introduced a locked state pattern — drawn from gaming and subscription UI — that showed the value and path to activation rather than hiding the capability. I faced significant pushback on this in a financial product context, but defended it as a well-established convention. It launched as a core onboarding mechanism. A progressive disclosure principle governed every hierarchy decision: orient and motivate first, invite depth on demand.',
 
-    impact: '2× increase in monthly visit rate. 61% CSAT, growing monthly at launch. 5.2% lead-to-close rate — a 1-point gain over pre-launch baseline. 500,000+ active monthly users at launch. Recognized with a Hermes Gold Award (July 2023), GDUSA 60th Anniversary Digital Design Award, and Muse Creative Award.',
+    accentColor: '#22d3ee',
+
+    impact: 'Launched December 2022. MyRocket Dashboard gave Rocket Mortgage clients a unified, goal-oriented view of their financial life for the first time — consolidating fragmented product experiences into a single coherent interface and driving meaningful gains in engagement, conversion, and satisfaction from day one.',
+
+    metrics: [
+      { value: '2×', label: 'Monthly Visit Rate', sublabel: 'increase at launch' },
+      { value: '500K+', label: 'Monthly Active Users', sublabel: 'at launch' },
+      { value: '61%', label: 'CSAT Score', sublabel: 'growing monthly at launch' },
+      { value: '5.2%', label: 'Lead-to-Close Rate', sublabel: '+1pt over pre-launch baseline' },
+      { value: '3', label: 'Industry Awards', sublabel: 'Hermes Gold, GDUSA, Muse' },
+      { value: '2', label: 'Design System Components', sublabel: 'adopted post-launch' },
+    ],
 
     process: [
       {
