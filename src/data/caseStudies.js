@@ -163,23 +163,27 @@ export const aboutContent = {
     'Over eleven years I taught myself front-end development, spent years as the first and only designer at a company that needed everything built from scratch, and worked my way from UI designer to Lead at Rocket — where I now design internal tools for one of the largest banking forces in the country. The problems are bigger, the stakes are real, and the systems are endlessly complex. That\'s exactly where I want to be.'
   ],
   skills: [
-    'User Research',
-    'UI/UX Design',
-    'Prototyping',
+    'Design Thinking',
+    'Design Strategy',
+    'Advanced Prototyping',
     'Design Systems',
     'Usability Testing',
     'Information Architecture',
     'Interaction Design',
-    'Visual Design'
+    'Visual Design',
+    'Prompting for AI',
+    'Team Leadership',
+    'Cross-Functional Collaboration',
+    'Communication and Storytelling'
   ],
   tools: [
     'Figma',
     'Adobe Creative Suite',
-    'Sketch',
-    'Principle',
-    'Miro',
-    'UserTesting',
-    'Maze'
+    'Vercel',
+    'Claude',
+    'Figma Make',
+    'Sour Skittles'
+
   ],
   contact: {
     email: 'tcorneliusart@gmail.com',

@@ -173,20 +173,7 @@ export default function PageOverlay({ isOpen, onClose, children, title, planetCo
               )}
             </motion.div>
 
-            {/* Bottom gradient fade */}
-            <div
-              className="overlay-fade"
-              style={{
-                position: 'absolute',
-                bottom: 0,
-                left: 0,
-                right: 0,
-                height: '100px',
-                background: 'linear-gradient(to bottom, rgba(26, 29, 58, 0) 0%, rgba(26, 29, 58, 0.9) 100%)',
-                pointerEvents: 'none',
-                zIndex: 1
-              }}
-            ></div>
+            
           </motion.div>
         </>
       )}

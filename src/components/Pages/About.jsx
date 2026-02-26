@@ -108,7 +108,7 @@ export default function About({ aboutData, planetColor = '#10b981', scrollContai
         '--planet-color-rgb': planetColor.replace('#', '').match(/.{2}/g).map(x => parseInt(x, 16)).join(', ')
       }}
     >
-      {/* Header tagline */}
+      {/* Header tagline + photo */}
       <motion.div
         className="about-header"
         initial={{ opacity: 0, y: -20 }}
@@ -116,8 +116,21 @@ export default function About({ aboutData, planetColor = '#10b981', scrollContai
         viewport={viewport}
         transition={{ duration: 0.7, ease: [0.4, 0, 0.2, 1] }}
       >
-        <div className="about-intro">
-          <h2 className="about-tagline">{aboutData.tagline}</h2>
+        <div className="about-header-inner">
+          <div className="about-intro">
+            <h2 className="about-tagline">{aboutData.tagline}</h2>
+          </div>
+          <motion.div
+            className="about-photo-wrap"
+            initial={{ opacity: 0, scale: 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={viewport}
+            transition={{ duration: 0.8, delay: 0.2, ease: [0.4, 0, 0.2, 1] }}
+          >
+            <div className="about-photo-frame">
+              <img src="/images/taylor.jpg" alt="Taylor Cornelius" />
+            </div>
+          </motion.div>
         </div>
       </motion.div>
 
@@ -214,63 +227,61 @@ export default function About({ aboutData, planetColor = '#10b981', scrollContai
         </motion.section>
       </motion.div>
 
-      {/* Contact */}
+      {/* Contact + Social — merged */}
       <AnimatedSection number="04" title="Get In Touch" viewport={viewport}>
         <motion.div className="contact-card" variants={contentVariants}>
           <p className="contact-text">
             I'm always interested in hearing about new projects and opportunities.
           </p>
-          {aboutData.contact.email && (
-            <motion.a
-              href={`mailto:${aboutData.contact.email}`}
-              className="contact-button"
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <Mail className="button-icon" size={20} />
-              {aboutData.contact.email}
-            </motion.a>
-          )}
+          <div className="contact-actions">
+            {aboutData.contact.email && (
+              <motion.a
+                href={`mailto:${aboutData.contact.email}`}
+                className="contact-button"
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <Mail className="button-icon" size={20} />
+                {aboutData.contact.email}
+              </motion.a>
+            )}
+            {aboutData.social && (
+              <motion.div
+                className="social-links"
+                variants={{
+                  hidden: {},
+                  visible: { transition: { staggerChildren: 0.1, delayChildren: 0.3 } }
+                }}
+              >
+                {aboutData.social.linkedin && (
+                  <motion.a
+                    href={aboutData.social.linkedin}
+                    className="social-link"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    variants={socialVariants}
+                    whileHover={{ scale: 1.1 }}
+                  >
+                    <Linkedin className="social-icon" size={24} />
+                  </motion.a>
+                )}
+                {aboutData.social.dribbble && (
+                  <motion.a
+                    href={aboutData.social.dribbble}
+                    className="social-link"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    variants={socialVariants}
+                    whileHover={{ scale: 1.1 }}
+                  >
+                    <Dribbble className="social-icon" size={24} />
+                  </motion.a>
+                )}
+              </motion.div>
+            )}
+          </div>
         </motion.div>
       </AnimatedSection>
-
-      {/* Social Links */}
-      {aboutData.social && (
-        <AnimatedSection number="05" title="Connect" viewport={viewport}>
-          <motion.div
-            className="social-links"
-            variants={{
-              hidden: {},
-              visible: { transition: { staggerChildren: 0.1, delayChildren: 0.3 } }
-            }}
-          >
-            {aboutData.social.linkedin && (
-              <motion.a
-                href={aboutData.social.linkedin}
-                className="social-link"
-                target="_blank"
-                rel="noopener noreferrer"
-                variants={socialVariants}
-                whileHover={{ scale: 1.1 }}
-              >
-                <Linkedin className="social-icon" size={24} />
-              </motion.a>
-            )}
-            {aboutData.social.dribbble && (
-              <motion.a
-                href={aboutData.social.dribbble}
-                className="social-link"
-                target="_blank"
-                rel="noopener noreferrer"
-                variants={socialVariants}
-                whileHover={{ scale: 1.1 }}
-              >
-                <Dribbble className="social-icon" size={24} />
-              </motion.a>
-            )}
-          </motion.div>
-        </AnimatedSection>
-      )}
     </div>
   );
 }
