@@ -149,8 +149,8 @@ function WellMesh({ well }) {
 
     if (diskMatRef.current) {
       if (active) {
-        const pulse = 0.2 * Math.sin(well.age * Math.PI * 3); // ~1.5 Hz
-        diskMatRef.current.opacity = (0.7 + pulse) * e;
+        const pulse = 0.07 * Math.sin(well.age * Math.PI * 3); // ~1.5 Hz, gentle
+        diskMatRef.current.opacity = (0.78 + pulse) * e;
       } else {
         diskMatRef.current.opacity = 0.5 * e; // steady, dimmed when inactive
       }
@@ -158,8 +158,8 @@ function WellMesh({ well }) {
 
     if (glowMatRef.current) {
       if (active) {
-        const pulse = 0.1 * Math.sin(well.age * Math.PI * 3);
-        glowMatRef.current.opacity = (0.35 + pulse) * e;
+        const pulse = 0.04 * Math.sin(well.age * Math.PI * 3);
+        glowMatRef.current.opacity = (0.36 + pulse) * e;
       } else {
         glowMatRef.current.opacity = 0.2 * e;
       }
