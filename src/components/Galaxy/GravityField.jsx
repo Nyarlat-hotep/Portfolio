@@ -6,11 +6,12 @@ import { createNebulaSplatTexture } from '../../utils/threeUtils';
 const WORLD_X = -60, WORLD_Y = 0, WORLD_Z = 20;
 const N = 12000;
 
-const WELL_RAMP  = 1.5;
-const CAPTURE_R  = 1.5;
-const PULL_MAX   = 80;
-const TANGENT_F  = 25;   // tangential force constant (orbital spiraling)
-const FADE_SPEED = 0.35; // color fade-in rate (1/s) — ~2.8s to fully reappear
+const WELL_RAMP        = 1.5;
+const GRAVITY_DURATION = 10;  // seconds gravity is active after planting
+const CAPTURE_R        = 1.5;
+const PULL_MAX         = 80;
+const TANGENT_F        = 25;   // tangential force constant (orbital spiraling)
+const FADE_SPEED       = 0.35; // color fade-in rate (1/s) — ~2.8s to fully reappear
 
 let _wellId = 0;
 
@@ -140,11 +141,29 @@ function WellMesh({ well }) {
   const glowMatRef = useRef();
 
   useFrame(() => {
-    const t = Math.min(1, well.age / 0.7);
-    const e = t * t * (3 - 2 * t); // smoothstep
-    if (groupRef.current)   groupRef.current.scale.setScalar(e);
-    if (diskMatRef.current) diskMatRef.current.opacity = 0.9 * e;
-    if (glowMatRef.current) glowMatRef.current.opacity = 0.4 * e;
+    const t      = Math.min(1, well.age / 0.7);
+    const e      = t * t * (3 - 2 * t); // smoothstep fade-in
+    const active = well.age < GRAVITY_DURATION;
+
+    if (groupRef.current) groupRef.current.scale.setScalar(e);
+
+    if (diskMatRef.current) {
+      if (active) {
+        const pulse = 0.2 * Math.sin(well.age * Math.PI * 3); // ~1.5 Hz
+        diskMatRef.current.opacity = (0.7 + pulse) * e;
+      } else {
+        diskMatRef.current.opacity = 0.5 * e; // steady, dimmed when inactive
+      }
+    }
+
+    if (glowMatRef.current) {
+      if (active) {
+        const pulse = 0.1 * Math.sin(well.age * Math.PI * 3);
+        glowMatRef.current.opacity = (0.35 + pulse) * e;
+      } else {
+        glowMatRef.current.opacity = 0.2 * e;
+      }
+    }
   });
 
   return (
@@ -243,7 +262,8 @@ export default function GravityField() {
     // Tick well ages
     for (let wi = 0; wi < wells.length; wi++) wells[wi].age += dt;
 
-    const hasWell  = wells.length > 0;
+    // Gravity is "active" only while well.age < GRAVITY_DURATION
+    const gravityActive = wells.some(w => w.age < GRAVITY_DURATION);
     let posDirty   = false;
     let colorDirty = false;
 
@@ -267,6 +287,8 @@ export default function GravityField() {
 
       for (let j = 0; j < wells.length; j++) {
         const w = wells[j];
+        if (w.age >= GRAVITY_DURATION) continue; // gravity window expired
+
         const strength = Math.min(1, w.age / WELL_RAMP);
         const dx = w.x - pos[i3];
         const dy = w.y - pos[i3+1];
@@ -288,7 +310,7 @@ export default function GravityField() {
           vx += dx/d * force;
           vy += dy/d * force;
           vz += dz/d * force;
-          // Tangential force for orbital spiral: cross(Z-up, radial) = (-dy/hd, dx/hd, 0)
+          // Tangential force — cross(Z-up, radial) = (-dy/hd, dx/hd, 0)
           const hd2 = dx*dx + dy*dy;
           if (hd2 > 0.001) {
             const hd = Math.sqrt(hd2);
@@ -301,13 +323,13 @@ export default function GravityField() {
 
       if (capturedBy[i] !== -1) continue;
 
-      if (!hasWell) {
+      if (!gravityActive) {
         vx += (home[i3]   - pos[i3])   * 0.4 * dt;
         vy += (home[i3+1] - pos[i3+1]) * 0.4 * dt;
         vz += (home[i3+2] - pos[i3+2]) * 0.4 * dt;
       }
 
-      const damp = hasWell ? 0.98 : 0.92;
+      const damp = gravityActive ? 0.98 : 0.92;
       vx *= damp; vy *= damp; vz *= damp;
 
       const s2 = vx*vx + vy*vy + vz*vz;
