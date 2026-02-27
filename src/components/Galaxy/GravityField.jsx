@@ -1,9 +1,10 @@
 import { useMemo, useEffect, useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
+import { createNebulaSplatTexture } from '../../utils/threeUtils';
 
 const WORLD_X = -60, WORLD_Y = 0, WORLD_Z = 20;
-const N = 5000;
+const N = 8000;
 
 const MAX_WELLS   = 5;
 const WELL_RAMP   = 1.5;
@@ -11,10 +12,7 @@ const WELL_LIFE   = 15;
 const WELL_COLORS = ['#26cdd4', '#f0b347', '#9944ee', '#4ade80', '#dd44bb'];
 const CAPTURE_R   = 0.8;
 const PULL_MAX    = 40;
-const MAX_SCALE   = 3;
-const GROW_RATE   = 2.5;  // scale units per second while held
-const HOLD_MS     = 200;  // ms: below = click, above = hold/grow
-const WELL_HIT_R2 = 4;    // squared units — proximity to detect well on pointer down
+const WELL_HIT_R2 = 4; // squared units — proximity to detect well on click
 
 let _wellId = 0;
 
@@ -53,6 +51,23 @@ function buildField() {
   geo.setAttribute('position', posAttr);
   geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
   return { geo, vel, home, capturedBy };
+}
+
+function buildHaze() {
+  const count = 300;
+  const pos = new Float32Array(count * 3);
+  const col = new Float32Array(count * 3);
+  for (let i = 0; i < count; i++) {
+    pos[i*3]   = randG() * 20;
+    pos[i*3+1] = randG() * 6;
+    pos[i*3+2] = randG() * 12;
+    const c = PAL[Math.floor(Math.random() * PAL.length)];
+    col[i*3] = c.r; col[i*3+1] = c.g; col[i*3+2] = c.b;
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  return geo;
 }
 
 let _tex = null;
@@ -100,29 +115,23 @@ function FlashMesh({ flashRef }) {
 
 // Purely visual — no event handlers (hit plane owns all interaction)
 function WellMesh({ well }) {
-  const groupRef = useRef();
-  useFrame(() => {
-    if (groupRef.current) groupRef.current.scale.setScalar(well.scale);
-  });
   return (
-    <group ref={groupRef} position={[well.x, well.y, well.z]}>
-      <mesh>
-        <sphereGeometry args={[0.35, 16, 16]} />
-        <meshStandardMaterial color="#000000" emissive="#000000" />
-      </mesh>
-    </group>
+    <mesh position={[well.x, well.y, well.z]}>
+      <sphereGeometry args={[0.35, 16, 16]} />
+      <meshStandardMaterial color="#000000" emissive="#000000" />
+    </mesh>
   );
 }
 
 export default function GravityField() {
   const { geo, vel, home, capturedBy } = useMemo(() => buildField(), []);
-  const tex = useMemo(() => getDotTex(), []);
+  const hazeGeo  = useMemo(() => buildHaze(), []);
+  const tex      = useMemo(() => getDotTex(), []);
+  const hazeTex  = useMemo(() => createNebulaSplatTexture(), []);
 
-  const wellsRef      = useRef([]);
+  const wellsRef     = useRef([]);
   const [wellSnapshot, setWellSnapshot] = useState([]);
-  const flashRef      = useRef(null);
-  const heldWellIdRef = useRef(null);
-  const holdStartRef  = useRef(0);
+  const flashRef     = useRef(null);
 
   const collapseWell = (idx) => {
     const wells = wellsRef.current;
@@ -153,46 +162,31 @@ export default function GravityField() {
 
     geo.attributes.position.needsUpdate = true;
     flashRef.current = { x: w.x, y: w.y, z: w.z, age: 0 };
-    if (heldWellIdRef.current === w.id) heldWellIdRef.current = null;
     wells.splice(idx, 1);
     setWellSnapshot([...wells]);
   };
 
-  // lp = local-space point from e.point minus WORLD offset
-  const handlePointerDown = (lp) => {
-    holdStartRef.current = Date.now();
+  // Click near existing well → collapse it; click empty space → plant new well
+  const handleClick = (lp) => {
     const wells = wellsRef.current;
     for (let i = 0; i < wells.length; i++) {
       const w = wells[i];
       const dx = lp.x - w.x, dy = lp.y - w.y, dz = lp.z - w.z;
       if (dx*dx + dy*dy + dz*dz < WELL_HIT_R2) {
-        heldWellIdRef.current = w.id;
+        collapseWell(i);
         return;
       }
     }
-    heldWellIdRef.current = null;
-  };
-
-  const handlePointerUp = (lp) => {
-    const held = Date.now() - holdStartRef.current;
-    if (heldWellIdRef.current !== null) {
-      if (held < HOLD_MS) {
-        const idx = wellsRef.current.findIndex(w => w.id === heldWellIdRef.current);
-        if (idx !== -1) collapseWell(idx);
-      }
-      heldWellIdRef.current = null;
-    } else if (held < HOLD_MS) {
-      const wells = wellsRef.current;
-      if (wells.length >= MAX_WELLS) return;
-      wells.push({ id: _wellId++, x: lp.x, y: lp.y, z: lp.z, age: 0, scale: 1, color: WELL_COLORS[wells.length % WELL_COLORS.length] });
-      setWellSnapshot([...wells]);
-    }
+    if (wells.length >= MAX_WELLS) return;
+    wells.push({ id: _wellId++, x: lp.x, y: lp.y, z: lp.z, age: 0, color: WELL_COLORS[wells.length % WELL_COLORS.length] });
+    setWellSnapshot([...wells]);
   };
 
   useEffect(() => () => {
     geo.dispose();
+    hazeGeo.dispose();
     if (_tex) { _tex.dispose(); _tex = null; }
-  }, [geo]);
+  }, [geo, hazeGeo]);
 
   useFrame((_, delta) => {
     const posAttr = geo.attributes.position;
@@ -208,16 +202,6 @@ export default function GravityField() {
     }
     for (let k = toCollapse.length - 1; k >= 0; k--) {
       collapseWell(toCollapse[k]);
-    }
-
-    // Grow held well
-    if (heldWellIdRef.current !== null) {
-      for (let wi = 0; wi < wells.length; wi++) {
-        if (wells[wi].id === heldWellIdRef.current) {
-          wells[wi].scale = Math.min(MAX_SCALE, wells[wi].scale + GROW_RATE * dt);
-          break;
-        }
-      }
     }
 
     // Tick flash
@@ -238,13 +222,12 @@ export default function GravityField() {
       for (let j = 0; j < wells.length; j++) {
         const w = wells[j];
         const strength = Math.min(1, w.age / WELL_RAMP);
-        const cr = CAPTURE_R * w.scale;
         const dx = w.x - pos[i3];
         const dy = w.y - pos[i3+1];
         const dz = w.z - pos[i3+2];
         const d2 = dx*dx + dy*dy + dz*dz;
 
-        if (d2 < cr * cr) {
+        if (d2 < CAPTURE_R * CAPTURE_R) {
           capturedBy[i] = w.id;
           vel[i3] = 0; vel[i3+1] = 0; vel[i3+2] = 0;
           pos[i3] = 0; pos[i3+1] = -9999; pos[i3+2] = 0;
@@ -293,17 +276,34 @@ export default function GravityField() {
 
   return (
     <group position={[WORLD_X, WORLD_Y, WORLD_Z]}>
+      {/* Invisible hit plane — owns all click interaction */}
       <mesh
         onPointerEnter={() => { document.body.style.cursor = 'crosshair'; }}
         onPointerLeave={() => { document.body.style.cursor = ''; }}
-        onPointerDown={(e) => { e.stopPropagation(); handlePointerDown({ x: e.point.x - WORLD_X, y: e.point.y - WORLD_Y, z: e.point.z - WORLD_Z }); }}
-        onPointerUp={(e)   => { e.stopPropagation(); handlePointerUp({ x: e.point.x - WORLD_X, y: e.point.y - WORLD_Y, z: e.point.z - WORLD_Z }); }}
+        onClick={(e) => { e.stopPropagation(); handleClick({ x: e.point.x - WORLD_X, y: e.point.y - WORLD_Y, z: e.point.z - WORLD_Z }); }}
       >
         <planeGeometry args={[80, 40]} />
         <meshBasicMaterial visible={false} side={THREE.DoubleSide} />
       </mesh>
+
+      {/* Volumetric haze — large soft puffs, additive blending */}
+      <points geometry={hazeGeo}>
+        <pointsMaterial
+          map={hazeTex}
+          size={8}
+          vertexColors
+          transparent
+          opacity={0.08}
+          depthWrite={false}
+          blending={THREE.AdditiveBlending}
+          sizeAttenuation
+        />
+      </points>
+
       {wellSnapshot.map(w => <WellMesh key={w.id} well={w} />)}
       <FlashMesh flashRef={flashRef} />
+
+      {/* Particle field */}
       <points geometry={geo}>
         <pointsMaterial
           map={tex}
