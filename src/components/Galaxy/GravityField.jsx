@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
@@ -66,6 +66,11 @@ function getDotTex() {
 export default function GravityField() {
   const { geo, vel, home } = useMemo(() => buildField(), []);
   const tex = useMemo(() => getDotTex(), []);
+
+  useEffect(() => () => {
+    geo.dispose();
+    if (_tex) { _tex.dispose(); _tex = null; }
+  }, [geo]);
 
   useFrame((_, delta) => {
     const posAttr = geo.attributes.position;
