@@ -87,6 +87,34 @@ function getGlowTex() {
   return (_glowTex = new THREE.CanvasTexture(canvas));
 }
 
+// Flat ring texture: near-white at inner edge → amber → orange-red → transparent outer
+// The hole is punched via destination-out so the black sphere shows through
+let _diskTex = null;
+function getDiskTex() {
+  if (_diskTex) return _diskTex;
+  const size = 256, c = size / 2;
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  const innerR = c * 0.36;
+  const g = ctx.createRadialGradient(c, c, innerR, c, c, c);
+  g.addColorStop(0,    'rgba(255,255,245,1.0)');
+  g.addColorStop(0.05, 'rgba(255,210,80,0.92)');
+  g.addColorStop(0.18, 'rgba(255,130,20,0.65)');
+  g.addColorStop(0.40, 'rgba(200,60,5,0.28)');
+  g.addColorStop(0.65, 'rgba(150,30,0,0.09)');
+  g.addColorStop(1.0,  'rgba(0,0,0,0)');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, size, size);
+  // Punch transparent center — sphere occludes via depth anyway, but this cleans up the look
+  ctx.globalCompositeOperation = 'destination-out';
+  ctx.beginPath();
+  ctx.arc(c, c, innerR, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(0,0,0,1)';
+  ctx.fill();
+  return (_diskTex = new THREE.CanvasTexture(canvas));
+}
+
 let _tex = null;
 function getDotTex() {
   if (_tex) return _tex;
@@ -132,10 +160,6 @@ function FlashMesh({ flashRef }) {
 
 // Purely visual — no event handlers (hit plane owns all interaction)
 function WellMesh({ well }) {
-  const diskRef = useRef();
-  useFrame((_, delta) => {
-    if (diskRef.current) diskRef.current.rotation.y += delta * 0.35;
-  });
   return (
     <group position={[well.x, well.y, well.z]}>
       {/* Outer soft glow — sprite always faces camera */}
@@ -143,36 +167,25 @@ function WellMesh({ well }) {
         <spriteMaterial
           map={getGlowTex()}
           transparent
-          opacity={0.45}
+          opacity={0.4}
           blending={THREE.AdditiveBlending}
           depthWrite={false}
         />
       </sprite>
-      {/* Accretion disk — tilted, slowly spinning */}
-      <group ref={diskRef} rotation={[Math.PI / 2 - 0.25, 0, 0.15]}>
-        {/* Outer diffuse ring */}
-        <mesh>
-          <torusGeometry args={[2.4, 0.5, 8, 64]} />
-          <meshBasicMaterial
-            color="#e07820"
-            transparent
-            opacity={0.35}
-            blending={THREE.AdditiveBlending}
-            depthWrite={false}
-          />
-        </mesh>
-        {/* Bright inner ring */}
-        <mesh>
-          <torusGeometry args={[1.75, 0.14, 8, 64]} />
-          <meshBasicMaterial
-            color="#fff0c0"
-            transparent
-            opacity={0.8}
-            blending={THREE.AdditiveBlending}
-            depthWrite={false}
-          />
-        </mesh>
-      </group>
+      {/* Accretion disk — flat ring plane tilted near edge-on.
+          Sphere depth-writes occlude the disk where they overlap;
+          the tapered ellipse at the sides comes naturally from geometry. */}
+      <mesh rotation={[1.2, 0.1, 0.15]}>
+        <planeGeometry args={[7, 7]} />
+        <meshBasicMaterial
+          map={getDiskTex()}
+          transparent
+          opacity={0.9}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+          side={THREE.DoubleSide}
+        />
+      </mesh>
       {/* Event horizon */}
       <mesh>
         <sphereGeometry args={[1.2, 20, 20]} />
@@ -246,6 +259,7 @@ export default function GravityField() {
     hazeGeo.dispose();
     if (_tex)     { _tex.dispose();     _tex     = null; }
     if (_glowTex) { _glowTex.dispose(); _glowTex = null; }
+    if (_diskTex) { _diskTex.dispose(); _diskTex = null; }
   }, [geo, hazeGeo]);
 
   useFrame((_, delta) => {
