@@ -15,10 +15,11 @@ const FADE_SPEED       = 0.35; // color fade-in rate (1/s) — ~2.8s to fully re
 
 let _wellId = 0;
 
-// Disk color transitions: white = full amber texture; dormant = cool gray-blue
+// Disk color transitions
 const DISK_COLOR_ACTIVE  = new THREE.Color(1, 1, 1);
 const DISK_COLOR_DORMANT = new THREE.Color(0.48, 0.50, 0.58);
 const GLOW_COLOR_DORMANT = new THREE.Color(0.42, 0.44, 0.52);
+const FLASH_COLOR        = new THREE.Color(1, 0.97, 0.90); // hot near-white surge
 
 const PAL = [
   new THREE.Color('#26cdd4'), // cyan
@@ -149,28 +150,33 @@ function WellMesh({ well }) {
     const t        = Math.min(1, well.age / 0.7);
     const e        = t * t * (3 - 2 * t); // smoothstep fade-in
     const active   = well.age < GRAVITY_DURATION;
-    // 0 while active, ramps 0→1 over 1.5s after gravity stops
     const dormantT = Math.min(1, Math.max(0, (well.age - GRAVITY_DURATION) / 1.5));
 
-    if (groupRef.current) groupRef.current.scale.setScalar(e);
+    // Sharp exponential surge at the moment gravity cuts off, decays over ~0.6s
+    const flashAge = well.age - GRAVITY_DURATION;
+    const flashT   = flashAge >= 0 ? Math.exp(-flashAge * 6) : 0;
+
+    if (groupRef.current) groupRef.current.scale.setScalar(e * (1 + flashT * 0.3));
 
     if (diskMatRef.current) {
       diskMatRef.current.color.lerpColors(DISK_COLOR_ACTIVE, DISK_COLOR_DORMANT, dormantT);
+      if (flashT > 0.01) diskMatRef.current.color.lerp(FLASH_COLOR, flashT);
       if (active) {
         const pulse = 0.07 * Math.sin(well.age * Math.PI * 3);
         diskMatRef.current.opacity = (0.78 + pulse) * e;
       } else {
-        diskMatRef.current.opacity = 0.5 * e;
+        diskMatRef.current.opacity = (0.5 + flashT * 0.8) * e;
       }
     }
 
     if (glowMatRef.current) {
       glowMatRef.current.color.lerpColors(DISK_COLOR_ACTIVE, GLOW_COLOR_DORMANT, dormantT);
+      if (flashT > 0.01) glowMatRef.current.color.lerp(FLASH_COLOR, flashT);
       if (active) {
         const pulse = 0.04 * Math.sin(well.age * Math.PI * 3);
         glowMatRef.current.opacity = (0.36 + pulse) * e;
       } else {
-        glowMatRef.current.opacity = 0.2 * e;
+        glowMatRef.current.opacity = (0.2 + flashT * 0.5) * e;
       }
     }
   });
