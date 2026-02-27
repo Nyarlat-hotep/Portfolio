@@ -6,13 +6,11 @@ import { createNebulaSplatTexture } from '../../utils/threeUtils';
 const WORLD_X = -60, WORLD_Y = 0, WORLD_Z = 20;
 const N = 12000;
 
-const MAX_WELLS   = 5;
-const WELL_RAMP   = 1.5;
-const WELL_LIFE   = 15;
-const WELL_COLORS = ['#26cdd4', '#f0b347', '#9944ee', '#4ade80', '#dd44bb'];
-const CAPTURE_R   = 1.5;
-const PULL_MAX    = 80;
-const WELL_HIT_R2 = 4; // squared units — proximity to detect well on click
+const WELL_RAMP  = 1.5;
+const CAPTURE_R  = 1.5;
+const PULL_MAX   = 80;
+const TANGENT_F  = 25;   // tangential force constant (orbital spiraling)
+const FADE_SPEED = 0.35; // color fade-in rate (1/s) — ~2.8s to fully reappear
 
 let _wellId = 0;
 
@@ -31,7 +29,9 @@ function buildField() {
   const home       = new Float32Array(N * 3);
   const vel        = new Float32Array(N * 3);
   const col        = new Float32Array(N * 3);
+  const homeCol    = new Float32Array(N * 3); // original colors for fade-back
   const capturedBy = new Int32Array(N).fill(-1);
+  const fadeProg   = new Float32Array(N).fill(0); // 0 = normal, >0 = fading in
 
   for (let i = 0; i < N; i++) {
     const x = randG() * 18;
@@ -42,15 +42,19 @@ function buildField() {
     pos[i*3+2] = home[i*3+2] = z;
     const c = PAL[Math.floor(Math.random() * PAL.length)];
     const b = 0.15 + Math.random() * 0.4;
-    col[i*3] = c.r*b; col[i*3+1] = c.g*b; col[i*3+2] = c.b*b;
+    col[i*3]   = homeCol[i*3]   = c.r * b;
+    col[i*3+1] = homeCol[i*3+1] = c.g * b;
+    col[i*3+2] = homeCol[i*3+2] = c.b * b;
   }
 
   const posAttr = new THREE.BufferAttribute(pos, 3);
   posAttr.usage = THREE.DynamicDrawUsage;
+  const colAttr = new THREE.BufferAttribute(col, 3);
+  colAttr.usage = THREE.DynamicDrawUsage;
   const geo = new THREE.BufferGeometry();
   geo.setAttribute('position', posAttr);
-  geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
-  return { geo, vel, home, capturedBy };
+  geo.setAttribute('color', colAttr);
+  return { geo, vel, home, homeCol, capturedBy, fadeProg };
 }
 
 function buildHaze() {
@@ -87,8 +91,6 @@ function getGlowTex() {
   return (_glowTex = new THREE.CanvasTexture(canvas));
 }
 
-// Flat ring texture: near-white at inner edge → amber → orange-red → transparent outer
-// The hole is punched via destination-out so the black sphere shows through
 let _diskTex = null;
 function getDiskTex() {
   if (_diskTex) return _diskTex;
@@ -106,7 +108,6 @@ function getDiskTex() {
   g.addColorStop(1.0,  'rgba(0,0,0,0)');
   ctx.fillStyle = g;
   ctx.fillRect(0, 0, size, size);
-  // Punch transparent center — sphere occludes via depth anyway, but this cleans up the look
   ctx.globalCompositeOperation = 'destination-out';
   ctx.beginPath();
   ctx.arc(c, c, innerR, 0, Math.PI * 2);
@@ -132,32 +133,6 @@ function getDotTex() {
   return (_tex = new THREE.CanvasTexture(canvas));
 }
 
-function FlashMesh({ flashRef }) {
-  const meshRef = useRef();
-  useFrame(() => {
-    const f = flashRef.current;
-    if (!meshRef.current) return;
-    if (!f) { meshRef.current.visible = false; return; }
-    const t = f.age / 0.4;
-    meshRef.current.visible = true;
-    meshRef.current.position.set(f.x, f.y, f.z);
-    meshRef.current.scale.setScalar(1 + t * 1.5);
-    meshRef.current.material.opacity = 0.2 * (1 - t);
-  });
-  return (
-    <mesh ref={meshRef} visible={false}>
-      <sphereGeometry args={[1, 16, 16]} />
-      <meshBasicMaterial
-        color="#ffffff"
-        transparent
-        opacity={0}
-        blending={THREE.AdditiveBlending}
-        depthWrite={false}
-      />
-    </mesh>
-  );
-}
-
 // Purely visual — no event handlers (hit plane owns all interaction)
 function WellMesh({ well }) {
   const groupRef   = useRef();
@@ -167,14 +142,13 @@ function WellMesh({ well }) {
   useFrame(() => {
     const t = Math.min(1, well.age / 0.7);
     const e = t * t * (3 - 2 * t); // smoothstep
-    if (groupRef.current)  groupRef.current.scale.setScalar(e);
+    if (groupRef.current)   groupRef.current.scale.setScalar(e);
     if (diskMatRef.current) diskMatRef.current.opacity = 0.9 * e;
     if (glowMatRef.current) glowMatRef.current.opacity = 0.4 * e;
   });
 
   return (
     <group ref={groupRef} position={[well.x, well.y, well.z]}>
-      {/* Outer soft glow — sprite always faces camera */}
       <sprite scale={[8, 8, 1]}>
         <spriteMaterial
           ref={glowMatRef}
@@ -185,7 +159,6 @@ function WellMesh({ well }) {
           depthWrite={false}
         />
       </sprite>
-      {/* Accretion disk — flat ring plane tilted near edge-on */}
       <mesh rotation={[1.2, 0.1, 0.15]}>
         <planeGeometry args={[7, 7]} />
         <meshBasicMaterial
@@ -198,7 +171,6 @@ function WellMesh({ well }) {
           side={THREE.DoubleSide}
         />
       </mesh>
-      {/* Event horizon */}
       <mesh>
         <sphereGeometry args={[1.2, 20, 20]} />
         <meshStandardMaterial color="#000000" />
@@ -208,61 +180,47 @@ function WellMesh({ well }) {
 }
 
 export default function GravityField() {
-  const { geo, vel, home, capturedBy } = useMemo(() => buildField(), []);
-  const hazeGeo  = useMemo(() => buildHaze(), []);
-  const tex      = useMemo(() => getDotTex(), []);
-  const hazeTex  = useMemo(() => createNebulaSplatTexture(), []);
+  const { geo, vel, home, homeCol, capturedBy, fadeProg } = useMemo(() => buildField(), []);
+  const hazeGeo = useMemo(() => buildHaze(), []);
+  const tex     = useMemo(() => getDotTex(), []);
+  const hazeTex = useMemo(() => createNebulaSplatTexture(), []);
 
-  const wellsRef     = useRef([]);
+  const wellsRef = useRef([]);
   const [wellSnapshot, setWellSnapshot] = useState([]);
-  const flashRef     = useRef(null);
 
+  // Release captured particles to home with color-fade (no burst)
   const collapseWell = (idx) => {
     const wells = wellsRef.current;
     const w = wells[idx];
-    const pos = geo.attributes.position.array;
-    const BURST_R = 5;
+    const pos    = geo.attributes.position.array;
+    const colArr = geo.attributes.color.array;
 
     for (let i = 0; i < N; i++) {
+      if (capturedBy[i] !== w.id) continue;
       const i3 = i * 3;
-      if (capturedBy[i] === w.id) {
-        capturedBy[i] = -1;
-        pos[i3]   = home[i3];
-        pos[i3+1] = home[i3+1];
-        pos[i3+2] = home[i3+2];
-        vel[i3] = 0; vel[i3+1] = 0; vel[i3+2] = 0;
-      } else {
-        const dx = pos[i3] - w.x, dy = pos[i3+1] - w.y, dz = pos[i3+2] - w.z;
-        const d2 = dx*dx + dy*dy + dz*dz;
-        if (d2 < BURST_R*BURST_R && d2 > 0.001) {
-          const d = Math.sqrt(d2);
-          const strength = 22 * (1 - d / BURST_R);
-          vel[i3]   += dx/d * strength;
-          vel[i3+1] += dy/d * strength;
-          vel[i3+2] += dz/d * strength;
-        }
-      }
+      capturedBy[i]  = -1;
+      pos[i3]   = home[i3];
+      pos[i3+1] = home[i3+1];
+      pos[i3+2] = home[i3+2];
+      vel[i3] = 0; vel[i3+1] = 0; vel[i3+2] = 0;
+      colArr[i3] = 0; colArr[i3+1] = 0; colArr[i3+2] = 0; // start black
+      fadeProg[i] = 0.001; // flag as fading in
     }
 
     geo.attributes.position.needsUpdate = true;
-    flashRef.current = { x: w.x, y: w.y, z: w.z, age: 0 };
+    geo.attributes.color.needsUpdate = true;
     wells.splice(idx, 1);
     setWellSnapshot([...wells]);
   };
 
-  // Click near existing well → collapse it; click empty space → plant new well
+  // First click → plant; second click (anywhere) → explode
   const handleClick = (lp) => {
     const wells = wellsRef.current;
-    for (let i = 0; i < wells.length; i++) {
-      const w = wells[i];
-      const dx = lp.x - w.x, dy = lp.y - w.y, dz = lp.z - w.z;
-      if (dx*dx + dy*dy + dz*dz < WELL_HIT_R2) {
-        collapseWell(i);
-        return;
-      }
+    if (wells.length > 0) {
+      collapseWell(0);
+      return;
     }
-    if (wells.length >= MAX_WELLS) return;
-    wells.push({ id: _wellId++, x: lp.x, y: lp.y, z: lp.z, age: 0, color: WELL_COLORS[wells.length % WELL_COLORS.length] });
+    wells.push({ id: _wellId++, x: lp.x, y: lp.y, z: lp.z, age: 0 });
     setWellSnapshot([...wells]);
   };
 
@@ -276,30 +234,32 @@ export default function GravityField() {
 
   useFrame((_, delta) => {
     const posAttr = geo.attributes.position;
-    const pos = posAttr.array;
-    const dt = Math.min(delta, 0.05);
-    const wells = wellsRef.current;
+    const colAttr = geo.attributes.color;
+    const pos     = posAttr.array;
+    const colArr  = colAttr.array;
+    const dt      = Math.min(delta, 0.05);
+    const wells   = wellsRef.current;
 
-    // Tick ages, auto-collapse expired wells
-    const toCollapse = [];
-    for (let wi = 0; wi < wells.length; wi++) {
-      wells[wi].age += dt;
-      if (wells[wi].age >= WELL_LIFE) toCollapse.push(wi);
-    }
-    for (let k = toCollapse.length - 1; k >= 0; k--) {
-      collapseWell(toCollapse[k]);
-    }
+    // Tick well ages
+    for (let wi = 0; wi < wells.length; wi++) wells[wi].age += dt;
 
-    // Tick flash
-    if (flashRef.current) {
-      flashRef.current.age += dt;
-      if (flashRef.current.age > 0.4) flashRef.current = null;
-    }
-
-    const hasWell = wells.length > 0;
-    let dirty = false;
+    const hasWell  = wells.length > 0;
+    let posDirty   = false;
+    let colorDirty = false;
 
     for (let i = 0; i < N; i++) {
+      // Color fade-in for released particles
+      if (fadeProg[i] > 0) {
+        fadeProg[i] = Math.min(1, fadeProg[i] + dt * FADE_SPEED);
+        const p = fadeProg[i];
+        const i3 = i * 3;
+        colArr[i3]   = homeCol[i3]   * p;
+        colArr[i3+1] = homeCol[i3+1] * p;
+        colArr[i3+2] = homeCol[i3+2] * p;
+        if (fadeProg[i] >= 1) fadeProg[i] = 0;
+        colorDirty = true;
+      }
+
       if (capturedBy[i] !== -1) continue;
 
       const i3 = i * 3;
@@ -317,16 +277,25 @@ export default function GravityField() {
           capturedBy[i] = w.id;
           vel[i3] = 0; vel[i3+1] = 0; vel[i3+2] = 0;
           pos[i3] = 0; pos[i3+1] = -9999; pos[i3+2] = 0;
-          dirty = true;
+          posDirty = true;
           break;
         }
 
         if (d2 > 0.001) {
           const d = Math.sqrt(d2);
+          // Radial pull
           const force = Math.min(PULL_MAX, (70 * strength) / d) * dt;
           vx += dx/d * force;
           vy += dy/d * force;
           vz += dz/d * force;
+          // Tangential force for orbital spiral: cross(Z-up, radial) = (-dy/hd, dx/hd, 0)
+          const hd2 = dx*dx + dy*dy;
+          if (hd2 > 0.001) {
+            const hd = Math.sqrt(hd2);
+            const tf = Math.min(PULL_MAX * 0.4, (TANGENT_F * strength) / d) * dt;
+            vx += (-dy / hd) * tf;
+            vy += ( dx / hd) * tf;
+          }
         }
       }
 
@@ -349,15 +318,16 @@ export default function GravityField() {
 
       vel[i3] = vx; vel[i3+1] = vy; vel[i3+2] = vz;
 
-      if (vx*vx + vy*vy + vz*vz > 0.0001) {
+      if (s2 > 0.0001) {
         pos[i3]   += vx * dt;
         pos[i3+1] += vy * dt;
         pos[i3+2] += vz * dt;
-        dirty = true;
+        posDirty = true;
       }
     }
 
-    if (dirty) posAttr.needsUpdate = true;
+    if (posDirty)   posAttr.needsUpdate = true;
+    if (colorDirty) colAttr.needsUpdate = true;
   });
 
   return (
@@ -372,7 +342,7 @@ export default function GravityField() {
         <meshBasicMaterial visible={false} side={THREE.DoubleSide} />
       </mesh>
 
-      {/* Volumetric haze — large soft puffs, additive blending */}
+      {/* Volumetric haze */}
       <points geometry={hazeGeo}>
         <pointsMaterial
           map={hazeTex}
@@ -387,7 +357,6 @@ export default function GravityField() {
       </points>
 
       {wellSnapshot.map(w => <WellMesh key={w.id} well={w} />)}
-      <FlashMesh flashRef={flashRef} />
 
       {/* Particle field */}
       <points geometry={geo}>
