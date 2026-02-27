@@ -72,6 +72,51 @@ function getDotTex() {
   return (_tex = new THREE.CanvasTexture(canvas));
 }
 
+function WellMesh({ well }) {
+  const ringRef = useRef();
+  const outerRef = useRef();
+
+  useFrame(() => {
+    if (!ringRef.current || !outerRef.current) return;
+    const strength = Math.min(1, well.age / WELL_RAMP);
+    const lifeProgress = Math.min(1, well.age / WELL_LIFE);
+    const pulse = 1 + 0.12 * Math.sin(well.age * 4) * strength;
+    ringRef.current.scale.setScalar(pulse);
+    ringRef.current.material.opacity = 0.5 + 0.5 * strength;
+    outerRef.current.scale.setScalar(1 + lifeProgress * 0.5);
+    outerRef.current.material.opacity = 0.1 + 0.3 * lifeProgress;
+  });
+
+  return (
+    <group position={[well.x, well.y, well.z]}>
+      <mesh>
+        <sphereGeometry args={[0.35, 16, 16]} />
+        <meshStandardMaterial color="#000000" emissive="#000000" />
+      </mesh>
+      <mesh ref={ringRef} rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[0.9, 0.15, 8, 48]} />
+        <meshBasicMaterial
+          color={well.color}
+          transparent
+          opacity={0.7}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+        />
+      </mesh>
+      <mesh ref={outerRef} rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[1.4, 0.08, 8, 48]} />
+        <meshBasicMaterial
+          color={well.color}
+          transparent
+          opacity={0.2}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+        />
+      </mesh>
+    </group>
+  );
+}
+
 export default function GravityField() {
   const { geo, vel, home } = useMemo(() => buildField(), []);
   const tex = useMemo(() => getDotTex(), []);
@@ -172,6 +217,7 @@ export default function GravityField() {
         <planeGeometry args={[80, 40]} />
         <meshBasicMaterial visible={false} side={THREE.DoubleSide} />
       </mesh>
+      {wellSnapshot.map(w => <WellMesh key={w.id} well={w} />)}
       <points geometry={geo}>
         <pointsMaterial
           map={tex}
