@@ -11,7 +11,7 @@ const WELL_RAMP   = 1.5;
 const WELL_LIFE   = 15;
 const WELL_COLORS = ['#26cdd4', '#f0b347', '#9944ee', '#4ade80', '#dd44bb'];
 const CAPTURE_R   = 1.5;
-const PULL_MAX    = 40;
+const PULL_MAX    = 80;
 const WELL_HIT_R2 = 4; // squared units — proximity to detect well on click
 
 let _wellId = 0;
@@ -323,7 +323,7 @@ export default function GravityField() {
 
         if (d2 > 0.001) {
           const d = Math.sqrt(d2);
-          const force = Math.min(PULL_MAX, (28 * strength) / d2) * dt;
+          const force = Math.min(PULL_MAX, (70 * strength) / d) * dt;
           vx += dx/d * force;
           vy += dy/d * force;
           vz += dz/d * force;
@@ -338,7 +338,7 @@ export default function GravityField() {
         vz += (home[i3+2] - pos[i3+2]) * 0.4 * dt;
       }
 
-      const damp = hasWell ? 0.96 : 0.92;
+      const damp = hasWell ? 0.98 : 0.92;
       vx *= damp; vy *= damp; vz *= damp;
 
       const s2 = vx*vx + vy*vy + vz*vz;
