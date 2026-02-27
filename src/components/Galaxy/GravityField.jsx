@@ -15,8 +15,8 @@ const FADE_SPEED       = 0.35; // color fade-in rate (1/s) — ~2.8s to fully re
 
 let _wellId = 0;
 
-// Disk color transitions: amber active, cool gray-blue dormant
-const DISK_COLOR_ACTIVE  = new THREE.Color('#ffb830');
+// Disk color transitions: white = full amber texture; dormant = cool gray-blue
+const DISK_COLOR_ACTIVE  = new THREE.Color(1, 1, 1);
 const DISK_COLOR_DORMANT = new THREE.Color(0.48, 0.50, 0.58);
 const GLOW_COLOR_DORMANT = new THREE.Color(0.42, 0.44, 0.52);
 
@@ -97,6 +97,30 @@ function getGlowTex() {
   return (_glowTex = new THREE.CanvasTexture(canvas));
 }
 
+let _diskTex = null;
+function getDiskTex() {
+  if (_diskTex) return _diskTex;
+  const size = 256, c = size / 2;
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  const innerR = c * 0.36;
+  const g = ctx.createRadialGradient(c, c, innerR, c, c, c);
+  g.addColorStop(0,    'rgba(255,255,245,1.0)');
+  g.addColorStop(0.05, 'rgba(255,210,80,0.92)');
+  g.addColorStop(0.18, 'rgba(255,130,20,0.65)');
+  g.addColorStop(0.40, 'rgba(200,60,5,0.28)');
+  g.addColorStop(0.65, 'rgba(150,30,0,0.09)');
+  g.addColorStop(1.0,  'rgba(0,0,0,0)');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, size, size);
+  ctx.globalCompositeOperation = 'destination-out';
+  ctx.beginPath();
+  ctx.arc(c, c, innerR, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(0,0,0,1)';
+  ctx.fill();
+  return (_diskTex = new THREE.CanvasTexture(canvas));
+}
 
 let _tex = null;
 function getDotTex() {
@@ -163,15 +187,16 @@ function WellMesh({ well }) {
           depthWrite={false}
         />
       </sprite>
-      {/* Flattened torus — real 3D depth, never collapses to a line */}
-      <mesh scale={[1, 0.13, 1]} rotation={[0.2, 0.1, 0.15]}>
-        <torusGeometry args={[2.4, 0.7, 12, 80]} />
+      <mesh rotation={[1.2, 0.1, 0.15]}>
+        <planeGeometry args={[7, 7]} />
         <meshBasicMaterial
           ref={diskMatRef}
+          map={getDiskTex()}
           transparent
           opacity={0}
           blending={THREE.AdditiveBlending}
           depthWrite={false}
+          side={THREE.DoubleSide}
         />
       </mesh>
       <mesh>
@@ -232,6 +257,7 @@ export default function GravityField() {
     hazeGeo.dispose();
     if (_tex)     { _tex.dispose();     _tex     = null; }
     if (_glowTex) { _glowTex.dispose(); _glowTex = null; }
+    if (_diskTex) { _diskTex.dispose(); _diskTex = null; }
   }, [geo, hazeGeo]);
 
   useFrame((_, delta) => {
