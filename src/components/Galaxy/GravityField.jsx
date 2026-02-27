@@ -70,6 +70,23 @@ function buildHaze() {
   return geo;
 }
 
+let _glowTex = null;
+function getGlowTex() {
+  if (_glowTex) return _glowTex;
+  const size = 128, c = size / 2;
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  const g = ctx.createRadialGradient(c, c, 0, c, c, c);
+  g.addColorStop(0,    'rgba(255,240,200,0.9)');
+  g.addColorStop(0.25, 'rgba(255,160,40,0.55)');
+  g.addColorStop(0.55, 'rgba(180,60,5,0.2)');
+  g.addColorStop(1.0,  'rgba(0,0,0,0)');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, size, size);
+  return (_glowTex = new THREE.CanvasTexture(canvas));
+}
+
 let _tex = null;
 function getDotTex() {
   if (_tex) return _tex;
@@ -115,11 +132,53 @@ function FlashMesh({ flashRef }) {
 
 // Purely visual — no event handlers (hit plane owns all interaction)
 function WellMesh({ well }) {
+  const diskRef = useRef();
+  useFrame((_, delta) => {
+    if (diskRef.current) diskRef.current.rotation.y += delta * 0.35;
+  });
   return (
-    <mesh position={[well.x, well.y, well.z]}>
-      <sphereGeometry args={[0.35, 16, 16]} />
-      <meshStandardMaterial color="#000000" emissive="#000000" />
-    </mesh>
+    <group position={[well.x, well.y, well.z]}>
+      {/* Outer soft glow — sprite always faces camera */}
+      <sprite scale={[8, 8, 1]}>
+        <spriteMaterial
+          map={getGlowTex()}
+          transparent
+          opacity={0.45}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+        />
+      </sprite>
+      {/* Accretion disk — tilted, slowly spinning */}
+      <group ref={diskRef} rotation={[Math.PI / 2 - 0.25, 0, 0.15]}>
+        {/* Outer diffuse ring */}
+        <mesh>
+          <torusGeometry args={[2.4, 0.5, 8, 64]} />
+          <meshBasicMaterial
+            color="#e07820"
+            transparent
+            opacity={0.35}
+            blending={THREE.AdditiveBlending}
+            depthWrite={false}
+          />
+        </mesh>
+        {/* Bright inner ring */}
+        <mesh>
+          <torusGeometry args={[1.75, 0.14, 8, 64]} />
+          <meshBasicMaterial
+            color="#fff0c0"
+            transparent
+            opacity={0.8}
+            blending={THREE.AdditiveBlending}
+            depthWrite={false}
+          />
+        </mesh>
+      </group>
+      {/* Event horizon */}
+      <mesh>
+        <sphereGeometry args={[1.2, 20, 20]} />
+        <meshStandardMaterial color="#000000" />
+      </mesh>
+    </group>
   );
 }
 
@@ -185,7 +244,8 @@ export default function GravityField() {
   useEffect(() => () => {
     geo.dispose();
     hazeGeo.dispose();
-    if (_tex) { _tex.dispose(); _tex = null; }
+    if (_tex)     { _tex.dispose();     _tex     = null; }
+    if (_glowTex) { _glowTex.dispose(); _glowTex = null; }
   }, [geo, hazeGeo]);
 
   useFrame((_, delta) => {
