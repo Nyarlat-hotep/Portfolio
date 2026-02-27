@@ -141,9 +141,10 @@ function getDotTex() {
 
 // Purely visual — no event handlers (hit plane owns all interaction)
 function WellMesh({ well }) {
-  const groupRef   = useRef();
-  const diskMatRef = useRef();
-  const glowMatRef = useRef();
+  const groupRef    = useRef();
+  const diskMatRef  = useRef();
+  const diskMat2Ref = useRef();
+  const glowMatRef  = useRef();
 
   useFrame(() => {
     const t        = Math.min(1, well.age / 0.7);
@@ -154,13 +155,13 @@ function WellMesh({ well }) {
 
     if (groupRef.current) groupRef.current.scale.setScalar(e);
 
-    if (diskMatRef.current) {
-      diskMatRef.current.color.lerpColors(DISK_COLOR_ACTIVE, DISK_COLOR_DORMANT, dormantT);
-      if (active) {
-        const pulse = 0.07 * Math.sin(well.age * Math.PI * 3);
-        diskMatRef.current.opacity = (0.78 + pulse) * e;
-      } else {
-        diskMatRef.current.opacity = 0.5 * e;
+    const diskOpacity = active
+      ? (0.78 + 0.07 * Math.sin(well.age * Math.PI * 3)) * e
+      : 0.5 * e;
+    for (const ref of [diskMatRef, diskMat2Ref]) {
+      if (ref.current) {
+        ref.current.color.lerpColors(DISK_COLOR_ACTIVE, DISK_COLOR_DORMANT, dormantT);
+        ref.current.opacity = diskOpacity;
       }
     }
 
@@ -191,6 +192,19 @@ function WellMesh({ well }) {
         <planeGeometry args={[7, 7]} />
         <meshBasicMaterial
           ref={diskMatRef}
+          map={getDiskTex()}
+          transparent
+          opacity={0}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+          side={THREE.DoubleSide}
+        />
+      </mesh>
+      {/* Second plane rotated 90° around y — ensures ring has visible width from all angles */}
+      <mesh rotation={[1.2, 0.1 + Math.PI / 2, 0.15]}>
+        <planeGeometry args={[7, 7]} />
+        <meshBasicMaterial
+          ref={diskMat2Ref}
           map={getDiskTex()}
           transparent
           opacity={0}
