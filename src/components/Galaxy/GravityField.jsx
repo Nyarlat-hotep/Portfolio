@@ -189,20 +189,60 @@ export default function GravityField() {
     const posAttr = geo.attributes.position;
     const pos = posAttr.array;
     const dt = Math.min(delta, 0.05);
+    const wells = wellsRef.current;
+    const hasWell = wells.length > 0;
     let dirty = false;
+
     for (let i = 0; i < N; i++) {
       const i3 = i * 3;
-      vel[i3]   += (home[i3]   - pos[i3])   * 0.3 * dt;
-      vel[i3+1] += (home[i3+1] - pos[i3+1]) * 0.3 * dt;
-      vel[i3+2] += (home[i3+2] - pos[i3+2]) * 0.3 * dt;
-      vel[i3]   *= 0.92; vel[i3+1] *= 0.92; vel[i3+2] *= 0.92;
-      if (Math.abs(vel[i3]) + Math.abs(vel[i3+1]) + Math.abs(vel[i3+2]) > 0.0001) {
-        pos[i3]   += vel[i3]   * dt;
-        pos[i3+1] += vel[i3+1] * dt;
-        pos[i3+2] += vel[i3+2] * dt;
+      let vx = vel[i3], vy = vel[i3+1], vz = vel[i3+2];
+
+      for (const w of wells) {
+        const strength = Math.min(1, w.age / WELL_RAMP);
+        const dx = w.x - pos[i3];
+        const dy = w.y - pos[i3+1];
+        const dz = w.z - pos[i3+2];
+        const d2 = dx*dx + dy*dy + dz*dz;
+
+        if (d2 < CAPTURE_R * CAPTURE_R) {
+          vx = 0; vy = 0; vz = 0;
+          break;
+        }
+
+        if (d2 > 0.001) {
+          const d = Math.sqrt(d2);
+          const force = Math.min(PULL_MAX, (28 * strength) / d2) * dt;
+          vx += dx/d * force;
+          vy += dy/d * force;
+          vz += dz/d * force;
+        }
+      }
+
+      if (!hasWell) {
+        vx += (home[i3]   - pos[i3])   * 0.4 * dt;
+        vy += (home[i3+1] - pos[i3+1]) * 0.4 * dt;
+        vz += (home[i3+2] - pos[i3+2]) * 0.4 * dt;
+      }
+
+      const damp = hasWell ? 0.96 : 0.92;
+      vx *= damp; vy *= damp; vz *= damp;
+
+      const s2 = vx*vx + vy*vy + vz*vz;
+      if (s2 > 900) {
+        const inv = 30 / Math.sqrt(s2);
+        vx *= inv; vy *= inv; vz *= inv;
+      }
+
+      vel[i3] = vx; vel[i3+1] = vy; vel[i3+2] = vz;
+
+      if (vx*vx + vy*vy + vz*vz > 0.0001) {
+        pos[i3]   += vx * dt;
+        pos[i3+1] += vy * dt;
+        pos[i3+2] += vz * dt;
         dirty = true;
       }
     }
+
     if (dirty) posAttr.needsUpdate = true;
   });
 
