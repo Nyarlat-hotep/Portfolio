@@ -15,6 +15,11 @@ const FADE_SPEED       = 0.35; // color fade-in rate (1/s) — ~2.8s to fully re
 
 let _wellId = 0;
 
+// Disk color transitions: white = full amber texture; dormant = cool gray-blue
+const DISK_COLOR_ACTIVE  = new THREE.Color(1, 1, 1);
+const DISK_COLOR_DORMANT = new THREE.Color(0.48, 0.50, 0.58);
+const GLOW_COLOR_DORMANT = new THREE.Color(0.42, 0.44, 0.52);
+
 const PAL = [
   new THREE.Color('#26cdd4'), // cyan
   new THREE.Color('#b033dd'), // bright purple
@@ -141,22 +146,26 @@ function WellMesh({ well }) {
   const glowMatRef = useRef();
 
   useFrame(() => {
-    const t      = Math.min(1, well.age / 0.7);
-    const e      = t * t * (3 - 2 * t); // smoothstep fade-in
-    const active = well.age < GRAVITY_DURATION;
+    const t        = Math.min(1, well.age / 0.7);
+    const e        = t * t * (3 - 2 * t); // smoothstep fade-in
+    const active   = well.age < GRAVITY_DURATION;
+    // 0 while active, ramps 0→1 over 1.5s after gravity stops
+    const dormantT = Math.min(1, Math.max(0, (well.age - GRAVITY_DURATION) / 1.5));
 
     if (groupRef.current) groupRef.current.scale.setScalar(e);
 
     if (diskMatRef.current) {
+      diskMatRef.current.color.lerpColors(DISK_COLOR_ACTIVE, DISK_COLOR_DORMANT, dormantT);
       if (active) {
-        const pulse = 0.07 * Math.sin(well.age * Math.PI * 3); // ~1.5 Hz, gentle
+        const pulse = 0.07 * Math.sin(well.age * Math.PI * 3);
         diskMatRef.current.opacity = (0.78 + pulse) * e;
       } else {
-        diskMatRef.current.opacity = 0.5 * e; // steady, dimmed when inactive
+        diskMatRef.current.opacity = 0.5 * e;
       }
     }
 
     if (glowMatRef.current) {
+      glowMatRef.current.color.lerpColors(DISK_COLOR_ACTIVE, GLOW_COLOR_DORMANT, dormantT);
       if (active) {
         const pulse = 0.04 * Math.sin(well.age * Math.PI * 3);
         glowMatRef.current.opacity = (0.36 + pulse) * e;
