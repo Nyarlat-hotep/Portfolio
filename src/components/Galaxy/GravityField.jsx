@@ -15,84 +15,10 @@ const FADE_SPEED       = 0.35; // color fade-in rate (1/s) — ~2.8s to fully re
 
 let _wellId = 0;
 
-const GLOW_COLOR_ACTIVE  = new THREE.Color(1, 1, 1);
+// Disk color transitions: white = full amber texture; dormant = cool gray-blue
+const DISK_COLOR_ACTIVE  = new THREE.Color(1, 1, 1);
+const DISK_COLOR_DORMANT = new THREE.Color(0.48, 0.50, 0.58);
 const GLOW_COLOR_DORMANT = new THREE.Color(0.42, 0.44, 0.52);
-
-const DISK_VERT = /* glsl */`
-  varying vec2 vUv;
-  void main() {
-    vUv = uv;
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-  }
-`;
-
-const DISK_FRAG = /* glsl */`
-  uniform float uTime;
-  uniform float uOpacity;
-  uniform float uDormantT;
-  varying vec2 vUv;
-
-  void main() {
-    vec2 uv  = vUv - 0.5;
-    float r  = length(uv);
-    float a  = atan(uv.y, uv.x);
-
-    // Ring mask: hollow centre + outer fade
-    float inner = 0.17;
-    float outer = 0.49;
-    float mask  = smoothstep(inner - 0.01, inner + 0.04, r)
-                * smoothstep(outer + 0.01, outer - 0.07, r);
-    if (mask < 0.001) discard;
-
-    // Three orbital noise layers at different speeds and scales
-    float n1 = sin(a * 7.0  + uTime * 2.4  + r * 14.0) * 0.5 + 0.5;
-    n1 *= (sin(a * 3.0  - uTime * 1.6  + r *  7.0) * 0.3 + 0.7);
-    float n2 = sin(a * 5.0  + uTime * 1.1  - r * 10.0) * 0.4 + 0.6;
-    n2 *= (cos(a * 11.0 - uTime * 0.65 + r * 21.0) * 0.2 + 0.8);
-    float n3 = sin(a * 2.0  + uTime * 0.35 + r *  4.0) * 0.35 + 0.65;
-    float diskNoise = n1 * 0.50 + n2 * 0.35 + n3 * 0.15;
-    diskNoise = pow(diskNoise, 1.6);
-
-    // Radial brightness: brighter toward inner edge
-    float radial = pow(1.0 - smoothstep(inner, outer, r), 0.6);
-
-    // Colour gradient along radius
-    float ct = smoothstep(inner, outer, r);
-    vec3 aInner = vec3(1.00, 0.93, 0.76);
-    vec3 aMid   = vec3(1.00, 0.52, 0.08);
-    vec3 aOuter = vec3(0.76, 0.11, 0.01);
-    vec3 dInner = vec3(0.60, 0.63, 0.76);
-    vec3 dMid   = vec3(0.40, 0.43, 0.58);
-    vec3 dOuter = vec3(0.26, 0.28, 0.40);
-    vec3 inner0 = mix(aInner, dInner, uDormantT);
-    vec3 mid0   = mix(aMid,   dMid,   uDormantT);
-    vec3 outer0 = mix(aOuter, dOuter, uDormantT);
-    vec3 baseColor = ct < 0.5
-      ? mix(inner0, mid0,   ct * 2.0)
-      : mix(mid0,   outer0, ct * 2.0 - 1.0);
-
-    // Chromatic aberration: sample ring mask at offset radii for R and B
-    float ab = 0.028;
-    float maskR = smoothstep(inner - 0.01, inner + 0.04, r - ab)
-                * smoothstep(outer + 0.01, outer - 0.07, r - ab);
-    float maskB = smoothstep(inner - 0.01, inner + 0.04, r + ab)
-                * smoothstep(outer + 0.01, outer - 0.07, r + ab);
-    float n1R = sin(a * 7.0 + uTime * 2.4 + (r - ab) * 14.0) * 0.5 + 0.5;
-    float n1B = sin(a * 7.0 + uTime * 2.4 + (r + ab) * 14.0) * 0.5 + 0.5;
-    float rr = diskNoise * (n1R * 0.3 + 0.7);
-    float gb = diskNoise;
-    float bb = diskNoise * (n1B * 0.3 + 0.7);
-
-    vec3 color = vec3(
-      baseColor.r * rr * maskR / max(mask, 0.01),
-      baseColor.g * gb,
-      baseColor.b * bb * maskB / max(mask, 0.01)
-    );
-    color *= radial * 2.8;
-
-    gl_FragColor = vec4(color, mask * uOpacity);
-  }
-`;
 
 const PAL = [
   new THREE.Color('#26cdd4'), // cyan
@@ -171,6 +97,30 @@ function getGlowTex() {
   return (_glowTex = new THREE.CanvasTexture(canvas));
 }
 
+let _diskTex = null;
+function getDiskTex() {
+  if (_diskTex) return _diskTex;
+  const size = 256, c = size / 2;
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  const innerR = c * 0.36;
+  const g = ctx.createRadialGradient(c, c, innerR, c, c, c);
+  g.addColorStop(0,    'rgba(255,255,245,1.0)');
+  g.addColorStop(0.05, 'rgba(255,210,80,0.92)');
+  g.addColorStop(0.18, 'rgba(255,130,20,0.65)');
+  g.addColorStop(0.40, 'rgba(200,60,5,0.28)');
+  g.addColorStop(0.65, 'rgba(150,30,0,0.09)');
+  g.addColorStop(1.0,  'rgba(0,0,0,0)');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, size, size);
+  ctx.globalCompositeOperation = 'destination-out';
+  ctx.beginPath();
+  ctx.arc(c, c, innerR, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(0,0,0,1)';
+  ctx.fill();
+  return (_diskTex = new THREE.CanvasTexture(canvas));
+}
 
 let _tex = null;
 function getDotTex() {
@@ -195,33 +145,27 @@ function WellMesh({ well }) {
   const diskMatRef = useRef();
   const glowMatRef = useRef();
 
-  const diskUniforms = useRef({
-    uTime:     { value: 0 },
-    uOpacity:  { value: 0 },
-    uDormantT: { value: 0 },
-  });
-
   useFrame(() => {
     const t        = Math.min(1, well.age / 0.7);
-    const e        = t * t * (3 - 2 * t);
+    const e        = t * t * (3 - 2 * t); // smoothstep fade-in
     const active   = well.age < GRAVITY_DURATION;
+    // 0 while active, ramps 0→1 over 1.5s after gravity stops
     const dormantT = Math.min(1, Math.max(0, (well.age - GRAVITY_DURATION) / 1.5));
 
     if (groupRef.current) groupRef.current.scale.setScalar(e);
 
     if (diskMatRef.current) {
-      diskMatRef.current.uniforms.uTime.value     = well.age;
-      diskMatRef.current.uniforms.uDormantT.value = dormantT;
+      diskMatRef.current.color.lerpColors(DISK_COLOR_ACTIVE, DISK_COLOR_DORMANT, dormantT);
       if (active) {
         const pulse = 0.07 * Math.sin(well.age * Math.PI * 3);
-        diskMatRef.current.uniforms.uOpacity.value = (0.78 + pulse) * e;
+        diskMatRef.current.opacity = (0.78 + pulse) * e;
       } else {
-        diskMatRef.current.uniforms.uOpacity.value = 0.5 * e;
+        diskMatRef.current.opacity = 0.5 * e;
       }
     }
 
     if (glowMatRef.current) {
-      glowMatRef.current.color.lerpColors(GLOW_COLOR_ACTIVE, GLOW_COLOR_DORMANT, dormantT);
+      glowMatRef.current.color.lerpColors(DISK_COLOR_ACTIVE, GLOW_COLOR_DORMANT, dormantT);
       if (active) {
         const pulse = 0.04 * Math.sin(well.age * Math.PI * 3);
         glowMatRef.current.opacity = (0.36 + pulse) * e;
@@ -245,15 +189,14 @@ function WellMesh({ well }) {
       </sprite>
       <mesh rotation={[1.2, 0.1, 0.15]}>
         <planeGeometry args={[7, 7]} />
-        <shaderMaterial
+        <meshBasicMaterial
           ref={diskMatRef}
-          vertexShader={DISK_VERT}
-          fragmentShader={DISK_FRAG}
-          uniforms={diskUniforms.current}
+          map={getDiskTex()}
           transparent
+          opacity={0}
+          blending={THREE.AdditiveBlending}
           depthWrite={false}
           side={THREE.DoubleSide}
-          blending={THREE.AdditiveBlending}
         />
       </mesh>
       <mesh>
@@ -314,6 +257,7 @@ export default function GravityField() {
     hazeGeo.dispose();
     if (_tex)     { _tex.dispose();     _tex     = null; }
     if (_glowTex) { _glowTex.dispose(); _glowTex = null; }
+    if (_diskTex) { _diskTex.dispose(); _diskTex = null; }
   }, [geo, hazeGeo]);
 
   useFrame((_, delta) => {
