@@ -4,13 +4,13 @@ import * as THREE from 'three';
 import { createNebulaSplatTexture } from '../../utils/threeUtils';
 
 const WORLD_X = -60, WORLD_Y = 0, WORLD_Z = 20;
-const N = 8000;
+const N = 12000;
 
 const MAX_WELLS   = 5;
 const WELL_RAMP   = 1.5;
 const WELL_LIFE   = 15;
 const WELL_COLORS = ['#26cdd4', '#f0b347', '#9944ee', '#4ade80', '#dd44bb'];
-const CAPTURE_R   = 0.8;
+const CAPTURE_R   = 1.5;
 const PULL_MAX    = 40;
 const WELL_HIT_R2 = 4; // squared units — proximity to detect well on click
 
@@ -160,27 +160,39 @@ function FlashMesh({ flashRef }) {
 
 // Purely visual — no event handlers (hit plane owns all interaction)
 function WellMesh({ well }) {
+  const groupRef   = useRef();
+  const diskMatRef = useRef();
+  const glowMatRef = useRef();
+
+  useFrame(() => {
+    const t = Math.min(1, well.age / 0.7);
+    const e = t * t * (3 - 2 * t); // smoothstep
+    if (groupRef.current)  groupRef.current.scale.setScalar(e);
+    if (diskMatRef.current) diskMatRef.current.opacity = 0.9 * e;
+    if (glowMatRef.current) glowMatRef.current.opacity = 0.4 * e;
+  });
+
   return (
-    <group position={[well.x, well.y, well.z]}>
+    <group ref={groupRef} position={[well.x, well.y, well.z]}>
       {/* Outer soft glow — sprite always faces camera */}
       <sprite scale={[8, 8, 1]}>
         <spriteMaterial
+          ref={glowMatRef}
           map={getGlowTex()}
           transparent
-          opacity={0.4}
+          opacity={0}
           blending={THREE.AdditiveBlending}
           depthWrite={false}
         />
       </sprite>
-      {/* Accretion disk — flat ring plane tilted near edge-on.
-          Sphere depth-writes occlude the disk where they overlap;
-          the tapered ellipse at the sides comes naturally from geometry. */}
+      {/* Accretion disk — flat ring plane tilted near edge-on */}
       <mesh rotation={[1.2, 0.1, 0.15]}>
         <planeGeometry args={[7, 7]} />
         <meshBasicMaterial
+          ref={diskMatRef}
           map={getDiskTex()}
           transparent
-          opacity={0.9}
+          opacity={0}
           blending={THREE.AdditiveBlending}
           depthWrite={false}
           side={THREE.DoubleSide}
