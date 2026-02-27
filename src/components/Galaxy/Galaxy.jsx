@@ -14,6 +14,7 @@ import CameraController from './CameraController';
 import Constellation from './Constellation';
 import ShootingStars from './ShootingStars';
 import DistantGalaxy from './DistantGalaxy';
+import GravityField from './GravityField';
 import Asteroid from './Asteroid';
 import BottomNav from '../Navigation/BottomNav';
 import { planetsData, getAdjacentPlanet } from '../../data/planets';
@@ -344,6 +345,9 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
 
         {/* Distant galaxy — discovered by orbiting east */}
         <DistantGalaxy />
+
+        {/* Ambient gravity field particle cloud */}
+        <GravityField />
 
         {/* Drifting alien asteroid — clickable */}
         <Asteroid onAsteroidClick={handleAsteroidClick} />
