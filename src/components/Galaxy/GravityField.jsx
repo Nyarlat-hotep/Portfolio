@@ -15,8 +15,8 @@ const FADE_SPEED       = 0.35; // color fade-in rate (1/s) — ~2.8s to fully re
 
 let _wellId = 0;
 
-// Disk color transitions: white = full amber texture; dormant = cool gray-blue
-const DISK_COLOR_ACTIVE  = new THREE.Color(1, 1, 1);
+// Disk color transitions: active = amber (tints grayscale texture), dormant = cool gray-blue
+const DISK_COLOR_ACTIVE  = new THREE.Color('#ffb830');
 const DISK_COLOR_DORMANT = new THREE.Color(0.48, 0.50, 0.58);
 const GLOW_COLOR_DORMANT = new THREE.Color(0.42, 0.44, 0.52);
 
@@ -106,11 +106,11 @@ function getDiskTex() {
   const ctx = canvas.getContext('2d');
   const innerR = c * 0.36;
   const g = ctx.createRadialGradient(c, c, innerR, c, c, c);
-  g.addColorStop(0,    'rgba(255,255,245,1.0)');
-  g.addColorStop(0.05, 'rgba(255,210,80,0.92)');
-  g.addColorStop(0.18, 'rgba(255,130,20,0.65)');
-  g.addColorStop(0.40, 'rgba(200,60,5,0.28)');
-  g.addColorStop(0.65, 'rgba(150,30,0,0.09)');
+  g.addColorStop(0,    'rgba(255,255,255,1.00)');
+  g.addColorStop(0.05, 'rgba(255,255,255,0.92)');
+  g.addColorStop(0.18, 'rgba(255,255,255,0.65)');
+  g.addColorStop(0.40, 'rgba(255,255,255,0.28)');
+  g.addColorStop(0.65, 'rgba(255,255,255,0.09)');
   g.addColorStop(1.0,  'rgba(0,0,0,0)');
   ctx.fillStyle = g;
   ctx.fillRect(0, 0, size, size);
