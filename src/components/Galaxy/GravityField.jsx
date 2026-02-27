@@ -197,7 +197,8 @@ export default function GravityField() {
       const i3 = i * 3;
       let vx = vel[i3], vy = vel[i3+1], vz = vel[i3+2];
 
-      for (const w of wells) {
+      for (let j = 0; j < wells.length; j++) {
+        const w = wells[j];
         const strength = Math.min(1, w.age / WELL_RAMP);
         const dx = w.x - pos[i3];
         const dy = w.y - pos[i3+1];
