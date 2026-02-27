@@ -72,6 +72,32 @@ function getDotTex() {
   return (_tex = new THREE.CanvasTexture(canvas));
 }
 
+function FlashMesh({ flashRef }) {
+  const meshRef = useRef();
+  useFrame(() => {
+    const f = flashRef.current;
+    if (!meshRef.current) return;
+    if (!f) { meshRef.current.visible = false; return; }
+    const t = f.age / 0.4;
+    meshRef.current.visible = true;
+    meshRef.current.position.set(f.x, f.y, f.z);
+    meshRef.current.scale.setScalar(1 + t * 4);
+    meshRef.current.material.opacity = 0.8 * (1 - t);
+  });
+  return (
+    <mesh ref={meshRef} visible={false}>
+      <sphereGeometry args={[1, 16, 16]} />
+      <meshBasicMaterial
+        color="#ffffff"
+        transparent
+        opacity={0}
+        blending={THREE.AdditiveBlending}
+        depthWrite={false}
+      />
+    </mesh>
+  );
+}
+
 function WellMesh({ well }) {
   const ringRef = useRef();
   const outerRef = useRef();
@@ -124,6 +150,7 @@ export default function GravityField() {
   const { camera, pointer } = useThree();
   const wellsRef = useRef([]);
   const [wellSnapshot, setWellSnapshot] = useState([]);
+  const flashRef = useRef(null); // { x, y, z, age }
 
   // Reusable temp objects — allocated once
   const _rc      = useMemo(() => new THREE.Raycaster(), []);
@@ -150,6 +177,7 @@ export default function GravityField() {
         vel[i3+2] += dz/d * strength;
       }
     }
+    flashRef.current = { x: w.x, y: w.y, z: w.z, age: 0 };
     wells.splice(idx, 1);
     setWellSnapshot([...wells]);
   };
@@ -190,6 +218,23 @@ export default function GravityField() {
     const pos = posAttr.array;
     const dt = Math.min(delta, 0.05);
     const wells = wellsRef.current;
+
+    // Tick well ages and auto-collapse expired wells
+    const toCollapse = [];
+    for (let wi = 0; wi < wells.length; wi++) {
+      wells[wi].age += dt;
+      if (wells[wi].age >= WELL_LIFE) toCollapse.push(wi);
+    }
+    for (let k = toCollapse.length - 1; k >= 0; k--) {
+      collapseWell(toCollapse[k]);
+    }
+
+    // Tick flash
+    if (flashRef.current) {
+      flashRef.current.age += dt;
+      if (flashRef.current.age > 0.4) flashRef.current = null;
+    }
+
     const hasWell = wells.length > 0;
     let dirty = false;
 
@@ -259,6 +304,7 @@ export default function GravityField() {
         <meshBasicMaterial visible={false} side={THREE.DoubleSide} />
       </mesh>
       {wellSnapshot.map(w => <WellMesh key={w.id} well={w} />)}
+      <FlashMesh flashRef={flashRef} />
       <points geometry={geo}>
         <pointsMaterial
           map={tex}
