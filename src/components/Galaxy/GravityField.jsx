@@ -187,7 +187,7 @@ function WellMesh({ well }) {
           depthWrite={false}
         />
       </sprite>
-      <mesh rotation={[0, 0, 0]}>
+      <mesh rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[7, 7]} />
         <meshBasicMaterial
           ref={diskMatRef}
