@@ -1,5 +1,5 @@
 import { useMemo, useEffect, useRef, useState } from 'react';
-import { useFrame, useThree } from '@react-three/fiber';
+import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
 const WORLD_X = -60, WORLD_Y = 0, WORLD_Z = 20;
@@ -118,31 +118,11 @@ export default function GravityField() {
   const { geo, vel, home, capturedBy } = useMemo(() => buildField(), []);
   const tex = useMemo(() => getDotTex(), []);
 
-  const { camera, pointer } = useThree();
   const wellsRef      = useRef([]);
   const [wellSnapshot, setWellSnapshot] = useState([]);
   const flashRef      = useRef(null);
   const heldWellIdRef = useRef(null);
   const holdStartRef  = useRef(0);
-
-  const _rc       = useMemo(() => new THREE.Raycaster(), []);
-  const _pln      = useMemo(() => new THREE.Plane(), []);
-  const _pn       = useMemo(() => new THREE.Vector3(), []);
-  const _hit      = useMemo(() => new THREE.Vector3(), []);
-  const WORLD_POS = useMemo(() => new THREE.Vector3(WORLD_X, WORLD_Y, WORLD_Z), []);
-
-  // Project pointer onto the camera-facing plane, return local coords or null
-  const projectPointer = (cam, ptr) => {
-    _pn.set(
-      cam.position.x - WORLD_X,
-      cam.position.y - WORLD_Y,
-      cam.position.z - WORLD_Z,
-    ).normalize();
-    _pln.setFromNormalAndCoplanarPoint(_pn, WORLD_POS);
-    _rc.setFromCamera(ptr, cam);
-    if (!_rc.ray.intersectPlane(_pln, _hit)) return null;
-    return { x: _hit.x - WORLD_X, y: _hit.y - WORLD_Y, z: _hit.z - WORLD_Z };
-  };
 
   const collapseWell = (idx) => {
     const wells = wellsRef.current;
@@ -178,37 +158,30 @@ export default function GravityField() {
     setWellSnapshot([...wells]);
   };
 
-  // Hit plane owns ALL pointer interaction — no ambiguity with tiny sphere meshes
-  const handlePointerDown = (cam, ptr) => {
-    const lp = projectPointer(cam, ptr);
-    if (!lp) return;
+  // lp = local-space point from e.point minus WORLD offset
+  const handlePointerDown = (lp) => {
     holdStartRef.current = Date.now();
     const wells = wellsRef.current;
     for (let i = 0; i < wells.length; i++) {
       const w = wells[i];
       const dx = lp.x - w.x, dy = lp.y - w.y, dz = lp.z - w.z;
       if (dx*dx + dy*dy + dz*dz < WELL_HIT_R2) {
-        heldWellIdRef.current = w.id; // start growing
+        heldWellIdRef.current = w.id;
         return;
       }
     }
-    heldWellIdRef.current = null; // click on empty space
+    heldWellIdRef.current = null;
   };
 
-  const handlePointerUp = (cam, ptr) => {
+  const handlePointerUp = (lp) => {
     const held = Date.now() - holdStartRef.current;
     if (heldWellIdRef.current !== null) {
-      // Was holding a well
       if (held < HOLD_MS) {
-        // Short tap — detonate
         const idx = wellsRef.current.findIndex(w => w.id === heldWellIdRef.current);
         if (idx !== -1) collapseWell(idx);
       }
       heldWellIdRef.current = null;
     } else if (held < HOLD_MS) {
-      // Short tap on empty space — plant well
-      const lp = projectPointer(cam, ptr);
-      if (!lp) return;
       const wells = wellsRef.current;
       if (wells.length >= MAX_WELLS) return;
       wells.push({ id: _wellId++, x: lp.x, y: lp.y, z: lp.z, age: 0, scale: 1, color: WELL_COLORS[wells.length % WELL_COLORS.length] });
@@ -323,8 +296,8 @@ export default function GravityField() {
       <mesh
         onPointerEnter={() => { document.body.style.cursor = 'crosshair'; }}
         onPointerLeave={() => { document.body.style.cursor = ''; }}
-        onPointerDown={(e) => { e.stopPropagation(); handlePointerDown(camera, pointer); }}
-        onPointerUp={(e)   => { e.stopPropagation(); handlePointerUp(camera, pointer); }}
+        onPointerDown={(e) => { e.stopPropagation(); handlePointerDown({ x: e.point.x - WORLD_X, y: e.point.y - WORLD_Y, z: e.point.z - WORLD_Z }); }}
+        onPointerUp={(e)   => { e.stopPropagation(); handlePointerUp({ x: e.point.x - WORLD_X, y: e.point.y - WORLD_Y, z: e.point.z - WORLD_Z }); }}
       >
         <planeGeometry args={[80, 40]} />
         <meshBasicMaterial visible={false} side={THREE.DoubleSide} />
