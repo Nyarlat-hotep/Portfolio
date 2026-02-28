@@ -142,9 +142,10 @@ function getDotTex() {
 
 // Purely visual — no event handlers (hit plane owns all interaction)
 function WellMesh({ well }) {
-  const groupRef   = useRef();
-  const diskMatRef = useRef();
-  const glowMatRef = useRef();
+  const groupRef      = useRef();
+  const diskMatRef    = useRef();
+  const glowMatRef    = useRef();
+  const glowSpriteRef = useRef();
 
   useFrame(() => {
     const t        = Math.min(1, well.age / 0.7);
@@ -152,11 +153,18 @@ function WellMesh({ well }) {
     const active   = well.age < GRAVITY_DURATION;
     const dormantT = Math.min(1, Math.max(0, (well.age - GRAVITY_DURATION) / 1.5));
 
-    // Sharp exponential surge at the moment gravity cuts off, decays over ~0.6s
+    // Slower decay (~1s) for a more visible surge
     const flashAge = well.age - GRAVITY_DURATION;
-    const flashT   = flashAge >= 0 ? Math.exp(-flashAge * 6) : 0;
+    const flashT   = flashAge >= 0 ? Math.exp(-flashAge * 4) : 0;
 
-    if (groupRef.current) groupRef.current.scale.setScalar(e * (1 + flashT * 0.3));
+    // Black hole size unchanged — only the glow blooms outward
+    if (groupRef.current) groupRef.current.scale.setScalar(e);
+
+    // Glow sprite expands dramatically during flash, snaps back to normal size
+    if (glowSpriteRef.current) {
+      const glowScale = 8 + flashT * 18;
+      glowSpriteRef.current.scale.set(glowScale, glowScale, 1);
+    }
 
     if (diskMatRef.current) {
       diskMatRef.current.color.lerpColors(DISK_COLOR_ACTIVE, DISK_COLOR_DORMANT, dormantT);
@@ -165,7 +173,7 @@ function WellMesh({ well }) {
         const pulse = 0.07 * Math.sin(well.age * Math.PI * 3);
         diskMatRef.current.opacity = (0.78 + pulse) * e;
       } else {
-        diskMatRef.current.opacity = (0.5 + flashT * 0.8) * e;
+        diskMatRef.current.opacity = (0.5 + flashT * 1.8) * e;
       }
     }
 
@@ -176,14 +184,14 @@ function WellMesh({ well }) {
         const pulse = 0.04 * Math.sin(well.age * Math.PI * 3);
         glowMatRef.current.opacity = (0.36 + pulse) * e;
       } else {
-        glowMatRef.current.opacity = (0.2 + flashT * 0.5) * e;
+        glowMatRef.current.opacity = (0.2 + flashT * 1.2) * e;
       }
     }
   });
 
   return (
     <group ref={groupRef} position={[well.x, well.y, well.z]}>
-      <sprite scale={[8, 8, 1]}>
+      <sprite ref={glowSpriteRef} scale={[8, 8, 1]}>
         <spriteMaterial
           ref={glowMatRef}
           map={getGlowTex()}
