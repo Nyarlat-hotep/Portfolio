@@ -12,6 +12,8 @@ export const caseStudies = {
 
     challenge: 'The design had been fragmented across multiple product managers who each owned a communication channel — phone calls, texting, chat — and rarely coordinated. The accumulated iterations had produced an interface that prioritized visual minimalism at the expense of usability: important client context was buried behind clicks, the lead queue was hidden, and bankers constantly context-switched between Banana Phone and other internal tools. I inherited this fragmentation with a fixed deadline, a sole-designer scope, and no room to start over.',
 
+    challengeViz: 'fragmented-orbits',
+
     solution: 'I made a foundational shift in design philosophy: enterprise is not consumer. A mortgage banker making dozens of client calls per day needs information surfaced, not hidden. I brought the lead queue — the daily roster of clients a banker works — to a persistent surface so it was never more than a glance away. I surfaced critical client context (address, timezone, loan purpose, loan stage) directly into the communication view rather than requiring navigation to find it. I unified call, text, and chat into a coherent interface that replaced the fragmented multi-system workflow bankers had been managing across separate tools and personal devices. And I served as the connective tissue between product managers who weren\'t talking to each other — establishing design language consistency and advocating for cross-channel coherence that no single PM had the incentive to own.',
 
     solutionComparison: {
@@ -53,7 +55,11 @@ export const caseStudies = {
       {
         title: 'Launch',
         description: 'I flew to Rocket\'s headquarters on launch day to help bankers get Banana Phone installed and configured on their machines. I also produced the visual training materials the training organization used for their formal onboarding courses — because getting thousands of bankers from zero to productive in a new communication tool required design judgment on what to explain, in what order, and how to frame a new workflow so it felt approachable rather than disruptive. After launch I addressed prioritized design debt and shifted attention toward what Banana Phone could become. The long-term vision — RocketOS — is a single application that replaces the collection of siloed tools bankers currently use: one interface for cross-channel client communication, persistent client context, and AI assistance surfaced at the right moments in a workflow.',
-        image: null
+        image: null,
+        comparison: {
+          before: '/images/case-studies/BananaPhone/current BP.png',
+          after:  '/images/case-studies/BananaPhone/OS BP.png',
+        }
       }
     ],
 

@@ -2,6 +2,7 @@ import { useRef } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 import ImageCompare from '../UI/ImageCompare';
+import FragmentedOrbits from '../UI/FragmentedOrbits';
 import ScrollTracker from '../UI/ScrollTracker';
 import './CaseStudy.css';
 
@@ -225,6 +226,11 @@ export default function CaseStudy({ caseStudy, planetColor = '#a855f7', scrollCo
           <motion.p className="section-text" variants={contentVariants}>
             {caseStudy.challenge}
           </motion.p>
+          {caseStudy.challengeViz === 'fragmented-orbits' && (
+            <motion.div variants={contentVariants}>
+              <FragmentedOrbits color={caseStudy.accentColor || planetColor} />
+            </motion.div>
+          )}
         </AnimatedSection>
       </div>
 
@@ -268,6 +274,15 @@ export default function CaseStudy({ caseStudy, planetColor = '#a855f7', scrollCo
                 variants={galleryItemVariants}
               >
                 <img src={phase.image} alt={phase.title} />
+              </motion.div>
+            )}
+            {phase.comparison && (
+              <motion.div variants={contentVariants} style={{ marginTop: '2rem' }}>
+                <ImageCompare
+                  beforeSrc={phase.comparison.before}
+                  afterSrc={phase.comparison.after}
+                  planetColor={planetColor}
+                />
               </motion.div>
             )}
           </AnimatedSection>

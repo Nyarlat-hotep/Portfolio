@@ -1,0 +1,13 @@
+.fragmented-orbits {
+  width: 100%;
+  margin-top: 2rem;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.fragmented-orbits-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
