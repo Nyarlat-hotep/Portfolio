@@ -5,7 +5,7 @@ import { createNebulaSplatTexture } from '../../utils/threeUtils';
 import PlanetField from './PlanetField';
 
 const WORLD_X = -60, WORLD_Y = 0, WORLD_Z = 20;
-const N = 12000;
+const N = 6000;
 
 const WELL_RAMP        = 1.5;
 const GRAVITY_DURATION = 10;  // seconds gravity is active after planting
@@ -481,10 +481,10 @@ export default function GravityField() {
       <points geometry={geo}>
         <pointsMaterial
           map={tex}
-          size={0.35}
+          size={0.2}
           vertexColors
           transparent
-          opacity={0.7}
+          opacity={0.6}
           depthWrite={false}
           blending={THREE.AdditiveBlending}
           sizeAttenuation
