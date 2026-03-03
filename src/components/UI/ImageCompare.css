@@ -1,7 +1,7 @@
 .image-compare {
   position: relative;
   width: 100%;
-  aspect-ratio: 16 / 10;
+  aspect-ratio: 16 / 11;
   border-radius: 12px;
   overflow: hidden;
   cursor: ew-resize;
@@ -20,7 +20,8 @@
 .compare-layer img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  object-position: center top;
   display: block;
   pointer-events: none;
 }
