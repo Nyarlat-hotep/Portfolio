@@ -101,7 +101,7 @@ function Planet({ config, wells }) {
       s.vel.z += (dz / d) * force;
     }
 
-    s.vel.multiplyScalar(gravityActive ? PLANET_DAMP : 0.88);
+    s.vel.multiplyScalar(gravityActive ? PLANET_DAMP : 0.99);
     const spd = s.vel.length();
     if (spd > PLANET_MAX_V) s.vel.multiplyScalar(PLANET_MAX_V / spd);
 
