@@ -2,9 +2,9 @@ import { useRef, useMemo } from 'react';
 import { useFrame, useLoader } from '@react-three/fiber';
 import * as THREE from 'three';
 
-const PLANET_PULL  = 70;   // gravity strength — matches particle pull
-const PLANET_DAMP  = 0.98; // velocity damping while gravity active — matches particles
-const PLANET_MAX_V = 30;   // velocity cap — matches particles
+const PLANET_PULL  = 160;   // gravity strength
+const PLANET_DAMP  = 0.996; // low friction while gravity active — lets velocity keep building
+const PLANET_MAX_V = 55;    // higher top speed so planets reach capture radius
 const SPAG_START   = 8;    // distance at which spaghettification begins
 const PLANET_CAP_R = 2.0;  // capture radius (disappear inside this)
 const GRAVITY_DUR  = 10;   // must match GravityField's GRAVITY_DURATION
