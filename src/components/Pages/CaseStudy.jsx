@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 import ImageCompare from '../UI/ImageCompare';
 import FragmentedOrbits from '../UI/FragmentedOrbits';
+import InterferenceWaves from '../UI/InterferenceWaves';
 import ScrollTracker from '../UI/ScrollTracker';
 import './CaseStudy.css';
 
@@ -229,6 +230,11 @@ export default function CaseStudy({ caseStudy, planetColor = '#a855f7', scrollCo
           {caseStudy.challengeViz === 'fragmented-orbits' && (
             <motion.div variants={contentVariants}>
               <FragmentedOrbits color={caseStudy.accentColor || planetColor} />
+            </motion.div>
+          )}
+          {caseStudy.challengeViz === 'interference-waves' && (
+            <motion.div variants={contentVariants}>
+              <InterferenceWaves color={caseStudy.accentColor || planetColor} />
             </motion.div>
           )}
         </AnimatedSection>

@@ -78,6 +78,8 @@ export const caseStudies = {
 
     challenge: 'Three tensions defined this project. Users were making major financial decisions without a coherent picture of their own financial situation. Two internal business units — Rocket Mortgage and Rocket Money — were competing for page real estate with conflicting priorities. And the product needed to surface features users hadn\'t yet activated without creating friction or a sense of exclusion. Resolving all three simultaneously, at scale, was the central design problem.',
 
+    challengeViz: 'interference-waves',
+
     solution: 'I defined an information architecture that could flex across radically different user states — from a first-time homebuyer with no connected accounts to a mortgage client actively tracking their payoff path. The existing mortgage relationship anchored the top of the page; Rocket Money\'s presence was negotiated down to its highest-signal modules. For features users hadn\'t yet activated, I introduced a locked state pattern — drawn from gaming and subscription UI — that showed the value and path to activation rather than hiding the capability. I faced significant pushback on this in a financial product context, but defended it as a well-established convention. It launched as a core onboarding mechanism. A progressive disclosure principle governed every hierarchy decision: orient and motivate first, invite depth on demand.',
 
     accentColor: '#22d3ee',

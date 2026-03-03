@@ -1,0 +1,35 @@
+.interference-waves {
+  width: 100%;
+  margin-top: 2rem;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.interference-waves-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+@keyframes iw-fwd {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-600px); }
+}
+
+@keyframes iw-rev {
+  from { transform: translateX(-600px); }
+  to   { transform: translateX(0); }
+}
+
+.iw-scroll-fwd {
+  animation: iw-fwd 8s linear infinite;
+}
+
+.iw-scroll-mid {
+  animation: iw-fwd 11s linear infinite;
+}
+
+.iw-scroll-rev {
+  animation: iw-rev 9s linear infinite;
+}
