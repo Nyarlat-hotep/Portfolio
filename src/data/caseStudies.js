@@ -167,7 +167,21 @@ export const caseStudies = {
       {
         title: 'Design',
         description: 'The core interaction is a drafting panel that lives inside Banana Phone\'s existing text interface. A banker triggers it, selects a category or requests the next logical message in a conversation thread, the AI drafts, and they send or edit. Simple. What made it hard was the engineering team\'s technical constraints, which required significant compromises on the visual design I\'d built. I designed for a particular UX. What launched was a more conservative version — less polished, more stable. That\'s a real tradeoff, and it\'s one I\'d revisit given more runway. The interaction model survived intact; some of the craft didn\'t.',
-        image: null
+        image: null,
+        galleryImages: [
+          '/images/case-studies/AItexting/Additional Details.png',
+          '/images/case-studies/AItexting/Additional Details-1.png',
+          '/images/case-studies/AItexting/Additional Details-2.png',
+          '/images/case-studies/AItexting/Additional Details-3.png',
+          '/images/case-studies/AItexting/Additional Details-4.png',
+          '/images/case-studies/AItexting/Additional Details-5.png',
+          '/images/case-studies/AItexting/Additional Details-6.png',
+          '/images/case-studies/AItexting/Additional Details-7.png',
+          '/images/case-studies/AItexting/Additional Details-8.png',
+          '/images/case-studies/AItexting/Additional Details-9.png',
+          '/images/case-studies/AItexting/Additional Details-10.png',
+          '/images/case-studies/AItexting/Additional Details-11.png',
+        ]
       },
       {
         title: 'Pilot',

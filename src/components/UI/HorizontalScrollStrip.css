@@ -1,0 +1,51 @@
+.hss-outer {
+  position: relative;
+  width: 100%;
+  margin-top: 2rem;
+  /* Fade edges via mask */
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    black 6%,
+    black 94%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    black 6%,
+    black 94%,
+    transparent 100%
+  );
+}
+
+.hss-track {
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  /* Hide scrollbar — all browsers */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding: 4px 6% 4px;
+  cursor: grab;
+}
+
+.hss-track::-webkit-scrollbar {
+  display: none;
+}
+
+.hss-track:active {
+  cursor: grabbing;
+}
+
+.hss-image {
+  height: 420px;
+  width: auto;
+  flex-shrink: 0;
+  border-radius: 8px;
+  display: block;
+  user-select: none;
+  -webkit-user-drag: none;
+}

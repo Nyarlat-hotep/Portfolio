@@ -6,6 +6,7 @@ import FragmentedOrbits from '../UI/FragmentedOrbits';
 import InterferenceWaves from '../UI/InterferenceWaves';
 import ThroughputCollapse from '../UI/ThroughputCollapse';
 import ScrollTracker from '../UI/ScrollTracker';
+import HorizontalScrollStrip from '../UI/HorizontalScrollStrip';
 import './CaseStudy.css';
 
 // --- Variant definitions ---
@@ -309,6 +310,14 @@ export default function CaseStudy({ caseStudy, planetColor = '#a855f7', scrollCo
                   beforeSrc={phase.comparison.before}
                   afterSrc={phase.comparison.after}
                   planetColor={planetColor}
+                />
+              </motion.div>
+            )}
+            {phase.galleryImages && phase.galleryImages.length > 0 && (
+              <motion.div variants={contentVariants}>
+                <HorizontalScrollStrip
+                  images={phase.galleryImages}
+                  alt={phase.title}
                 />
               </motion.div>
             )}
