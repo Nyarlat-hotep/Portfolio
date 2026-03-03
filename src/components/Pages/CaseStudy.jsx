@@ -263,6 +263,11 @@ export default function CaseStudy({ caseStudy, planetColor = '#a855f7', scrollCo
               />
             </motion.div>
           )}
+          {caseStudy.solutionImages && caseStudy.solutionImages.map((src, i) => (
+            <motion.div key={i} className="process-image" variants={galleryItemVariants} style={{ marginTop: '2rem' }}>
+              <img src={src} alt={`${caseStudy.title} solution ${i + 1}`} />
+            </motion.div>
+          ))}
         </AnimatedSection>
       </div>
 
@@ -286,6 +291,16 @@ export default function CaseStudy({ caseStudy, planetColor = '#a855f7', scrollCo
                 variants={galleryItemVariants}
               >
                 <img src={phase.image} alt={phase.title} />
+              </motion.div>
+            )}
+            {phase.video && (
+              <motion.div className="process-image" variants={galleryItemVariants}>
+                <video
+                  src={phase.video}
+                  controls
+                  playsInline
+                  style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }}
+                />
               </motion.div>
             )}
             {phase.comparison && (
