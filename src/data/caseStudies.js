@@ -43,7 +43,7 @@ export const caseStudies = {
       {
         title: 'UI Redesign',
         description: 'Two changes defined the redesign. First: the lead queue — a banker\'s daily roster of active client communications — moved from a buried menu item to a persistent sidebar. It had received consistent negative feedback in its hidden state; surfacing it was the most direct usability fix available. Second: critical client context (address, timezone, loan purpose, loan stage) moved into the communication view itself, eliminating the mid-call navigation bankers had been doing to find information they needed to have the conversation.',
-        image: null
+        image: '/images/case-studies/BananaPhone/current BP.png'
       },
       {
         title: 'Alignment',
