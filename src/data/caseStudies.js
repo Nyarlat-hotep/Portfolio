@@ -14,6 +14,13 @@ export const caseStudies = {
 
     solution: 'I made a foundational shift in design philosophy: enterprise is not consumer. A mortgage banker making dozens of client calls per day needs information surfaced, not hidden. I brought the lead queue — the daily roster of clients a banker works — to a persistent surface so it was never more than a glance away. I surfaced critical client context (address, timezone, loan purpose, loan stage) directly into the communication view rather than requiring navigation to find it. I unified call, text, and chat into a coherent interface that replaced the fragmented multi-system workflow bankers had been managing across separate tools and personal devices. And I served as the connective tissue between product managers who weren\'t talking to each other — establishing design language consistency and advocating for cross-channel coherence that no single PM had the incentive to own.',
 
+    solutionComparison: {
+      before: '/images/case-studies/BananaPhone/BP - 2.png',
+      after:  '/images/case-studies/BananaPhone/current BP.png',
+      beforeLabel: 'Old Design',
+      afterLabel:  'New Design',
+    },
+
     accentColor: '#f5c842',
 
     impact: 'Launched Q4 2024. Banana Phone became the communication layer for thousands of bankers across Rocket Mortgage — consolidating fragmented systems into a single interface and driving measurable results across every channel from day one.',

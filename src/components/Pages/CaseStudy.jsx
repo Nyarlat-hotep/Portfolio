@@ -234,6 +234,17 @@ export default function CaseStudy({ caseStudy, planetColor = '#a855f7', scrollCo
           <motion.p className="section-text" variants={contentVariants}>
             {caseStudy.solution}
           </motion.p>
+          {caseStudy.solutionComparison && (
+            <motion.div variants={contentVariants} style={{ marginTop: '2rem' }}>
+              <ImageCompare
+                beforeSrc={caseStudy.solutionComparison.before}
+                afterSrc={caseStudy.solutionComparison.after}
+                beforeLabel={caseStudy.solutionComparison.beforeLabel}
+                afterLabel={caseStudy.solutionComparison.afterLabel}
+                planetColor={planetColor}
+              />
+            </motion.div>
+          )}
         </AnimatedSection>
       </div>
 
