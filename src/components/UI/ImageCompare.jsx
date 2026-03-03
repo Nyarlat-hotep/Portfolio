@@ -56,7 +56,6 @@ export default function ImageCompare({
             <span className="compare-placeholder-text">IMG</span>
           </div>
         )}
-        <span className="compare-label compare-label-after">{afterLabel}</span>
       </div>
 
       {/* Before layer (clipped) */}
@@ -71,7 +70,6 @@ export default function ImageCompare({
             <span className="compare-placeholder-text">IMG</span>
           </div>
         )}
-        <span className="compare-label compare-label-before">{beforeLabel}</span>
       </div>
 
       {/* Divider line + handle */}
