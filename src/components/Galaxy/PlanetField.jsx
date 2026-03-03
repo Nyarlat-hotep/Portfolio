@@ -85,15 +85,11 @@ function Planet({ config, wells }) {
     const py = config.home[1] + s.vel.y;
     const pz = baseZ + s.vel.z;
 
-    // Gravity from active wells
-    let gravityActive = false;
-    for (let i = 0; i < wells.length; i++) {
-      if (wells[i].age < GRAVITY_DUR) { gravityActive = true; break; }
-    }
+    // Gravity from all wells — planets are pulled indefinitely until well is removed
+    const gravityActive = wells.length > 0;
     let nearWell = null, nearDist = Infinity;
 
     for (const w of wells) {
-      if (w.age >= GRAVITY_DUR) continue;
       const dx = w.x - px, dy = w.y - py, dz = w.z - pz;
       const d  = Math.sqrt(dx*dx + dy*dy + dz*dz);
       if (d < nearDist) { nearDist = d; nearWell = w; }

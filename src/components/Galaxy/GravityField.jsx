@@ -58,13 +58,16 @@ function buildBlinks() {
       peakR:  c.r * peak,
       peakG:  c.g * peak,
       peakB:  c.b * peak,
+      hx: pos[i*3], hy: pos[i*3+1], hz: pos[i*3+2], // home position
     });
   }
 
+  const posAttr = new THREE.BufferAttribute(pos, 3);
+  posAttr.usage = THREE.DynamicDrawUsage;
   const colAttr = new THREE.BufferAttribute(col, 3);
   colAttr.usage = THREE.DynamicDrawUsage;
   const geo = new THREE.BufferGeometry();
-  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  geo.setAttribute('position', posAttr);
   geo.setAttribute('color', colAttr);
   return { geo, meta };
 }
@@ -421,17 +424,27 @@ export default function GravityField() {
     if (posDirty)   posAttr.needsUpdate = true;
     if (colorDirty) colAttr.needsUpdate = true;
 
-    // Blink stars — update color attribute each frame
+    // Blink stars — hide when dim to avoid dark-spot alpha artifact
     blinkTimeRef.current += dt;
     const blinkArr = blinkGeo.attributes.color.array;
+    const blinkPos = blinkGeo.attributes.position.array;
+    let blinkPosDirty = false;
     for (let i = 0; i < blinkMeta.length; i++) {
       const m  = blinkMeta[i];
       const br = Math.max(0, Math.sin((blinkTimeRef.current / m.period) * Math.PI * 2 + m.phase));
       const i3 = i * 3;
-      blinkArr[i3]   = m.peakR * br;
-      blinkArr[i3+1] = m.peakG * br;
-      blinkArr[i3+2] = m.peakB * br;
+      if (br < 0.02) {
+        // Move off-screen so the point doesn't write alpha to the canvas
+        if (blinkPos[i3+1] !== -9999) { blinkPos[i3] = 0; blinkPos[i3+1] = -9999; blinkPos[i3+2] = 0; blinkPosDirty = true; }
+        blinkArr[i3] = 0; blinkArr[i3+1] = 0; blinkArr[i3+2] = 0;
+      } else {
+        if (blinkPos[i3+1] === -9999) { blinkPos[i3] = m.hx; blinkPos[i3+1] = m.hy; blinkPos[i3+2] = m.hz; blinkPosDirty = true; }
+        blinkArr[i3]   = m.peakR * br;
+        blinkArr[i3+1] = m.peakG * br;
+        blinkArr[i3+2] = m.peakB * br;
+      }
     }
+    if (blinkPosDirty) blinkGeo.attributes.position.needsUpdate = true;
     blinkGeo.attributes.color.needsUpdate = true;
   });
 
