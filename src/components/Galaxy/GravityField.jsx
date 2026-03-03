@@ -2,6 +2,7 @@ import { useMemo, useEffect, useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { createNebulaSplatTexture } from '../../utils/threeUtils';
+import PlanetField from './PlanetField';
 
 const WORLD_X = -60, WORLD_Y = 0, WORLD_Z = 20;
 const N = 12000;
@@ -488,6 +489,8 @@ export default function GravityField() {
           sizeAttenuation
         />
       </points>
+
+      <PlanetField wells={wellSnapshot} />
     </group>
   );
 }
