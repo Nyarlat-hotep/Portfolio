@@ -26,6 +26,48 @@ const PAL = [
   new THREE.Color('#b033dd'), // bright purple
 ];
 
+const BLINK_PAL = [
+  new THREE.Color('#ffdd33'), // yellow
+  new THREE.Color('#ff3322'), // red
+  new THREE.Color('#33ff66'), // green
+  new THREE.Color('#ff8800'), // orange
+  new THREE.Color('#ffffff'), // white
+  new THREE.Color('#ff44bb'), // pink
+  new THREE.Color('#88ff00'), // lime
+  new THREE.Color('#ff6600'), // amber
+];
+
+function buildBlinks() {
+  const COUNT = 250;
+  const pos  = new Float32Array(COUNT * 3);
+  const col  = new Float32Array(COUNT * 3); // starts all black
+  const meta = [];
+
+  for (let i = 0; i < COUNT; i++) {
+    pos[i*3]   = randG() * 22;
+    pos[i*3+1] = randG() * 6;
+    pos[i*3+2] = randG() * 12;
+
+    const c    = BLINK_PAL[Math.floor(Math.random() * BLINK_PAL.length)];
+    const peak = 0.25 + Math.random() * 0.2; // 25–45% brightness at peak
+
+    meta.push({
+      period: 1 + Math.random() * 3, // blink cycle length in seconds
+      phase:  Math.random() * Math.PI * 2,
+      peakR:  c.r * peak,
+      peakG:  c.g * peak,
+      peakB:  c.b * peak,
+    });
+  }
+
+  const colAttr = new THREE.BufferAttribute(col, 3);
+  colAttr.usage = THREE.DynamicDrawUsage;
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  geo.setAttribute('color', colAttr);
+  return { geo, meta };
+}
+
 function randG() {
   const u = Math.max(1e-10, Math.random());
   return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * Math.random());
@@ -227,6 +269,9 @@ export default function GravityField() {
   const tex     = useMemo(() => getDotTex(), []);
   const hazeTex = useMemo(() => createNebulaSplatTexture(), []);
 
+  const { geo: blinkGeo, meta: blinkMeta } = useMemo(() => buildBlinks(), []);
+  const blinkTimeRef = useRef(0);
+
   const wellsRef = useRef([]);
   const [wellSnapshot, setWellSnapshot] = useState([]);
 
@@ -269,10 +314,11 @@ export default function GravityField() {
   useEffect(() => () => {
     geo.dispose();
     hazeGeo.dispose();
+    blinkGeo.dispose();
     if (_tex)     { _tex.dispose();     _tex     = null; }
     if (_glowTex) { _glowTex.dispose(); _glowTex = null; }
     if (_diskTex) { _diskTex.dispose(); _diskTex = null; }
-  }, [geo, hazeGeo]);
+  }, [geo, hazeGeo, blinkGeo]);
 
   useFrame((_, delta) => {
     const posAttr = geo.attributes.position;
@@ -373,6 +419,19 @@ export default function GravityField() {
 
     if (posDirty)   posAttr.needsUpdate = true;
     if (colorDirty) colAttr.needsUpdate = true;
+
+    // Blink stars — update color attribute each frame
+    blinkTimeRef.current += dt;
+    const blinkArr = blinkGeo.attributes.color.array;
+    for (let i = 0; i < blinkMeta.length; i++) {
+      const m  = blinkMeta[i];
+      const br = Math.max(0, Math.sin((blinkTimeRef.current / m.period) * Math.PI * 2 + m.phase));
+      const i3 = i * 3;
+      blinkArr[i3]   = m.peakR * br;
+      blinkArr[i3+1] = m.peakG * br;
+      blinkArr[i3+2] = m.peakB * br;
+    }
+    blinkGeo.attributes.color.needsUpdate = true;
   });
 
   return (
@@ -395,6 +454,19 @@ export default function GravityField() {
           vertexColors
           transparent
           opacity={0.08}
+          depthWrite={false}
+          blending={THREE.AdditiveBlending}
+          sizeAttenuation
+        />
+      </points>
+
+      {/* Blink stars — periodic chromatic flashes */}
+      <points geometry={blinkGeo}>
+        <pointsMaterial
+          size={0.4}
+          vertexColors
+          transparent
+          opacity={1}
           depthWrite={false}
           blending={THREE.AdditiveBlending}
           sizeAttenuation
