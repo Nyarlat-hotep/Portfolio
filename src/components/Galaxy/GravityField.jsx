@@ -1,4 +1,4 @@
-import { useMemo, useEffect, useRef, useState } from 'react';
+import { useMemo, useEffect, useRef, useState, Suspense } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { createNebulaSplatTexture } from '../../utils/threeUtils';
@@ -39,7 +39,7 @@ const BLINK_PAL = [
 ];
 
 function buildBlinks() {
-  const COUNT = 250;
+  const COUNT = 40;
   const pos  = new Float32Array(COUNT * 3);
   const col  = new Float32Array(COUNT * 3); // starts all black
   const meta = [];
@@ -50,10 +50,10 @@ function buildBlinks() {
     pos[i*3+2] = randG() * 12;
 
     const c    = BLINK_PAL[Math.floor(Math.random() * BLINK_PAL.length)];
-    const peak = 0.25 + Math.random() * 0.2; // 25–45% brightness at peak
+    const peak = 0.35 + Math.random() * 0.25; // 35–60% brightness at peak
 
     meta.push({
-      period: 1 + Math.random() * 3, // blink cycle length in seconds
+      period: 5 + Math.random() * 10, // blink cycle length in seconds — slow and rare
       phase:  Math.random() * Math.PI * 2,
       peakR:  c.r * peak,
       peakG:  c.g * peak,
@@ -464,7 +464,8 @@ export default function GravityField() {
       {/* Blink stars — periodic chromatic flashes */}
       <points geometry={blinkGeo}>
         <pointsMaterial
-          size={0.4}
+          map={tex}
+          size={0.5}
           vertexColors
           transparent
           opacity={1}
@@ -490,7 +491,9 @@ export default function GravityField() {
         />
       </points>
 
-      <PlanetField wells={wellSnapshot} />
+      <Suspense fallback={null}>
+        <PlanetField wells={wellSnapshot} />
+      </Suspense>
     </group>
   );
 }
