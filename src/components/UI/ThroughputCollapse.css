@@ -1,0 +1,33 @@
+.throughput-collapse {
+  width: 100%;
+  margin-top: 2rem;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.throughput-collapse-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* dash + gap = 12px → dashoffset -12 = one full cycle */
+@keyframes tc-march {
+  from { stroke-dashoffset: 0; }
+  to   { stroke-dashoffset: -12; }
+}
+
+/* dash + gap = 12px → same period, faster duration */
+@keyframes tc-march-fast {
+  from { stroke-dashoffset: 0; }
+  to   { stroke-dashoffset: -12; }
+}
+
+.tc-march {
+  animation: tc-march 1.6s linear infinite;
+}
+
+.tc-march-fast {
+  animation: tc-march-fast 0.65s linear infinite;
+}
