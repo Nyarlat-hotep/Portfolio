@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Skull, ExternalLink, Eye } from 'lucide-react';
 import './Experiments.css';
@@ -223,57 +224,55 @@ export default function Experiments({ planetColor = '#6b2fa0', scrollContainerRe
         </span>
       </motion.div>
 
-      {/* Gallery backdrop */}
-      <AnimatePresence>
-        {galleryOpen && (
+      {/* Portal: renders backdrop + clipper directly in document.body,
+          keeping position:fixed truly relative to viewport */}
+      {createPortal(
+        <>
+          <AnimatePresence>
+            {galleryOpen && (
+              <motion.div
+                className="gallery-backdrop"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                onClick={() => setGalleryOpen(false)}
+              />
+            )}
+          </AnimatePresence>
+
           <motion.div
-            className="gallery-backdrop"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            onClick={() => setGalleryOpen(false)}
-          />
-        )}
-      </AnimatePresence>
-
-      {/* Entire container animates as one unit */}
-      <motion.div
-        ref={panelRef}
-        className="gallery-clipper"
-        animate={{ y: galleryOpen ? 0 : '100%' }}
-        initial={{ y: '100%' }}
-        transition={{ type: 'spring', damping: 24, stiffness: 300 }}
-        style={{ pointerEvents: galleryOpen ? 'auto' : 'none' }}
-        onTouchStart={handleTouchStart}
-        onTouchEnd={handleTouchEnd}
-      >
-        <div className="gallery-panel">
-          {/* Swipe indicator */}
-          <div className="gallery-swipe-indicator">
-            <div className="swipe-bar" />
-          </div>
-
-          {/* Gallery header */}
-          <div className="gallery-header">
-            <div className="gallery-title-group">
-              <h2 className="gallery-title">VISUAL_ARCHIVE</h2>
-            </div>
-          </div>
-
-          {/* Masonry grid */}
-          <div className="gallery-grid">
-            {galleryImages.map((src, i) => (
-              <div key={i} className="gallery-item">
-                <img src={src} alt={`Visual archive ${i + 1}`} className="gallery-img" decoding="async" />
+            ref={panelRef}
+            className="gallery-clipper"
+            animate={{ y: galleryOpen ? 0 : '100%' }}
+            initial={{ y: '100%' }}
+            transition={{ type: 'spring', damping: 27, stiffness: 300 }}
+            style={{ pointerEvents: galleryOpen ? 'auto' : 'none' }}
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+          >
+            <div className="gallery-panel">
+              <div className="gallery-swipe-indicator">
+                <div className="swipe-bar" />
               </div>
-            ))}
-          </div>
-
-          {/* Bottom fade */}
-          <div className="gallery-bottom-fade" />
-        </div>
-      </motion.div>
+              <div className="gallery-header">
+                <div className="gallery-title-group">
+                  <h2 className="gallery-title">VISUAL_ARCHIVE</h2>
+                </div>
+              </div>
+              <div className="gallery-grid">
+                {galleryImages.map((src, i) => (
+                  <div key={i} className="gallery-item">
+                    <img src={src} alt={`Visual archive ${i + 1}`} className="gallery-img" decoding="async" />
+                  </div>
+                ))}
+              </div>
+              <div className="gallery-bottom-fade" />
+            </div>
+          </motion.div>
+        </>,
+        document.body
+      )}
     </div>
   );
 }

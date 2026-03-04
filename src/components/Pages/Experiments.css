@@ -343,7 +343,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 100;
+  z-index: 2100;
   cursor: pointer;
 }
 
@@ -354,7 +354,7 @@
   left: 0;
   right: 0;
   height: 75vh;
-  z-index: 101;
+  z-index: 2101;
   overflow: hidden;
   border-radius: 20px 20px 0 0;
 }
