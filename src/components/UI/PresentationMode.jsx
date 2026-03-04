@@ -1,5 +1,5 @@
 // src/components/UI/PresentationMode.jsx
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createPortal } from 'react-dom';
 import { X, ArrowLeft, ArrowRight } from 'lucide-react';
@@ -46,7 +46,7 @@ function SlideSolution({ slide }) {
       <div className="pm-solution-body">
         {slide.image && (
           <div className="pm-solution-image">
-            <img src={slide.image} alt="Solution" />
+            <img src={slide.image} alt={`${slide.title} solution`} />
           </div>
         )}
         <p className="pm-nugget">{slide.nugget}</p>
@@ -100,12 +100,32 @@ const slideVariants = {
 export default function PresentationMode({ isOpen, onClose }) {
   const [slideIndex, setSlideIndex] = useState(0);
   const [direction,  setDirection]  = useState(1);
+  const closeButtonRef = useRef(null);
   const total = presentationSlides.length;
   const slide = presentationSlides[slideIndex];
 
   // Reset to first slide whenever opened
   useEffect(() => {
     if (isOpen) setSlideIndex(0);
+  }, [isOpen]);
+
+  // Focus close button when overlay opens for accessibility
+  useEffect(() => {
+    if (isOpen && closeButtonRef.current) {
+      closeButtonRef.current.focus();
+    }
+  }, [isOpen]);
+
+  // Prevent body scroll when overlay is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
   }, [isOpen]);
 
   const goNext = useCallback(() => {
@@ -143,6 +163,9 @@ export default function PresentationMode({ isOpen, onClose }) {
   return createPortal(
     <motion.div
       className="pm-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Portfolio Presentation"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -171,7 +194,7 @@ export default function PresentationMode({ isOpen, onClose }) {
       </div>
 
       {/* Close — top right (reuses .close-button from PageOverlay styles) */}
-      <button className="close-button pm-close" onClick={onClose} aria-label="Close presentation">
+      <button ref={closeButtonRef} className="close-button pm-close" onClick={onClose} aria-label="Close presentation">
         <X size={24} />
       </button>
 
