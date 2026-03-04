@@ -20,9 +20,9 @@ function buildNoisePath(cy, totalWidth = 1200, pts = 400) {
   for (let i = 0; i <= pts; i++) {
     const x = (i / pts) * totalWidth;
     const y = cy
-      + Math.sin(x * F1) * 15
-      + Math.sin(x * F2) * 12
-      + Math.sin(x * F3) * 5;
+      + Math.sin(x * F1) * 10
+      + Math.sin(x * F2) * 8
+      + Math.sin(x * F3) * 3;
     d.push(`${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`);
   }
   return d.join(' ');

@@ -53,7 +53,7 @@ function buildBlinks() {
     const peak = 0.35 + Math.random() * 0.25; // 35–60% brightness at peak
 
     meta.push({
-      period: 5 + Math.random() * 10, // blink cycle length in seconds — slow and rare
+      period: 1.5 + Math.random() * 3, // blink cycle length in seconds
       phase:  Math.random() * Math.PI * 2,
       peakR:  c.r * peak,
       peakG:  c.g * peak,

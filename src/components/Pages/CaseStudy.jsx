@@ -71,13 +71,23 @@ const cardVariants = {
   }
 };
 
-// Gallery images — scale in
+// Gallery images — scale in (used inside staggered parent that provides its own delay)
 const galleryItemVariants = {
   hidden: { opacity: 0, scale: 0.85 },
   visible: {
     opacity: 1,
     scale: 1,
     transition: { duration: 0.5, ease: [0.4, 0, 0.2, 1] }
+  }
+};
+
+// Inline images within content flow — appear after body text (delay 0.45)
+const inlineImageVariants = {
+  hidden: { opacity: 0, y: 15 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.6, delay: 0.6, ease: [0.4, 0, 0.2, 1] }
   }
 };
 
@@ -265,7 +275,7 @@ export default function CaseStudy({ caseStudy, planetColor = '#a855f7', scrollCo
             </motion.div>
           )}
           {caseStudy.solutionImages && caseStudy.solutionImages.map((src, i) => (
-            <motion.div key={i} className="process-image" variants={galleryItemVariants} style={{ marginTop: '2rem' }}>
+            <motion.div key={i} className="process-image" variants={inlineImageVariants} style={{ marginTop: '2rem' }}>
               <img src={src} alt={`${caseStudy.title} solution ${i + 1}`} />
             </motion.div>
           ))}
@@ -289,13 +299,13 @@ export default function CaseStudy({ caseStudy, planetColor = '#a855f7', scrollCo
             {phase.image && (
               <motion.div
                 className="process-image"
-                variants={galleryItemVariants}
+                variants={inlineImageVariants}
               >
                 <img src={phase.image} alt={phase.title} />
               </motion.div>
             )}
             {phase.video && (
-              <motion.div className="process-image" variants={galleryItemVariants}>
+              <motion.div className="process-image" variants={inlineImageVariants}>
                 <video
                   src={phase.video}
                   controls
@@ -325,31 +335,14 @@ export default function CaseStudy({ caseStudy, planetColor = '#a855f7', scrollCo
         </div>
       ))}
 
-      {/* Images Gallery — staggered scale-in */}
+      {/* Images Gallery — horizontal scroll strip */}
       {caseStudy.images && caseStudy.images.length > 0 && (
         <AnimatedSection number={sectionNum()} title="Visuals" viewport={viewport}>
-          <motion.div
-            className="image-gallery"
-            variants={{
-              hidden: {},
-              visible: {
-                transition: { staggerChildren: 0.12, delayChildren: 0.45 }
-              }
-            }}
-          >
-            {caseStudy.images.map((image, index) => (
-              <motion.div
-                key={index}
-                className="gallery-item"
-                variants={galleryItemVariants}
-              >
-                {image ? (
-                  <img src={image} alt={`${caseStudy.title} - ${index + 1}`} />
-                ) : (
-                  <div className="gallery-placeholder">IMG</div>
-                )}
-              </motion.div>
-            ))}
+          <motion.div variants={contentVariants}>
+            <HorizontalScrollStrip
+              images={caseStudy.images}
+              alt={caseStudy.title}
+            />
           </motion.div>
         </AnimatedSection>
       )}

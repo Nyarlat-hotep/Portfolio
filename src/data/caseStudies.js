@@ -69,7 +69,7 @@ export const caseStudies = {
   'case-study-2': {
     id: 'case-study-2',
     title: 'MyRocket Dashboard',
-    subtitle: 'Product Design • 2023',
+    subtitle: 'Consumer Product Design • 2023',
     company: 'Rocket Mortgage',
     role: 'Design Lead, Consumer Experience',
     duration: '6 months',
@@ -81,6 +81,8 @@ export const caseStudies = {
     challengeViz: 'interference-waves',
 
     solution: 'I defined an information architecture that could flex across radically different user states — from a first-time homebuyer with no connected accounts to a mortgage client actively tracking their payoff path. The existing mortgage relationship anchored the top of the page; Rocket Money\'s presence was negotiated down to its highest-signal modules. For features users hadn\'t yet activated, I introduced a locked state pattern — drawn from gaming and subscription UI — that showed the value and path to activation rather than hiding the capability. I faced significant pushback on this in a financial product context, but defended it as a well-established convention. It launched as a core onboarding mechanism. A progressive disclosure principle governed every hierarchy decision: orient and motivate first, invite depth on demand.',
+
+    solutionImages: ['/images/case-studies/myrocket/lockedstate.png'],
 
     accentColor: '#22d3ee',
 
@@ -109,7 +111,7 @@ export const caseStudies = {
       {
         title: 'Scope & Iteration',
         description: 'With a Q4 deadline, the business decision was made to narrow scope to existing mortgage clients — a deliberate trade to go deep on one segment rather than thin across many. I aligned to this constraint and used it to sharpen the product\'s focus. This phase also saw the most stakeholder negotiation. The IA provoked real disagreement between mortgage servicing, Rocket Money, PM, and engineering — each advocating for their product\'s priority. I led multiple alignment sessions, making the case repeatedly for a structure that served users\' mental models rather than the org chart.',
-        image: '/images/case-studies/myrocket/concept2.png'
+        image: null
       },
       {
         title: 'Launch',
@@ -120,7 +122,11 @@ export const caseStudies = {
 
     tools: ['Figma', 'Miro', 'UserTesting', 'Maze', 'Jira'],
     images: [
-      '/images/case-studies/myrocket/dashboard-final.png'
+      '/images/case-studies/myrocket/concept2.png',
+      '/images/case-studies/myrocket/wireframe.png',
+      '/images/case-studies/myrocket/dash-concept2.png',
+      '/images/case-studies/myrocket/dash-final.png',
+      '/images/case-studies/myrocket/dashboard-final.png',
     ],
     links: {}
   },
