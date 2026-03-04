@@ -17,6 +17,9 @@ import DistantGalaxy from './DistantGalaxy';
 import GravityField from './GravityField';
 import Asteroid from './Asteroid';
 import BottomNav from '../Navigation/BottomNav';
+import LightspeedTransition from '../UI/LightspeedTransition';
+import PresentationMode from '../UI/PresentationMode';
+import '../UI/PresentationMode.css';
 import { planetsData, getAdjacentPlanet } from '../../data/planets';
 import { isWebGLSupported } from '../../utils/webglDetect';
 import { isTouchDevice } from '../../utils/isTouchDevice';
@@ -80,11 +83,6 @@ function WebGLFallback() {
   );
 }
 
-// Alien transmission glitch text generator
-function generateAlienText() {
-  return "Ph'nglui mglw'nafh Cthulhu R'lyeh wgah'nagl fhtagn.";
-}
-
 // Glitchy text effect - randomly corrupts characters
 function GlitchText({ children, active = true }) {
   const [text, setText] = useState(children);
@@ -132,7 +130,11 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
   const welcomeTimeoutRef = useRef(null);
   const controlsRef = useRef(null);
   const shootingStarsRef = useRef();
-  const [asteroidMessage, setAsteroidMessage] = useState(null);
+  const [asteroidModalOpen,  setAsteroidModalOpen]  = useState(false);
+  const [codexInput,         setCodexInput]         = useState('');
+  const [codexError,         setCodexError]         = useState(false);
+  const [warpActive,         setWarpActive]          = useState(false);
+  const [presentationOpen,   setPresentationOpen]   = useState(false);
 
   // Ref-stable wrapper — prevents handler useMemo/useCallback deps from invalidating
   // when parent passes a new onPlanetClick function reference on each render
@@ -171,10 +173,27 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
     shootingStarsRef.current?.trigger();
   }, []);
 
-  // Asteroid click — show alien transmission, dismiss via close button only
+  // Asteroid click — open codex modal
   const handleAsteroidClick = useCallback(() => {
-    setAsteroidMessage(generateAlienText());
+    setAsteroidModalOpen(true);
+    setCodexInput('');
+    setCodexError(false);
   }, []);
+
+  const handleCodexSubmit = useCallback(() => {
+    if (codexInput.trim().toLowerCase() === "r'lyeh") {
+      setAsteroidModalOpen(false);
+      setCodexInput('');
+      setWarpActive(true);
+    } else {
+      setCodexError(true);
+      setTimeout(() => setCodexError(false), 400);
+    }
+  }, [codexInput]);
+
+  const handleCodexKeyDown = useCallback((e) => {
+    if (e.key === 'Enter') handleCodexSubmit();
+  }, [handleCodexSubmit]);
 
   // Memoized click handlers per planet — stable forever via ref, no dep on onPlanetClick
   const planetClickHandlers = useMemo(() => {
@@ -284,6 +303,19 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [currentPlanetIndex]);
+
+  // Shift+P — open codex modal
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.shiftKey && e.key === 'P') {
+        setAsteroidModalOpen(true);
+        setCodexInput('');
+        setCodexError(false);
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
 
   return (
     <div
@@ -461,11 +493,11 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
         )}
       </AnimatePresence>
 
-      {/* Asteroid alien transmission message */}
+      {/* Asteroid codex modal */}
       <AnimatePresence>
-        {asteroidMessage && (
+        {asteroidModalOpen && (
           <motion.div
-            key="asteroid-msg"
+            key="asteroid-codex"
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 8 }}
@@ -476,11 +508,27 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
               <span className="asteroid-message-label">SIGNAL INTERCEPTED</span>
               <button
                 className="asteroid-message-close"
-                onClick={() => setAsteroidMessage(null)}
+                onClick={() => setAsteroidModalOpen(false)}
                 aria-label="Close"
               ><X size={16} /></button>
             </div>
-            <pre className="asteroid-message-body">{asteroidMessage}</pre>
+            <div className="asteroid-codex-body">
+              <label className="asteroid-codex-label" htmlFor="codex-input">
+                Enter the cosmic codex
+              </label>
+              <input
+                id="codex-input"
+                className={`asteroid-codex-input${codexError ? ' codex-error' : ''}`}
+                type="text"
+                value={codexInput}
+                onChange={(e) => setCodexInput(e.target.value)}
+                onKeyDown={handleCodexKeyDown}
+                autoFocus
+                autoComplete="off"
+                spellCheck={false}
+                placeholder="_ _ _ _ _ _ _"
+              />
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -687,6 +735,23 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
           onExpandChange={handleNavExpandChange}
         />
       )}
+
+      {/* Lightspeed warp transition */}
+      {warpActive && (
+        <LightspeedTransition
+          onComplete={() => {
+            setWarpActive(false);
+            setPresentationOpen(true);
+          }}
+        />
+      )}
+
+      {/* Presentation mode slideshow */}
+      <AnimatePresence>
+        {presentationOpen && (
+          <PresentationMode onClose={() => setPresentationOpen(false)} />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
