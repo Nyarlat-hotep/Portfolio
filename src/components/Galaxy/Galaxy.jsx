@@ -1,6 +1,7 @@
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
 import { useState, useEffect, Suspense, useMemo, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import * as THREE from 'three';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, ArrowRight, Move, ZoomIn, X } from 'lucide-react';
@@ -281,6 +282,7 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
   // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e) => {
+      if (presentationOpen) return;
       if (e.key === 'ArrowLeft') {
         const currentId = planetsData[currentPlanetIndex].id;
         const prevPlanet = getAdjacentPlanet(currentId, 'prev');
@@ -302,7 +304,7 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentPlanetIndex]);
+  }, [currentPlanetIndex, presentationOpen]);
 
   // Shift+P — skip codex, go straight to warp
   useEffect(() => {
@@ -492,45 +494,48 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
         )}
       </AnimatePresence>
 
-      {/* Asteroid codex modal */}
-      <AnimatePresence>
-        {asteroidModalOpen && (
-          <motion.div
-            key="asteroid-codex"
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 8 }}
-            transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
-            className="asteroid-message"
-          >
-            <div className="asteroid-message-header">
-              <span className="asteroid-message-label">SIGNAL INTERCEPTED</span>
-              <button
-                className="asteroid-message-close"
-                onClick={() => setAsteroidModalOpen(false)}
-                aria-label="Close"
-              ><X size={16} /></button>
-            </div>
-            <div className="asteroid-codex-body">
-              <label className="asteroid-codex-label" htmlFor="codex-input">
-                Enter the cosmic codex
-              </label>
-              <input
-                id="codex-input"
-                className={`asteroid-codex-input${codexError ? ' codex-error' : ''}`}
-                type="text"
-                value={codexInput}
-                onChange={(e) => setCodexInput(e.target.value)}
-                onKeyDown={handleCodexKeyDown}
-                autoFocus
-                autoComplete="off"
-                spellCheck={false}
-                placeholder="_ _ _ _ _ _ _"
-              />
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Asteroid codex modal — portal ensures true viewport centering */}
+      {createPortal(
+        <AnimatePresence>
+          {asteroidModalOpen && (
+            <motion.div
+              key="asteroid-codex"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 8 }}
+              transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
+              className="asteroid-message"
+            >
+              <div className="asteroid-message-header">
+                <span className="asteroid-message-label">SIGNAL INTERCEPTED</span>
+                <button
+                  className="asteroid-message-close"
+                  onClick={() => setAsteroidModalOpen(false)}
+                  aria-label="Close"
+                ><X size={16} /></button>
+              </div>
+              <div className="asteroid-codex-body">
+                <label className="asteroid-codex-label" htmlFor="codex-input">
+                  Enter the cosmic codex
+                </label>
+                <input
+                  id="codex-input"
+                  className={`asteroid-codex-input${codexError ? ' codex-error' : ''}`}
+                  type="text"
+                  value={codexInput}
+                  onChange={(e) => setCodexInput(e.target.value)}
+                  onKeyDown={handleCodexKeyDown}
+                  autoFocus
+                  autoComplete="off"
+                  spellCheck={false}
+                  placeholder="_ _ _ _ _ _ _"
+                />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
 
       {/* Planet name label - futuristic HUD style (hide for Home planet) */}
       <AnimatePresence>

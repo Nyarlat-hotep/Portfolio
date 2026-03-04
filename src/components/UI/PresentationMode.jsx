@@ -109,11 +109,11 @@ export default function PresentationMode({ isOpen, onClose }) {
     if (isOpen) setSlideIndex(0);
   }, [isOpen]);
 
-  // Focus close button when overlay opens for accessibility
+  // Focus close button when overlay opens (rAF ensures portal DOM is painted)
   useEffect(() => {
-    if (isOpen && closeButtonRef.current) {
-      closeButtonRef.current.focus();
-    }
+    if (!isOpen) return;
+    const id = requestAnimationFrame(() => closeButtonRef.current?.focus());
+    return () => cancelAnimationFrame(id);
   }, [isOpen]);
 
   // Prevent body scroll when overlay is open
