@@ -57,7 +57,10 @@ function Planet({ config, wells }) {
       mesh.material.opacity = 0;
       mesh.scale.set(1, 1, 1);
       mesh.rotation.set(0, 0, 0);
-      mesh.position.set(config.home[0], config.home[1], config.home[2]);
+      // Fade in at the orbit starting position so there's no jump when alive kicks in
+      const startX = config.home[0] + Math.cos(config.orbitPhase) * config.orbitR;
+      const startZ = config.home[2] + Math.sin(config.orbitPhase) * config.orbitR;
+      mesh.position.set(startX, config.home[1], startZ);
     }
     prevWellsLen.current = wellCount;
 

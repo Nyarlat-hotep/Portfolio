@@ -26,6 +26,7 @@ function Planet({
   const ringRef2 = useRef();
   const particlesRef = useRef();
   const _scaleVec = useRef(new THREE.Vector3());
+  const floatStartedRef = useRef(false);
   const [hovered, setHovered] = useState(false);
   const { camera, size } = useThree();
 
@@ -68,6 +69,13 @@ function Planet({
     };
   }, [ringGeo]);
 
+  // Delay floating animation so planets render static first — prevents jump on mount/remount
+  useEffect(() => {
+    floatStartedRef.current = false;
+    const timer = setTimeout(() => { floatStartedRef.current = true; }, 600);
+    return () => clearTimeout(timer);
+  }, []);
+
   // Create particle positions around the planet
   const particleCount = 30;
   const particles = useMemo(() => {
@@ -87,8 +95,8 @@ function Planet({
   // Rotate the planet slowly
   useFrame((state, delta) => {
     // Gentle floating animation on the shared group (planet + moons move together)
-    if (floatingRef.current) {
-      floatingRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * 0.5) * 0.1;
+    if (floatingRef.current && floatStartedRef.current) {
+      floatingRef.current.position.y = Math.sin(state.clock.elapsedTime * 0.5) * 0.1;
     }
 
     if (meshRef.current) {
@@ -171,8 +179,7 @@ function Planet({
       )}
 
       {/* Floating group — planet, moons, and particles share the same center */}
-      {/* position-y seeds the initial value so useFrame's first write is ≤±0.1, not a position[1]-sized jump */}
-      <group ref={floatingRef} position-y={position[1]}>
+      <group ref={floatingRef}>
         {/* Main planet sphere */}
         <mesh
           ref={meshRef}
