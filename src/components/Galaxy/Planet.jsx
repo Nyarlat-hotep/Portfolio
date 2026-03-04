@@ -171,7 +171,8 @@ function Planet({
       )}
 
       {/* Floating group — planet, moons, and particles share the same center */}
-      <group ref={floatingRef}>
+      {/* position-y seeds the initial value so useFrame's first write is ≤±0.1, not a position[1]-sized jump */}
+      <group ref={floatingRef} position-y={position[1]}>
         {/* Main planet sphere */}
         <mesh
           ref={meshRef}
