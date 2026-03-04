@@ -304,13 +304,12 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [currentPlanetIndex]);
 
-  // Shift+P — open codex modal
+  // Shift+P — skip codex, go straight to warp
   useEffect(() => {
     const handler = (e) => {
       if (e.shiftKey && e.key === 'P') {
-        setAsteroidModalOpen(true);
-        setCodexInput('');
-        setCodexError(false);
+        setAsteroidModalOpen(false);
+        setWarpActive(true);
       }
     };
     window.addEventListener('keydown', handler);
@@ -747,7 +746,13 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
       )}
 
       {/* Presentation mode slideshow */}
-      <PresentationMode isOpen={presentationOpen} onClose={() => setPresentationOpen(false)} />
+      <PresentationMode
+        isOpen={presentationOpen}
+        onClose={() => {
+          setPresentationOpen(false);
+          onPlanetClickRef.current?.(planetsData.find(p => p.id === 'home'));
+        }}
+      />
     </div>
   );
 }

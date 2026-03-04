@@ -9,7 +9,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 2rem;
+  padding: 5rem 3rem 4rem;
   box-sizing: border-box;
   overflow: hidden;
 }
@@ -57,7 +57,7 @@
 /* ── Stage ────────────────────────── */
 .pm-stage {
   width: 100%;
-  max-width: 860px;
+  max-width: 1100px;
   flex: 1;
   display: flex;
   align-items: center;
@@ -95,7 +95,6 @@
   line-height: 1.75;
   color: rgba(220, 210, 240, 0.95);
   margin: 0;
-  max-width: 740px;
 }
 
 /* ── Title slide ──────────────────── */
@@ -147,7 +146,7 @@
 }
 
 .pm-solution-image {
-  flex: 0 0 44%;
+  flex: 0 0 52%;
   border-radius: 8px;
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.08);

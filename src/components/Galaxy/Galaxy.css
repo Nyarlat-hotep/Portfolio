@@ -8,9 +8,9 @@
 
 .asteroid-message {
   position: fixed;
-  bottom: 18px;
+  top: 50%;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translate(-50%, -50%);
   width: 340px;
   background: linear-gradient(135deg, rgba(4, 0, 18, 0.97) 0%, rgba(10, 2, 30, 0.97) 100%);
   border: 1px solid rgba(0, 255, 106, 0.7);
