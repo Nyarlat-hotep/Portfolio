@@ -494,10 +494,11 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
         )}
       </AnimatePresence>
 
-      {/* Asteroid codex modal — portal ensures true viewport centering */}
+      {/* Asteroid codex modal — flex wrapper guarantees centering */}
       {createPortal(
         <AnimatePresence>
           {asteroidModalOpen && (
+            <div className="asteroid-message-overlay">
             <motion.div
               key="asteroid-codex"
               initial={{ opacity: 0, y: 12 }}
@@ -532,6 +533,7 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
                 />
               </div>
             </motion.div>
+            </div>
           )}
         </AnimatePresence>,
         document.body
