@@ -57,12 +57,17 @@
 /* ── Stage ────────────────────────── */
 .pm-stage {
   width: 100%;
-  max-width: 960px;
+  max-width: 760px;
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  transition: max-width 0.32s ease;
+}
+
+.pm-stage--wide {
+  max-width: 1200px;
 }
 
 .pm-slide-wrapper {

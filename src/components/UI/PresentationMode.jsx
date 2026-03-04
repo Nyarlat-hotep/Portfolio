@@ -198,8 +198,8 @@ export default function PresentationMode({ isOpen, onClose }) {
         <X size={24} />
       </button>
 
-      {/* Slide stage */}
-      <div className="pm-stage">
+      {/* Slide stage — wider on solution slides that have images */}
+      <div className={`pm-stage${slide.type === 'solution' ? ' pm-stage--wide' : ''}`}>
         <AnimatePresence custom={direction} mode="wait">
           <motion.div
             key={slideIndex}
