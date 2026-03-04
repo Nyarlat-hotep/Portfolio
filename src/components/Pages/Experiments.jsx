@@ -94,28 +94,12 @@ export default function Experiments({ scrollContainerRef, isVoidMode = false }) 
   // Experiments data - themed for the void
   const experiments = [
     {
-      title: 'SIGNAL_DECAY',
-      description: 'Transmission intercepted from beyond the threshold. Contents: fragmented. Origin: unknown.',
-      tags: ['Three.js', 'WebGL', 'Noise'],
-      link: null,
-      status: 'CORRUPTED',
-      action: null
-    },
-    {
       title: 'VISUAL_ARCHIVE',
       description: 'Fragments of creation. Images pulled from the spaces between projects. Handle with care.',
       tags: ['Gallery', 'Art'],
       link: null,
       status: 'ACTIVE',
       action: () => setGalleryOpen(true)
-    },
-    {
-      title: 'ECHO_CHAMBER',
-      description: 'Sounds from nowhere. Voices that speak in geometries. Do not listen for too long.',
-      tags: ['Web Audio', 'Generative'],
-      link: null,
-      status: 'UNSTABLE',
-      action: null
     }
   ];
 
