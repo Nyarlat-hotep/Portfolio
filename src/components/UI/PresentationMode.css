@@ -57,6 +57,7 @@
 /* ── Stage ────────────────────────── */
 .pm-stage {
   width: 100%;
+  max-width: 960px;
   flex: 1;
   display: flex;
   align-items: center;

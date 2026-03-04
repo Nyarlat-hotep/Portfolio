@@ -117,7 +117,7 @@ export const presentationSlides = [
     accent: '#22d3ee',
     title: 'MYROCKET DASHBOARD',
     nugget: "An IA that flexes across radically different user states. A locked state pattern — borrowed from gaming — showed unactivated features as aspirational, not absent. I defended it in a financial context. It launched as the core onboarding mechanism.",
-    image: '/images/case-studies/myrocket/lockedstate.png',
+    image: '/images/case-studies/myrocket/dash-final.png',
   },
   {
     id: 'mr-impact',
