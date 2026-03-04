@@ -747,11 +747,7 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
       )}
 
       {/* Presentation mode slideshow */}
-      <AnimatePresence>
-        {presentationOpen && (
-          <PresentationMode onClose={() => setPresentationOpen(false)} />
-        )}
-      </AnimatePresence>
+      <PresentationMode isOpen={presentationOpen} onClose={() => setPresentationOpen(false)} />
     </div>
   );
 }
