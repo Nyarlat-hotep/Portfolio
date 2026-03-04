@@ -52,7 +52,6 @@ const todayConstellation = getTodayConstellation();
 
 export default function Constellation({ position = [0, 2, -55], onSelect, onHover }) {
   const starMatRef    = useRef();
-  const lineMatRef    = useRef();
   const haloRef       = useRef();
   const nebulaRef     = useRef();
   const _projVec      = useRef(new THREE.Vector3());
@@ -267,7 +266,7 @@ export default function Constellation({ position = [0, 2, -55], onSelect, onHove
       {/* Single merged line mesh */}
       {mergedLineGeo && (
         <mesh geometry={mergedLineGeo}>
-          <meshBasicMaterial ref={lineMatRef} color="#a855f7" transparent opacity={0.25} />
+          <meshBasicMaterial color="#a855f7" transparent opacity={0.25} />
         </mesh>
       )}
 

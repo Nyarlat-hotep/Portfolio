@@ -11,8 +11,6 @@ export const planetsData = [
     emissive: '#00d4ff',
     emissiveIntensity: 0.8,
     rotationSpeed: 0.04,
-    route: '/',
-    description: 'Return to galaxy view'
   },
   {
     id: 'case-study-1',
@@ -25,8 +23,6 @@ export const planetsData = [
     emissive: '#a855f7',
     emissiveIntensity: 0.3,
     rotationSpeed: 0.15,
-    route: '/case-study-1',
-    description: 'Featured project showcase',
     moons: [
       { id: 'cs1-moon', scale: 0.2, orbitRadius: 2.5, orbitSpeed: 0.06, orbitTilt: 0.4, textureType: 'alien' },
     ]
@@ -42,8 +38,6 @@ export const planetsData = [
     emissive: '#22d3ee',
     emissiveIntensity: 0.3,
     rotationSpeed: 0.08,
-    route: '/case-study-2',
-    description: 'Product design project'
   },
   {
     id: 'case-study-3',
@@ -56,8 +50,6 @@ export const planetsData = [
     emissive: '#ec4899',
     emissiveIntensity: 0.3,
     rotationSpeed: 0.22,
-    route: '/case-study-3',
-    description: 'UX research project'
   },
   {
     id: 'about',
@@ -70,19 +62,12 @@ export const planetsData = [
     emissive: '#10b981',
     emissiveIntensity: 0.3,
     rotationSpeed: 0.12,
-    route: '/about',
-    description: 'Learn more about me',
     moons: [
       { id: 'moon-1', scale: 0.15, orbitRadius: 2.2, orbitSpeed: 0.08, orbitTilt: 0.3, textureType: 'rocky' },
       { id: 'moon-2', scale: 0.1, orbitRadius: 2.8, orbitSpeed: 0.05, orbitTilt: -0.5, textureType: 'icy' },
     ]
   }
 ];
-
-// Helper function to get planet by ID
-export const getPlanetById = (id) => {
-  return planetsData.find(planet => planet.id === id);
-};
 
 // Helper function to get next/previous planet for arrow key navigation
 export const getAdjacentPlanet = (currentId, direction) => {

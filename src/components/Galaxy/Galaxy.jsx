@@ -44,7 +44,6 @@ function WebGLFallback() {
     <div style={{
       width: '100vw',
       height: '100vh',
-      // background: '#0a0e27',
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
@@ -82,7 +81,6 @@ function WebGLFallback() {
 }
 
 // Alien transmission glitch text generator
-// const ALIEN_CHARS = '░▒▓│┤╣║╗╝╜╛┐└┴┬├─┼╚╔╩╦╠═╬╧╙╘╒╓╪┘┌█▄▌▐▀∑∏∫∂∇⊗⊕⊖⊘⊙◊●◐◑◒◓◔⍟⍩⍪⍫⍬⍭⍮⍯⍰ΨΩΞΔΛΦΣΘ';
 function generateAlienText() {
   return "Ph'nglui mglw'nafh Cthulhu R'lyeh wgah'nagl fhtagn.";
 }
@@ -269,23 +267,23 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
         const prevPlanet = getAdjacentPlanet(currentId, 'prev');
         const prevIndex = planetsData.findIndex(p => p.id === prevPlanet.id);
         setCurrentPlanetIndex(prevIndex);
-        onPlanetClick?.(prevPlanet);
+        onPlanetClickRef.current?.(prevPlanet);
       } else if (e.key === 'ArrowRight') {
         const currentId = planetsData[currentPlanetIndex].id;
         const nextPlanet = getAdjacentPlanet(currentId, 'next');
         const nextIndex = planetsData.findIndex(p => p.id === nextPlanet.id);
         setCurrentPlanetIndex(nextIndex);
-        onPlanetClick?.(nextPlanet);
+        onPlanetClickRef.current?.(nextPlanet);
       } else if (e.key === 'Escape') {
         // Return to home view
         const homePlanet = planetsData.find(p => p.id === 'home');
-        onPlanetClick?.(homePlanet);
+        onPlanetClickRef.current?.(homePlanet);
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentPlanetIndex, onPlanetClick]);
+  }, [currentPlanetIndex]);
 
   return (
     <div
@@ -404,8 +402,8 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
           background: `radial-gradient(ellipse at center,
             transparent 0%,
             transparent ${Math.max(0, 60 - vignetteIntensity * 40)}%,
-            rgba(10, 5, 20, ${vignetteIntensity * 0.4}) ${Math.max(0, 80 - vignetteIntensity * 30)}%,
-            rgba(5, 2, 15, ${vignetteIntensity * 0.7}) 100%
+            rgba(10, 5, 20, ${vignetteIntensity * 0.2}) ${Math.max(0, 80 - vignetteIntensity * 30)}%,
+            rgba(5, 2, 15, ${vignetteIntensity * 0.3}) 100%
           )`,
           transition: 'background 0.5s ease-out',
           zIndex: 10
@@ -615,7 +613,7 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
             position: 'absolute',
             bottom: '20px',
             right: '20px',
-            color: 'rgba(255, 255, 255, 0.5)',
+            color: '#ffffff',
             fontSize: '12px',
             fontFamily: 'monospace',
             textAlign: 'right',

@@ -91,17 +91,6 @@ const inlineImageVariants = {
   }
 };
 
-// Tool chips — pop in
-const toolChipVariants = {
-  hidden: { opacity: 0, y: 15, scale: 0.9 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    scale: 1,
-    transition: { duration: 0.4, ease: [0.4, 0, 0.2, 1] }
-  }
-};
-
 // --- Animated section component ---
 function AnimatedSection({ number, title, children, viewport }) {
   return (
@@ -140,10 +129,6 @@ export default function CaseStudy({ caseStudy, planetColor = '#a855f7', scrollCo
   const overviewRef = useRef(null);
   const solutionRef = useRef(null);
   const impactRef = useRef(null);
-
-  // Also keep phaseRefs / challengeRef for existing JSX markup (still rendered)
-  const challengeRef = useRef(null);
-  const phaseRefs = useRef([]);
 
   if (!caseStudy) return null;
 
@@ -234,7 +219,7 @@ export default function CaseStudy({ caseStudy, planetColor = '#a855f7', scrollCo
       </div>
 
       {/* Challenge */}
-      <div ref={challengeRef}>
+      <div>
         <AnimatedSection number={sectionNum()} title="Challenge" viewport={viewport}>
           <motion.p className="section-text" variants={contentVariants}>
             {caseStudy.challenge}
@@ -284,10 +269,7 @@ export default function CaseStudy({ caseStudy, planetColor = '#a855f7', scrollCo
 
       {/* Process Phases — each phase gets its own section */}
       {caseStudy.process && caseStudy.process.map((phase, index) => (
-        <div
-          key={phase.title || index}
-          ref={(el) => (phaseRefs.current[index] = el)}
-        >
+        <div key={phase.title || index}>
           <AnimatedSection
             number={sectionNum()}
             title={phase.title}

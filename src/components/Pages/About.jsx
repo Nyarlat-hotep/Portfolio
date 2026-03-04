@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Sparkles, Zap, Mail, Linkedin, Dribbble } from 'lucide-react';
+import { Sparkles, Zap, Mail, Linkedin } from 'lucide-react';
 import './About.css';
 
 // --- Variant definitions ---

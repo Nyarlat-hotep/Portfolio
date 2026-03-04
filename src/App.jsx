@@ -87,10 +87,6 @@ function App() {
       return <About aboutData={aboutContent} planetColor={activePlanet.color} />;
     }
 
-    if (activePlanet.id === 'experiments') {
-      return <Experiments planetColor={activePlanet.color} />;
-    }
-
     // Case study pages
     const caseStudy = caseStudies[activePlanet.id];
     if (caseStudy) {

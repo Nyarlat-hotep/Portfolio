@@ -33,8 +33,8 @@ export default function BottomNav({ activePlanetId, onNavigate, onCreatePlanet, 
 
   const navItems = [
     { id: 'case-study-1', label: 'Banana Phone', icon: <Banana size={18} /> },
-    { id: 'case-study-2', label: 'Project 2', icon: <Briefcase size={18} /> },
-    { id: 'case-study-3', label: 'Project 3', icon: <Rocket size={18} /> },
+    { id: 'case-study-2', label: 'Consumer Dashboard', icon: <Briefcase size={18} /> },
+    { id: 'case-study-3', label: 'AI Texting', icon: <Rocket size={18} /> },
     { id: 'about', label: 'About', icon: <User size={18} /> },
     { id: 'experiments', label: 'ERR_X.0', icon: <FlaskConical size={18} /> },
   ];

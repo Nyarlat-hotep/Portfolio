@@ -1,4 +1,4 @@
-import { useMemo, useRef, useEffect } from 'react';
+import { useRef, useEffect } from 'react';
 import './OverlayStars.css';
 
 const ATTRACTION_RADIUS = 120;
@@ -93,11 +93,10 @@ const STAR_CONFIGS = [
 ];
 
 export default function OverlayStars({ planetColor = '#00d4ff' }) {
-  const stars = useMemo(() => STAR_CONFIGS, []);
   const wrapperRefs = useRef([]);
   const starRefs    = useRef([]);
-  const pulls       = useRef(stars.map(() => ({ x: 0, y: 0 })));
-  const targets     = useRef(stars.map(() => ({ x: 0, y: 0 })));
+  const pulls       = useRef(STAR_CONFIGS.map(() => ({ x: 0, y: 0 })));
+  const targets     = useRef(STAR_CONFIGS.map(() => ({ x: 0, y: 0 })));
   const mouseRef    = useRef({ x: -9999, y: -9999 });
   const rafRef      = useRef(null);
 
@@ -108,7 +107,7 @@ export default function OverlayStars({ planetColor = '#00d4ff' }) {
     const tick = () => {
       const { x: mx, y: my } = mouseRef.current;
 
-      stars.forEach((_, i) => {
+      STAR_CONFIGS.forEach((_, i) => {
         const wrapper = wrapperRefs.current[i];
         const star    = starRefs.current[i];
         if (!wrapper || !star) return;
@@ -143,11 +142,11 @@ export default function OverlayStars({ planetColor = '#00d4ff' }) {
       window.removeEventListener('mousemove', onMouseMove);
       cancelAnimationFrame(rafRef.current);
     };
-  }, [stars]);
+  }, [STAR_CONFIGS]);
 
   return (
-    <div className="overlay-stars" aria-hidden="true">
-      {stars.map((s, i) => (
+    <div className="overlay-STAR_CONFIGS" aria-hidden="true">
+      {STAR_CONFIGS.map((s, i) => (
         <div
           key={i}
           ref={el => { wrapperRefs.current[i] = el; }}

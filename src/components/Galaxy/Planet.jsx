@@ -25,6 +25,7 @@ function Planet({
   const ringRef1 = useRef();
   const ringRef2 = useRef();
   const particlesRef = useRef();
+  const _scaleVec = useRef(new THREE.Vector3());
   const [hovered, setHovered] = useState(false);
   const { camera, size } = useThree();
 
@@ -96,7 +97,7 @@ function Planet({
       // Scale up on hover or when active - smoother animation
       const targetScale = (hovered || isActive) ? scale * 1.15 : scale;
       meshRef.current.scale.lerp(
-        new THREE.Vector3(targetScale, targetScale, targetScale),
+        _scaleVec.current.set(targetScale, targetScale, targetScale),
         0.05
       );
     }

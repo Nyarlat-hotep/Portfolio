@@ -37,7 +37,37 @@ function CorruptedText({ children }) {
   return <span className="corrupted-text">{text}</span>;
 }
 
-export default function Experiments({ planetColor = '#6b2fa0', scrollContainerRef, isVoidMode = false }) {
+const galleryImages = [
+  '/images/case-studies/visualdesign/OS - dash.png',
+  '/images/case-studies/visualdesign/OS 1 - client.png',
+  '/images/case-studies/visualdesign/Omni.png',
+  '/images/case-studies/visualdesign/Product Recommendations-1.png',
+  '/images/case-studies/visualdesign/Scene 1_ Dashboard (daily landing view with Tasks).png',
+  '/images/case-studies/visualdesign/TM dashboard.png',
+  '/images/case-studies/visualdesign/dashboard home improvements.png',
+  '/images/case-studies/visualdesign/messy kitchen AR 9.png',
+  '/images/case-studies/visualdesign/v2 homes.png',
+  '/images/case-studies/visualdesign/v2.png',
+  '/images/case-studies/visualdesign/Frame 48097530.png',
+  '/images/case-studies/visualdesign/Frame 48097531.png',
+  '/images/case-studies/visualdesign/Frame 48099754.png',
+  '/images/case-studies/visualdesign/Frame 48099768.png',
+  '/images/case-studies/visualdesign/Frame 48099769.png',
+  '/images/case-studies/visualdesign/Frame 48099770.png',
+  '/images/case-studies/visualdesign/Frame 48099771.png',
+  '/images/case-studies/visualdesign/Frame 48099772.png',
+  '/images/case-studies/visualdesign/Frame 48099773.png',
+  '/images/case-studies/visualdesign/Frame 48099774.png',
+  '/images/case-studies/visualdesign/Frame 48099775.png',
+  '/images/case-studies/visualdesign/Frame 48099776.png',
+  '/images/case-studies/visualdesign/Frame 48099777.png',
+  '/images/case-studies/visualdesign/Frame 48099778.png',
+  '/images/case-studies/visualdesign/Frame 48099779.png',
+  '/images/case-studies/visualdesign/HBP-progress.png',
+  '/images/case-studies/visualdesign/car goal.png',
+];
+
+export default function Experiments({ scrollContainerRef, isVoidMode = false }) {
   const viewport = {
     root: scrollContainerRef,
     once: true,
@@ -47,44 +77,6 @@ export default function Experiments({ planetColor = '#6b2fa0', scrollContainerRe
   const [galleryOpen, setGalleryOpen] = useState(false);
   const touchStartY = useRef(0);
   const panelRef = useRef(null);
-
-  const galleryImages = [
-    '/images/case-studies/visualdesign/OS - dash.png',
-    '/images/case-studies/visualdesign/OS 1 - client.png',
-    '/images/case-studies/visualdesign/Omni.png',
-    '/images/case-studies/visualdesign/Product Recommendations-1.png',
-    '/images/case-studies/visualdesign/Scene 1_ Dashboard (daily landing view with Tasks).png',
-    '/images/case-studies/visualdesign/TM dashboard.png',
-    '/images/case-studies/visualdesign/dashboard home improvements.png',
-    '/images/case-studies/visualdesign/messy kitchen AR 9.png',
-    '/images/case-studies/visualdesign/v2 homes.png',
-    '/images/case-studies/visualdesign/v2.png',
-    '/images/case-studies/visualdesign/Frame 48097530.png',
-    '/images/case-studies/visualdesign/Frame 48097531.png',
-    '/images/case-studies/visualdesign/Frame 48099754.png',
-    '/images/case-studies/visualdesign/Frame 48099768.png',
-    '/images/case-studies/visualdesign/Frame 48099769.png',
-    '/images/case-studies/visualdesign/Frame 48099770.png',
-    '/images/case-studies/visualdesign/Frame 48099771.png',
-    '/images/case-studies/visualdesign/Frame 48099772.png',
-    '/images/case-studies/visualdesign/Frame 48099773.png',
-    '/images/case-studies/visualdesign/Frame 48099774.png',
-    '/images/case-studies/visualdesign/Frame 48099775.png',
-    '/images/case-studies/visualdesign/Frame 48099776.png',
-    '/images/case-studies/visualdesign/Frame 48099777.png',
-    '/images/case-studies/visualdesign/Frame 48099778.png',
-    '/images/case-studies/visualdesign/Frame 48099779.png',
-    '/images/case-studies/visualdesign/HBP-progress.png',
-    '/images/case-studies/visualdesign/car goal.png',
-  ];
-
-  // Preload gallery images on mount so they're cached before the panel opens
-  useEffect(() => {
-    galleryImages.forEach(src => {
-      const img = new Image();
-      img.src = src;
-    });
-  }, []);
 
   // Handle swipe down to close
   const handleTouchStart = (e) => {

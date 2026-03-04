@@ -49,9 +49,6 @@ export default function FragmentedOrbits({ color = '#f5c842' }) {
               opacity="0.18"
             />
 
-            {/* Inner dashed ring */}
-            
-
             {/* Center marker — pulsing crosshair */}
             <circle cx={s.cx} cy={s.cy} r="2.5" fill={color} opacity="0.5" />
             
