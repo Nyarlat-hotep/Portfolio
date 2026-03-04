@@ -74,7 +74,7 @@ export const presentationSlides = [
     accent: '#ec4899',
     title: 'AI TEXTING',
     nugget: "A drafting panel inside Banana Phone. Select a category — first-time hello, rate update, follow-up after silence — and the AI drafts the right message instantly. Send as-is or edit.",
-    image: '/images/case-studies/AItexting/AI text 1.png',
+    video: "/images/case-studies/AItexting/Taylor's video.mp4",
   },
   {
     id: 'ai-impact',

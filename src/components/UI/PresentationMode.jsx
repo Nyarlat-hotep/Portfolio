@@ -44,11 +44,15 @@ function SlideSolution({ slide }) {
       <div className="pm-slide-label" style={{ color: slide.accent }}>The Solution</div>
       <div className="pm-divider" style={{ background: slide.accent }} />
       <div className="pm-solution-body">
-        {slide.image && (
+        {slide.video ? (
+          <div className="pm-solution-image">
+            <video src={slide.video} autoPlay loop muted playsInline />
+          </div>
+        ) : slide.image ? (
           <div className="pm-solution-image">
             <img src={slide.image} alt={`${slide.title} solution`} />
           </div>
-        )}
+        ) : null}
         <p className="pm-nugget">{slide.nugget}</p>
       </div>
     </div>
