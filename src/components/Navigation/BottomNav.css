@@ -32,7 +32,7 @@
 
 /* Expanded state - use keyframe animation for smooth opening */
 .nav-main:has(.nav-list.expanded) {
-  width: 200px;
+  width: 270px;
   animation: navExpand 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
@@ -41,7 +41,7 @@
     width: 145px;
   }
   100% {
-    width: 200px;
+    width: 270px;
   }
 }
 
@@ -194,7 +194,7 @@
 
 /* Animate the typewriter when item is visible */
 .nav-list.expanded .nav-item .nav-label {
-  animation: typewriter 0.8s steps(12, end) forwards;
+  animation: typewriter 0.8s steps(20, end) forwards;
 }
 
 /* Typewriter starts 0.1s after item appears */
