@@ -3,20 +3,20 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { fbm } from '../../utils/noise';
 
-const START    = new THREE.Vector3(-32, 2, 14);
-const VELOCITY = new THREE.Vector3(0.55, 0.04, -0.38);
+const START    = new THREE.Vector3(32, 2, -14);
+const VELOCITY = new THREE.Vector3(-0.55, 0.04, 0.38);
 const FADE_START       = 40;
 const DORMANT_DURATION = 18;
 
 const RESPAWN_ORIGINS = [
-  new THREE.Vector3(-32, 2,   14),
-  new THREE.Vector3(-28, -2,  18),
-  new THREE.Vector3(-30, 4,    6),
+  new THREE.Vector3(32,  2,  -14),
+  new THREE.Vector3(28, -2,  -18),
+  new THREE.Vector3(30,  4,   -6),
 ];
 const RESPAWN_VELS = [
-  new THREE.Vector3(0.55,  0.04, -0.38),
-  new THREE.Vector3(0.50, -0.03, -0.42),
-  new THREE.Vector3(0.60,  0.06, -0.35),
+  new THREE.Vector3(-0.55,  0.04, 0.38),
+  new THREE.Vector3(-0.50, -0.03, 0.42),
+  new THREE.Vector3(-0.60,  0.06, 0.35),
 ];
 
 const NORMAL_SCALE = new THREE.Vector2(2.0, 2.0);
