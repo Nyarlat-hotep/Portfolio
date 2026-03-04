@@ -173,7 +173,7 @@ function initEventStates() {
 // All battle action is confined to one quadrant of the disc (local +X/+Z quadrant)
 
 const GALAXY_WORLD_POS  = new THREE.Vector3(60, -6, 18);
-const BATTLE_RADIUS     = 35;          // camera distance to activate
+const BATTLE_RADIUS     = 65;          // camera distance to activate
 const BATTLE_ANGLE_MIN  = Math.PI * 0.05;
 const BATTLE_ANGLE_MAX  = Math.PI * 0.55;
 const BATTLE_R_MIN      = 2.5;
