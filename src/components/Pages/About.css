@@ -123,6 +123,7 @@
   margin: 0;
   line-height: 1.45;
   letter-spacing: 1px;
+  white-space: pre-line;
   background: #10b981;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -343,7 +344,7 @@
   justify-content: center;
   padding: 1rem;
   background: rgba(var(--planet-color-rgb, 16, 185, 129), 0.1);
-  border: 1px solid rgba(var(--planet-color-rgb, 16, 185, 129), 0.3);
+  border: 1px solid rgba(var(--planet-color-rgb, 16, 185, 129), 0.5);
   border-radius: 12px;
   color: var(--planet-color, #10b981);
   text-decoration: none;

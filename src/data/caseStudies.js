@@ -214,7 +214,7 @@ export const caseStudies = {
 // About me content
 export const aboutContent = {
   name: 'I.x35',
-  tagline: 'Lead Product Designer. Born as an artist, formed to think in systems.',
+  tagline: 'Lead Product Designer. \nBorn as an artist, formed to think in systems.',
   bio: [
     'My path into design started with a canvas. I studied drawing and painting — which, it turns out, is a surprisingly useful foundation for a career spent designing digital systems. When a friend pulled me into the world of information architecture, something clicked into place. Hierarchy, flow, the tension between simplicity and depth — those were just composition by another name. I\'ve been chasing that alignment ever since.',
     'I think like a game master. I\'ve always been drawn to games — D&D, strategy systems, anything governed by discoverable rules and hidden logic. That instinct follows me into design: I treat a vague brief not as a problem to solve before I start, but as a world to explore while I do. I find the constraints, pressure-test the assumptions, and look for the move that hasn\'t been tried yet. Ambiguity doesn\'t slow me down — it\'s usually where the most interesting solutions are hiding.',

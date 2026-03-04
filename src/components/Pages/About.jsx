@@ -265,18 +265,6 @@ export default function About({ aboutData, planetColor = '#10b981', scrollContai
                     <Linkedin className="social-icon" size={24} />
                   </motion.a>
                 )}
-                {aboutData.social.dribbble && (
-                  <motion.a
-                    href={aboutData.social.dribbble}
-                    className="social-link"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    variants={socialVariants}
-                    whileHover={{ scale: 1.1 }}
-                  >
-                    <Dribbble className="social-icon" size={24} />
-                  </motion.a>
-                )}
               </motion.div>
             )}
           </div>
