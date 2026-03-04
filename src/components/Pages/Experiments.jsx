@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Skull, ExternalLink, Eye, Image, X } from 'lucide-react';
+import { Skull, ExternalLink, Eye } from 'lucide-react';
 import './Experiments.css';
 
 // Card variants for staggered animation
@@ -47,17 +47,26 @@ export default function Experiments({ planetColor = '#6b2fa0', scrollContainerRe
   const touchStartY = useRef(0);
   const panelRef = useRef(null);
 
-  // Placeholder gallery items (will be replaced with real images)
-  const galleryItems = [
-    { id: 1, aspectRatio: 1.5 },
-    { id: 2, aspectRatio: 0.8 },
-    { id: 3, aspectRatio: 1.2 },
-    { id: 4, aspectRatio: 1.0 },
-    { id: 5, aspectRatio: 0.75 },
-    { id: 6, aspectRatio: 1.3 },
-    { id: 7, aspectRatio: 1.1 },
-    { id: 8, aspectRatio: 0.9 },
+  const galleryImages = [
+    '/images/case-studies/visualdesign/OS - dash.png',
+    '/images/case-studies/visualdesign/OS 1 - client.png',
+    '/images/case-studies/visualdesign/Omni.png',
+    '/images/case-studies/visualdesign/Product Recommendations-1.png',
+    '/images/case-studies/visualdesign/Scene 1_ Dashboard (daily landing view with Tasks).png',
+    '/images/case-studies/visualdesign/TM dashboard.png',
+    '/images/case-studies/visualdesign/dashboard home improvements.png',
+    '/images/case-studies/visualdesign/messy kitchen AR 9.png',
+    '/images/case-studies/visualdesign/v2 homes.png',
+    '/images/case-studies/visualdesign/v2.png',
   ];
+
+  // Preload gallery images on mount so they're cached before the panel opens
+  useEffect(() => {
+    galleryImages.forEach(src => {
+      const img = new Image();
+      img.src = src;
+    });
+  }, []);
 
   // Handle swipe down to close
   const handleTouchStart = (e) => {
@@ -197,69 +206,57 @@ export default function Experiments({ planetColor = '#6b2fa0', scrollContainerRe
         </span>
       </motion.div>
 
-      {/* Gallery Panel - slides up from bottom */}
+      {/* Gallery backdrop */}
       <AnimatePresence>
         {galleryOpen && (
-          <>
-            {/* Click-outside area (top 25%) */}
-            <motion.div
-              className="gallery-backdrop"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
-              onClick={() => setGalleryOpen(false)}
-            />
-
-            {/* Gallery panel */}
-            <motion.div
-              ref={panelRef}
-              className="gallery-panel"
-              initial={{ y: '100%' }}
-              animate={{ y: 0 }}
-              exit={{ y: '100%' }}
-              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-              onTouchStart={handleTouchStart}
-              onTouchEnd={handleTouchEnd}
-            >
-              {/* Swipe indicator */}
-              <div className="gallery-swipe-indicator">
-                <div className="swipe-bar" />
-              </div>
-
-              {/* Gallery header */}
-              <div className="gallery-header">
-                <div className="gallery-title-group">
-                  <h2 className="gallery-title">VISUAL_ARCHIVE</h2>
-                </div>
-              </div>
-
-              {/* Masonry grid */}
-              <div className="gallery-grid">
-                {galleryItems.map((item) => (
-                  <motion.div
-                    key={item.id}
-                    className="gallery-item"
-                    style={{ aspectRatio: item.aspectRatio }}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: item.id * 0.05 }}
-                    whileHover={{ scale: 1.02 }}
-                  >
-                    <div className="gallery-placeholder">
-                      <span className="placeholder-id">#{String(item.id).padStart(3, '0')}</span>
-                      <span className="placeholder-text">AWAITING_DATA</span>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-
-              {/* Bottom fade */}
-              <div className="gallery-bottom-fade" />
-            </motion.div>
-          </>
+          <motion.div
+            className="gallery-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            onClick={() => setGalleryOpen(false)}
+          />
         )}
       </AnimatePresence>
+
+      {/* Entire container animates as one unit */}
+      <motion.div
+        ref={panelRef}
+        className="gallery-clipper"
+        animate={{ y: galleryOpen ? 0 : '100%' }}
+        initial={{ y: '100%' }}
+        transition={{ type: 'spring', damping: 24, stiffness: 300 }}
+        style={{ pointerEvents: galleryOpen ? 'auto' : 'none' }}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
+        <div className="gallery-panel">
+          {/* Swipe indicator */}
+          <div className="gallery-swipe-indicator">
+            <div className="swipe-bar" />
+          </div>
+
+          {/* Gallery header */}
+          <div className="gallery-header">
+            <div className="gallery-title-group">
+              <h2 className="gallery-title">VISUAL_ARCHIVE</h2>
+            </div>
+          </div>
+
+          {/* Masonry grid */}
+          <div className="gallery-grid">
+            {galleryImages.map((src, i) => (
+              <div key={i} className="gallery-item">
+                <img src={src} alt={`Visual archive ${i + 1}`} className="gallery-img" decoding="async" />
+              </div>
+            ))}
+          </div>
+
+          {/* Bottom fade */}
+          <div className="gallery-bottom-fade" />
+        </div>
+      </motion.div>
     </div>
   );
 }
