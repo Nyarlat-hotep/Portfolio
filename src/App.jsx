@@ -7,6 +7,7 @@ import PlanetCreator from './components/UI/PlanetCreator';
 import CaseStudy from './components/Pages/CaseStudy';
 import About from './components/Pages/About';
 import Experiments from './components/Pages/Experiments';
+import CustomCursor from './components/UI/CustomCursor';
 import { caseStudies, aboutContent } from './data/caseStudies';
 import './App.css';
 
@@ -98,6 +99,7 @@ function App() {
 
   return (
     <div className="App">
+      <CustomCursor />
       <ErrorBoundary>
         <Galaxy
           onPlanetClick={handlePlanetClick}
