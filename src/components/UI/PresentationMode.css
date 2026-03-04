@@ -1,0 +1,335 @@
+/* src/components/UI/PresentationMode.css */
+
+.pm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 8000;
+  background: rgba(4, 2, 10, 0.98);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* ── Progress ─────────────────────── */
+.pm-progress {
+  position: absolute;
+  top: 2rem;
+  left: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.pm-study-dots,
+.pm-slide-dots {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.pm-study-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  transition: background 0.3s ease;
+}
+
+.pm-slide-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  transition: background 0.3s ease;
+}
+
+/* ── Close button (reuses .close-button from PageOverlay styles) ─ */
+.pm-close {
+  position: absolute;
+  top: 2rem;
+  right: 2rem;
+}
+
+/* ── Stage ────────────────────────── */
+.pm-stage {
+  width: 100%;
+  max-width: 860px;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.pm-slide-wrapper {
+  width: 100%;
+}
+
+/* ── Shared slide ─────────────────── */
+.pm-slide {
+  padding: 0.5rem 0;
+}
+
+.pm-slide-label {
+  font-family: monospace;
+  font-size: 0.65rem;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin-bottom: 0.75rem;
+}
+
+.pm-divider {
+  height: 1px;
+  width: 60px;
+  margin-bottom: 2rem;
+  opacity: 0.5;
+}
+
+.pm-nugget {
+  font-size: 1.35rem;
+  font-weight: 300;
+  line-height: 1.75;
+  color: rgba(220, 210, 240, 0.95);
+  margin: 0;
+  max-width: 740px;
+}
+
+/* ── Title slide ──────────────────── */
+.pm-slide--title {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.pm-study-badge {
+  font-family: monospace;
+  font-size: 0.7rem;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+
+.pm-title {
+  font-size: clamp(2rem, 6vw, 3.75rem);
+  font-family: monospace;
+  font-weight: 700;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  margin: 0;
+  line-height: 1;
+}
+
+.pm-title-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.9rem;
+  color: rgba(200, 190, 220, 0.65);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.pm-meta-dot {
+  opacity: 0.35;
+}
+
+/* ── Solution slide ───────────────── */
+.pm-solution-body {
+  display: flex;
+  gap: 2.5rem;
+  align-items: flex-start;
+}
+
+.pm-solution-image {
+  flex: 0 0 44%;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.pm-solution-image img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.pm-solution-body .pm-nugget {
+  flex: 1;
+  font-size: 1.1rem;
+}
+
+/* ── Impact slide ─────────────────── */
+.pm-metrics {
+  display: flex;
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
+.pm-metric-card {
+  flex: 1;
+  min-width: 150px;
+  padding: 1.25rem 1.5rem;
+  border: 1px solid;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.02);
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.pm-metric-value {
+  font-family: monospace;
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.pm-metric-label {
+  font-size: 0.85rem;
+  color: rgba(220, 210, 240, 0.8);
+  font-weight: 500;
+}
+
+.pm-metric-sublabel {
+  font-size: 0.65rem;
+  color: rgba(200, 180, 220, 0.45);
+  font-family: monospace;
+  letter-spacing: 0.5px;
+}
+
+.pm-summary {
+  font-size: 0.9rem;
+  color: rgba(200, 180, 220, 0.6);
+  margin: 0;
+  line-height: 1.7;
+}
+
+/* ── Navigation ───────────────────── */
+.pm-nav {
+  position: absolute;
+  bottom: 2rem;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 2rem;
+  pointer-events: none;
+}
+
+.pm-nav-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  color: rgba(220, 210, 240, 0.7);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  pointer-events: auto;
+}
+
+.pm-nav-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.3);
+  color: #ffffff;
+}
+
+.pm-nav-btn:disabled {
+  cursor: default;
+  pointer-events: none;
+}
+
+/* ── Codex input (asteroid modal) — used by Galaxy.jsx ─── */
+.asteroid-codex-body {
+  padding: 1rem;
+}
+
+.asteroid-codex-label {
+  display: block;
+  font-family: monospace;
+  font-size: 0.55rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(0, 255, 106, 0.6);
+  margin-bottom: 0.5rem;
+}
+
+.asteroid-codex-input {
+  width: 100%;
+  box-sizing: border-box;
+  background: rgba(0, 212, 255, 0.04);
+  border: 1px solid rgba(0, 255, 106, 0.4);
+  border-radius: 6px;
+  padding: 0.6rem 0.75rem;
+  font-family: monospace;
+  font-size: 0.85rem;
+  color: rgba(200, 180, 220, 1);
+  letter-spacing: 1px;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.asteroid-codex-input:focus {
+  border-color: rgba(0, 255, 106, 0.8);
+}
+
+.asteroid-codex-input.codex-error {
+  border-color: rgba(255, 80, 80, 0.8);
+  animation: codexShake 0.35s ease;
+}
+
+@keyframes codexShake {
+  0%, 100% { transform: translateX(0); }
+  20%       { transform: translateX(-6px); }
+  40%       { transform: translateX(6px); }
+  60%       { transform: translateX(-4px); }
+  80%       { transform: translateX(4px); }
+}
+
+/* ── Mobile ───────────────────────── */
+@media (max-width: 768px) {
+  .pm-overlay {
+    padding: 1.25rem;
+  }
+
+  .pm-title {
+    font-size: clamp(1.5rem, 8vw, 2.5rem);
+  }
+
+  .pm-nugget {
+    font-size: 1.05rem;
+  }
+
+  .pm-solution-body {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .pm-solution-image {
+    flex: none;
+    width: 100%;
+  }
+
+  .pm-metrics {
+    gap: 0.75rem;
+  }
+
+  .pm-metric-card {
+    min-width: 120px;
+    padding: 1rem;
+  }
+
+  .pm-metric-value {
+    font-size: 1.5rem;
+  }
+}
