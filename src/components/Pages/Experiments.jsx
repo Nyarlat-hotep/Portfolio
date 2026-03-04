@@ -75,8 +75,22 @@ export default function Experiments({ scrollContainerRef, isVoidMode = false }) 
   };
 
   const [galleryOpen, setGalleryOpen] = useState(false);
+  const [expandedIndex, setExpandedIndex] = useState(null);
   const touchStartY = useRef(0);
   const panelRef = useRef(null);
+  const itemRefs = useRef([]);
+
+  const handleItemClick = (i) => {
+    const newIndex = expandedIndex === i ? null : i;
+    setExpandedIndex(newIndex);
+    if (newIndex !== null) {
+      // Wait for width transition (400ms) to finish so the element's
+      // final expanded height is measured correctly before centering
+      setTimeout(() => {
+        itemRefs.current[i]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 420);
+    }
+  };
 
   // Handle swipe down to close
   const handleTouchStart = (e) => {
@@ -238,7 +252,13 @@ export default function Experiments({ scrollContainerRef, isVoidMode = false }) 
               </div>
               <div className="gallery-grid">
                 {galleryImages.map((src, i) => (
-                  <div key={i} className="gallery-item">
+                  <div
+                    key={i}
+                    ref={(el) => { itemRefs.current[i] = el; }}
+                    className={`gallery-item${expandedIndex === i ? ' gallery-item--expanded' : ''}`}
+                    onClick={() => handleItemClick(i)}
+                    role="button"
+                  >
                     <img src={src} alt={`Visual archive ${i + 1}`} className="gallery-img" decoding="async" />
                   </div>
                 ))}

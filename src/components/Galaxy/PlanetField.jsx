@@ -44,9 +44,9 @@ function Planet({ config, wells }) {
     const s    = state.current;
     const mesh = meshRef.current;
 
-    // Detect well collapse → respawn if this planet was captured
+    // Detect well collapse → reset all planets to home (deterministic each time)
     const wellCount = wells.length;
-    if (prevWellsLen.current > 0 && wellCount === 0 && s.captured) {
+    if (prevWellsLen.current > 0 && wellCount === 0) {
       s.vel.set(0, 0, 0);
       s.captured    = false;
       s.alive       = false;
