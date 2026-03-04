@@ -222,19 +222,21 @@ export default function PresentationMode({ isOpen, onClose }) {
           className="pm-nav-btn"
           onClick={goPrev}
           disabled={slideIndex === 0}
-          style={{ opacity: slideIndex === 0 ? 0 : 1 }}
+          style={{ opacity: slideIndex === 0 ? 0 : 1, pointerEvents: slideIndex === 0 ? 'none' : 'auto' }}
           aria-label="Previous slide"
         >
-          <ArrowLeft size={20} />
+          <ArrowLeft size={18} />
+          Prev
         </button>
         <button
           className="pm-nav-btn"
           onClick={goNext}
           disabled={slideIndex === total - 1}
-          style={{ opacity: slideIndex === total - 1 ? 0 : 1 }}
+          style={{ opacity: slideIndex === total - 1 ? 0 : 1, pointerEvents: slideIndex === total - 1 ? 'none' : 'auto' }}
           aria-label="Next slide"
         >
-          <ArrowRight size={20} />
+          Next
+          <ArrowRight size={18} />
         </button>
       </div>
     </motion.div>,
