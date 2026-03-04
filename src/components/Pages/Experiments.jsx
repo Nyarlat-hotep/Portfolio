@@ -58,6 +58,23 @@ export default function Experiments({ planetColor = '#6b2fa0', scrollContainerRe
     '/images/case-studies/visualdesign/messy kitchen AR 9.png',
     '/images/case-studies/visualdesign/v2 homes.png',
     '/images/case-studies/visualdesign/v2.png',
+    '/images/case-studies/visualdesign/Frame 48097530.png',
+    '/images/case-studies/visualdesign/Frame 48097531.png',
+    '/images/case-studies/visualdesign/Frame 48099754.png',
+    '/images/case-studies/visualdesign/Frame 48099768.png',
+    '/images/case-studies/visualdesign/Frame 48099769.png',
+    '/images/case-studies/visualdesign/Frame 48099770.png',
+    '/images/case-studies/visualdesign/Frame 48099771.png',
+    '/images/case-studies/visualdesign/Frame 48099772.png',
+    '/images/case-studies/visualdesign/Frame 48099773.png',
+    '/images/case-studies/visualdesign/Frame 48099774.png',
+    '/images/case-studies/visualdesign/Frame 48099775.png',
+    '/images/case-studies/visualdesign/Frame 48099776.png',
+    '/images/case-studies/visualdesign/Frame 48099777.png',
+    '/images/case-studies/visualdesign/Frame 48099778.png',
+    '/images/case-studies/visualdesign/Frame 48099779.png',
+    '/images/case-studies/visualdesign/HBP-progress.png',
+    '/images/case-studies/visualdesign/car goal.png',
   ];
 
   // Preload gallery images on mount so they're cached before the panel opens

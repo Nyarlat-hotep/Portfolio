@@ -357,7 +357,6 @@
   z-index: 101;
   overflow: hidden;
   border-radius: 20px 20px 0 0;
-  will-change: transform;
 }
 
 /* Panel slides inside the clipper */
