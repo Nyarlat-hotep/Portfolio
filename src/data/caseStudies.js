@@ -49,8 +49,12 @@ export const caseStudies = {
       },
       {
         title: 'Alignment',
-        description: 'With ownership split across PMs who each managed a separate communication channel and rarely coordinated, there was no single person accountable for the coherence of the full experience. I became that connective layer. I established design language consistency across call, text, and chat surfaces, and made the case in every alignment conversation for decisions that served the whole experience rather than any one team\'s slice of it. The product felt disjointed because it was built that way — changing that required both design work and sustained advocacy.',
-        image: null
+        description: 'With ownership split across PMs who each managed a separate communication channel, there was no single person accountable for the coherence of the full experience. I became that connective layer. I established design language consistency across call, text, and chat surfaces, and made the case in every alignment conversation for decisions that served the whole experience rather than any one team\'s slice of it. The product felt disjointed because it was built that way — changing that required both design work and sustained advocacy.',
+        image: null,
+        galleryImages: [
+          '/images/case-studies/BananaPhone/Text.png',
+          '/images/case-studies/BananaPhone/Chat.png',
+        ]
       },
       {
         title: 'Launch',
@@ -144,7 +148,7 @@ export const caseStudies = {
 
     challengeViz: 'throughput-collapse',
 
-    solution: 'I designed a drafting panel built into Banana Phone\'s existing text interface. A banker triggers the panel, selects from a list of message categories — first-time hello, credit pull objection, rate update, follow-up after no response — and the AI drafts an appropriate message instantly. They can send it as-is or edit before sending. In v1 we launched with approximately 10 categories per banker specialty, covering both purchase and refinance workflows. Categories weren\'t invented at a desk — I ran discovery sessions with banking leaders to map the real moments in a client relationship where language mattered most and where bankers were most likely to hesitate or get it wrong.\n\nThe hardest part of this project wasn\'t the concept — it was the execution. The engineering team had significant technical constraints that forced real compromises on the visual UX I\'d designed. The panel I shipped is not the panel I designed. We traded polish for stability and got to launch on schedule. The model quality improved substantially post-launch as it learned from millions of real interactions, which softened some of those tradeoffs over time.',
+    solution: 'I designed a drafting panel built into Banana Phone\'s existing text interface. A banker triggers the panel, selects from a list of message categories — first-time hello, credit pull objection, rate update, follow-up after no response — and the AI drafts an appropriate message instantly. They can send it as-is or edit before sending. In v1 we launched with approximately 10 categories per banker specialty, covering both purchase and refinance workflows. Categories weren\'t invented at a desk — I ran discovery sessions with banking leaders to map the real moments in a client relationship where language mattered most and where bankers were most likely to hesitate or get it wrong.\n\nThe hardest part of this project wasn\'t the concept — it was the execution. The engineering team had significant technical constraints that forced real compromises on the visual UX I\'d designed. The panel that was shipped is not the panel I designed. We traded polish for stability and got to launch on schedule. The model quality improved substantially post-launch as it learned from millions of real interactions, which softened some of those tradeoffs over time.',
 
     accentColor: '#ec4899',
 
@@ -167,7 +171,7 @@ export const caseStudies = {
     process: [
       {
         title: 'Problem & Discovery',
-        description: 'The number migration wasn\'t a design problem at first — it was a compliance decision made above the product layer. But its downstream consequences landed squarely in the product. Bankers went from coordinated, scalable text outreach to composing every message manually. For bankers managing pipelines of dozens of active clients, that meant fewer touchpoints, slower follow-up, and measurable drops in conversion. Before writing a single line of interface, I ran discovery sessions with banking leaders across purchase and refinance teams to map the real communication moments that defined their workflows — the first hello to a new lead, the credit pull conversation, the rate update, the follow-up after silence. That map became the category architecture for v1: approximately 10 categories per banker specialty.',
+        description: 'The number migration wasn\'t a design problem at first — it was a compliance decision made above the product layer. But its downstream consequences landed squarely in the product. Bankers went from coordinated, scalable text outreach to composing every message manually. For bankers managing pipelines of hundreds of active clients, that meant fewer touchpoints, slower follow-up, and measurable drops in conversion. Before desiging any aspect of interface, I ran discovery sessions with banking leaders across purchase and refinance teams to map the real communication moments that defined their workflows — the first hello to a new lead, the credit pull conversation, the rate update, the follow-up after silence. That map became the category architecture for v1: approximately 10 categories per banker specialty.',
         image: null
       },
       {
