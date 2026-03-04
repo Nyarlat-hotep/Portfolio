@@ -1,0 +1,135 @@
+// src/data/presentationSlides.js
+
+export const SLIDES_PER_STUDY = 4;
+export const TOTAL_STUDIES = 3;
+
+export const presentationSlides = [
+  // ── BANANA PHONE ─────────────────────────────────
+  {
+    id: 'bp-title',
+    type: 'title',
+    study: 1,
+    accent: '#f5c842',
+    title: 'BANANA PHONE',
+    subtitle: 'Enterprise Communication Platform',
+    company: 'Rocket Mortgage',
+    role: 'Lead Product Designer',
+    duration: '3–4 months to launch',
+  },
+  {
+    id: 'bp-problem',
+    type: 'problem',
+    study: 1,
+    accent: '#f5c842',
+    title: 'BANANA PHONE',
+    nugget: "The design had been fragmented across multiple PMs who each owned a separate channel — and rarely coordinated. I inherited this with a fixed deadline, sole-designer scope, and no room to start over.",
+  },
+  {
+    id: 'bp-solution',
+    type: 'solution',
+    study: 1,
+    accent: '#f5c842',
+    title: 'BANANA PHONE',
+    nugget: "Enterprise ≠ consumer. I brought the lead queue to a persistent surface and surfaced critical client context — address, timezone, loan stage — directly into the communication view. Unified call, text, and chat into one coherent interface.",
+    image: '/images/case-studies/BananaPhone/current BP.png',
+  },
+  {
+    id: 'bp-impact',
+    type: 'impact',
+    study: 1,
+    accent: '#f5c842',
+    title: 'BANANA PHONE',
+    summary: 'Launched Q4 2024. The communication layer for thousands of bankers across Rocket Mortgage.',
+    metrics: [
+      { value: '650K+', label: 'Client Calls', sublabel: 'made in 2025' },
+      { value: '15M+',  label: 'Texts Sent',   sublabel: 'since Nov 2025' },
+      { value: '85%',   label: 'Easy to Use',  sublabel: 'peak satisfaction' },
+    ],
+  },
+
+  // ── AI TEXTING ────────────────────────────────────
+  {
+    id: 'ai-title',
+    type: 'title',
+    study: 2,
+    accent: '#ec4899',
+    title: 'AI TEXTING',
+    subtitle: 'Enterprise AI · Banana Phone',
+    company: 'Rocket Mortgage',
+    role: 'Lead Product Designer',
+    duration: 'April – June 2025',
+  },
+  {
+    id: 'ai-problem',
+    type: 'problem',
+    study: 2,
+    accent: '#ec4899',
+    title: 'AI TEXTING',
+    nugget: "A phone number migration made mass texts look like spam overnight. Bankers were left writing every client message by hand — one at a time, at scale. That's not a slowdown. It's a breakdown.",
+  },
+  {
+    id: 'ai-solution',
+    type: 'solution',
+    study: 2,
+    accent: '#ec4899',
+    title: 'AI TEXTING',
+    nugget: "A drafting panel inside Banana Phone. Select a category — first-time hello, rate update, follow-up after silence — and the AI drafts the right message instantly. Send as-is or edit.",
+    image: '/images/case-studies/AItexting/AI text 1.png',
+  },
+  {
+    id: 'ai-impact',
+    type: 'impact',
+    study: 2,
+    accent: '#ec4899',
+    title: 'AI TEXTING',
+    summary: "Launched June 2025. Rocket Mortgage's first major AI integration into the banker workflow.",
+    metrics: [
+      { value: '1.8M', label: 'AI Texts',        sublabel: 'first 10 weeks' },
+      { value: '$75M', label: 'Closing Volume',   sublabel: 'monthly increase' },
+      { value: '56%',  label: 'AI-Generated',     sublabel: 'of all outbound texts' },
+    ],
+  },
+
+  // ── MYROCKET DASHBOARD ────────────────────────────
+  {
+    id: 'mr-title',
+    type: 'title',
+    study: 3,
+    accent: '#22d3ee',
+    title: 'MYROCKET DASHBOARD',
+    subtitle: 'Consumer Product Design',
+    company: 'Rocket Mortgage',
+    role: 'Design Lead, Consumer Experience',
+    duration: '6 months',
+  },
+  {
+    id: 'mr-problem',
+    type: 'problem',
+    study: 3,
+    accent: '#22d3ee',
+    title: 'MYROCKET DASHBOARD',
+    nugget: "Users were making major financial decisions without a coherent picture of their own finances. Two internal business units were competing for the same page — with conflicting priorities.",
+  },
+  {
+    id: 'mr-solution',
+    type: 'solution',
+    study: 3,
+    accent: '#22d3ee',
+    title: 'MYROCKET DASHBOARD',
+    nugget: "An IA that flexes across radically different user states. A locked state pattern — borrowed from gaming — showed unactivated features as aspirational, not absent. I defended it in a financial context. It launched as the core onboarding mechanism.",
+    image: '/images/case-studies/myrocket/lockedstate.png',
+  },
+  {
+    id: 'mr-impact',
+    type: 'impact',
+    study: 3,
+    accent: '#22d3ee',
+    title: 'MYROCKET DASHBOARD',
+    summary: 'Launched December 2022 with 500K+ monthly active users from day one.',
+    metrics: [
+      { value: '2×',    label: 'Monthly Visits', sublabel: 'increase at launch' },
+      { value: '500K+', label: 'Active Users',    sublabel: 'at launch' },
+      { value: '61%',   label: 'CSAT Score',      sublabel: 'growing monthly' },
+    ],
+  },
+];
