@@ -1,7 +1,8 @@
 // src/data/presentationSlides.js
 
-export const SLIDES_PER_STUDY = 5;
 export const TOTAL_STUDIES = 3;
+// Slide count per study — index 0 = study 1, etc.
+export const STUDY_SLIDE_COUNTS = [6, 5, 5];
 
 export const presentationSlides = [
   // ── BANANA PHONE ─────────────────────────────────
@@ -57,6 +58,17 @@ export const presentationSlides = [
       { value: '15M+',  label: 'Texts Sent',   sublabel: 'since Nov 2025' },
       { value: '85%',   label: 'Easy to Use',  sublabel: 'peak satisfaction' },
     ],
+  },
+  {
+    id: 'bp-vision',
+    type: 'explore',
+    layout: 'side',
+    label: "What's Next",
+    study: 1,
+    accent: '#f5c842',
+    title: 'BANANA PHONE',
+    nugget: "The long-term vision — RocketOS — is a single application that replaces the collection of siloed tools bankers currently use: one interface for cross-channel client communication, persistent client context, and AI assistance surfaced at the right moments in a workflow.",
+    images: ['/images/case-studies/BananaPhone/OS BP.png'],
   },
 
   // ── AI TEXTING ────────────────────────────────────

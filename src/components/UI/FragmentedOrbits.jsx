@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import './FragmentedOrbits.css';
 
 const SYSTEMS = [
@@ -11,9 +12,23 @@ function ellipsePath(cx, cy, rx, ry) {
 }
 
 export default function FragmentedOrbits({ color = '#f5c842' }) {
+  const svgRef = useRef(null);
+
+  // SMIL animateMotion doesn't auto-start reliably when inserted dynamically.
+  // Force-begin all animations after the first paint.
+  useEffect(() => {
+    if (!svgRef.current) return;
+    const id = requestAnimationFrame(() => {
+      svgRef.current?.querySelectorAll('animateMotion')
+        .forEach(a => a.beginElement());
+    });
+    return () => cancelAnimationFrame(id);
+  }, []);
+
   return (
     <div className="fragmented-orbits">
       <svg
+        ref={svgRef}
         viewBox="0 0 600 230"
         xmlns="http://www.w3.org/2000/svg"
         className="fragmented-orbits-svg"
@@ -28,9 +43,6 @@ export default function FragmentedOrbits({ color = '#f5c842' }) {
               <feMergeNode in="SourceGraphic" />
             </feMerge>
           </filter>
-          {SYSTEMS.map(s => (
-            <path key={s.id} id={`fo-path-${s.id}`} d={ellipsePath(s.cx, s.cy, s.rx, s.ry)} fill="none" />
-          ))}
         </defs>
 
         {/* Broken connection indicators — barely visible dashed lines suggesting these should connect */}
@@ -55,9 +67,12 @@ export default function FragmentedOrbits({ color = '#f5c842' }) {
 
             {/* Orbiting dot */}
             <circle r="4.5" fill={color} filter="url(#fo-glow)">
-              <animateMotion dur={s.dur} repeatCount="indefinite" begin={s.begin}>
-                <mpath href={`#fo-path-${s.id}`} />
-              </animateMotion>
+              <animateMotion
+                dur={s.dur}
+                repeatCount="indefinite"
+                begin={s.begin}
+                path={ellipsePath(s.cx, s.cy, s.rx, s.ry)}
+              />
             </circle>
 
             {/* Label */}

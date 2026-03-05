@@ -73,6 +73,8 @@
 
 .pm-slide-wrapper {
   width: 100%;
+  display: flex;
+  justify-content: center;
 }
 
 /* ── Shared slide ─────────────────── */
@@ -86,6 +88,26 @@
   letter-spacing: 3px;
   text-transform: uppercase;
   margin-bottom: 0.75rem;
+}
+
+.pm-slide--impact {
+  width: 75%;
+}
+
+/* ── Problem slide ────────────────── */
+.pm-problem-body {
+  display: flex;
+  gap: 3rem;
+  align-items: center;
+}
+
+.pm-problem-text {
+  flex: 0 0 36%;
+}
+
+.pm-problem-viz {
+  flex: 1;
+  min-width: 0;
 }
 
 .pm-divider {

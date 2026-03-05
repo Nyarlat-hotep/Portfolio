@@ -3,8 +3,18 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createPortal } from 'react-dom';
 import { X, ArrowLeft, ArrowRight } from 'lucide-react';
-import { presentationSlides, SLIDES_PER_STUDY } from '../../data/presentationSlides';
+import { presentationSlides, STUDY_SLIDE_COUNTS } from '../../data/presentationSlides';
+import FragmentedOrbits   from './FragmentedOrbits';
+import ThroughputCollapse from './ThroughputCollapse';
+import InterferenceWaves  from './InterferenceWaves';
 import './PresentationMode.css';
+
+// Map study number → problem visualisation component
+const PROBLEM_VIZ = {
+  1: FragmentedOrbits,    // Banana Phone
+  2: ThroughputCollapse,  // AI Texting
+  3: InterferenceWaves,   // MyRocket
+};
 
 // ── Slide sub-components ──────────────────────────────────────
 
@@ -29,11 +39,21 @@ function SlideTitle({ slide }) {
 }
 
 function SlideProblem({ slide }) {
+  const VizComponent = PROBLEM_VIZ[slide.study];
   return (
-    <div className="pm-slide pm-slide--problem">
-      <div className="pm-slide-label" style={{ color: slide.accent }}>The Problem</div>
-      <div className="pm-divider" style={{ background: slide.accent }} />
-      <p className="pm-nugget">{slide.nugget}</p>
+    <div className="pm-slide pm-slide--text pm-slide--problem">
+      <div className="pm-problem-body">
+        <div className="pm-problem-text">
+          <div className="pm-slide-label" style={{ color: slide.accent }}>The Problem</div>
+          <div className="pm-divider" style={{ background: slide.accent }} />
+          <p className="pm-nugget">{slide.nugget}</p>
+        </div>
+        {VizComponent && (
+          <div className="pm-problem-viz">
+            <VizComponent color={slide.accent} />
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -61,7 +81,7 @@ function SlideSolution({ slide }) {
 
 function SlideImpact({ slide }) {
   return (
-    <div className="pm-slide pm-slide--impact">
+    <div className="pm-slide pm-slide--text pm-slide--impact">
       <div className="pm-slide-label" style={{ color: slide.accent }}>The Impact</div>
       <div className="pm-divider" style={{ background: slide.accent }} />
       <div className="pm-metrics">
@@ -88,7 +108,7 @@ function SlideExplore({ slide }) {
   const isSide = slide.layout === 'side';
   return (
     <div className="pm-slide pm-slide--explore">
-      <div className="pm-slide-label" style={{ color: slide.accent }}>The Process</div>
+      <div className="pm-slide-label" style={{ color: slide.accent }}>{slide.label || 'The Process'}</div>
       <div className="pm-divider" style={{ background: slide.accent }} />
       {isSide ? (
         <div className="pm-solution-body">
@@ -144,18 +164,15 @@ export default function PresentationMode({ isOpen, onClose }) {
   const [navVisible, setNavVisible]  = useState(false);
   const [slideScale,  setSlideScale]  = useState(1);
   const closeButtonRef = useRef(null);
-  const hideNavTimer   = useRef(null);
   const stageRef       = useRef(null);
   const total = presentationSlides.length;
   const slide = presentationSlides[slideIndex];
 
   const handleMouseMove = useCallback((e) => {
     if (e.clientY >= window.innerHeight * 0.80) {
-      clearTimeout(hideNavTimer.current);
       setNavVisible(true);
     } else {
-      clearTimeout(hideNavTimer.current);
-      hideNavTimer.current = setTimeout(() => setNavVisible(false), 500);
+      setNavVisible(false);
     }
   }, []);
 
@@ -165,12 +182,8 @@ export default function PresentationMode({ isOpen, onClose }) {
       setSlideIndex(0);
     } else {
       setNavVisible(false);
-      clearTimeout(hideNavTimer.current);
     }
   }, [isOpen]);
-
-  // Cleanup timer on unmount
-  useEffect(() => () => clearTimeout(hideNavTimer.current), []);
 
   // Proportional scale: recompute whenever the overlay opens or viewport resizes
   useEffect(() => {
@@ -232,9 +245,11 @@ export default function PresentationMode({ isOpen, onClose }) {
 
   if (!isOpen) return null;
 
-  const SlideComponent = SLIDE_COMPONENTS[slide.type];
-  const currentStudy   = slide.study;                   // 1 | 2 | 3
-  const slideInStudy   = slideIndex % SLIDES_PER_STUDY; // 0–3
+  const SlideComponent    = SLIDE_COMPONENTS[slide.type];
+  const currentStudy      = slide.study;                   // 1 | 2 | 3
+  const studySlideCount   = STUDY_SLIDE_COUNTS[currentStudy - 1];
+  const studyStartIndex   = STUDY_SLIDE_COUNTS.slice(0, currentStudy - 1).reduce((a, b) => a + b, 0);
+  const slideInStudy      = slideIndex - studyStartIndex;
 
   return createPortal(
     <motion.div
@@ -261,7 +276,7 @@ export default function PresentationMode({ isOpen, onClose }) {
             ))}
           </div>
           <div className="pm-slide-dots">
-            {Array.from({ length: SLIDES_PER_STUDY }, (_, i) => (
+            {Array.from({ length: studySlideCount }, (_, i) => (
               <span
                 key={i}
                 className="pm-slide-dot"
