@@ -114,7 +114,15 @@ export default function Experiments({ scrollContainerRef, isVoidMode = false }) 
       link: null,
       status: 'ACTIVE',
       action: () => setGalleryOpen(true)
-    }
+    },
+    {
+      title: 'CONDITION_BUILDER',
+      description: 'Visual logic builder. Drag conditions into groups, toggle AND/OR, watch the expression form.',
+      tags: ['Tool', 'Logic'],
+      link: 'https://nyarlat-hotep.github.io/better-condition-builder/',
+      status: 'ACTIVE',
+      action: null,
+    },
   ];
 
   return (
