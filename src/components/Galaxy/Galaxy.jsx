@@ -1,8 +1,7 @@
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
+import { TrackballControls, PerspectiveCamera } from '@react-three/drei';
 import { useState, useEffect, Suspense, useMemo, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import * as THREE from 'three';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, ArrowRight, Move, ZoomIn, X } from 'lucide-react';
 import './Galaxy.css';
@@ -344,22 +343,19 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
           introDuration={INTRO_DURATION}
         />
 
-        {/* Controls - cancel intro on any interaction */}
-        <OrbitControls
+        {/* Controls - full 360° trackball rotation in all axes */}
+        <TrackballControls
           ref={controlsRef}
-          enablePan={true}
-          enableZoom={true}
-          enableRotate={true}
+          rotateSpeed={2.0}
+          zoomSpeed={1.2}
+          panSpeed={0.8}
           minDistance={10}
           maxDistance={120}
-          maxPolarAngle={Math.PI / 1.5}
-          minPolarAngle={Math.PI / 3}
+          noPan={false}
+          noZoom={false}
+          noRotate={false}
+          mouseButtons={{ LEFT: 0, MIDDLE: 1, RIGHT: 2 }}
           onStart={cancelIntro}
-          mouseButtons={{
-            LEFT: THREE.MOUSE.ROTATE,
-            MIDDLE: THREE.MOUSE.DOLLY,
-            RIGHT: null // Allow right-click context menu
-          }}
         />
 
         {/* Lighting */}
