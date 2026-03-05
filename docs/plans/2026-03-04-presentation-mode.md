@@ -512,7 +512,7 @@ git commit -m "feat: add lightspeed warp canvas transition"
 
 .pm-metric-sublabel {
   font-size: 0.65rem;
-  color: rgba(200, 180, 220, 0.45);
+  color: rgba(200, 180, 220, 1);
   font-family: monospace;
   letter-spacing: 0.5px;
 }

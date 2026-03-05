@@ -84,12 +84,49 @@ function SlideImpact({ slide }) {
   );
 }
 
+function SlideExplore({ slide }) {
+  const isSide = slide.layout === 'side';
+  return (
+    <div className="pm-slide pm-slide--explore">
+      <div className="pm-slide-label" style={{ color: slide.accent }}>The Process</div>
+      <div className="pm-divider" style={{ background: slide.accent }} />
+      {isSide ? (
+        <div className="pm-solution-body">
+          {slide.images?.[0] && (
+            <div className="pm-solution-image">
+              <img src={slide.images[0]} alt={`${slide.title} exploration`} />
+            </div>
+          )}
+          <p className="pm-nugget">{slide.nugget}</p>
+        </div>
+      ) : (
+        <div className="pm-explore-body">
+          {slide.images?.length > 0 && (
+            <div className="pm-explore-images">
+              {slide.images.map((src, i) => (
+                <div key={i} className="pm-explore-image">
+                  <img src={src} alt={`${slide.title} exploration ${i + 1}`} />
+                </div>
+              ))}
+            </div>
+          )}
+          <p className="pm-nugget">{slide.nugget}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 const SLIDE_COMPONENTS = {
   title:    SlideTitle,
   problem:  SlideProblem,
+  explore:  SlideExplore,
   solution: SlideSolution,
   impact:   SlideImpact,
 };
+
+// Reference width the slides are designed at — used for proportional scaling
+const SLIDE_BASE_W = 1100;
 
 // ── Slide transition variants ─────────────────────────────────
 
@@ -104,13 +141,48 @@ const slideVariants = {
 export default function PresentationMode({ isOpen, onClose }) {
   const [slideIndex, setSlideIndex] = useState(0);
   const [direction,  setDirection]  = useState(1);
+  const [navVisible, setNavVisible]  = useState(false);
+  const [slideScale,  setSlideScale]  = useState(1);
   const closeButtonRef = useRef(null);
+  const hideNavTimer   = useRef(null);
+  const stageRef       = useRef(null);
   const total = presentationSlides.length;
   const slide = presentationSlides[slideIndex];
 
-  // Reset to first slide whenever opened
+  const handleMouseMove = useCallback((e) => {
+    if (e.clientY >= window.innerHeight * 0.80) {
+      clearTimeout(hideNavTimer.current);
+      setNavVisible(true);
+    } else {
+      clearTimeout(hideNavTimer.current);
+      hideNavTimer.current = setTimeout(() => setNavVisible(false), 500);
+    }
+  }, []);
+
+  // Reset to first slide whenever opened; clear nav on close
   useEffect(() => {
-    if (isOpen) setSlideIndex(0);
+    if (isOpen) {
+      setSlideIndex(0);
+    } else {
+      setNavVisible(false);
+      clearTimeout(hideNavTimer.current);
+    }
+  }, [isOpen]);
+
+  // Cleanup timer on unmount
+  useEffect(() => () => clearTimeout(hideNavTimer.current), []);
+
+  // Proportional scale: recompute whenever the overlay opens or viewport resizes
+  useEffect(() => {
+    if (!isOpen) return;
+    const update = () => {
+      if (!stageRef.current) return;
+      const scale = Math.min(1, (stageRef.current.clientWidth - 64) / SLIDE_BASE_W);
+      setSlideScale(Math.max(0.3, scale));
+    };
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
   }, [isOpen]);
 
   // Focus close button when overlay opens (rAF ensures portal DOM is painted)
@@ -174,59 +246,64 @@ export default function PresentationMode({ isOpen, onClose }) {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.4 }}
+      onMouseMove={handleMouseMove}
     >
-      {/* Progress dots — top left */}
-      <div className="pm-progress">
-        <div className="pm-study-dots">
-          {[1, 2, 3].map((s) => (
-            <span
-              key={s}
-              className="pm-study-dot"
-              style={{ background: s === currentStudy ? slide.accent : undefined }}
-            />
-          ))}
+      {/* ── Top bar: progress dots + close ── */}
+      <div className="pm-header">
+        <div className="pm-progress">
+          <div className="pm-study-dots">
+            {[1, 2, 3].map((s) => (
+              <span
+                key={s}
+                className="pm-study-dot"
+                style={{ background: s === currentStudy ? slide.accent : undefined }}
+              />
+            ))}
+          </div>
+          <div className="pm-slide-dots">
+            {Array.from({ length: SLIDES_PER_STUDY }, (_, i) => (
+              <span
+                key={i}
+                className="pm-slide-dot"
+                style={{ background: i === slideInStudy ? slide.accent : undefined }}
+              />
+            ))}
+          </div>
         </div>
-        <div className="pm-slide-dots">
-          {Array.from({ length: SLIDES_PER_STUDY }, (_, i) => (
-            <span
-              key={i}
-              className="pm-slide-dot"
-              style={{ background: i === slideInStudy ? slide.accent : undefined }}
-            />
-          ))}
+        <button ref={closeButtonRef} className="close-button pm-close" onClick={onClose} aria-label="Close presentation">
+          <X size={20} />
+        </button>
+      </div>
+
+      {/* ── Content stage: fills remaining space, scales content proportionally ── */}
+      <div className="pm-stage" ref={stageRef}>
+        <div
+          className="pm-slide-scaler"
+        >
+          <AnimatePresence custom={direction} mode="wait">
+            <motion.div
+              key={slideIndex}
+              custom={direction}
+              variants={slideVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ duration: 0.32, ease: [0.4, 0, 0.2, 1] }}
+              className="pm-slide-wrapper"
+            >
+              <SlideComponent slide={slide} />
+            </motion.div>
+          </AnimatePresence>
         </div>
       </div>
 
-      {/* Close — top right (reuses .close-button from PageOverlay styles) */}
-      <button ref={closeButtonRef} className="close-button pm-close" onClick={onClose} aria-label="Close presentation">
-        <X size={24} />
-      </button>
-
-      {/* Slide stage — wider on solution slides that have images */}
-      <div className={`pm-stage${slide.type === 'solution' ? ' pm-stage--wide' : ''}`}>
-        <AnimatePresence custom={direction} mode="wait">
-          <motion.div
-            key={slideIndex}
-            custom={direction}
-            variants={slideVariants}
-            initial="enter"
-            animate="center"
-            exit="exit"
-            transition={{ duration: 0.32, ease: [0.4, 0, 0.2, 1] }}
-            className="pm-slide-wrapper"
-          >
-            <SlideComponent slide={slide} />
-          </motion.div>
-        </AnimatePresence>
-      </div>
-
-      {/* Arrow navigation — bottom left/right */}
-      <div className="pm-nav">
+      {/* ── Arrow navigation — revealed on hover near bottom ── */}
+      <div className={`pm-nav${navVisible ? ' pm-nav--visible' : ''}`}>
         <button
           className="pm-nav-btn"
           onClick={goPrev}
           disabled={slideIndex === 0}
-          style={{ opacity: slideIndex === 0 ? 0 : 1, pointerEvents: slideIndex === 0 ? 'none' : 'auto' }}
+          style={{ opacity: slideIndex === 0 ? 0 : 1 }}
           aria-label="Previous slide"
         >
           <ArrowLeft size={18} />
@@ -236,7 +313,7 @@ export default function PresentationMode({ isOpen, onClose }) {
           className="pm-nav-btn"
           onClick={goNext}
           disabled={slideIndex === total - 1}
-          style={{ opacity: slideIndex === total - 1 ? 0 : 1, pointerEvents: slideIndex === total - 1 ? 'none' : 'auto' }}
+          style={{ opacity: slideIndex === total - 1 ? 0 : 1 }}
           aria-label="Next slide"
         >
           Next

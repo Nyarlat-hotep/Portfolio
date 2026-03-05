@@ -3,8 +3,10 @@ import { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 
 export default function LightspeedTransition({ onComplete }) {
-  const canvasRef = useRef(null);
-  const rafRef    = useRef(null);
+  const canvasRef      = useRef(null);
+  const rafRef         = useRef(null);
+  const onCompleteRef  = useRef(onComplete);
+  onCompleteRef.current = onComplete;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -134,13 +136,13 @@ export default function LightspeedTransition({ onComplete }) {
       if (t < 1) {
         rafRef.current = requestAnimationFrame(tick);
       } else {
-        onComplete?.();
+        onCompleteRef.current?.();
       }
     };
 
     rafRef.current = requestAnimationFrame(tick);
     return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
-  }, [onComplete]);
+  }, []); // empty deps — animation runs once on mount; onCompleteRef stays current
 
   return createPortal(
     <canvas

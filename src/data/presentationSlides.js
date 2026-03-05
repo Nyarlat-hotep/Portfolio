@@ -1,6 +1,6 @@
 // src/data/presentationSlides.js
 
-export const SLIDES_PER_STUDY = 4;
+export const SLIDES_PER_STUDY = 5;
 export const TOTAL_STUDIES = 3;
 
 export const presentationSlides = [
@@ -23,6 +23,18 @@ export const presentationSlides = [
     accent: '#f5c842',
     title: 'BANANA PHONE',
     nugget: "The design had been fragmented across multiple PMs who each owned a separate channel — and rarely coordinated. I inherited this with a fixed deadline, sole-designer scope, and no room to start over.",
+  },
+  {
+    id: 'bp-explore',
+    type: 'explore',
+    layout: 'side',
+    study: 1,
+    accent: '#f5c842',
+    title: 'BANANA PHONE',
+    nugget: "Early explorations focused on surface-level unification — putting channels in tabs. It took seeing the patterns break under real workflows to understand the real problem was context collapse, not layout.",
+    images: [
+      '/images/case-studies/BananaPhone/BP - 2.png',
+    ],
   },
   {
     id: 'bp-solution',
@@ -68,6 +80,18 @@ export const presentationSlides = [
     nugget: "A phone number migration made mass texts look like spam overnight. Bankers were left writing every client message by hand — one at a time, at scale. That's not a slowdown. It's a breakdown.",
   },
   {
+    id: 'ai-explore',
+    type: 'explore',
+    layout: 'side',
+    study: 2,
+    accent: '#ec4899',
+    title: 'AI TEXTING',
+    nugget: "Initial directions ranged from a full AI modal to inline ghost-text suggestions. The constraint was trust — bankers needed to feel like they owned the message, not just forwarded it.",
+    images: [
+      '/images/case-studies/AItexting/AI text 1.png',
+    ],
+  },
+  {
     id: 'ai-solution',
     type: 'solution',
     study: 2,
@@ -109,6 +133,17 @@ export const presentationSlides = [
     accent: '#22d3ee',
     title: 'MYROCKET DASHBOARD',
     nugget: "Users were making major financial decisions without a coherent picture of their own finances. Two internal business units were competing for the same page — with conflicting priorities.",
+  },
+  {
+    id: 'mr-explore',
+    type: 'explore',
+    study: 3,
+    accent: '#22d3ee',
+    title: 'MYROCKET DASHBOARD',
+    nugget: "Early wireframes treated the dashboard as a portal — everything visible, all at once. Testing showed that without personalisation, abundance read as noise. That's what led to the locked state pattern.",
+    images: [
+      '/images/case-studies/myrocket/concept-analysis.png',
+    ],
   },
   {
     id: 'mr-solution',
