@@ -746,8 +746,8 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
       {warpActive && (
         <LightspeedTransition
           onComplete={() => {
-            setWarpActive(false);
             setPresentationOpen(true);
+            requestAnimationFrame(() => setWarpActive(false));
           }}
         />
       )}
