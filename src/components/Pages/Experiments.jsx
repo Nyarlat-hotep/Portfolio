@@ -158,16 +158,18 @@ export default function Experiments({ scrollContainerRef, isVoidMode = false }) 
             visible: { transition: { staggerChildren: 0.15 } }
           }}
         >
-          {experiments.map((exp, index) => (
+          {experiments.map((exp, index) => {
+            const handleClick = exp.action ?? (exp.link ? () => window.open(exp.link, '_blank', 'noopener,noreferrer') : undefined);
+            return (
             <motion.div
               key={index}
-              className={`experiment-card ${exp.action ? 'clickable' : ''}`}
+              className={`experiment-card ${handleClick ? 'clickable' : ''}`}
               variants={cardVariants}
               whileHover={{
                 y: -6,
                 boxShadow: '0 0 30px rgba(0, 255, 106, 0.2), inset 0 0 20px rgba(0, 255, 106, 0.05)'
               }}
-              onClick={exp.action}
+              onClick={handleClick}
             >
               {/* Status indicator */}
               <div className={`card-status status-${exp.status.toLowerCase()}`}>
@@ -190,22 +192,14 @@ export default function Experiments({ scrollContainerRef, isVoidMode = false }) 
                     <span key={i} className="card-tag">{tag}</span>
                   ))}
                 </div>
-                {exp.link && (
-                  <a
-                    href={exp.link}
-                    className="card-link"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <ExternalLink size={16} />
-                  </a>
-                )}
+                
               </div>
 
               {/* Organic border decoration */}
               <div className="card-border-glow" />
             </motion.div>
-          ))}
+            );
+          })}
         </motion.div>
       </section>
 
