@@ -123,6 +123,14 @@ export default function Experiments({ scrollContainerRef, isVoidMode = false }) 
       status: 'ACTIVE',
       action: null,
     },
+    {
+      title: 'DICE_ROLLER',
+      description: 'Seven sacred polyhedra tumble in the dark. Cast your fate — d4 through d100, advantage, disadvantage, and the chronicle of every roll.',
+      tags: ['Tool', '3D', 'D&D'],
+      link: 'https://nyarlat-hotep.github.io/dice-roller/',
+      status: 'ACTIVE',
+      action: null,
+    },
   ];
 
   return (
