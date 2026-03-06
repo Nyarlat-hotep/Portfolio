@@ -1750,7 +1750,7 @@ Add a page subtitle and refine spacing:
 
 .app-subtitle {
   font-size: 0.6rem;
-  color: rgba(220, 210, 240, 0.2);
+  color: rgba(220, 210, 240, 1);
   letter-spacing: 0.5px;
 }
 
