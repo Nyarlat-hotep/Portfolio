@@ -121,6 +121,7 @@ function GlitchText({ children, active = true }) {
   useEffect(() => {
     if (!active || typeof children !== 'string') return;
 
+    let restoreTimeout = null;
     const interval = setInterval(() => {
       // More frequent glitches (60% chance each interval)
       if (Math.random() > 0.4) {
@@ -132,12 +133,15 @@ function GlitchText({ children, active = true }) {
           chars[idx] = glitchChars[Math.floor(Math.random() * glitchChars.length)];
         }
         setText(chars.join(''));
-        // Restore after brief glitch
-        setTimeout(() => setText(children), 60);
+        // Restore after brief glitch — tracked so it can be cancelled on unmount
+        restoreTimeout = setTimeout(() => setText(children), 60);
       }
     }, 800);
 
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      if (restoreTimeout) clearTimeout(restoreTimeout);
+    };
   }, [children, active]);
 
   return <span>{text}</span>;
@@ -158,6 +162,7 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
   const [showWelcome, setShowWelcome] = useState(false);
   const introCompletedRef = useRef(false);
   const welcomeTimeoutRef = useRef(null);
+  const welcomeShownRef   = useRef(false);
   const controlsRef = useRef(null);
   const shootingStarsRef = useRef();
   const containerRef = useRef(null);
@@ -321,8 +326,8 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
 
   // Show welcome text once per page load — only on first nav open, never again
   useEffect(() => {
-    if (isNavExpanded && !welcomeTimeoutRef._triggered) {
-      welcomeTimeoutRef._triggered = true; // mark immediately so re-opens don't re-trigger
+    if (isNavExpanded && !welcomeShownRef.current) {
+      welcomeShownRef.current = true; // mark immediately so re-opens don't re-trigger
       welcomeTimeoutRef.current = setTimeout(() => {
         setShowWelcome(true);
       }, 1600);

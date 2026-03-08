@@ -9,6 +9,7 @@ function Planet({
   position,
   scale,
   color,
+  texture,
   tooltipColor,
   emissive,
   emissiveIntensity,
@@ -30,24 +31,8 @@ function Planet({
   const [hovered, setHovered] = useState(false);
   const { camera, size } = useThree();
 
-  // Determine which texture to use based on planet properties
-  const textureUrl = useMemo(() => {
-    const colorValue = color.toLowerCase();
-
-    // Home planet uses sun texture
-    if (type === 'star') {
-      return '/textures/sun.jpg';
-    } else if (colorValue.includes('a855f7')) {
-      return '/textures/venus.jpg';
-    } else if (colorValue.includes('22d3ee')) {
-      return '/textures/uranus.jpg';
-    } else if (colorValue.includes('ec4899')) {
-      return '/textures/mars.jpg';
-    } else if (colorValue.includes('10b981')) {
-      return '/textures/neptune.jpg';
-    }
-    return '/textures/jupiter.jpg';
-  }, [color, type]);
+  // Use explicit texture from planet data, falling back to jupiter if not provided
+  const textureUrl = texture ?? '/textures/jupiter.jpg';
 
   // Load the planet texture
   const planetTexture = useTexture(textureUrl);
