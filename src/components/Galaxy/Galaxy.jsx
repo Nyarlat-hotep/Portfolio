@@ -131,7 +131,6 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
   const controlsRef = useRef(null);
   const shootingStarsRef = useRef();
   const containerRef = useRef(null);
-  const tapRef = useRef(null);
   const [asteroidModalOpen,  setAsteroidModalOpen]  = useState(false);
   const [codexInput,         setCodexInput]         = useState('');
   const [codexError,         setCodexError]         = useState(false);
@@ -171,30 +170,49 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
     setVignetteIntensity(intensity);
   }, []);
 
-  // Mobile tap detection — TrackballControls uses touch events, not pointer events,
-  // so we detect taps here and fire synthetic PointerEvents that R3F can raycast.
-  const handleTouchStart = useCallback((e) => {
-    const t = e.touches[0];
-    tapRef.current = { x: t.clientX, y: t.clientY, time: performance.now() };
-  }, []);
+  // Mobile tap detection — TrackballControls intercepts all touch events and may call
+  // stopPropagation, blocking React's synthetic onTouchEnd. We use native capture-phase
+  // listeners (fire before any bubble-phase handler) to detect taps and dispatch synthetic
+  // PointerEvents that R3F's raycaster can process.
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
 
-  const handleTouchEnd = useCallback((e) => {
-    if (!tapRef.current) return;
-    const t = e.changedTouches[0];
-    const dx = t.clientX - tapRef.current.x;
-    const dy = t.clientY - tapRef.current.y;
-    const dt = performance.now() - tapRef.current.time;
-    tapRef.current = null;
-    if (Math.sqrt(dx * dx + dy * dy) < 12 && dt < 300) {
-      const canvas = containerRef.current?.querySelector('canvas');
-      if (!canvas) return;
-      ['pointerdown', 'pointerup', 'click'].forEach(type => {
-        canvas.dispatchEvent(new PointerEvent(type, {
-          clientX: t.clientX, clientY: t.clientY,
-          bubbles: true, cancelable: true, pointerType: 'touch',
-        }));
-      });
-    }
+    let tapData = null;
+
+    const onTouchStart = (e) => {
+      const t = e.touches[0];
+      tapData = { x: t.clientX, y: t.clientY, time: performance.now() };
+    };
+
+    const onTouchEnd = (e) => {
+      if (!tapData) return;
+      const t = e.changedTouches[0];
+      const dx = t.clientX - tapData.x;
+      const dy = t.clientY - tapData.y;
+      const dt = performance.now() - tapData.time;
+      tapData = null;
+      if (Math.sqrt(dx * dx + dy * dy) < 12 && dt < 300) {
+        const canvas = container.querySelector('canvas');
+        if (!canvas) return;
+        // pointerType: 'mouse' matches desktop clicks — more compatible with R3F raycasting
+        ['pointerdown', 'pointerup', 'click'].forEach(type => {
+          canvas.dispatchEvent(new PointerEvent(type, {
+            clientX: t.clientX, clientY: t.clientY,
+            bubbles: true, cancelable: true, pointerType: 'mouse', isPrimary: true,
+          }));
+        });
+      }
+    };
+
+    // capture: true ensures these fire before TrackballControls' bubble-phase handlers
+    container.addEventListener('touchstart', onTouchStart, { capture: true, passive: true });
+    container.addEventListener('touchend', onTouchEnd, { capture: true });
+
+    return () => {
+      container.removeEventListener('touchstart', onTouchStart, { capture: true });
+      container.removeEventListener('touchend', onTouchEnd, { capture: true });
+    };
   }, []);
 
   const handleDoubleClick = useCallback(() => {
@@ -349,8 +367,6 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
     <div
       ref={containerRef}
       onDoubleClick={handleDoubleClick}
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
       style={{
         width: '100vw',
         height: '100vh',
