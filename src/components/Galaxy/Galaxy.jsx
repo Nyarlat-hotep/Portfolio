@@ -1,4 +1,4 @@
-import { Canvas } from '@react-three/fiber';
+import { Canvas, useThree, useFrame } from '@react-three/fiber';
 import { TrackballControls, PerspectiveCamera } from '@react-three/drei';
 import { useState, useEffect, Suspense, useMemo, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
@@ -38,6 +38,36 @@ function SceneReadySignal({ onReady }) {
   useEffect(() => {
     onReady?.();
   }, [onReady]);
+  return null;
+}
+
+// Handles mobile taps by doing real Three.js raycasting inside the Canvas context,
+// completely bypassing DOM event interception by TrackballControls.
+function MobileTapHandler({ pendingTapRef }) {
+  const { camera, raycaster, scene, gl } = useThree();
+
+  useFrame(() => {
+    const tap = pendingTapRef.current;
+    if (!tap) return;
+    pendingTapRef.current = null;
+
+    const canvas = gl.domElement;
+    const rect = canvas.getBoundingClientRect();
+    const x = ((tap.x - rect.left) / rect.width) * 2 - 1;
+    const y = -((tap.y - rect.top) / rect.height) * 2 + 1;
+
+    raycaster.setFromCamera({ x, y }, camera);
+    const hits = raycaster.intersectObjects(scene.children, true);
+
+    for (const hit of hits) {
+      const handler = hit.object.__r3f?.handlers?.onClick;
+      if (handler) {
+        handler({ stopPropagation: () => {}, ...hit });
+        break;
+      }
+    }
+  });
+
   return null;
 }
 
@@ -131,6 +161,7 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
   const controlsRef = useRef(null);
   const shootingStarsRef = useRef();
   const containerRef = useRef(null);
+  const pendingTapRef = useRef(null);
   const [asteroidModalOpen,  setAsteroidModalOpen]  = useState(false);
   const [codexInput,         setCodexInput]         = useState('');
   const [codexError,         setCodexError]         = useState(false);
@@ -170,10 +201,9 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
     setVignetteIntensity(intensity);
   }, []);
 
-  // Mobile tap detection — TrackballControls intercepts all touch events and may call
-  // stopPropagation, blocking React's synthetic onTouchEnd. We use native capture-phase
-  // listeners (fire before any bubble-phase handler) to detect taps and dispatch synthetic
-  // PointerEvents that R3F's raycaster can process.
+  // Mobile tap detection — TrackballControls intercepts all touch events.
+  // We detect taps here and hand off to MobileTapHandler (inside Canvas) which
+  // does real Three.js raycasting via useThree, bypassing DOM events entirely.
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -193,15 +223,8 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
       const dt = performance.now() - tapData.time;
       tapData = null;
       if (Math.sqrt(dx * dx + dy * dy) < 12 && dt < 300) {
-        const canvas = container.querySelector('canvas');
-        if (!canvas) return;
-        // pointerType: 'mouse' matches desktop clicks — more compatible with R3F raycasting
-        ['pointerdown', 'pointerup', 'click'].forEach(type => {
-          canvas.dispatchEvent(new PointerEvent(type, {
-            clientX: t.clientX, clientY: t.clientY,
-            bubbles: true, cancelable: true, pointerType: 'mouse', isPrimary: true,
-          }));
-        });
+        // Signal MobileTapHandler (inside Canvas) to raycast on next frame
+        pendingTapRef.current = { x: t.clientX, y: t.clientY };
       }
     };
 
@@ -380,6 +403,9 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
         performance={{ min: 0.5 }}
         gl={{ antialias: true, powerPreference: 'high-performance' }}
       >
+        {/* Mobile tap → real raycast inside Canvas context */}
+        <MobileTapHandler pendingTapRef={pendingTapRef} />
+
         {/* Camera setup - starts zoomed out for intro */}
         <PerspectiveCamera makeDefault position={[0, 8, 55]} fov={60} />
 
