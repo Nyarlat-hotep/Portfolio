@@ -130,6 +130,8 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
   const welcomeTimeoutRef = useRef(null);
   const controlsRef = useRef(null);
   const shootingStarsRef = useRef();
+  const containerRef = useRef(null);
+  const tapRef = useRef(null);
   const [asteroidModalOpen,  setAsteroidModalOpen]  = useState(false);
   const [codexInput,         setCodexInput]         = useState('');
   const [codexError,         setCodexError]         = useState(false);
@@ -167,6 +169,32 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
   // Memoized vignette handler
   const handleVignetteChange = useCallback((intensity) => {
     setVignetteIntensity(intensity);
+  }, []);
+
+  // Mobile tap detection — TrackballControls uses touch events, not pointer events,
+  // so we detect taps here and fire synthetic PointerEvents that R3F can raycast.
+  const handleTouchStart = useCallback((e) => {
+    const t = e.touches[0];
+    tapRef.current = { x: t.clientX, y: t.clientY, time: performance.now() };
+  }, []);
+
+  const handleTouchEnd = useCallback((e) => {
+    if (!tapRef.current) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - tapRef.current.x;
+    const dy = t.clientY - tapRef.current.y;
+    const dt = performance.now() - tapRef.current.time;
+    tapRef.current = null;
+    if (Math.sqrt(dx * dx + dy * dy) < 12 && dt < 300) {
+      const canvas = containerRef.current?.querySelector('canvas');
+      if (!canvas) return;
+      ['pointerdown', 'pointerup', 'click'].forEach(type => {
+        canvas.dispatchEvent(new PointerEvent(type, {
+          clientX: t.clientX, clientY: t.clientY,
+          bubbles: true, cancelable: true, pointerType: 'touch',
+        }));
+      });
+    }
   }, []);
 
   const handleDoubleClick = useCallback(() => {
@@ -319,7 +347,10 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
 
   return (
     <div
+      ref={containerRef}
       onDoubleClick={handleDoubleClick}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
       style={{
         width: '100vw',
         height: '100vh',

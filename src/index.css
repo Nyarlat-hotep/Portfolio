@@ -68,6 +68,11 @@ button {
   cursor: pointer;
   transition: all 0.3s ease;
   backdrop-filter: blur(10px);
+  touch-action: manipulation;
+}
+
+a {
+  touch-action: manipulation;
 }
 
 button:hover {
