@@ -67,7 +67,7 @@ export function stopBackground() {
 export function getMuted()  { return _muted }
 export function setMuted(v) {
   _muted = v
-  if (v) _bgAudio.pause()
+  if (v) { _bgAudio.pause(); _sbAudio.pause(); }
 }
 
 // ── Cosmic void — dedicated instance so it can be stopped on pointer-out ──────

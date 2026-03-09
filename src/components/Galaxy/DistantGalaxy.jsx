@@ -423,10 +423,10 @@ export default function DistantGalaxy() {
     const bi = battleIntensityRef.current;
 
     // Play battle sound when close enough, stop when moving away
-    if (bi > 0.05 && !battleSoundActiveRef.current) {
+    if (bi > 0.1 && !battleSoundActiveRef.current) {
       battleSoundActiveRef.current = true;
       playSpaceBattle();
-    } else if (bi <= 0.05 && battleSoundActiveRef.current) {
+    } else if (bi <= 0.1 && battleSoundActiveRef.current) {
       battleSoundActiveRef.current = false;
       stopSpaceBattle();
     }
