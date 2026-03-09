@@ -3,7 +3,6 @@ const SRCS = {
   blackHole:     '/sounds/black-hole.mp3',
   caseStudyOpen: '/sounds/case-study-open.mp3',
   menuClick:     '/sounds/menu-click.mp3',
-  menuHover:     '/sounds/menu-hover.mp3',
   cosmicVoid:    '/sounds/cosmic-void.mp3',
 }
 
@@ -100,6 +99,15 @@ export function stopBlackHole() {
 }
 
 
+// ── Menu click — dedicated instance with its own volume control ───────────────
+const _mcAudio = getPool(SRCS.menuClick).instances[0]
+
+export function playMenuClick() {
+  if (_muted) return
+  _mcAudio.volume = 0.4  // ← adjust here
+  try { _mcAudio.currentTime = 0 } catch (_) {}
+  _mcAudio.play().catch(() => {})
+}
+
 export function playCaseStudyOpen() { play(SRCS.caseStudyOpen, 0.9) }
-export function playMenuClick()     { play(SRCS.menuClick,     0.8) }
-export function playMenuHover()     { play(SRCS.menuHover,     0.5) }
+export function playMenuHover()     { playMenuClick() }
