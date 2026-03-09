@@ -23,7 +23,7 @@ import '../UI/PresentationMode.css';
 import { planetsData, getAdjacentPlanet } from '../../data/planets';
 import { isWebGLSupported } from '../../utils/webglDetect';
 import { isTouchDevice } from '../../utils/isTouchDevice';
-import { playBackground, getMuted, setMuted } from '../../utils/sounds';
+import { playBackground, playBlackHole, getMuted, setMuted } from '../../utils/sounds';
 
 // Check WebGL support once on module load
 const webGLSupported = isWebGLSupported();
@@ -285,6 +285,7 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
 
   // Memoized void click handler — stable via ref
   const handleVoidClick = useCallback(() => {
+    playBlackHole();
     onPlanetClickRef.current?.({ id: 'experiments', name: 'Experiments', color: '#6b2fa0' });
   }, []);
 
