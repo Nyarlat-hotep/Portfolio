@@ -131,6 +131,14 @@ export default function Experiments({ scrollContainerRef, isVoidMode = false }) 
       status: 'OPERATIONAL',
       action: null,
     },
+    {
+      title: 'DRAG_INTERACTION',
+      description: 'How much time do you really spend? Drag across pills to paint your weekly screen time. Physics-driven dots pile up as the hours grow.',
+      tags: ['Interaction', 'Physics', 'Data Viz'],
+      link: 'https://nyarlat-hotep.github.io/drag-interaction/',
+      status: 'OPERATIONAL',
+      action: null,
+    },
   ];
 
   return (
