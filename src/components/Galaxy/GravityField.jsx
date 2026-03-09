@@ -3,7 +3,7 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { createNebulaSplatTexture } from '../../utils/threeUtils';
 import PlanetField from './PlanetField';
-import { playBlackHole } from '../../utils/sounds';
+import { playBlackHole, stopBlackHole } from '../../utils/sounds';
 
 const WORLD_X = -60, WORLD_Y = 0, WORLD_Z = 20;
 const N = 6000;
@@ -282,6 +282,7 @@ export default function GravityField() {
 
   // Release captured particles to home with color-fade (no burst)
   const collapseWell = (idx) => {
+    stopBlackHole();
     const wells = wellsRef.current;
     const w = wells[idx];
     const pos    = geo.attributes.position.array;

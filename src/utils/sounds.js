@@ -40,10 +40,11 @@ function play(src, volume = 1) {
 // Kick off preloading all sounds immediately
 Object.values(SRCS).forEach(getPool)
 
-// Background: browsers block autoplay without a prior user gesture.
-// Try immediately; if blocked, queue it for the first real interaction.
+// ── Background ────────────────────────────────────────────────────────────────
+// Loops, and queues on first user gesture if autoplay is blocked.
 let _bgQueued = false
 const _bgAudio = getPool(SRCS.background).instances[0]
+_bgAudio.loop = true
 
 window.addEventListener('pointerdown', () => {
   if (_bgQueued && !_muted) { _bgQueued = false; _bgAudio.volume = 0.2; _bgAudio.play().catch(() => {}) }
@@ -51,7 +52,7 @@ window.addEventListener('pointerdown', () => {
 
 export function playBackground() {
   _bgAudio.volume = 0.2
-  _bgAudio.currentTime = 0
+  try { _bgAudio.currentTime = 0 } catch (_) {}
   if (_muted) return
   _bgAudio.play().catch(() => { _bgQueued = true })
 }
@@ -59,21 +60,45 @@ export function playBackground() {
 export function stopBackground() {
   _bgQueued = false
   _bgAudio.pause()
-  _bgAudio.currentTime = 0
+  try { _bgAudio.currentTime = 0 } catch (_) {}
 }
 
 export function getMuted()  { return _muted }
 export function setMuted(v) {
   _muted = v
-  if (v) {
-    _bgAudio.pause()
-  } else if (!_bgAudio.paused) {
-    // already playing, nothing to do
-  }
+  if (v) _bgAudio.pause()
 }
 
-export function playBlackHole()     { play(SRCS.blackHole,     1.0) }
+// ── Cosmic void — dedicated instance so it can be stopped on pointer-out ──────
+const _cvAudio = getPool(SRCS.cosmicVoid).instances[0]
+
+export function playCosmicVoid() {
+  if (_muted) return
+  _cvAudio.volume = 0.8
+  try { _cvAudio.currentTime = 0 } catch (_) {}
+  _cvAudio.play().catch(() => {})
+}
+
+export function stopCosmicVoid() {
+  _cvAudio.pause()
+  try { _cvAudio.currentTime = 0 } catch (_) {}
+}
+
+// ── Black hole — dedicated instance so it can be stopped on well collapse ─────
+const _bhAudio = getPool(SRCS.blackHole).instances[0]
+
+export function playBlackHole() {
+  if (_muted) return
+  _bhAudio.volume = 1.0
+  try { _bhAudio.currentTime = 0 } catch (_) {}
+  _bhAudio.play().catch(() => {})
+}
+
+export function stopBlackHole() {
+  _bhAudio.pause()
+  try { _bhAudio.currentTime = 0 } catch (_) {}
+}
+
 export function playCaseStudyOpen() { play(SRCS.caseStudyOpen, 0.9) }
 export function playMenuClick()     { play(SRCS.menuClick,     0.8) }
 export function playMenuHover()     { play(SRCS.menuHover,     0.5) }
-export function playCosmicVoid()    { play(SRCS.cosmicVoid,    0.8) }
