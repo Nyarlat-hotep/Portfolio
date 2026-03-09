@@ -5,7 +5,6 @@ const SRCS = {
   menuClick:     '/sounds/menu-click.mp3',
   menuHover:     '/sounds/menu-hover.mp3',
   cosmicVoid:    '/sounds/cosmic-void.mp3',
-  spaceBattle:   '/sounds/space-battle.mp3',
 }
 
 // Pool of pre-loaded instances per sound — no fetch delay on playback
@@ -67,7 +66,7 @@ export function stopBackground() {
 export function getMuted()  { return _muted }
 export function setMuted(v) {
   _muted = v
-  if (v) { _bgAudio.pause(); _sbAudio.pause(); }
+  if (v) _bgAudio.pause()
 }
 
 // ── Cosmic void — dedicated instance so it can be stopped on pointer-out ──────
@@ -100,20 +99,6 @@ export function stopBlackHole() {
   try { _bhAudio.currentTime = 0 } catch (_) {}
 }
 
-// ── Space battle — dedicated instance, loops while camera is near the galaxy ──
-const _sbAudio = getPool(SRCS.spaceBattle).instances[0]
-_sbAudio.loop = true
-
-export function playSpaceBattle() {
-  if (_muted || !_sbAudio.paused) return
-  _sbAudio.volume = 0.5
-  _sbAudio.play().catch(() => {})
-}
-
-export function stopSpaceBattle() {
-  _sbAudio.pause()
-  try { _sbAudio.currentTime = 0 } catch (_) {}
-}
 
 export function playCaseStudyOpen() { play(SRCS.caseStudyOpen, 0.9) }
 export function playMenuClick()     { play(SRCS.menuClick,     0.8) }
