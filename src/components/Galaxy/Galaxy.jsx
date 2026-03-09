@@ -23,7 +23,7 @@ import '../UI/PresentationMode.css';
 import { planetsData, getAdjacentPlanet } from '../../data/planets';
 import { isWebGLSupported } from '../../utils/webglDetect';
 import { isTouchDevice } from '../../utils/isTouchDevice';
-import { playBackground, getMuted, setMuted } from '../../utils/sounds';
+import { playBackground, getMuted, setMuted, playMenuClick } from '../../utils/sounds';
 
 // Check WebGL support once on module load
 const webGLSupported = isWebGLSupported();
@@ -773,7 +773,7 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
               padding: 0,
               transition: 'background 0.15s, color 0.15s',
             }}
-            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.14)'; e.currentTarget.style.color = '#fff'; }}
+            onMouseEnter={e => { playMenuClick(); e.currentTarget.style.background = 'rgba(255,255,255,0.14)'; e.currentTarget.style.color = '#fff'; }}
             onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.07)'; e.currentTarget.style.color = 'rgba(255,255,255,0.6)'; }}
           >
             {muted ? <VolumeX size={14} /> : <Volume2 size={14} />}
