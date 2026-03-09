@@ -4,6 +4,7 @@ import { useTexture } from '@react-three/drei';
 import * as THREE from 'three';
 import Moon from './Moon';
 import { disposeObject, createCircularParticleTexture } from '../../utils/threeUtils';
+import { playMenuClick } from '../../utils/sounds';
 
 function Planet({
   position,
@@ -113,6 +114,7 @@ function Planet({
   const handlePointerOver = useCallback((e) => {
     e.stopPropagation();
     setHovered(true);
+    playMenuClick();
 
     // Calculate screen position and screen-space radius of the planet
     if (meshRef.current) {
@@ -148,6 +150,7 @@ function Planet({
 
   const handleClick = useCallback((e) => {
     e.stopPropagation();
+    playMenuClick();
     onClick?.();
   }, [onClick]);
 

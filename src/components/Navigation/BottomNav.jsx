@@ -81,7 +81,7 @@ export default function BottomNav({ activePlanetId, onNavigate, onCreatePlanet, 
                 <button
                   className={`nav-button ${isActive ? 'active' : ''}`}
                   onClick={() => { playMenuClick(); handleNavClick(item.id); }}
-                  onMouseEnter={playMenuHover}
+                  onMouseEnter={playMenuClick}
                   role="menuitem"
                   aria-current={isActive ? 'page' : undefined}
                 >

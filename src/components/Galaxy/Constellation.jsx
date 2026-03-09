@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { CONSTELLATIONS } from '../../data/constellations';
 import { createCircularParticleTexture, createNebulaSplatTexture } from '../../utils/threeUtils';
+import { playMenuClick } from '../../utils/sounds';
 
 const SCALE = 1.6;
 const STAR_SIZE = 3.0;
@@ -273,9 +274,9 @@ export default function Constellation({ position = [0, 2, -55], onSelect, onHove
       {/* Invisible bounding rectangle — hover/click surface */}
       <mesh
         position={[bounds.cx, bounds.cy, 0]}
-        onPointerOver={(e) => { e.stopPropagation(); hoveredRef.current = true; setHovered(true); }}
+        onPointerOver={(e) => { e.stopPropagation(); hoveredRef.current = true; setHovered(true); playMenuClick(); }}
         onPointerOut={handlePointerOut}
-        onClick={(e) => { e.stopPropagation(); onSelect(todayConstellation); }}
+        onClick={(e) => { e.stopPropagation(); playMenuClick(); onSelect(todayConstellation); }}
       >
         <planeGeometry args={[bounds.width, bounds.height]} />
         <meshBasicMaterial visible={false} side={THREE.DoubleSide} />
