@@ -58,6 +58,7 @@ export default function BottomNav({ activePlanetId, onNavigate, onCreatePlanet, 
           <button
             className="nav-toggle"
             onClick={() => { playMenuClick(); handleToggle(!isExpanded); }}
+            onMouseEnter={playMenuClick}
             aria-label={isExpanded ? "Close navigation menu" : "Open navigation menu"}
             aria-expanded={isExpanded}
             aria-controls="nav-list"
@@ -101,6 +102,7 @@ export default function BottomNav({ activePlanetId, onNavigate, onCreatePlanet, 
             className="nav-button resume-button"
             target="_blank"
             rel="noopener noreferrer"
+            onMouseEnter={playMenuClick}
           >
             <span className="nav-icon"><FileText size={18} /></span>
             <span className="nav-label">Resume</span>
@@ -120,6 +122,7 @@ export default function BottomNav({ activePlanetId, onNavigate, onCreatePlanet, 
               rel="noopener noreferrer"
               aria-label={social.name}
               title={social.name}
+              onMouseEnter={playMenuClick}
             >
               {social.icon}
             </a>
@@ -130,6 +133,7 @@ export default function BottomNav({ activePlanetId, onNavigate, onCreatePlanet, 
         <button
           className={`social-link create-planet-btn ${hasCustomPlanet ? 'delete-mode' : ''}`}
           onClick={() => hasCustomPlanet ? onDeletePlanet?.() : onCreatePlanet?.()}
+          onMouseEnter={playMenuClick}
           aria-label={hasCustomPlanet ? "Delete your planet" : "Create your own planet"}
           title={hasCustomPlanet ? "Delete planet" : "Create your planet"}
         >
