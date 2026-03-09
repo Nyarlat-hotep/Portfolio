@@ -89,7 +89,7 @@ const _bhAudio = getPool(SRCS.blackHole).instances[0]
 
 export function playBlackHole() {
   if (_muted) return
-  _bhAudio.volume = 1.0
+  _bhAudio.volume = 0.5
   try { _bhAudio.currentTime = 0 } catch (_) {}
   _bhAudio.play().catch(() => {})
 }
