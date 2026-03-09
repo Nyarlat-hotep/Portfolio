@@ -1,6 +1,7 @@
 import { useRef, useState, useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
+import { playCosmicVoid } from '../../utils/sounds';
 
 // ============================================================
 // GLSL Simplex 3D Noise (Ashima Arts / Ian McEwan)
@@ -462,6 +463,7 @@ function BlackHoleCore({ position, onClick, onHoverChange }) {
     document.body.style.cursor = 'pointer';
     isHovered.current = true;
     onHoverChange?.(true);
+    playCosmicVoid();
   };
 
   const handlePointerOut = () => {

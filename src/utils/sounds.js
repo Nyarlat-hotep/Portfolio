@@ -4,6 +4,7 @@ const SRCS = {
   caseStudyOpen: '/sounds/case-study-open.mp3',
   menuClick:     '/sounds/menu-click.mp3',
   menuHover:     '/sounds/menu-hover.mp3',
+  cosmicVoid:    '/sounds/cosmic-void.mp3',
 }
 
 // Pool of pre-loaded instances per sound — no fetch delay on playback
@@ -75,3 +76,4 @@ export function playBlackHole()     { play(SRCS.blackHole,     1.0) }
 export function playCaseStudyOpen() { play(SRCS.caseStudyOpen, 0.9) }
 export function playMenuClick()     { play(SRCS.menuClick,     0.8) }
 export function playMenuHover()     { play(SRCS.menuHover,     0.5) }
+export function playCosmicVoid()    { play(SRCS.cosmicVoid,    0.8) }
