@@ -4,6 +4,7 @@ import './BottomNav.css';
 import { planetsData } from '../../data/planets';
 import { aboutContent } from '../../data/caseStudies';
 import { isTouchDevice } from '../../utils/isTouchDevice';
+import { playMenuClick, playMenuHover } from '../../utils/sounds';
 
 // Check touch once on module load
 const isTouch = isTouchDevice();
@@ -56,7 +57,7 @@ export default function BottomNav({ activePlanetId, onNavigate, onCreatePlanet, 
         <div className="nav-header">
           <button
             className="nav-toggle"
-            onClick={() => handleToggle(!isExpanded)}
+            onClick={() => { playMenuClick(); handleToggle(!isExpanded); }}
             aria-label={isExpanded ? "Close navigation menu" : "Open navigation menu"}
             aria-expanded={isExpanded}
             aria-controls="nav-list"
@@ -79,7 +80,8 @@ export default function BottomNav({ activePlanetId, onNavigate, onCreatePlanet, 
               <li key={item.id} className="nav-item" role="none">
                 <button
                   className={`nav-button ${isActive ? 'active' : ''}`}
-                  onClick={() => handleNavClick(item.id)}
+                  onClick={() => { playMenuClick(); handleNavClick(item.id); }}
+                  onMouseEnter={playMenuHover}
                   role="menuitem"
                   aria-current={isActive ? 'page' : undefined}
                 >

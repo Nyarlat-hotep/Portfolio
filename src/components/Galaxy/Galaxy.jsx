@@ -23,6 +23,7 @@ import '../UI/PresentationMode.css';
 import { planetsData, getAdjacentPlanet } from '../../data/planets';
 import { isWebGLSupported } from '../../utils/webglDetect';
 import { isTouchDevice } from '../../utils/isTouchDevice';
+import { playBackground, playBlackHole, playCaseStudyOpen } from '../../utils/sounds';
 
 // Check WebGL support once on module load
 const webGLSupported = isWebGLSupported();
@@ -181,6 +182,7 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
   // Start intro only after scene is ready (runs once)
   useEffect(() => {
     if (sceneReady && !introCompletedRef.current && !isIntroActive) {
+      playBackground();
       const timer = setTimeout(() => {
         setIsIntroActive(true);
       }, 100);
@@ -273,6 +275,7 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
   const planetClickHandlers = useMemo(() => {
     return planetsData.reduce((handlers, planet, index) => {
       handlers[planet.id] = () => {
+        if (planet.id !== 'home') playCaseStudyOpen();
         setCurrentPlanetIndex(index);
         onPlanetClickRef.current?.(planet);
       };
@@ -282,6 +285,7 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
 
   // Memoized void click handler — stable via ref
   const handleVoidClick = useCallback(() => {
+    playBlackHole();
     onPlanetClickRef.current?.({ id: 'experiments', name: 'Experiments', color: '#6b2fa0' });
   }, []);
 
