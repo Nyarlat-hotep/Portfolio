@@ -9,6 +9,7 @@ import About from './components/Pages/About';
 import Experiments from './components/Pages/Experiments';
 import CustomCursor from './components/UI/CustomCursor';
 import { caseStudies, aboutContent } from './data/caseStudies';
+import { playCaseStudyOpen, playBlackHole } from './utils/sounds';
 import './App.css';
 
 function App() {
@@ -21,8 +22,9 @@ function App() {
   const handlePlanetClick = useCallback((planet) => {
     setActivePlanet(planet);
 
-    // Don't open overlay for home planet
     if (planet.id !== 'home') {
+      if (planet.id === 'experiments') playBlackHole();
+      else playCaseStudyOpen();
       setIsOverlayOpen(true);
     } else {
       setIsOverlayOpen(false);
