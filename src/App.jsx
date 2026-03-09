@@ -9,7 +9,7 @@ import About from './components/Pages/About';
 import Experiments from './components/Pages/Experiments';
 import CustomCursor from './components/UI/CustomCursor';
 import { caseStudies, aboutContent } from './data/caseStudies';
-import { playCaseStudyOpen, stopBackground } from './utils/sounds';
+import { playCaseStudyOpen, playCaseStudyClose, stopBackground } from './utils/sounds';
 import './App.css';
 
 function App() {
@@ -32,6 +32,7 @@ function App() {
   }, []);
 
   const handleCloseOverlay = useCallback(() => {
+    playCaseStudyClose();
     setIsOverlayOpen(false);
     setActivePlanet(null);
   }, []);

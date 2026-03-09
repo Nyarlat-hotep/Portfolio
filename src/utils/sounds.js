@@ -1,9 +1,10 @@
 const SRCS = {
-  background:    '/sounds/background.mp3',
-  blackHole:     '/sounds/black-hole.mp3',
-  caseStudyOpen: '/sounds/case-study-open.mp3',
-  menuClick:     '/sounds/menu-click.mp3',
-  cosmicVoid:    '/sounds/cosmic-void.mp3',
+  background:     '/sounds/background.mp3',
+  blackHole:      '/sounds/black-hole.mp3',
+  caseStudyOpen:  '/sounds/case-study-open.mp3',
+  caseStudyClose: '/sounds/case-study-close.mp3',
+  menuClick:      '/sounds/menu-click.mp3',
+  cosmicVoid:     '/sounds/cosmic-void.mp3',
 }
 
 // Pool of pre-loaded instances per sound — no fetch delay on playback
@@ -109,5 +110,6 @@ export function playMenuClick() {
   _mcAudio.play().catch(() => {})
 }
 
-export function playCaseStudyOpen() { play(SRCS.caseStudyOpen, 0.9) }
-export function playMenuHover()     { playMenuClick() }
+export function playCaseStudyOpen()  { play(SRCS.caseStudyOpen,  0.9) }
+export function playCaseStudyClose() { play(SRCS.caseStudyClose, 0.9) }
+export function playMenuHover()      { playMenuClick() }

@@ -23,7 +23,7 @@ import '../UI/PresentationMode.css';
 import { planetsData, getAdjacentPlanet } from '../../data/planets';
 import { isWebGLSupported } from '../../utils/webglDetect';
 import { isTouchDevice } from '../../utils/isTouchDevice';
-import { playBackground, getMuted, setMuted, playMenuClick } from '../../utils/sounds';
+import { playBackground, getMuted, setMuted, playMenuClick, playCaseStudyOpen, playCaseStudyClose } from '../../utils/sounds';
 
 // Check WebGL support once on module load
 const webGLSupported = isWebGLSupported();
@@ -252,6 +252,7 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
 
   // Asteroid click — open codex modal
   const handleAsteroidClick = useCallback(() => {
+    playCaseStudyOpen();
     setAsteroidModalOpen(true);
     setCodexInput('');
     setCodexError(false);
@@ -290,6 +291,7 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
 
   // Constellation select — fetch Wikipedia summary, cache per session
   const handleConstellationSelect = useCallback(async (constellation) => {
+    playCaseStudyOpen();
     setConstellationModal({ name: constellation.name, wikiKey: constellation.wikiKey, text: null, loading: true });
 
     if (wikiCacheRef.current[constellation.wikiKey]) {
@@ -588,7 +590,7 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
                 <span className="asteroid-message-label">SIGNAL INTERCEPTED</span>
                 <button
                   className="asteroid-message-close"
-                  onClick={() => setAsteroidModalOpen(false)}
+                  onClick={() => { playCaseStudyClose(); setAsteroidModalOpen(false); }}
                   aria-label="Close"
                 ><X size={16} /></button>
               </div>
@@ -830,7 +832,7 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
               </div>
               <button
                 className="constellation-modal-close"
-                onClick={() => setConstellationModal(null)}
+                onClick={() => { playCaseStudyClose(); setConstellationModal(null); }}
                 aria-label="Close"
               ><X size={16} /></button>
             </div>
