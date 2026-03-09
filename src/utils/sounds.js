@@ -32,7 +32,7 @@ function play(src, volume = 1) {
   const audio = pool.instances[pool.index]
   pool.index = (pool.index + 1) % POOL_SIZE
   audio.volume = volume
-  audio.currentTime = 0
+  try { audio.currentTime = 0 } catch (_) {}
   audio.play().catch(() => {})
 }
 
