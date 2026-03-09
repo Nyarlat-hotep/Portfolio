@@ -112,7 +112,7 @@ export default function Experiments({ scrollContainerRef, isVoidMode = false }) 
       description: 'Fragments of creation. Images pulled from the spaces between projects. Handle with care.',
       tags: ['Gallery', 'Art'],
       link: null,
-      status: 'ACTIVE',
+      status: 'OPERATIONAL',
       action: () => setGalleryOpen(true)
     },
     {
@@ -120,7 +120,7 @@ export default function Experiments({ scrollContainerRef, isVoidMode = false }) 
       description: 'Visual logic builder. Drag conditions into groups, toggle AND/OR, watch the expression form.',
       tags: ['Tool', 'Logic'],
       link: 'https://nyarlat-hotep.github.io/better-condition-builder/',
-      status: 'ACTIVE',
+      status: 'OPERATIONAL',
       action: null,
     },
     {
@@ -128,7 +128,7 @@ export default function Experiments({ scrollContainerRef, isVoidMode = false }) 
       description: 'Seven sacred polyhedra tumble in the dark. Cast your fate — d4 through d100, advantage, disadvantage, and the chronicle of every roll.',
       tags: ['Tool', '3D', 'D&D'],
       link: 'https://nyarlat-hotep.github.io/dice-roller/',
-      status: 'ACTIVE',
+      status: 'OPERATIONAL',
       action: null,
     },
   ];

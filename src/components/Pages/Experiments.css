@@ -178,12 +178,14 @@
   color: #ffcc44;
 }
 
-.status-active .status-dot {
+.status-active .status-dot,
+.status-operational .status-dot {
   background: #00ff6a;
   box-shadow: 0 0 8px #00ff6a;
 }
 
-.status-active .status-text {
+.status-active .status-text,
+.status-operational .status-text {
   color: #00ff6a;
 }
 
