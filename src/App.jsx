@@ -24,7 +24,7 @@ function App() {
 
     if (planet.id !== 'home') {
       stopBackground();
-      if (planet.id !== 'experiments') playCaseStudyOpen();
+      playCaseStudyOpen();
       setIsOverlayOpen(true);
     } else {
       setIsOverlayOpen(false);
