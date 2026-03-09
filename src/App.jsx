@@ -9,7 +9,7 @@ import About from './components/Pages/About';
 import Experiments from './components/Pages/Experiments';
 import CustomCursor from './components/UI/CustomCursor';
 import { caseStudies, aboutContent } from './data/caseStudies';
-import { playCaseStudyOpen, playBlackHole } from './utils/sounds';
+import { playCaseStudyOpen, playBlackHole, stopBackground } from './utils/sounds';
 import './App.css';
 
 function App() {
@@ -23,6 +23,7 @@ function App() {
     setActivePlanet(planet);
 
     if (planet.id !== 'home') {
+      stopBackground();
       if (planet.id === 'experiments') playBlackHole();
       else playCaseStudyOpen();
       setIsOverlayOpen(true);

@@ -24,7 +24,10 @@ function getPool(src) {
   return _pools[src]
 }
 
+let _muted = false
+
 function play(src, volume = 1) {
+  if (_muted) return
   const pool = getPool(src)
   const audio = pool.instances[pool.index]
   pool.index = (pool.index + 1) % POOL_SIZE
@@ -39,15 +42,33 @@ Object.values(SRCS).forEach(getPool)
 // Background: browsers block autoplay without a prior user gesture.
 // Try immediately; if blocked, queue it for the first real interaction.
 let _bgQueued = false
+const _bgAudio = getPool(SRCS.background).instances[0]
 
 window.addEventListener('pointerdown', () => {
-  if (_bgQueued) { _bgQueued = false; play(SRCS.background, 0.4) }
+  if (_bgQueued && !_muted) { _bgQueued = false; _bgAudio.play().catch(() => {}) }
 }, { once: true, capture: true })
 
 export function playBackground() {
-  getPool(SRCS.background).instances[0].volume = 0.4
-  getPool(SRCS.background).instances[0].currentTime = 0
-  getPool(SRCS.background).instances[0].play().catch(() => { _bgQueued = true })
+  _bgAudio.volume = 0.4
+  _bgAudio.currentTime = 0
+  if (_muted) return
+  _bgAudio.play().catch(() => { _bgQueued = true })
+}
+
+export function stopBackground() {
+  _bgQueued = false
+  _bgAudio.pause()
+  _bgAudio.currentTime = 0
+}
+
+export function getMuted()  { return _muted }
+export function setMuted(v) {
+  _muted = v
+  if (v) {
+    _bgAudio.pause()
+  } else if (!_bgAudio.paused) {
+    // already playing, nothing to do
+  }
 }
 
 export function playBlackHole()     { play(SRCS.blackHole,     1.0) }

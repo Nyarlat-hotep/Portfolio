@@ -3,7 +3,7 @@ import { TrackballControls, PerspectiveCamera } from '@react-three/drei';
 import { useState, useEffect, Suspense, useMemo, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, ArrowRight, Move, ZoomIn, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Move, ZoomIn, X, Volume2, VolumeX } from 'lucide-react';
 import './Galaxy.css';
 import Planet from './Planet';
 import CustomPlanet from './CustomPlanet';
@@ -23,7 +23,7 @@ import '../UI/PresentationMode.css';
 import { planetsData, getAdjacentPlanet } from '../../data/planets';
 import { isWebGLSupported } from '../../utils/webglDetect';
 import { isTouchDevice } from '../../utils/isTouchDevice';
-import { playBackground } from '../../utils/sounds';
+import { playBackground, getMuted, setMuted } from '../../utils/sounds';
 
 // Check WebGL support once on module load
 const webGLSupported = isWebGLSupported();
@@ -168,6 +168,7 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
   const shootingStarsRef = useRef();
   const containerRef = useRef(null);
   const pendingTapRef = useRef(null);
+  const [muted, setMutedState] = useState(() => getMuted());
   const [asteroidModalOpen,  setAsteroidModalOpen]  = useState(false);
   const [codexInput,         setCodexInput]         = useState('');
   const [codexError,         setCodexError]         = useState(false);
@@ -736,41 +737,79 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
         )}
       </AnimatePresence>
 
-      {/* Navigation hint - different for touch vs keyboard */}
+      {/* Mute button + navigation hints — bottom right */}
       {sceneReady && (
         <div
           style={{
             position: 'absolute',
             bottom: '20px',
             right: '20px',
-            color: '#ffffff',
-            fontSize: '12px',
-            fontFamily: 'monospace',
-            textAlign: 'right',
-            pointerEvents: 'none',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'flex-end',
+            gap: '10px',
             paddingBottom: 'env(safe-area-inset-bottom, 0px)'
           }}
         >
-          {isTouch ? (
-            <>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'flex-end' }}>
-                <Move size={12} /> Drag to orbit
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'flex-end' }}>
-                <ZoomIn size={12} /> Pinch to zoom
-              </div>
-              <div>Tap planets to explore</div>
-            </>
-          ) : (
-            <>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'flex-end' }}>
-                <ArrowLeft size={12} /> <ArrowRight size={12} /> Arrow keys to navigate
-              </div>
-              <div>Click and drag to orbit</div>
-              <div>Scroll to zoom</div>
-              <div>ESC to return home</div>
-            </>
-          )}
+          {/* Mute toggle */}
+          <button
+            onClick={() => {
+              const next = !muted;
+              setMuted(next);
+              setMutedState(next);
+            }}
+            aria-label={muted ? 'Unmute' : 'Mute'}
+            style={{
+              background: 'rgba(255,255,255,0.07)',
+              border: '1px solid rgba(255,255,255,0.15)',
+              borderRadius: '6px',
+              color: 'rgba(255,255,255,0.6)',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '28px',
+              height: '28px',
+              padding: 0,
+              transition: 'background 0.15s, color 0.15s',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.14)'; e.currentTarget.style.color = '#fff'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.07)'; e.currentTarget.style.color = 'rgba(255,255,255,0.6)'; }}
+          >
+            {muted ? <VolumeX size={14} /> : <Volume2 size={14} />}
+          </button>
+
+          {/* Navigation hints */}
+          <div
+            style={{
+              color: '#ffffff',
+              fontSize: '12px',
+              fontFamily: 'monospace',
+              textAlign: 'right',
+              pointerEvents: 'none',
+            }}
+          >
+            {isTouch ? (
+              <>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'flex-end' }}>
+                  <Move size={12} /> Drag to orbit
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'flex-end' }}>
+                  <ZoomIn size={12} /> Pinch to zoom
+                </div>
+                <div>Tap planets to explore</div>
+              </>
+            ) : (
+              <>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'flex-end' }}>
+                  <ArrowLeft size={12} /> <ArrowRight size={12} /> Arrow keys to navigate
+                </div>
+                <div>Click and drag to orbit</div>
+                <div>Scroll to zoom</div>
+                <div>ESC to return home</div>
+              </>
+            )}
+          </div>
         </div>
       )}
 
