@@ -2,6 +2,7 @@ import { useRef, useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { createCircularParticleTexture, createNebulaSplatTexture } from '../../utils/threeUtils';
+import { playSpaceBattle, stopSpaceBattle } from '../../utils/sounds';
 
 // Positioned east of the planet cluster — discovered by orbiting right
 const GALAXY_RADIUS  = 9;
@@ -355,6 +356,7 @@ export default function DistantGalaxy() {
   const events      = useRef(initEventStates());
 
   const battleIntensityRef = useRef(0);
+  const battleSoundActiveRef = useRef(false);
   const laserGeo    = useMemo(() => buildLaserGeometry(), []);
   const lasers      = useRef(initLasers());
   const fireballGeo = useMemo(() => buildFireballGeometry(), []);
@@ -363,6 +365,7 @@ export default function DistantGalaxy() {
 
   useEffect(() => {
     return () => {
+      stopSpaceBattle();
       geometry.dispose();
       nebulaGeo.dispose();
       eventsGeo.dispose();
@@ -418,6 +421,15 @@ export default function DistantGalaxy() {
     const targetBI = dist < BATTLE_RADIUS ? 1 - dist / BATTLE_RADIUS : 0;
     battleIntensityRef.current += (targetBI - battleIntensityRef.current) * Math.min(delta * 1.5, 1);
     const bi = battleIntensityRef.current;
+
+    // Play battle sound when close enough, stop when moving away
+    if (bi > 0.05 && !battleSoundActiveRef.current) {
+      battleSoundActiveRef.current = true;
+      playSpaceBattle();
+    } else if (bi <= 0.05 && battleSoundActiveRef.current) {
+      battleSoundActiveRef.current = false;
+      stopSpaceBattle();
+    }
 
     // ── Laser animation ──
     const lPos = laserGeo.attributes.position;
