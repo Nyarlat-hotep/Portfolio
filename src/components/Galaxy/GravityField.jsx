@@ -3,6 +3,7 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { createNebulaSplatTexture } from '../../utils/threeUtils';
 import PlanetField from './PlanetField';
+import { playBlackHole } from '../../utils/sounds';
 
 const WORLD_X = -60, WORLD_Y = 0, WORLD_Z = 20;
 const N = 6000;
@@ -311,6 +312,7 @@ export default function GravityField() {
       collapseWell(0);
       return;
     }
+    playBlackHole();
     wells.push({ id: _wellId++, x: lp.x, y: lp.y, z: lp.z, age: 0 });
     setWellSnapshot([...wells]);
   };
