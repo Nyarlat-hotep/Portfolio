@@ -48,9 +48,9 @@ function createStoneAlbedo(size = 256) {
       const nx = x / size, ny = y / size;
       const n  = Math.max(0, Math.min(1, sampleHeight(nx, ny)));
       const i  = (y * size + x) * 4;
-      d[i]     = Math.round(52  + n * 118);
-      d[i + 1] = Math.round(38  + n * 78);
-      d[i + 2] = Math.round(22  + n * 42);
+      d[i]     = Math.round(18  + n * 45);
+      d[i + 1] = Math.round(80  + n * 140);
+      d[i + 2] = Math.round(18  + n * 40);
       d[i + 3] = 255;
     }
   }
@@ -84,7 +84,7 @@ function createStoneNormal(size = 256) {
   return new THREE.CanvasTexture(canvas);
 }
 
-let _stoneAlbedo = null;
+let _stoneAlbedo = null; // regenerated on next mount
 let _stoneNormal = null;
 function getStoneTextures() {
   if (!_stoneAlbedo) _stoneAlbedo = createStoneAlbedo();
@@ -102,17 +102,17 @@ function createWispGlowTexture() {
   const c = size / 2;
 
   const halo = ctx.createRadialGradient(c, c, 0, c, c, c);
-  halo.addColorStop(0,    'rgba(180, 255, 240, 1.0)');
-  halo.addColorStop(0.25, 'rgba(0,   255, 200, 0.7)');
-  halo.addColorStop(0.55, 'rgba(0,   200, 160, 0.2)');
-  halo.addColorStop(1.0,  'rgba(0,   180, 140, 0)');
+  halo.addColorStop(0,    'rgba(180, 255, 100, 1.0)');
+  halo.addColorStop(0.25, 'rgba(60,  255, 60,  0.7)');
+  halo.addColorStop(0.55, 'rgba(30,  200, 30,  0.2)');
+  halo.addColorStop(1.0,  'rgba(0,   160, 0,   0)');
   ctx.fillStyle = halo;
   ctx.fillRect(0, 0, size, size);
 
   const core = ctx.createRadialGradient(c, c, 0, c, c, c * 0.3);
-  core.addColorStop(0,   'rgba(255, 255, 255, 0.95)');
-  core.addColorStop(0.5, 'rgba(200, 255, 240, 0.4)');
-  core.addColorStop(1,   'rgba(0,   255, 200, 0)');
+  core.addColorStop(0,   'rgba(220, 255, 180, 0.95)');
+  core.addColorStop(0.5, 'rgba(120, 255, 80,  0.4)');
+  core.addColorStop(1,   'rgba(0,   200, 0,   0)');
   ctx.fillStyle = core;
   ctx.fillRect(0, 0, size, size);
 
@@ -282,8 +282,8 @@ export default function Asteroid({ onAsteroidClick }) {
           map={albedo}
           normalMap={normal}
           normalScale={NORMAL_SCALE}
-          emissive="#00ccaa"
-          emissiveIntensity={0.08}
+          emissive="#00ff44"
+          emissiveIntensity={0.55}
           roughness={0.95}
           metalness={0.02}
         />
@@ -293,10 +293,10 @@ export default function Asteroid({ onAsteroidClick }) {
       <mesh renderOrder={1} geometry={rimGeo}>
         <meshBasicMaterial
           ref={rimMatRef}
-          color="#00ffcc"
+          color="#44ff44"
           side={THREE.BackSide}
           transparent
-          opacity={0.07}
+          opacity={0.18}
           depthWrite={false}
           blending={THREE.AdditiveBlending}
         />
@@ -307,7 +307,7 @@ export default function Asteroid({ onAsteroidClick }) {
         <pointsMaterial
           ref={wispMatRef}
           map={wispTexture}
-          color="#88ffee"
+          color="#aaff66"
           size={0.22}
           transparent
           opacity={0.7}
