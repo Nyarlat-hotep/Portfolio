@@ -60,7 +60,6 @@ export function playBackground() {
 }
 
 export function stopBackground() {
-  _bgQueued = false
   _bgAudio.pause()
   try { _bgAudio.currentTime = 0 } catch (_) {}
 }
