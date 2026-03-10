@@ -749,18 +749,20 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
         )}
       </AnimatePresence>
 
-      {/* Mute button + navigation hints — bottom right */}
+      {/* Mute button + navigation hints — top-right on mobile, bottom-right on desktop */}
       {sceneReady && (
         <div
           style={{
             position: 'absolute',
-            bottom: '20px',
+            ...(isTouch
+              ? { top: '16px', paddingTop: 'env(safe-area-inset-top, 0px)' }
+              : { bottom: '20px', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }
+            ),
             right: '20px',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'flex-end',
             gap: '10px',
-            paddingBottom: 'env(safe-area-inset-bottom, 0px)'
           }}
         >
           {/* Mute toggle */}
