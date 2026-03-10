@@ -23,7 +23,7 @@ import '../UI/PresentationMode.css';
 import { planetsData, getAdjacentPlanet } from '../../data/planets';
 import { isWebGLSupported } from '../../utils/webglDetect';
 import { isTouchDevice } from '../../utils/isTouchDevice';
-import { playBackground, getMuted, setMuted, playMenuClick, playCaseStudyOpen, playCaseStudyClose } from '../../utils/sounds';
+import { playBackground, getMuted, setMuted, playMenuClick, playCaseStudyOpen, playCaseStudyClose, playWarp } from '../../utils/sounds';
 
 // Check WebGL support once on module load
 const webGLSupported = isWebGLSupported();
@@ -264,6 +264,7 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
     if (codexInput.trim().toLowerCase() === "r'lyeh") {
       setAsteroidModalOpen(false);
       setCodexInput('');
+      playWarp();
       setWarpActive(true);
     } else {
       setCodexError(true);
@@ -391,6 +392,7 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
     const handler = (e) => {
       if (e.shiftKey && e.key === 'P') {
         setAsteroidModalOpen(false);
+        playWarp();
         setWarpActive(true);
       }
     };
