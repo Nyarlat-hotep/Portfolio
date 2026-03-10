@@ -269,7 +269,6 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
       setWarpActive(true);
     } else {
       setCodexError(true);
-      setTimeout(() => setCodexError(false), 400);
     }
   }, [codexInput]);
 
@@ -590,10 +589,12 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 8 }}
               transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
-              className="asteroid-message"
+              className={`asteroid-message${codexError ? ' codex-rejected' : ''}`}
             >
               <div className="asteroid-message-header">
-                <span className="asteroid-message-label">SIGNAL INTERCEPTED</span>
+                <span className="asteroid-message-label">
+                  {codexError ? 'INVALID CODEX' : 'SIGNAL INTERCEPTED'}
+                </span>
                 <button
                   className="asteroid-message-close"
                   onClick={() => { playCaseStudyClose(); setAsteroidModalOpen(false); }}
@@ -609,7 +610,10 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
                   className={`asteroid-codex-input${codexError ? ' codex-error' : ''}`}
                   type="text"
                   value={codexInput}
-                  onChange={(e) => setCodexInput(e.target.value)}
+                  onChange={(e) => {
+                    setCodexInput(e.target.value);
+                    if (codexError) setCodexError(false);
+                  }}
                   onKeyDown={handleCodexKeyDown}
                   autoFocus
                   autoComplete="off"
@@ -799,17 +803,17 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
           >
             {isTouch ? (
               <>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'flex-end' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'flex-end', color: 'rgba(255, 255, 255, 0.8)' }}>
                   <Move size={12} /> Drag to orbit
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'flex-end' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'flex-end', color: 'rgba(255, 255, 255, 0.8)' }}>
                   <ZoomIn size={12} /> Pinch to zoom
                 </div>
                 <div>Tap planets to explore</div>
               </>
             ) : (
               <>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'flex-end' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'flex-end', color: 'rgba(255, 255, 255, 0.8)' }}>
                   <ArrowLeft size={12} /> <ArrowRight size={12} /> Arrow keys to navigate
                 </div>
                 <div>Click and drag to orbit</div>

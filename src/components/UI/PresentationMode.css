@@ -362,6 +362,10 @@
   border-color: rgba(0, 255, 106, 0.8);
 }
 
+.asteroid-message.codex-rejected .asteroid-codex-label {
+  color: rgba(255, 70, 70, 0.75);
+}
+
 .asteroid-codex-input.codex-error {
   border-color: rgba(255, 80, 80, 0.8);
   animation: codexShake 0.35s ease;

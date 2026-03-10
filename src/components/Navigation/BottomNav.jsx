@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Banana, LayoutDashboard, MessageSquare, User, FlaskConical, FileText, Menu, X, Linkedin, Dribbble, Orbit, Trash2 } from 'lucide-react';
+import { Banana, LayoutDashboard, MessageSquare, User, FlaskConical, FileText, Menu, X, Linkedin, Dribbble, Github, Orbit, Trash2 } from 'lucide-react';
 import './BottomNav.css';
 import { planetsData } from '../../data/planets';
 import { aboutContent } from '../../data/caseStudies';
@@ -43,6 +43,7 @@ export default function BottomNav({ activePlanetId, onNavigate, onCreatePlanet, 
   const socialLinks = [
     { name: 'LinkedIn', url: aboutContent.social.linkedin, icon: <Linkedin size={16} /> },
     { name: 'Dribbble', url: aboutContent.social.dribbble, icon: <Dribbble size={16} /> },
+    { name: 'GitHub', url: 'https://github.com/Nyarlat-hotep', icon: <Github size={16} /> },
   ];
 
   const handleNavClick = (itemId) => {
