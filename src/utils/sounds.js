@@ -37,17 +37,29 @@ function play(src, volume = 1) {
   audio.play().catch(() => {})
 }
 
-// Kick off preloading all sounds immediately (skip background — loaded via Web Audio)
+// Kick off preloading all sounds immediately (background loaded separately via Web Audio)
 Object.values(SRCS).filter(s => s !== SRCS.background).forEach(getPool)
 
 // ── Background — Web Audio API (bypasses system media session / phone controls) ─
-let _audioCtx = null
-let _gainNode = null
-let _bgBuffer = null
-let _bgSource = null
+// Strategy:
+//   1. Fetch raw bytes immediately — no AudioContext or gesture needed
+//   2. playBackground() sets _bgWantsPlay = true
+//   3. On first user gesture, resume AudioContext and decode+start playback
+let _audioCtx    = null
+let _gainNode    = null
+let _bgRawBuf    = null   // fetched ArrayBuffer
+let _bgBuffer    = null   // decoded AudioBuffer
+let _bgSource    = null
 let _bgStartedAt = 0
-let _bgOffset = 0
-let _bgPlaying = false
+let _bgOffset    = 0
+let _bgPlaying   = false
+let _bgWantsPlay = false
+
+// Fetch raw bytes now — works before any user gesture
+fetch(SRCS.background)
+  .then(r => r.arrayBuffer())
+  .then(buf => { _bgRawBuf = buf })
+  .catch(() => {})
 
 function getBgCtx() {
   if (!_audioCtx) {
@@ -60,16 +72,18 @@ function getBgCtx() {
   return _audioCtx
 }
 
-async function loadBgBuffer() {
+async function decodeBgBuffer() {
   if (_bgBuffer) return
   const ctx = getBgCtx()
-  const res = await fetch(SRCS.background)
-  const buf = await res.arrayBuffer()
-  _bgBuffer = await ctx.decodeAudioData(buf)
+  if (!_bgRawBuf) {
+    const res = await fetch(SRCS.background)
+    _bgRawBuf = await res.arrayBuffer()
+  }
+  _bgBuffer = await ctx.decodeAudioData(_bgRawBuf.slice(0))
 }
 
 function startBgSource() {
-  if (!_bgBuffer || !_audioCtx) return
+  if (!_bgBuffer || !_audioCtx || _audioCtx.state !== 'running') return
   _bgSource?.stop?.()
   _bgSource = _audioCtx.createBufferSource()
   _bgSource.buffer = _bgBuffer
@@ -81,39 +95,51 @@ function startBgSource() {
   _bgPlaying = true
 }
 
+async function tryStartBg() {
+  if (!_bgWantsPlay || _muted) return
+  const ctx = getBgCtx()
+  if (ctx.state === 'suspended') return  // wait for gesture to resume
+  if (!_bgBuffer) await decodeBgBuffer()
+  if (_bgWantsPlay && !_bgPlaying) startBgSource()
+}
+
+// On user gesture: resume suspended context then try to start bg music
+function onUserGesture() {
+  if (!_bgWantsPlay) return
+  const ctx = getBgCtx()
+  if (ctx.state === 'suspended') {
+    ctx.resume().then(() => tryStartBg())
+  } else {
+    tryStartBg()
+  }
+}
+window.addEventListener('touchend',   onUserGesture, { capture: true, passive: true })
+window.addEventListener('pointerdown', onUserGesture, { capture: true, passive: true })
+
 // Pause when tab/app is hidden (phone locked, switched app, left browser)
 document.addEventListener('visibilitychange', () => {
   if (!_audioCtx) return
   if (document.hidden) {
-    if (_bgPlaying) {
-      _bgOffset = (_audioCtx.currentTime - _bgStartedAt) % (_bgBuffer?.duration || 1)
+    if (_bgPlaying && _bgBuffer) {
+      _bgOffset = (_audioCtx.currentTime - _bgStartedAt) % _bgBuffer.duration
       _bgSource?.stop?.()
       _bgPlaying = false
     }
-  } else if (!_muted && _bgBuffer) {
-    startBgSource()
+  } else if (_bgWantsPlay && !_muted) {
+    tryStartBg()
   }
 })
 
 export function playBackground() {
   if (_muted) return
-  const ctx = getBgCtx()
-  // Resume suspended context (required after user gesture on mobile)
-  const resume = ctx.state === 'suspended' ? ctx.resume() : Promise.resolve()
-  resume.then(() => {
-    if (_bgBuffer) {
-      startBgSource()
-    } else {
-      loadBgBuffer().then(startBgSource)
-    }
-  })
+  _bgWantsPlay = true
+  tryStartBg()
 }
 
 export function stopBackground() {
-  if (_bgSource) {
-    _bgSource.stop?.()
-    _bgSource = null
-  }
+  _bgWantsPlay = false
+  _bgSource?.stop?.()
+  _bgSource = null
   _bgOffset = 0
   _bgPlaying = false
 }
@@ -156,7 +182,6 @@ export function stopBlackHole() {
   _bhAudio.pause()
   try { _bhAudio.currentTime = 0 } catch (_) {}
 }
-
 
 // ── Menu click — dedicated instance with its own volume control ───────────────
 const _mcAudio = getPool(SRCS.menuClick).instances[0]
