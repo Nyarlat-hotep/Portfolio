@@ -45,6 +45,22 @@ Object.values(SRCS).forEach(getPool)
 const _bgAudio = getPool(SRCS.background).instances[0]
 _bgAudio.loop = true
 
+// Don't register with system media controls (lock screen, notification center)
+if ('mediaSession' in navigator) {
+  navigator.mediaSession.metadata = null
+  navigator.mediaSession.setActionHandler?.('play', null)
+  navigator.mediaSession.setActionHandler?.('pause', null)
+}
+
+// Pause when tab/app is hidden (phone locked, switched app, left Chrome)
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    _bgAudio.pause()
+  } else if (!_muted && _bgAudio.src) {
+    _bgAudio.play().catch(() => {})
+  }
+})
+
 export function playBackground() {
   _bgAudio.volume = 0.2
   try { _bgAudio.currentTime = 0 } catch (_) {}
