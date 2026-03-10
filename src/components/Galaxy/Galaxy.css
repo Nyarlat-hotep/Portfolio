@@ -15,7 +15,7 @@
   align-items: flex-end;
   padding-bottom: 24px;
   pointer-events: none;
-  z-index: 50;
+  z-index: 1500;
 }
 
 .asteroid-message {
@@ -25,7 +25,7 @@
   border: 1px solid rgba(0, 255, 106, 0.7);
   border-radius: 12px;
   overflow: hidden;
-  z-index: 50;
+  z-index: 1500;
   box-shadow:
     0 0 40px rgba(0, 212, 255, 0.15),
     0 0 12px rgba(85, 0, 187, 0.2),
@@ -135,7 +135,7 @@
   border: 1px solid rgba(107, 47, 160, 0.5);
   border-radius: 12px;
   overflow: hidden;
-  z-index: 50;
+  z-index: 1500;
   box-shadow:
     0 0 40px rgba(107, 47, 160, 0.3),
     0 0 10px rgba(0, 255, 106, 0.1),
@@ -255,16 +255,24 @@
 /* Mobile adjustments */
 @media (max-width: 768px) {
   .constellation-modal {
-    bottom: 186px;
-    right: 12px;
-    left: 12px;
-    width: auto;
+    bottom: auto;
+    top: 50%;
+    left: 50%;
+    right: auto;
+    transform: translate(-50%, -50%);
+    width: calc(100vw - 2rem);
+    max-width: 360px;
+    max-height: 70vh;
+    overflow-y: auto;
+  }
+
+  .asteroid-message-overlay {
+    align-items: center;
+    padding-bottom: 0;
   }
 
   .asteroid-message {
-    bottom: 186px;
-    left: 12px;
-    right: 12px;
-    width: auto;
+    width: calc(100vw - 2rem);
+    max-width: 360px;
   }
 }
