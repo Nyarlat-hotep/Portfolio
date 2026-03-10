@@ -1,5 +1,6 @@
 import { useRef, useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
+import { Line } from '@react-three/drei';
 import * as THREE from 'three';
 import { fbm } from '../../utils/noise';
 
@@ -154,14 +155,21 @@ export default function Asteroid({ onAsteroidClick }) {
   const groupRef     = useRef();
   const mainMatRef   = useRef();
   const rimMatRef    = useRef();
-  const edgeMatRef   = useRef();
+  const edgeLineRef  = useRef();
   const wispMatRef   = useRef();
   const isHoveredRef = useRef(false);
   const hoverRef     = useRef(0);
 
-  const geometry = useMemo(() => buildPyramidGeo(1),    []);
-  const rimGeo   = useMemo(() => buildPyramidGeo(1.14), []);
-  const edgesGeo = useMemo(() => new THREE.EdgesGeometry(buildPyramidGeo(1)), []);
+  const geometry  = useMemo(() => buildPyramidGeo(1),    []);
+  const rimGeo    = useMemo(() => buildPyramidGeo(1.14), []);
+  const edgePts   = useMemo(() => {
+    const geo = new THREE.EdgesGeometry(buildPyramidGeo(1));
+    const pos = geo.attributes.position;
+    const pts = [];
+    for (let i = 0; i < pos.count; i++) pts.push([pos.getX(i), pos.getY(i), pos.getZ(i)]);
+    geo.dispose();
+    return pts;
+  }, []);
 
   const { albedo, normal } = useMemo(() => getStoneTextures(), []);
 
@@ -191,7 +199,6 @@ export default function Asteroid({ onAsteroidClick }) {
     return () => {
       geometry.dispose();
       rimGeo.dispose();
-      edgesGeo.dispose();
       wispGeo.dispose();
       // albedo, normal, wispTexture are module-level caches — not disposed here
     };
@@ -239,8 +246,8 @@ export default function Asteroid({ onAsteroidClick }) {
       mainMatRef.current.opacity     = fading ? s.fadeOpacity : 1;
       mainMatRef.current.needsUpdate = true;
     }
-    if (rimMatRef.current)  rimMatRef.current.opacity  = 0.18 * s.fadeOpacity;
-    if (edgeMatRef.current) edgeMatRef.current.opacity = s.fadeOpacity;
+    if (rimMatRef.current)                    rimMatRef.current.opacity              = 0.18 * s.fadeOpacity;
+    if (edgeLineRef.current?.material)        edgeLineRef.current.material.opacity   = s.fadeOpacity;
     if (wispMatRef.current) wispMatRef.current.opacity = 0.7  * s.fadeOpacity;
 
     // Smooth hover lerp
@@ -294,16 +301,17 @@ export default function Asteroid({ onAsteroidClick }) {
       </mesh>
 
       {/* Face edge outlines */}
-      <lineSegments renderOrder={1} geometry={edgesGeo}>
-        <lineBasicMaterial
-          ref={edgeMatRef}
-          color="#007722"
-          transparent
-          opacity={1}
-          depthWrite={false}
-          linewidth={1}
-        />
-      </lineSegments>
+      <Line
+        ref={edgeLineRef}
+        points={edgePts}
+        segments
+        lineWidth={2.5}
+        color="#007722"
+        transparent
+        opacity={1}
+        depthWrite={false}
+        renderOrder={1}
+      />
 
       {/* Rim glow — slightly expanded BackSide copy */}
       <mesh renderOrder={1} geometry={rimGeo}>
