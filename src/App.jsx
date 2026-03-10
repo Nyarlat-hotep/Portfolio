@@ -9,7 +9,7 @@ import About from './components/Pages/About';
 import Experiments from './components/Pages/Experiments';
 import CustomCursor from './components/UI/CustomCursor';
 import { caseStudies, aboutContent } from './data/caseStudies';
-import { playCaseStudyOpen, playCaseStudyClose, stopBackground } from './utils/sounds';
+import { playCaseStudyOpen, playCaseStudyClose, playPlanetExplosion, stopBackground } from './utils/sounds';
 import './App.css';
 
 function App() {
@@ -71,6 +71,7 @@ function App() {
   }, []);
 
   const handleDeletePlanet = useCallback(() => {
+    playPlanetExplosion();
     // Start deletion animation
     setIsCustomPlanetDeleting(true);
 
