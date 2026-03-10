@@ -9,7 +9,7 @@ import About from './components/Pages/About';
 import Experiments from './components/Pages/Experiments';
 import CustomCursor from './components/UI/CustomCursor';
 import { caseStudies, aboutContent } from './data/caseStudies';
-import { playCaseStudyOpen, playCaseStudyClose, playPlanetExplosion, stopBackground } from './utils/sounds';
+import { playCaseStudyOpen, playCaseStudyClose, playPlanetExplosion, playPlanetCreation, stopBackground } from './utils/sounds';
 import './App.css';
 
 function App() {
@@ -48,6 +48,7 @@ function App() {
   }, []);
 
   const handleSavePlanet = useCallback((planetData) => {
+    playPlanetCreation();
     // Generate random position for the custom planet
     const angle = Math.random() * Math.PI * 2;
     const distance = 8 + Math.random() * 6; // Between 8 and 14 units from center

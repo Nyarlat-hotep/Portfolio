@@ -6,6 +6,7 @@ const SRCS = {
   menuClick:        '/sounds/menu-click.mp3',
   cosmicVoid:       '/sounds/cosmic-void.mp3',
   planetExplosion:  '/sounds/planet-explosion.mp3',
+  planetCreation:   '/sounds/planet-creation.mp3',
 }
 
 // Pool of pre-loaded instances per sound — no fetch delay on playback
@@ -197,4 +198,5 @@ export function playMenuClick() {
 export function playCaseStudyOpen()    { play(SRCS.caseStudyOpen,    0.9) }
 export function playCaseStudyClose()   { play(SRCS.caseStudyClose,   0.9) }
 export function playPlanetExplosion()  { play(SRCS.planetExplosion,  1.0) }
+export function playPlanetCreation()   { play(SRCS.planetCreation,   1.0) }
 export function playMenuHover()        { playMenuClick() }
