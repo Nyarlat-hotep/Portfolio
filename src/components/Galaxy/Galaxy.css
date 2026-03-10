@@ -255,14 +255,15 @@
 /* Mobile adjustments */
 @media (max-width: 768px) {
   .constellation-modal {
-    bottom: auto;
-    top: 50%;
-    left: 50%;
-    right: auto;
-    transform: translate(-50%, -50%);
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    margin: auto;
     width: calc(100vw - 2rem);
     max-width: 360px;
     max-height: 70vh;
+    height: fit-content;
     overflow-y: auto;
   }
 
