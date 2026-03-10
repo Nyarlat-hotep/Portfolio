@@ -6,6 +6,7 @@ import * as THREE from 'three';
 import { X } from 'lucide-react';
 import DataStream from './DataStream';
 import { isTouchDevice } from '../../utils/isTouchDevice';
+import { playMenuClick } from '../../utils/sounds';
 import './PlanetCreator.css';
 
 // Check touch once on module load
@@ -299,6 +300,7 @@ export default function PlanetCreator({ isOpen, onClose, onSave }) {
                 ref={closeButtonRef}
                 className="creator-close"
                 onClick={onClose}
+                onMouseEnter={playMenuClick}
                 aria-label="Close"
               >
                 <X size={24} />
@@ -358,6 +360,7 @@ export default function PlanetCreator({ isOpen, onClose, onSave }) {
                         key={s.id}
                         className={`size-button size-button-${s.id} ${size === s.id ? 'active' : ''}`}
                         onClick={() => setSize(s.id)}
+                        onMouseEnter={playMenuClick}
                         aria-label={`Size ${s.label}`}
                       >
                         <span className="size-dot" />
@@ -375,6 +378,7 @@ export default function PlanetCreator({ isOpen, onClose, onSave }) {
                         key={t.id}
                         className={`texture-option ${texture.id === t.id ? 'active' : ''}`}
                         onClick={() => setTexture(t)}
+                        onMouseEnter={playMenuClick}
                       >
                         <div className="texture-preview">
                           {isTouch ? (
@@ -429,10 +433,10 @@ export default function PlanetCreator({ isOpen, onClose, onSave }) {
 
             {/* Footer */}
             <div className="creator-footer">
-              <button className="cancel-button" onClick={onClose}>
+              <button className="cancel-button" onClick={onClose} onMouseEnter={playMenuClick}>
                 Cancel
               </button>
-              <button className="save-button" onClick={handleSave}>
+              <button className="save-button" onClick={handleSave} onMouseEnter={playMenuClick}>
                 Launch Planet
               </button>
             </div>

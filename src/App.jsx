@@ -38,10 +38,12 @@ function App() {
   }, []);
 
   const handleOpenPlanetCreator = useCallback(() => {
+    playCaseStudyOpen();
     setShowPlanetCreator(true);
   }, []);
 
   const handleClosePlanetCreator = useCallback(() => {
+    playCaseStudyClose();
     setShowPlanetCreator(false);
   }, []);
 
