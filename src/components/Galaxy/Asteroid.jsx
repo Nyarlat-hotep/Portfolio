@@ -305,7 +305,7 @@ export default function Asteroid({ onAsteroidClick }) {
         ref={edgeLineRef}
         points={edgePts}
         segments
-        lineWidth={2.5}
+        lineWidth={1.5}
         color="#007722"
         transparent
         opacity={1}
