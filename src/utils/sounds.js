@@ -42,19 +42,21 @@ Object.values(SRCS).forEach(getPool)
 
 // ── Background ────────────────────────────────────────────────────────────────
 // Loops, and queues on first user gesture if autoplay is blocked.
-let _bgQueued = false
 const _bgAudio = getPool(SRCS.background).instances[0]
 _bgAudio.loop = true
-
-window.addEventListener('pointerdown', () => {
-  if (_bgQueued && !_muted) { _bgQueued = false; _bgAudio.volume = 0.2; _bgAudio.play().catch(() => {}) }
-}, { once: true, capture: true })
 
 export function playBackground() {
   _bgAudio.volume = 0.2
   try { _bgAudio.currentTime = 0 } catch (_) {}
   if (_muted) return
-  _bgAudio.play().catch(() => { _bgQueued = true })
+  _bgAudio.play().catch(() => {
+    // Autoplay blocked — resume on next user gesture (covers mobile Safari)
+    const resume = () => {
+      if (!_muted) _bgAudio.play().catch(() => {})
+    }
+    window.addEventListener('touchend', resume, { once: true, capture: true })
+    window.addEventListener('pointerdown', resume, { once: true, capture: true })
+  })
 }
 
 export function stopBackground() {

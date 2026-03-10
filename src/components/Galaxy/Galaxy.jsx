@@ -219,12 +219,14 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
     let tapData = null;
 
     const onTouchStart = (e) => {
+      if (e.target.closest('.bottom-nav')) return;
       const t = e.touches[0];
       tapData = { x: t.clientX, y: t.clientY, time: performance.now() };
     };
 
     const onTouchEnd = (e) => {
       if (!tapData) return;
+      if (e.target.closest('.bottom-nav')) { tapData = null; return; }
       const t = e.changedTouches[0];
       const dx = t.clientX - tapData.x;
       const dy = t.clientY - tapData.y;
