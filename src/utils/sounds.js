@@ -37,53 +37,94 @@ function play(src, volume = 1) {
   audio.play().catch(() => {})
 }
 
-// Kick off preloading all sounds immediately
-Object.values(SRCS).forEach(getPool)
+// Kick off preloading all sounds immediately (skip background — loaded via Web Audio)
+Object.values(SRCS).filter(s => s !== SRCS.background).forEach(getPool)
 
-// ── Background ────────────────────────────────────────────────────────────────
-// Loops, and queues on first user gesture if autoplay is blocked.
-const _bgAudio = getPool(SRCS.background).instances[0]
-_bgAudio.loop = true
+// ── Background — Web Audio API (bypasses system media session / phone controls) ─
+let _audioCtx = null
+let _gainNode = null
+let _bgBuffer = null
+let _bgSource = null
+let _bgStartedAt = 0
+let _bgOffset = 0
+let _bgPlaying = false
 
-// Don't register with system media controls (lock screen, notification center)
-if ('mediaSession' in navigator) {
-  navigator.mediaSession.metadata = null
-  navigator.mediaSession.setActionHandler?.('play', null)
-  navigator.mediaSession.setActionHandler?.('pause', null)
+function getBgCtx() {
+  if (!_audioCtx) {
+    const AudioCtx = window.AudioContext || /** @type {any} */ (window).webkitAudioContext
+    _audioCtx = new AudioCtx()
+    _gainNode = _audioCtx.createGain()
+    _gainNode.gain.value = 0.2
+    _gainNode.connect(_audioCtx.destination)
+  }
+  return _audioCtx
 }
 
-// Pause when tab/app is hidden (phone locked, switched app, left Chrome)
+async function loadBgBuffer() {
+  if (_bgBuffer) return
+  const ctx = getBgCtx()
+  const res = await fetch(SRCS.background)
+  const buf = await res.arrayBuffer()
+  _bgBuffer = await ctx.decodeAudioData(buf)
+}
+
+function startBgSource() {
+  if (!_bgBuffer || !_audioCtx) return
+  _bgSource?.stop?.()
+  _bgSource = _audioCtx.createBufferSource()
+  _bgSource.buffer = _bgBuffer
+  _bgSource.loop = true
+  _bgSource.connect(_gainNode)
+  const offset = _bgOffset % _bgBuffer.duration
+  _bgSource.start(0, offset)
+  _bgStartedAt = _audioCtx.currentTime - offset
+  _bgPlaying = true
+}
+
+// Pause when tab/app is hidden (phone locked, switched app, left browser)
 document.addEventListener('visibilitychange', () => {
+  if (!_audioCtx) return
   if (document.hidden) {
-    _bgAudio.pause()
-  } else if (!_muted && _bgAudio.src) {
-    _bgAudio.play().catch(() => {})
+    if (_bgPlaying) {
+      _bgOffset = (_audioCtx.currentTime - _bgStartedAt) % (_bgBuffer?.duration || 1)
+      _bgSource?.stop?.()
+      _bgPlaying = false
+    }
+  } else if (!_muted && _bgBuffer) {
+    startBgSource()
   }
 })
 
 export function playBackground() {
-  _bgAudio.volume = 0.2
-  try { _bgAudio.currentTime = 0 } catch (_) {}
   if (_muted) return
-  _bgAudio.play().catch(() => {
-    // Autoplay blocked — resume on next user gesture (covers mobile Safari)
-    const resume = () => {
-      if (!_muted) _bgAudio.play().catch(() => {})
+  const ctx = getBgCtx()
+  // Resume suspended context (required after user gesture on mobile)
+  const resume = ctx.state === 'suspended' ? ctx.resume() : Promise.resolve()
+  resume.then(() => {
+    if (_bgBuffer) {
+      startBgSource()
+    } else {
+      loadBgBuffer().then(startBgSource)
     }
-    window.addEventListener('touchend', resume, { once: true, capture: true })
-    window.addEventListener('pointerdown', resume, { once: true, capture: true })
   })
 }
 
 export function stopBackground() {
-  _bgAudio.pause()
-  try { _bgAudio.currentTime = 0 } catch (_) {}
+  if (_bgSource) {
+    _bgSource.stop?.()
+    _bgSource = null
+  }
+  _bgOffset = 0
+  _bgPlaying = false
 }
 
 export function getMuted()  { return _muted }
 export function setMuted(v) {
   _muted = v
-  if (v) _bgAudio.pause()
+  if (v) {
+    _bgSource?.stop?.()
+    _bgPlaying = false
+  }
 }
 
 // ── Cosmic void — dedicated instance so it can be stopped on pointer-out ──────
