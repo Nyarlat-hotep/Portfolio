@@ -64,6 +64,7 @@
   overflow: visible;
 }
 
+
 .nav-toggle {
   width: 36px;
   height: 36px;
@@ -342,9 +343,9 @@
 
 /* Menu toggle outer container — matches nav-social dark box */
 .nav-toggle-container {
-  background: rgba(10, 14, 39, 0.7);
+  background: rgba(255, 120, 0, 0.05);
   backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 140, 0, 0.2);
   border-radius: 12px;
   padding: 0.75rem;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);

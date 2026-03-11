@@ -214,10 +214,10 @@ export const caseStudies = {
 // About me content
 export const aboutContent = {
   name: 'I.x35',
-  tagline: 'Lead Product Designer. \nBorn as an artist, formed to think in systems.',
+  tagline: 'there are points of light, you just have to know where to look.',
   bio: [
     'My path into design started with a canvas. I studied drawing and painting — which, it turns out, is a surprisingly useful foundation for a career spent designing digital systems. When a friend pulled me into the world of information architecture, something clicked into place. Hierarchy, flow, the tension between simplicity and depth — those were just composition by another name. I\'ve been chasing that alignment ever since.',
-    'I think like a game master. I\'ve always been drawn to games — D&D, strategy systems, anything governed by discoverable rules and hidden logic. That instinct follows me into design: I treat a vague brief not as a problem to solve before I start, but as a world to explore while I do. I find the constraints, pressure-test the assumptions, and look for the move that hasn\'t been tried yet. Ambiguity doesn\'t slow me down — it\'s usually where the most interesting solutions are hiding.',
+    'I\'ve always been drawn to games — D&D, strategy systems, anything governed by discoverable rules and hidden logic. That instinct follows me into design: I treat a vague brief not as a problem to solve before I start, but as a world to explore while I do. I find the constraints, pressure-test the assumptions, and look for the move that hasn\'t been tried yet. Ambiguity doesn\'t slow me down — it\'s usually where the most interesting solutions are hiding.',
     'Over eleven years I taught myself front-end development, spent years as the first and only designer at a company that needed everything built from scratch, and worked my way from UI designer to Lead at Rocket — where I now design internal tools for one of the largest banking forces in the country. The problems are bigger, the stakes are real, and the systems are endlessly complex. That\'s exactly where I want to be.'
   ],
   skills: [
