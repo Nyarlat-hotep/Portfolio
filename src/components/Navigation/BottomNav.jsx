@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { Banana, LayoutDashboard, MessageSquare, User, FlaskConical, FileText, Menu, X, Linkedin, Dribbble, Github, Orbit, Trash2 } from 'lucide-react';
 import './BottomNav.css';
 import { planetsData } from '../../data/planets';
@@ -9,8 +9,12 @@ import { playMenuClick, playMenuHover } from '../../utils/sounds';
 // Check touch once on module load
 const isTouch = isTouchDevice();
 
-export default function BottomNav({ activePlanetId, onNavigate, onCreatePlanet, onDeletePlanet, hasCustomPlanet = false, onExpandChange }) {
+const BottomNav = forwardRef(function BottomNav({ activePlanetId, onNavigate, onCreatePlanet, onDeletePlanet, hasCustomPlanet = false, onExpandChange }, ref) {
   const [isExpanded, setIsExpanded] = useState(false);
+
+  useImperativeHandle(ref, () => ({
+    openNav() { handleToggle(true); },
+  }));
 
   // Notify parent when expanded state changes
   const handleToggle = (expanded) => {
@@ -53,28 +57,9 @@ export default function BottomNav({ activePlanetId, onNavigate, onCreatePlanet, 
 
   return (
     <nav className="bottom-nav">
-      {/* Main Navigation */}
+      {/* Nav panel — collapses when closed, expands above toolbar */}
       <div className="nav-main">
-        <div className="nav-header">
-          <button
-            className="nav-toggle"
-            onClick={() => { playMenuClick(); handleToggle(!isExpanded); }}
-            onMouseEnter={playMenuClick}
-            aria-label={isExpanded ? "Close navigation menu" : "Open navigation menu"}
-            aria-expanded={isExpanded}
-            aria-controls="nav-list"
-          >
-            <span className="nav-toggle-icon">{isExpanded ? <X size={20} /> : <Menu size={20} />}</span>
-            {/* Hide keyboard tooltip on touch devices */}
-            {!isTouch && (
-              <span className="nav-tooltip">
-                <span className="tooltip-key">Press m</span>
-              </span>
-            )}
-          </button>
-          <span className="nav-title">Navigate</span>
-        </div>
-
+        <div className="nav-main-inner">
         <ul id="nav-list" className={`nav-list ${isExpanded ? 'expanded' : ''}`} role="menu">
           {navItems.map((item) => {
             const isActive = activePlanetId === item.id;
@@ -109,10 +94,31 @@ export default function BottomNav({ activePlanetId, onNavigate, onCreatePlanet, 
             <span className="nav-label">Resume</span>
           </a>
         </div>
+        </div>
       </div>
 
-      {/* Social Links & Create Planet */}
-      <div className="nav-bottom-row">
+      {/* Toolbar row — always visible */}
+      <div className="nav-toolbar">
+        {/* Menu toggle — dark container matching social group */}
+        <div className="nav-toggle-container">
+          <button
+            className="nav-toggle"
+            onClick={() => { playMenuClick(); handleToggle(!isExpanded); }}
+            onMouseEnter={playMenuClick}
+            aria-label={isExpanded ? "Close navigation menu" : "Open navigation menu"}
+            aria-expanded={isExpanded}
+            aria-controls="nav-list"
+          >
+            <span className="nav-toggle-icon">{isExpanded ? <X size={20} /> : <Menu size={20} />}</span>
+            {!isTouch && (
+              <span className="nav-tooltip">
+                <span className="tooltip-key">Press m</span>
+              </span>
+            )}
+          </button>
+        </div>
+
+        {/* Social links */}
         <div className="nav-social">
           {socialLinks.map((social) => (
             <a
@@ -131,16 +137,22 @@ export default function BottomNav({ activePlanetId, onNavigate, onCreatePlanet, 
         </div>
 
         {/* Create/Delete Planet Button */}
-        <button
-          className={`social-link create-planet-btn ${hasCustomPlanet ? 'delete-mode' : ''}`}
-          onClick={() => hasCustomPlanet ? onDeletePlanet?.() : onCreatePlanet?.()}
-          onMouseEnter={playMenuClick}
-          aria-label={hasCustomPlanet ? "Delete your planet" : "Create your own planet"}
-          title={hasCustomPlanet ? "Delete planet" : "Create your planet"}
-        >
-          {hasCustomPlanet ? <Trash2 size={16} /> : <Orbit size={16} />}
-        </button>
+        <div className="nav-social">
+          <a
+            className={`social-link create-planet-btn ${hasCustomPlanet ? 'delete-mode' : ''}`}
+            onClick={() => hasCustomPlanet ? onDeletePlanet?.() : onCreatePlanet?.()}
+            onMouseEnter={playMenuClick}
+            aria-label={hasCustomPlanet ? "Delete your planet" : "Create your own planet"}
+            title={hasCustomPlanet ? "Delete planet" : "Create your planet"}
+            role="button"
+            tabIndex={0}
+          >
+            {hasCustomPlanet ? <Trash2 size={16} /> : <Orbit size={16} />}
+          </a>
+        </div>
       </div>
     </nav>
   );
-}
+});
+
+export default BottomNav;

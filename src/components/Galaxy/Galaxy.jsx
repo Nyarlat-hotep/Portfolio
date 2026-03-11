@@ -180,6 +180,8 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
   const onPlanetClickRef = useRef(onPlanetClick);
   onPlanetClickRef.current = onPlanetClick;
 
+  const bottomNavRef = useRef(null);
+
   // Start intro only after scene is ready (runs once)
   useEffect(() => {
     if (sceneReady && !introCompletedRef.current && !isIntroActive) {
@@ -279,10 +281,17 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
   // Memoized click handlers per planet — stable forever via ref, no dep on onPlanetClick
   const planetClickHandlers = useMemo(() => {
     return planetsData.reduce((handlers, planet, index) => {
-      handlers[planet.id] = () => {
-        setCurrentPlanetIndex(index);
-        onPlanetClickRef.current?.(planet);
-      };
+      if (planet.id === 'home') {
+        // Sun click opens the nav instead of navigating
+        handlers[planet.id] = () => {
+          bottomNavRef.current?.openNav();
+        };
+      } else {
+        handlers[planet.id] = () => {
+          setCurrentPlanetIndex(index);
+          onPlanetClickRef.current?.(planet);
+        };
+      }
       return handlers;
     }, {});
   }, []);
@@ -862,6 +871,7 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
       {/* Bottom Navigation */}
       {sceneReady && (
         <BottomNav
+          ref={bottomNavRef}
           activePlanetId={activePlanetId}
           onNavigate={onPlanetClick}
           onCreatePlanet={onCreatePlanet}

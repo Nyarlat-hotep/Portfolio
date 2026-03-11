@@ -16,38 +16,44 @@
   pointer-events: auto;
 }
 
-/* Main Navigation Container */
+/* Main Navigation Container — grid-row trick for exact-height animation */
 .nav-main {
   background: rgba(10, 14, 39, 0.7);
   backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 16px;
-  padding: 1rem;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-  position: relative;
-  overflow: visible;
-  /* Transition for closing (width) + other properties */
-  transition: width 0.3s ease-out, background 0.3s ease, border-color 0.3s ease;
-}
-
-/* Expanded state - use keyframe animation for smooth opening */
-.nav-main:has(.nav-list.expanded) {
   width: 270px;
-  animation: navExpand 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  display: grid;
+  grid-template-rows: 0fr;   /* collapsed: row height = 0 */
+  opacity: 0;
+  /* Close easing */
+  transition: grid-template-rows 0.3s cubic-bezier(0.4, 0, 0.6, 1),
+              opacity 0.2s ease-in,
+              border-color 0.3s ease,
+              background 0.3s ease;
 }
 
-@keyframes navExpand {
-  0% {
-    width: 145px;
-  }
-  100% {
-    width: 270px;
-  }
+.nav-main:has(.nav-list.expanded) {
+  grid-template-rows: 1fr;   /* expanded: row height = content height */
+  opacity: 1;
+  /* Open easing: spring-like */
+  transition: grid-template-rows 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+              opacity 0.25s ease-out 0.05s,
+              border-color 0.3s ease,
+              background 0.3s ease;
 }
 
-.nav-main:hover {
+.nav-main:has(.nav-list.expanded):hover {
   background: rgba(10, 14, 39, 0.85);
   border-color: rgba(0, 212, 255, 0.3);
+}
+
+/* Inner wrapper — overflow:hidden + min-height:0 required for 0fr to collapse fully */
+.nav-main-inner {
+  overflow: hidden;
+  min-height: 0;
+  padding: 1rem;
 }
 
 /* Header */
@@ -64,12 +70,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 212, 255, 0.1);
-  border: 1px solid rgba(0, 212, 255, 0.3);
+  background: rgba(255, 120, 0, 0.12);
+  border: 1px solid rgba(255, 140, 0, 0.4);
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.3s ease;
-  color: #00d4ff;
+  color: #ff8c00;
   font-size: 18px;
   padding: 0;
   position: relative;
@@ -77,9 +83,11 @@
 }
 
 .nav-toggle:hover {
-  background: rgba(0, 212, 255, 0.2);
-  border-color: #00d4ff;
+  background: rgba(255, 140, 0, 0.22);
+  border-color: #ffaa00;
+  color: #ffaa00;
   transform: scale(1.05);
+  box-shadow: 0 0 12px rgba(255, 140, 0, 0.35);
 }
 
 .nav-toggle-icon {
@@ -110,14 +118,14 @@
   justify-content: center;
   padding: 6px 10px;
   background: rgba(10, 14, 39, 0.95);
-  border: 1px solid rgba(0, 212, 255, 0.6);
+  border: 1px solid rgba(255, 140, 0, 0.6);
   border-radius: 6px;
-  color: #00d4ff;
+  color: #ffaa00;
   font-size: 11px;
   font-weight: 500;
   font-family: monospace;
   white-space: nowrap;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), 0 0 8px rgba(0, 212, 255, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), 0 0 8px rgba(255, 140, 0, 0.3);
 }
 
 .nav-title {
@@ -332,8 +340,21 @@
   background: rgba(0, 212, 255, 0.2);
 }
 
-/* Bottom Row - Social Links + Create Planet */
-.nav-bottom-row {
+/* Menu toggle outer container — matches nav-social dark box */
+.nav-toggle-container {
+  background: rgba(10, 14, 39, 0.7);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 0.75rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Toolbar row — menu toggle + social group + planet button */
+.nav-toolbar {
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -399,11 +420,6 @@
   text-decoration: none;
 }
 
-.create-planet-btn {
-  width: auto;
-  height: auto;
-  padding: 0.8rem;
-}
 
 .social-link:hover {
   background: rgba(0, 212, 255, 0.15);
@@ -421,7 +437,7 @@
     padding-left: calc(1rem + env(safe-area-inset-left, 0px));
   }
 
-  .nav-main {
+  .nav-main-inner {
     padding: 0.75rem;
   }
 
