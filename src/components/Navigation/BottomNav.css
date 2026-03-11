@@ -28,8 +28,8 @@
   grid-template-rows: 0fr;   /* collapsed: row height = 0 */
   opacity: 0;
   /* Close easing */
-  transition: grid-template-rows 0.3s cubic-bezier(0.4, 0, 0.6, 1),
-              opacity 0.2s ease-in,
+  transition: grid-template-rows 0.5s cubic-bezier(0.4, 0, 0.6, 1),
+              opacity 0.35s ease-in,
               border-color 0.3s ease,
               background 0.3s ease;
 }
@@ -38,8 +38,8 @@
   grid-template-rows: 1fr;   /* expanded: row height = content height */
   opacity: 1;
   /* Open easing: spring-like */
-  transition: grid-template-rows 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
-              opacity 0.25s ease-out 0.05s,
+  transition: grid-template-rows 0.55s cubic-bezier(0.34, 1.56, 0.64, 1),
+              opacity 0.35s ease-out 0.05s,
               border-color 0.3s ease,
               background 0.3s ease;
 }
@@ -71,12 +71,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 120, 0, 0.12);
-  border: 1px solid rgba(255, 140, 0, 0.4);
+  background: rgba(0, 212, 255, 0.1);
+  border: 1px solid rgba(0, 212, 255, 0.3);
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.3s ease;
-  color: #ff8c00;
+  color: #00d4ff;
   font-size: 18px;
   padding: 0;
   position: relative;
@@ -84,11 +84,9 @@
 }
 
 .nav-toggle:hover {
-  background: rgba(255, 140, 0, 0.22);
-  border-color: #ffaa00;
-  color: #ffaa00;
+  background: rgba(0, 212, 255, 0.2);
+  border-color: #00d4ff;
   transform: scale(1.05);
-  box-shadow: 0 0 12px rgba(255, 140, 0, 0.35);
 }
 
 .nav-toggle-icon {
@@ -119,14 +117,14 @@
   justify-content: center;
   padding: 6px 10px;
   background: rgba(10, 14, 39, 0.95);
-  border: 1px solid rgba(255, 140, 0, 0.6);
+  border: 1px solid rgba(0, 212, 255, 0.6);
   border-radius: 6px;
-  color: #ffaa00;
+  color: #00d4ff;
   font-size: 11px;
   font-weight: 500;
   font-family: monospace;
   white-space: nowrap;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), 0 0 8px rgba(255, 140, 0, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), 0 0 8px rgba(0, 212, 255, 0.3);
 }
 
 .nav-title {
@@ -343,9 +341,9 @@
 
 /* Menu toggle outer container — matches nav-social dark box */
 .nav-toggle-container {
-  background: rgba(255, 120, 0, 0.05);
+  background: rgba(10, 14, 39, 0.7);
   backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 140, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;
   padding: 0.75rem;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);

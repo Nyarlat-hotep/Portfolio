@@ -410,7 +410,7 @@ export default function PlanetCreator({ isOpen, onClose, onSave }) {
                 </div>
 
                 {/* Color Picker */}
-                <div className="control-group">
+                <div className="control-group" style={{paddingBottom: '3rem'}}>
                   <label className="control-label">Chromatic Tint</label>
                   <ColorWheel value={color} onChange={setColor} />
                   <div className="tint-intensity">
