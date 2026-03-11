@@ -282,9 +282,9 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
   const planetClickHandlers = useMemo(() => {
     return planetsData.reduce((handlers, planet, index) => {
       if (planet.id === 'home') {
-        // Sun click opens the nav instead of navigating
+        // Sun click toggles the nav
         handlers[planet.id] = () => {
-          bottomNavRef.current?.openNav();
+          bottomNavRef.current?.toggleNav();
         };
       } else {
         handlers[planet.id] = () => {

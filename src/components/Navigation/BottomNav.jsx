@@ -14,7 +14,8 @@ const BottomNav = forwardRef(function BottomNav({ activePlanetId, onNavigate, on
 
   useImperativeHandle(ref, () => ({
     openNav() { handleToggle(true); },
-  }));
+    toggleNav() { handleToggle(!isExpanded); },
+  }), [isExpanded]);
 
   // Notify parent when expanded state changes
   const handleToggle = (expanded) => {
