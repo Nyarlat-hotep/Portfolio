@@ -760,71 +760,36 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
 
       {/* Mute button + navigation hints — top-right on mobile, bottom-right on desktop */}
       {sceneReady && (
-        <div
-          style={{
-            position: 'absolute',
-            ...(isTouch
-              ? { top: '16px', paddingTop: 'env(safe-area-inset-top, 0px)' }
-              : { bottom: '20px', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }
-            ),
-            right: '20px',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'flex-end',
-            gap: '10px',
-          }}
-        >
+        <div className={`scene-hud${isTouch ? ' scene-hud--touch' : ''}`}>
           {/* Mute toggle */}
           <button
+            className="mute-btn"
             onClick={() => {
               const next = !muted;
               setMuted(next);
               setMutedState(next);
             }}
             aria-label={muted ? 'Unmute' : 'Mute'}
-            style={{
-              background: 'rgba(255,255,255,0.07)',
-              border: '1px solid rgba(255,255,255,0.15)',
-              borderRadius: '6px',
-              color: 'rgba(255,255,255,0.6)',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: '28px',
-              height: '28px',
-              padding: 0,
-              transition: 'background 0.15s, color 0.15s',
-            }}
-            onMouseEnter={e => { playMenuClick(); e.currentTarget.style.background = 'rgba(255,255,255,0.14)'; e.currentTarget.style.color = '#fff'; }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.07)'; e.currentTarget.style.color = 'rgba(255,255,255,0.6)'; }}
+            onMouseEnter={e => { playMenuClick(); }}
           >
             {muted ? <VolumeX size={14} /> : <Volume2 size={14} />}
           </button>
 
           {/* Navigation hints */}
-          <div
-            style={{
-              color: '#ffffff',
-              fontSize: '12px',
-              fontFamily: 'monospace',
-              textAlign: 'right',
-              pointerEvents: 'none',
-            }}
-          >
+          <div className="nav-hints">
             {isTouch ? (
               <>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'flex-end', color: 'rgba(255, 255, 255, 0.8)' }}>
+                <div className="nav-hint-row">
                   <Move size={12} /> Drag to orbit
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'flex-end', color: 'rgba(255, 255, 255, 0.8)' }}>
+                <div className="nav-hint-row">
                   <ZoomIn size={12} /> Pinch to zoom
                 </div>
                 <div>Tap planets to explore</div>
               </>
             ) : (
               <>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'flex-end', color: 'rgba(255, 255, 255, 0.8)' }}>
+                <div className="nav-hint-row">
                   <ArrowLeft size={12} /> <ArrowRight size={12} /> Arrow keys to navigate
                 </div>
                 <div>Click and drag to orbit</div>

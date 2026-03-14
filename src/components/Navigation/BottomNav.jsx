@@ -68,6 +68,7 @@ const BottomNav = forwardRef(function BottomNav({ activePlanetId, onNavigate, on
   return (
     <nav className="bottom-nav">
       {/* Nav panel — collapses when closed, expands above toolbar */}
+
       <div className={`nav-main${isExpanded ? ' nav-main--open' : ''}`}>
         <div className="nav-main-inner">
         <ul id="nav-list" className={`nav-list${buttonsVisible ? ' buttons-visible' : ''}`} role="menu">
