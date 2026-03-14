@@ -150,7 +150,7 @@ export const caseStudies = {
 
     solution: 'I designed a drafting panel built into Banana Phone\'s existing text interface. A banker triggers the panel, selects from a list of message categories — first-time hello, credit pull objection, rate update, follow-up after no response — and the AI drafts an appropriate message instantly. They can send it as-is or edit before sending. In v1 we launched with approximately 10 categories per banker specialty, covering both purchase and refinance workflows. Categories weren\'t invented at a desk — I ran discovery sessions with banking leaders to map the real moments in a client relationship where language mattered most and where bankers were most likely to hesitate or get it wrong.\n\nThe hardest part of this project wasn\'t the concept — it was the execution. The engineering team had significant technical constraints that forced real compromises on the visual UX I\'d designed. The panel that was shipped is not the panel I designed. We traded polish for stability and got to launch on schedule. The model quality improved substantially post-launch as it learned from millions of real interactions, which softened some of those tradeoffs over time.',
 
-    accentColor: '#ec4899',
+    accentColor: '#ff4400',
 
     solutionImages: [
       '/images/case-studies/AItexting/AI text 1.png',
