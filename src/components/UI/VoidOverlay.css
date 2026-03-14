@@ -269,20 +269,20 @@
 
 /* Custom scrollbar for void */
 .void-content::-webkit-scrollbar {
-  width: 6px;
+  width: 4px;
 }
 
 .void-content::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.3);
+  background: transparent;
 }
 
 .void-content::-webkit-scrollbar-thumb {
-  background: rgba(107, 47, 160, 0.5);
-  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
 }
 
 .void-content::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 255, 106, 0.5);
+  background: rgba(255, 255, 255, 0.2);
 }
 
 /* Bottom fade */

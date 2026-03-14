@@ -466,20 +466,20 @@
 
 /* Custom scrollbar */
 .gallery-grid::-webkit-scrollbar {
-  width: 6px;
+  width: 4px;
 }
 
 .gallery-grid::-webkit-scrollbar-track {
-  background: rgba(107, 47, 160, 0.1);
+  background: transparent;
 }
 
 .gallery-grid::-webkit-scrollbar-thumb {
-  background: rgba(107, 47, 160, 0.4);
-  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
 }
 
 .gallery-grid::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 255, 106, 0.5);
+  background: rgba(255, 255, 255, 0.2);
 }
 
 /* Gallery items */
