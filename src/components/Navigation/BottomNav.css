@@ -38,8 +38,8 @@
   grid-template-rows: 1fr;   /* expanded: row height = content height */
   opacity: 1;
   /* Open easing: spring-like */
-  transition: grid-template-rows 0.55s cubic-bezier(0.34, 1.56, 0.64, 1),
-              opacity 0.35s ease-out 0.05s,
+  transition: grid-template-rows 0.75s cubic-bezier(0.34, 1.56, 0.64, 1),
+              opacity 0.4s ease-out 0.05s,
               border-color 0.3s ease,
               background 0.3s ease;
 }
@@ -153,15 +153,15 @@
 
 /* Buttons stagger in after drawer is fully open */
 .nav-list.buttons-visible .nav-item {
-  animation: buttonSlideIn 0.22s ease-out forwards;
+  animation: buttonSlideIn 0.3s ease-out forwards;
 }
 
 .nav-list.buttons-visible .nav-item:nth-child(1) { animation-delay: 0s; }
-.nav-list.buttons-visible .nav-item:nth-child(2) { animation-delay: 0.06s; }
-.nav-list.buttons-visible .nav-item:nth-child(3) { animation-delay: 0.12s; }
-.nav-list.buttons-visible .nav-item:nth-child(4) { animation-delay: 0.18s; }
-.nav-list.buttons-visible .nav-item:nth-child(5) { animation-delay: 0.24s; }
-.nav-list.buttons-visible .nav-item:nth-child(6) { animation-delay: 0.30s; }
+.nav-list.buttons-visible .nav-item:nth-child(2) { animation-delay: 0.12s; }
+.nav-list.buttons-visible .nav-item:nth-child(3) { animation-delay: 0.24s; }
+.nav-list.buttons-visible .nav-item:nth-child(4) { animation-delay: 0.36s; }
+.nav-list.buttons-visible .nav-item:nth-child(5) { animation-delay: 0.48s; }
+.nav-list.buttons-visible .nav-item:nth-child(6) { animation-delay: 0.60s; }
 
 @keyframes buttonSlideIn {
   from {
@@ -275,8 +275,8 @@
 
 /* Animate in with buttons when drawer is fully open */
 .nav-list.buttons-visible ~ .nav-resume {
-  animation: buttonSlideIn 0.22s ease-out forwards;
-  animation-delay: 0.30s;
+  animation: buttonSlideIn 0.3s ease-out forwards;
+  animation-delay: 0.60s;
   pointer-events: auto;
 }
 
