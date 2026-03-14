@@ -186,11 +186,7 @@ function ColorWheel({ value, onChange }) {
         onMouseLeave={handleMouseUp}
       />
       <div className="color-preview-wrapper">
-        <div
-          className="color-preview"
-          style={{ backgroundColor: value }}
-        />
-        <span className="color-hex">{value.toUpperCase()}</span>
+        <span className="color-hex" style={{ color: value }}>{value.toUpperCase()}</span>
       </div>
     </div>
   );
