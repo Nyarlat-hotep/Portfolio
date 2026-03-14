@@ -1,6 +1,6 @@
 import './OctagonAccent.css';
 
-export default function OctagonAccent({ size = 40, color = '#00d4ff', opacity = 0.3, className = '' }) {
+export default function OctagonAccent({ size = 40, color = '#ff7700', opacity = 0.3, className = '' }) {
   return (
     <div className={`octagon-accent ${className}`} style={{
       width: `${size}px`,

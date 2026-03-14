@@ -5,7 +5,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(10, 14, 39, 0.8);
+  background: rgba(5, 5, 5, 0.8);
   backdrop-filter: blur(8px);
   z-index: 2000;
 }
@@ -42,9 +42,9 @@
   padding: 1px;
   background: linear-gradient(
     135deg,
-    rgba(0, 212, 255, 0.3) 0%,
-    rgba(168, 85, 247, 0.3) 50%,
-    rgba(34, 211, 238, 0.3) 100%
+    rgba(255, 119, 0, 0.3) 0%,
+    rgba(204, 34, 0, 0.3) 50%,
+    rgba(255, 170, 51, 0.3) 100%
   );
   -webkit-mask:
     linear-gradient(#fff 0 0) content-box,
@@ -60,7 +60,7 @@
   position: absolute;
   width: 40px;
   height: 40px;
-  border: 2px solid rgba(0, 212, 255, 0.6);
+  border: 2px solid rgba(255, 119, 0, 0.6);
   pointer-events: none;
   z-index: 1;
 }
@@ -103,9 +103,9 @@
   position: absolute;
   width: 6px;
   height: 6px;
-  background: #00d4ff;
+  background: #ff7700;
   border-radius: 50%;
-  box-shadow: 0 0 10px #00d4ff;
+  box-shadow: 0 0 10px #ff7700;
 }
 
 .corner-accent.top-left::before {
@@ -134,11 +134,11 @@
   align-items: center;
   justify-content: space-between;
   padding: 2rem 3rem;
-  border-bottom: 1px solid rgba(0, 212, 255, 0.15);
+  border-bottom: 1px solid rgba(255, 119, 0, 0.15);
   background: linear-gradient(
     180deg,
-    rgba(0, 212, 255, 0.05) 0%,
-    rgba(0, 212, 255, 0) 100%
+    rgba(255, 119, 0, 0.05) 0%,
+    rgba(255, 119, 0, 0) 100%
   );
   flex-shrink: 0;
   position: relative;
@@ -154,11 +154,11 @@
   font-weight: 200;
   letter-spacing: 2px;
   margin: 0;
-  background: linear-gradient(135deg, #00d4ff 0%, #a855f7 100%);
+  background: linear-gradient(135deg, #ff7700 0%, #cc2200 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  text-shadow: 0 0 30px rgba(0, 212, 255, 0.3);
+  text-shadow: 0 0 30px rgba(255, 119, 0, 0.3);
 }
 
 /* Per-planet title color overrides */
@@ -171,7 +171,7 @@
 }
 
 .overlay--case-study-3 .overlay-title {
-  background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
+  background: linear-gradient(135deg, #ff3300 0%, #db2777 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -193,10 +193,10 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem;
-  background: rgba(0, 212, 255, 0.1);
-  border: 1px solid rgba(0, 212, 255, 0.3);
+  background: rgba(255, 119, 0, 0.1);
+  border: 1px solid rgba(255, 119, 0, 0.3);
   border-radius: 12px;
-  color: #00d4ff;
+  color: #ff7700;
   font-size: 14px;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -206,7 +206,7 @@
 
 .close-button:hover {
   background: rgba(var(--overlay-color-rgb, 0, 212, 255), 0.2);
-  border-color: var(--overlay-color, #00d4ff);
+  border-color: var(--overlay-color, #ff7700);
   transform: translateY(-2px);
   box-shadow: 0 4px 16px rgba(var(--overlay-color-rgb, 0, 212, 255), 0.4);
 }
@@ -221,10 +221,10 @@
   font-family: monospace;
   font-size: 11px;
   opacity: 0.7;
-  background: rgba(0, 212, 255, 0.2);
+  background: rgba(255, 119, 0, 0.2);
   padding: 2px 6px;
   border-radius: 4px;
-  border: 1px solid rgba(0, 212, 255, 0.3);
+  border: 1px solid rgba(255, 119, 0, 0.3);
 }
 
 /* Content Area */
@@ -238,7 +238,7 @@
 
   /* Custom scrollbar */
   scrollbar-width: thin;
-  scrollbar-color: rgba(0, 212, 255, 0.5) rgba(255, 255, 255, 0.1);
+  scrollbar-color: rgba(255, 119, 0, 0.5) rgba(255, 255, 255, 0.1);
 }
 
 .overlay-content::-webkit-scrollbar {
@@ -252,13 +252,13 @@
 }
 
 .overlay-content::-webkit-scrollbar-thumb {
-  background: rgba(0, 212, 255, 0.5);
+  background: rgba(255, 119, 0, 0.5);
   border-radius: 4px;
   border: 2px solid rgba(26, 29, 58, 0.7);
 }
 
 .overlay-content::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 212, 255, 0.7);
+  background: rgba(255, 119, 0, 0.7);
 }
 
 /* Bottom fade effect */
@@ -355,10 +355,10 @@
   background: linear-gradient(
     90deg,
     transparent,
-    rgba(0, 212, 255, 0.6),
+    rgba(255, 119, 0, 0.6),
     transparent
   );
-  box-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+  box-shadow: 0 0 10px rgba(255, 119, 0, 0.5);
   animation: scanline 6s linear 1 forwards;
   pointer-events: none;
   opacity: 0.1;
@@ -375,7 +375,7 @@
   background: linear-gradient(
     90deg,
     transparent,
-    rgba(168, 85, 247, 0.4),
+    rgba(204, 34, 0, 0.4),
     transparent
   );
   animation: scanline-slow 10s linear 1 forwards;

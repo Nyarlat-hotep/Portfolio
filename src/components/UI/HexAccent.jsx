@@ -1,6 +1,6 @@
 import './HexAccent.css';
 
-export default function HexAccent({ size = 40, color = '#00d4ff', opacity = 0.3, className = '' }) {
+export default function HexAccent({ size = 40, color = '#ff7700', opacity = 0.3, className = '' }) {
   return (
     <div className={`hex-accent ${className}`} style={{
       width: `${size}px`,

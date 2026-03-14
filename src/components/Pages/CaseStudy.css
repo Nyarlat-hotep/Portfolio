@@ -41,7 +41,7 @@
   font-weight: 500;
   padding: 0.75rem 1rem;
   background: rgba(var(--planet-color-rgb, 0, 212, 255), 0.03);
-  border-left: 2px solid var(--planet-color, #00d4ff);
+  border-left: 2px solid var(--planet-color, #ff7700);
   font-family: monospace;
 }
 
@@ -80,7 +80,7 @@
 
 .info-value {
   font-size: 1.125rem;
-  color: var(--planet-color, #00d4ff);
+  color: var(--planet-color, #ff7700);
   font-weight: 400;
   letter-spacing: 0.5px;
 }
@@ -126,7 +126,7 @@
   left: 0;
   width: 100%;
   height: 1px;
-  background: linear-gradient(90deg, var(--planet-color, #00d4ff) 0%, rgba(var(--planet-color-rgb, 0, 212, 255), 0.2) 50%, transparent 100%);
+  background: linear-gradient(90deg, var(--planet-color, #ff7700) 0%, rgba(var(--planet-color-rgb, 0, 212, 255), 0.2) 50%, transparent 100%);
   transform-origin: left;
   display: block;
 }
@@ -146,7 +146,7 @@
   border-radius: 8px;
   font-size: 1rem;
   font-weight: 500;
-  color: var(--planet-color, #00d4ff);
+  color: var(--planet-color, #ff7700);
   font-family: monospace;
   position: relative;
   box-shadow: 0 0 20px rgba(var(--planet-color-rgb, 0, 212, 255), 0.3);
@@ -161,8 +161,8 @@
 }
 
 .impact-text {
-  background: linear-gradient(135deg, rgba(168, 85, 247, 0.1), rgba(236, 72, 153, 0.1));
-  border-left: 3px solid #a855f7;
+  background: linear-gradient(135deg, rgba(204, 34, 0, 0.1), rgba(255, 51, 0, 0.1));
+  border-left: 3px solid #cc2200;
   padding: 1.5rem;
   border-radius: 8px;
 }
@@ -196,7 +196,7 @@
 
 .gallery-item:hover::before,
 .gallery-item:hover::after {
-  border-color: var(--planet-color, #a855f7);
+  border-color: var(--planet-color, #cc2200);
   width: 30px;
   height: 30px;
 }
@@ -259,11 +259,11 @@
 
 .tool-chip {
   padding: 0.5rem 1rem;
-  background: rgba(34, 211, 238, 0.1);
-  border: 1px solid rgba(34, 211, 238, 0.3);
+  background: rgba(255, 170, 51, 0.1);
+  border: 1px solid rgba(255, 170, 51, 0.3);
   border-radius: 20px;
   font-size: 0.875rem;
-  color: #22d3ee;
+  color: #ffaa33;
   font-weight: 400;
   letter-spacing: 0.5px;
   transition: all 0.3s ease;
@@ -285,16 +285,16 @@
   right: 2px;
   width: 4px;
   height: 4px;
-  background: #22d3ee;
+  background: #ffaa33;
   border-radius: 50%;
-  box-shadow: 0 0 6px #22d3ee;
+  box-shadow: 0 0 6px #ffaa33;
 }
 
 .tool-chip:hover {
-  background: rgba(34, 211, 238, 0.2);
-  border-color: #22d3ee;
+  background: rgba(255, 170, 51, 0.2);
+  border-color: #ffaa33;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(34, 211, 238, 0.2);
+  box-shadow: 0 4px 12px rgba(255, 170, 51, 0.2);
 }
 
 /* Links */
@@ -312,7 +312,7 @@
   background: rgba(var(--planet-color-rgb, 0, 212, 255), 0.1);
   border: 1px solid rgba(var(--planet-color-rgb, 0, 212, 255), 0.4);
   border-radius: 12px;
-  color: var(--planet-color, #00d4ff);
+  color: var(--planet-color, #ff7700);
   font-size: 1rem;
   font-weight: 500;
   text-decoration: none;
@@ -338,7 +338,7 @@
 }
 
 .link-button:hover {
-  border-color: var(--planet-color, #00d4ff);
+  border-color: var(--planet-color, #ff7700);
   transform: translateY(-2px);
   box-shadow: 0 8px 24px rgba(var(--planet-color-rgb, 0, 212, 255), 0.3);
 }

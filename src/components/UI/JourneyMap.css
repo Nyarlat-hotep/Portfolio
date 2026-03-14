@@ -40,14 +40,14 @@
   background: linear-gradient(
     180deg,
     transparent 0%,
-    var(--planet-color, #00d4ff) 30%,
-    var(--planet-color, #00d4ff) 70%,
+    var(--planet-color, #ff7700) 30%,
+    var(--planet-color, #ff7700) 70%,
     transparent 100%
   );
   border-radius: 2px;
   box-shadow:
-    0 0 10px var(--planet-color, #00d4ff),
-    0 0 20px var(--planet-color, #00d4ff),
+    0 0 10px var(--planet-color, #ff7700),
+    0 0 20px var(--planet-color, #ff7700),
     0 0 30px rgba(var(--planet-color-rgb, 0, 212, 255), 0.5);
   pointer-events: none;
   z-index: 10;
@@ -109,18 +109,18 @@
 
 /* Past waypoints */
 .journey-waypoint.past .waypoint-dot {
-  background: var(--planet-color, #a855f7);
-  border-color: var(--planet-color, #a855f7);
-  box-shadow: 0 0 8px var(--planet-color, #a855f7);
+  background: var(--planet-color, #cc2200);
+  border-color: var(--planet-color, #cc2200);
+  box-shadow: 0 0 8px var(--planet-color, #cc2200);
 }
 
 /* Active waypoint */
 .journey-waypoint.active .waypoint-dot {
   width: 10px;
   height: 10px;
-  background: var(--planet-color, #00d4ff);
-  border-color: var(--planet-color, #00d4ff);
-  box-shadow: 0 0 12px var(--planet-color, #00d4ff);
+  background: var(--planet-color, #ff7700);
+  border-color: var(--planet-color, #ff7700);
+  box-shadow: 0 0 12px var(--planet-color, #ff7700);
 }
 
 /* Pulsing ring for active waypoint - CSS animation for stability */
@@ -129,7 +129,7 @@
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  border: 1px solid var(--planet-color, #00d4ff);
+  border: 1px solid var(--planet-color, #ff7700);
   pointer-events: none;
   animation: pulse-ring 2s ease-out infinite;
 }
@@ -177,7 +177,7 @@
 }
 
 .journey-waypoint.active .waypoint-label {
-  color: var(--planet-color, #00d4ff);
+  color: var(--planet-color, #ff7700);
 }
 
 .journey-waypoint:hover .waypoint-label {

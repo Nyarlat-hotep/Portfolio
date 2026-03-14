@@ -33,7 +33,7 @@ const PATH_RM  = buildPath(45,  F1, 15);
 const PATH_CMP = buildNoisePath(118);
 const PATH_RKM = buildPath(192, F2, 12);
 
-export default function InterferenceWaves({ color = '#22d3ee' }) {
+export default function InterferenceWaves({ color = '#ffaa33' }) {
   return (
     <div className="interference-waves">
       <svg

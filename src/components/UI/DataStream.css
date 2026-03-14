@@ -23,7 +23,7 @@
   background: linear-gradient(
     180deg,
     transparent 0%,
-    rgba(0, 212, 255, 0.4) 50%,
+    rgba(255, 119, 0, 0.4) 50%,
     transparent 100%
   );
   animation: streamFlow 4s linear 1 forwards;
@@ -50,7 +50,7 @@
   background: linear-gradient(
     180deg,
     transparent 0%,
-    rgba(168, 85, 247, 0.6) 50%,
+    rgba(204, 34, 0, 0.6) 50%,
     transparent 100%
   );
 }

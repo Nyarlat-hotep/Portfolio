@@ -18,7 +18,7 @@ function lineY(i) {
   return TOP_Y + (i / (LINE_COUNT - 1)) * (BOTTOM_Y - TOP_Y);
 }
 
-export default function ThroughputCollapse({ color = '#ec4899' }) {
+export default function ThroughputCollapse({ color = '#ff3300' }) {
   const blocked = Array.from({ length: LINE_COUNT }, (_, i) => i).filter(i => i !== SURVIVOR);
 
   return (

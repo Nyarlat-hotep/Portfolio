@@ -33,14 +33,14 @@ class ErrorBoundary extends Component {
           <div style={{
             fontSize: '48px',
             marginBottom: '20px',
-            color: '#a855f7'
+            color: '#cc2200'
           }}>
             ⚠
           </div>
           <h1 style={{
             fontSize: '24px',
             marginBottom: '16px',
-            color: '#00d4ff'
+            color: '#ff7700'
           }}>
             Something went wrong
           </h1>
@@ -58,8 +58,8 @@ class ErrorBoundary extends Component {
             style={{
               padding: '12px 24px',
               background: 'transparent',
-              border: '1px solid #00d4ff',
-              color: '#00d4ff',
+              border: '1px solid #ff7700',
+              color: '#ff7700',
               fontFamily: 'monospace',
               fontSize: '14px',
               cursor: 'pointer',
@@ -67,7 +67,7 @@ class ErrorBoundary extends Component {
               transition: 'all 0.2s ease'
             }}
             onMouseOver={(e) => {
-              e.target.style.background = 'rgba(0, 212, 255, 0.1)';
+              e.target.style.background = 'rgba(255, 119, 0, 0.1)';
             }}
             onMouseOut={(e) => {
               e.target.style.background = 'transparent';

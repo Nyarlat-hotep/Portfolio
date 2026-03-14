@@ -79,7 +79,7 @@ function TextureSphere({ textureUrl, isSelected, onClick }) {
       <sphereGeometry args={[1, 32, 32]} />
       <meshStandardMaterial
         map={texture}
-        emissive={isSelected ? '#a855f7' : '#000000'}
+        emissive={isSelected ? '#cc2200' : '#000000'}
         emissiveIntensity={isSelected ? 0.4 : 0}
         roughness={0.5}
         metalness={0.2}
@@ -159,7 +159,7 @@ function ColorWheel({ value, onChange }) {
     // Add glow ring effect
     ctx.beginPath();
     ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
-    ctx.strokeStyle = 'rgba(168, 85, 247, 0.5)';
+    ctx.strokeStyle = 'rgba(204, 34, 0, 0.5)';
     ctx.lineWidth = 2;
     ctx.stroke();
   };
@@ -315,7 +315,7 @@ export default function PlanetCreator({ isOpen, onClose, onSave }) {
                   <Canvas camera={{ position: [0, 0, 4], fov: 50 }} style={{ width: '100%', height: '100%' }}>
                     <ambientLight intensity={0.35} />
                     <directionalLight position={[5, 5, 5]} intensity={1.6} />
-                    <pointLight position={[-5, -5, -5]} intensity={0.8} color="#00d4ff" />
+                    <pointLight position={[-5, -5, -5]} intensity={0.8} color="#ff7700" />
                     <Suspense fallback={null}>
                       <PreviewPlanet
                         textureUrl={texture.url}

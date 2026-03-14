@@ -1,6 +1,6 @@
 .hex-accent {
   display: inline-block;
-  color: var(--hex-color, #00d4ff);
+  color: var(--hex-color, #ff7700);
   opacity: var(--hex-opacity, 0.3);
   animation: hexPulse 3s ease-in-out infinite;
 }

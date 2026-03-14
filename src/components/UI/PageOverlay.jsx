@@ -5,7 +5,7 @@ import DataStream from './DataStream';
 import OverlayStars from './OverlayStars';
 import './PageOverlay.css';
 
-export default function PageOverlay({ isOpen, onClose, children, title, planetColor = '#00d4ff', planetId }) {
+export default function PageOverlay({ isOpen, onClose, children, title, planetColor = '#ff7700', planetId }) {
   const contentRef = useRef(null);
   const closeButtonRef = useRef(null);
 

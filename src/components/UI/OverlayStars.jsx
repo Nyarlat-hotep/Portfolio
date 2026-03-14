@@ -92,7 +92,7 @@ const STAR_CONFIGS = [
   { left: 83,   top: 80,   size: 2, opacity: 0.16, duration: 12.4, delay: 2.8,  drift: 2 },
 ];
 
-export default function OverlayStars({ planetColor = '#00d4ff' }) {
+export default function OverlayStars({ planetColor = '#ff7700' }) {
   const wrapperRefs = useRef([]);
   const starRefs    = useRef([]);
   const pulls       = useRef(STAR_CONFIGS.map(() => ({ x: 0, y: 0 })));

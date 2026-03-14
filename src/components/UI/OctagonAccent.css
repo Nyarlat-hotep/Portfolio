@@ -1,6 +1,6 @@
 .octagon-accent {
   display: inline-block;
-  color: var(--octagon-color, #00d4ff);
+  color: var(--octagon-color, #ff7700);
   opacity: var(--octagon-opacity, 0.3);
   animation: octagonPulse 4s ease-in-out infinite;
 }

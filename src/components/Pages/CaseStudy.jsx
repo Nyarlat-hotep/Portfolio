@@ -124,7 +124,7 @@ function AnimatedSection({ number, title, children, viewport }) {
 }
 
 // --- Main component ---
-export default function CaseStudy({ caseStudy, planetColor = '#a855f7', scrollContainerRef }) {
+export default function CaseStudy({ caseStudy, planetColor = '#cc2200', scrollContainerRef }) {
   // Refs for the 3 scroll-tracker anchor sections
   const overviewRef = useRef(null);
   const solutionRef = useRef(null);

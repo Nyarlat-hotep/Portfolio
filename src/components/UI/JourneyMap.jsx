@@ -5,7 +5,7 @@ import './JourneyMap.css';
 export default function JourneyMap({
   phases,
   currentPhaseIndex = -1,
-  planetColor = '#a855f7',
+  planetColor = '#cc2200',
   onPhaseClick
 }) {
   const [beam, setBeam] = useState(null); // { origin, target, key }

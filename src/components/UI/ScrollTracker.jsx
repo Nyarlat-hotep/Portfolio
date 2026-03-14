@@ -4,7 +4,7 @@ import './ScrollTracker.css';
 const INSET = 100;       // px inset from each end of the line
 const ABSORB_DIST = 18;  // px center-to-center → triggers absorption
 
-export default function ScrollTracker({ sections = [], scrollContainerRef, planetColor = '#a855f7' }) {
+export default function ScrollTracker({ sections = [], scrollContainerRef, planetColor = '#cc2200' }) {
   const containerRef = useRef(null);
   const amoebaRef    = useRef(null);
   const dotRefs      = useRef([]);

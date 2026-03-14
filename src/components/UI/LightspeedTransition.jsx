@@ -27,7 +27,7 @@ export default function LightspeedTransition({ onComplete }) {
       angle:  Math.random() * Math.PI * 2,
       speed:  0.3 + Math.random() * 0.7,
       width:  0.4 + Math.random() * 1.6,
-      color:  Math.random() > 0.55 ? '#00d4ff' : '#ffffff',
+      color:  Math.random() > 0.55 ? '#ff7700' : '#ffffff',
       starR:  maxLen * (0.06 + Math.random() * 0.62), // depth of the star dot
       dim:    0.35 + Math.random() * 0.65,            // per-star brightness
     }));

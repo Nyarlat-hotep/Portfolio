@@ -6,7 +6,7 @@ export default function ImageCompare({
   afterSrc,
   beforeLabel = 'Before',
   afterLabel = 'After',
-  planetColor = '#a855f7'
+  planetColor = '#cc2200'
 }) {
   const containerRef = useRef(null);
   const [position, setPosition] = useState(50);
