@@ -26,7 +26,7 @@ const BottomNav = forwardRef(function BottomNav({ activePlanetId, onNavigate, on
     clearTimeout(buttonsTimerRef.current);
     if (expanded) {
       // Wait for drawer spring to complete before showing buttons
-      buttonsTimerRef.current = setTimeout(() => setButtonsVisible(true), 750);
+      buttonsTimerRef.current = setTimeout(() => setButtonsVisible(true), 580);
     } else {
       setButtonsVisible(false);
     }
