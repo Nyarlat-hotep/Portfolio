@@ -1,4 +1,4 @@
-import { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
+import { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
 import { Banana, LayoutDashboard, MessageSquare, User, FlaskConical, FileText, Menu, X, Linkedin, Dribbble, Github, Orbit, Trash2 } from 'lucide-react';
 import './BottomNav.css';
 import { planetsData } from '../../data/planets';
@@ -11,6 +11,8 @@ const isTouch = isTouchDevice();
 
 const BottomNav = forwardRef(function BottomNav({ activePlanetId, onNavigate, onCreatePlanet, onDeletePlanet, hasCustomPlanet = false, onExpandChange }, ref) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [buttonsVisible, setButtonsVisible] = useState(false);
+  const buttonsTimerRef = useRef(null);
 
   useImperativeHandle(ref, () => ({
     openNav() { handleToggle(true); },
@@ -21,6 +23,13 @@ const BottomNav = forwardRef(function BottomNav({ activePlanetId, onNavigate, on
   const handleToggle = (expanded) => {
     setIsExpanded(expanded);
     onExpandChange?.(expanded);
+    clearTimeout(buttonsTimerRef.current);
+    if (expanded) {
+      // Wait for drawer spring to complete before showing buttons
+      buttonsTimerRef.current = setTimeout(() => setButtonsVisible(true), 550);
+    } else {
+      setButtonsVisible(false);
+    }
   };
 
   // Keyboard shortcut: 'm' to toggle menu
@@ -59,9 +68,9 @@ const BottomNav = forwardRef(function BottomNav({ activePlanetId, onNavigate, on
   return (
     <nav className="bottom-nav">
       {/* Nav panel — collapses when closed, expands above toolbar */}
-      <div className="nav-main">
+      <div className={`nav-main${isExpanded ? ' nav-main--open' : ''}`}>
         <div className="nav-main-inner">
-        <ul id="nav-list" className={`nav-list ${isExpanded ? 'expanded' : ''}`} role="menu">
+        <ul id="nav-list" className={`nav-list${buttonsVisible ? ' buttons-visible' : ''}`} role="menu">
           {navItems.map((item) => {
             const isActive = activePlanetId === item.id;
             return (
