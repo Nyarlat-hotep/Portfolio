@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
-import { Banana, LayoutDashboard, MessageSquare, User, FlaskConical, FileText, Menu, X, Linkedin, Dribbble, Github, Orbit, Trash2 } from 'lucide-react';
+import { Banana, LayoutDashboard, MessageSquare, Brain, FlaskConical, FileText, Menu, X, Linkedin, Dribbble, Github, Orbit, Trash2 } from 'lucide-react';
 import './BottomNav.css';
 import { planetsData } from '../../data/planets';
 import { aboutContent } from '../../data/caseStudies';
@@ -50,7 +50,7 @@ const BottomNav = forwardRef(function BottomNav({ activePlanetId, onNavigate, on
     { id: 'case-study-1', label: 'Banana Phone', icon: <Banana size={18} /> },
     { id: 'case-study-2', label: 'Consumer Dashboard', icon: <LayoutDashboard size={18} /> },
     { id: 'case-study-3', label: 'AI Texting', icon: <MessageSquare size={18} /> },
-    { id: 'about', label: 'About', icon: <User size={18} /> },
+    { id: 'about', label: 'Memory Core', icon: <Brain size={18} /> },
     { id: 'experiments', label: 'ERR_X.0', icon: <FlaskConical size={18} /> },
   ];
 
