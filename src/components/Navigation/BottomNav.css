@@ -28,8 +28,8 @@
   grid-template-rows: 0fr;   /* collapsed: row height = 0 */
   opacity: 0;
   /* Close easing — height collapses first, opacity fades at the end */
-  transition: grid-template-rows 0.5s cubic-bezier(0.4, 0, 0.6, 1),
-              opacity 0.2s ease-in 0.35s,
+  transition: grid-template-rows 0.35s cubic-bezier(0.4, 0, 0.6, 1),
+              opacity 0.15s ease-in 0.25s,
               border-color 0.3s ease,
               background 0.3s ease;
 }
