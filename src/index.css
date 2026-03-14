@@ -1,11 +1,11 @@
 :root {
   /* Color palette */
-  --space-dark: #1a0d28;
-  --space-medium: #2a1840;
-  --electric-blue: #00d4ff;
-  --neon-purple: #a855f7;
-  --cyan: #22d3ee;
-  --pink: #ec4899;
+  --space-dark: #050505;
+  --space-medium: #0a0a0a;
+  --electric-blue: #ff7700;
+  --neon-purple: #cc2200;
+  --cyan: #ffaa33;
+  --pink: #ff3300;
   --glass-white: rgba(255, 255, 255, 0.1);
   --glass-border: rgba(255, 255, 255, 0.2);
   --text-primary: #ffffff;

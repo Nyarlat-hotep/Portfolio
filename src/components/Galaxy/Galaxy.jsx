@@ -528,8 +528,8 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
           background: `radial-gradient(ellipse at center,
             transparent 0%,
             transparent ${Math.max(0, 60 - vignetteIntensity * 40)}%,
-            rgba(10, 5, 20, ${vignetteIntensity * 0.2}) ${Math.max(0, 80 - vignetteIntensity * 30)}%,
-            rgba(5, 2, 15, ${vignetteIntensity * 0.3}) 100%
+            rgba(0, 0, 0, ${vignetteIntensity * 0.2}) ${Math.max(0, 80 - vignetteIntensity * 30)}%,
+            rgba(0, 0, 0, ${vignetteIntensity * 0.3}) 100%
           )`,
           transition: 'background 0.5s ease-out',
           zIndex: 10
