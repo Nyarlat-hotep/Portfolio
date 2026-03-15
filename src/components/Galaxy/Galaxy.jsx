@@ -859,45 +859,36 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
             )}
           </button>
 
-          {/* Navigation hints — animated drawer below buttons */}
-          <AnimatePresence>
-            {helpVisible && (
-              <motion.div
-                className="nav-hints"
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-                style={{ overflow: 'hidden' }}
-              >
-                <div className="nav-hints-inner">
-                  {isTouch ? (
-                    <>
-                      <div className="nav-hint-row">
-                        <Move size={12} /> Drag to orbit
-                      </div>
-                      <div className="nav-hint-row">
-                        <ZoomIn size={12} /> Pinch to zoom
-                      </div>
-                      <div>Tap planets to explore</div>
-                    </>
-                  ) : (
-                    <>
-                      <div className="nav-hint-row">
-                        <ArrowLeft size={12} /> <ArrowRight size={12} /> Orbit left / right
-                      </div>
-                      <div className="nav-hint-row">
-                        <ArrowUp size={12} /> <ArrowDown size={12} /> Zoom in / out
-                      </div>
-                      <div>Click and drag to orbit</div>
-                      <div>Scroll to zoom</div>
-                      <div>ESC to return home</div>
-                    </>
-                  )}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          {/* Navigation hints — CSS grid drawer, no DOM removal so no reflow jump */}
+          <div className={`nav-hints-drawer${helpVisible ? ' nav-hints-drawer--open' : ''}`}>
+            <div>
+              <div className="nav-hints-inner">
+                {isTouch ? (
+                  <>
+                    <div className="nav-hint-row">
+                      <Move size={12} /> Drag to orbit
+                    </div>
+                    <div className="nav-hint-row">
+                      <ZoomIn size={12} /> Pinch to zoom
+                    </div>
+                    <div>Tap planets to explore</div>
+                  </>
+                ) : (
+                  <>
+                    <div className="nav-hint-row">
+                      <ArrowLeft size={12} /> <ArrowRight size={12} /> Orbit left / right
+                    </div>
+                    <div className="nav-hint-row">
+                      <ArrowUp size={12} /> <ArrowDown size={12} /> Zoom in / out
+                    </div>
+                    <div>Click and drag to orbit</div>
+                    <div>Scroll to zoom</div>
+                    <div>ESC to return home</div>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
