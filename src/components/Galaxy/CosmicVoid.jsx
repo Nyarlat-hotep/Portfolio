@@ -478,7 +478,7 @@ function BlackHoleCore({ position, onClick, onHoverChange }) {
   const diskMatRef = useRef();
   const innerMatRef = useRef();
   const outerMatRef = useRef();
-  const rimGlowMaterial = useRef();
+  const horizonMatRef = useRef();
   const hoverRef = useRef(0);
   const isHovered = useRef(false);
 
@@ -531,9 +531,9 @@ function BlackHoleCore({ position, onClick, onHoverChange }) {
       outerMatRef.current.uniforms.uTime.value  = time;
       outerMatRef.current.uniforms.uHover.value = h;
     }
-    if (rimGlowMaterial.current) {
-      rimGlowMaterial.current.uniforms.uTime.value  = time;
-      rimGlowMaterial.current.uniforms.uHover.value = h;
+    if (horizonMatRef.current) {
+      horizonMatRef.current.uniforms.uTime.value  = time;
+      horizonMatRef.current.uniforms.uHover.value = h;
     }
   });
 
@@ -564,7 +564,7 @@ function BlackHoleCore({ position, onClick, onHoverChange }) {
 
       <mesh ref={eventHorizonRef} geometry={horizonGeo}>
         <shaderMaterial
-          ref={rimGlowMaterial}
+          ref={horizonMatRef}
           uniforms={{
             uTime:  { value: 0 },
             uHover: { value: 0 },
