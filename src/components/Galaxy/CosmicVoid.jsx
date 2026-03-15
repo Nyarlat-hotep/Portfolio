@@ -206,27 +206,27 @@ const tentacleFragmentShader = `
 
     // Subsurface bleed — varies per arm
     vec3 subA = vec3(0.02, 0.20, 0.08);   // green
-    vec3 subB = vec3(0.10, 0.20, 0.02);   // sickly yellow-green
-    vec3 subC = vec3(0.12, 0.18, 0.02);   // yellow-green
+    vec3 subB = vec3(0.20, 0.18, 0.01);   // sickly yellow
+    vec3 subC = vec3(0.22, 0.16, 0.01);   // murky yellow
     vec3 subColor = mix(mix(subA, subB, isTeal), subC, isYellow) * (1.0 - vUv.x * 0.4);
 
     // Vein color — varies per arm
     vec3 veinA = vec3(0.05, 0.80, 0.28);  // phosphorescent green
-    vec3 veinB = vec3(0.55, 0.85, 0.05);  // bioluminescent yellow-green
-    vec3 veinC = vec3(0.55, 0.78, 0.04);  // sickly bioluminescent yellow-green
+    vec3 veinB = vec3(0.80, 0.85, 0.02);  // bioluminescent yellow
+    vec3 veinC = vec3(0.85, 0.72, 0.02);  // sickly yellow-gold
     vec3 veinBase = mix(mix(veinA, veinB, isTeal), veinC, isYellow);
     vec3 veinColor = veinBase * veinPattern * pulse * (0.12 + uHover * 0.45);
 
     // Rim — varies per arm
     vec3 rimA = vec3(0.03, 0.38, 0.16);
-    vec3 rimB = vec3(0.22, 0.42, 0.03);
+    vec3 rimB = vec3(0.42, 0.38, 0.02);
     vec3 rimC = vec3(0.25, 0.38, 0.03);
     vec3 rimBase = mix(mix(rimA, rimB, isTeal), rimC, isYellow);
     vec3 rimColor = rimBase + vec3(uHover * 0.05, uHover * 0.22, uHover * 0.12);
 
     // Ridge tint also varies
-    vec3 ridgeTint = mix(mix(vec3(0.01, 0.06, 0.02), vec3(0.06, 0.08, 0.01), isTeal),
-                         vec3(0.06, 0.08, 0.01), isYellow);
+    vec3 ridgeTint = mix(mix(vec3(0.01, 0.06, 0.02), vec3(0.08, 0.07, 0.01), isTeal),
+                         vec3(0.10, 0.06, 0.01), isYellow);
 
     // Length gradient — dark at root, brightens mid-arm, fades at tip
     float lengthGrad = sin(vUv.x * 3.14159) * 0.55 + 0.25;
@@ -244,8 +244,8 @@ const tentacleFragmentShader = `
     color += veinBase * tubeHighlight * 0.025 * lengthGrad;
 
     // Wet specular — tinted to arm hue
-    vec3 specTint = mix(mix(vec3(0.4, 1.0, 0.6), vec3(0.8, 1.0, 0.3), isTeal),
-                        vec3(0.9, 1.0, 0.2), isYellow);
+    vec3 specTint = mix(mix(vec3(0.4, 1.0, 0.6), vec3(1.0, 0.95, 0.2), isTeal),
+                        vec3(1.0, 0.88, 0.1), isYellow);
     float spec = pow(max(0.0, surface * 0.5 + 0.5), 12.0) * fresnel * 0.25;
     color += specTint * spec;
 
@@ -314,7 +314,7 @@ const horizonFragmentShader = `
 
     // Three subsurface hues: deep green / abyssal teal / murky yellow-green
     vec3 subA = vec3(0.01, 0.18, 0.08);
-    vec3 subB = vec3(0.10, 0.18, 0.02);
+    vec3 subB = vec3(0.20, 0.16, 0.01);
     vec3 subC = vec3(0.07, 0.14, 0.02);
     // Blend noise zones then layer the world Y gradient on top
     vec3 subBase = mix(mix(subA, subB, zone), subC, zone2 * 0.4);
@@ -324,7 +324,7 @@ const horizonFragmentShader = `
 
     // Rim varies spatially AND by world Y
     vec3 rimA = vec3(0.04, 0.50, 0.20);
-    vec3 rimB = vec3(0.25, 0.45, 0.03);
+    vec3 rimB = vec3(0.45, 0.38, 0.02);
     vec3 rimBase = mix(mix(rimA, rimB, zone), rimB, worldY * 0.4);
     vec3 rimColor = rimBase * vec3(1.0 + uHover * 0.12, 1.0 + uHover * 0.5, 1.0 + uHover * 0.18);
 
@@ -690,9 +690,9 @@ function BlackHoleCore({ position, onClick, onHoverChange }) {
           uniforms={{
             uTime:      { value: 0 },
             uHover:     { value: 0 },
-            uColorHot:  { value: new THREE.Color('#aadd22') },
-            uColorMid:  { value: new THREE.Color('#2a3a08') },
-            uColorCool: { value: new THREE.Color('#060800') },
+            uColorHot:  { value: new THREE.Color('#ddcc11') },
+            uColorMid:  { value: new THREE.Color('#3a2e04') },
+            uColorCool: { value: new THREE.Color('#080600') },
             uFlowSpeed: { value: 0.22 },
           }}
           vertexShader={ringVertexShader}
