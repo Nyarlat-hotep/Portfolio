@@ -784,7 +784,7 @@ export default function CosmicVoid({ position = [0, 0, -80], onClick }) {
       <VoidParticles hovered={hovered} />
 
       <pointLight position={[0, 0, 5]}  color="#4a1a6b" intensity={2}   distance={30} decay={2} />
-      <pointLight position={[0, 0, -5]} color="#00ff6a" intensity={0.5} distance={20} decay={2} />
+      <pointLight position={[0, 0, -5]} color="#1a0008" intensity={0.3} distance={20} decay={2} />
     </group>
   );
 }
