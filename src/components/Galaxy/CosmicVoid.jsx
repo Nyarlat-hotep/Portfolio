@@ -159,7 +159,6 @@ const voidTentacleVertexShader = `
   }
 `;
 
-// Bioluminescent effect — unchanged visual language from original
 const tentacleFragmentShader = `
   uniform float uTime;
   uniform float uIndex;
@@ -172,28 +171,52 @@ const tentacleFragmentShader = `
   ${glslNoise}
 
   void main() {
-    vec3 baseColor = vec3(0.06, 0.02, 0.12);
-
     vec3 viewDir = normalize(cameraPosition - vWorldPosition);
-    float fresnel = pow(1.0 - max(dot(viewDir, vNormal), 0.0), 3.0);
-    vec3 rimColor = vec3(0.25 + uHover * 0.35, 0.05, 0.45 + uHover * 0.35);
+    float fresnel = pow(1.0 - max(dot(viewDir, vNormal), 0.0), 2.5);
 
+    // Surface normal variation — bumpy organic texture
+    float bump1 = snoise(vec3(vUv.x * 18.0 + uTime * 0.3, vUv.y * 10.0, uIndex * 4.0));
+    float bump2 = snoise(vec3(vUv.x * 40.0 + uTime * 0.5, vUv.y * 22.0, uIndex * 7.0 + 2.0));
+    float surface = bump1 * 0.6 + bump2 * 0.4;
+
+    // Longitudinal ridges — tendon/muscle anatomy
+    float ridgeFreq = 6.0 + uIndex * 0.5;
+    float ridge = smoothstep(0.3, 0.7, sin(vUv.y * ridgeFreq * 3.14159) * 0.5 + 0.5);
+
+    // Vein / internal structure
     float veinNoise = snoise(vec3(
-      vUv.x * 15.0 + uTime * 0.5,
-      vUv.y * 8.0,
+      vUv.x * 12.0 + uTime * 0.4,
+      vUv.y * 7.0,
       uIndex * 5.0
     ));
-    float veinPattern = smoothstep(0.3, 0.6, veinNoise);
+    float veinPattern = smoothstep(0.25, 0.55, veinNoise);
 
-    float pulse = sin(uTime * 1.5 + uIndex * 2.0 + vUv.x * 8.0) * 0.5 + 0.5;
-    vec3 veinColor = vec3(0.0, 0.8, 0.35) * veinPattern * pulse * (0.2 + uHover * 0.6);
+    // Pulse — slower, more visceral
+    float pulse = sin(uTime * 0.9 + uIndex * 1.8 + vUv.x * 5.0) * 0.5 + 0.5;
 
-    float lengthGrad = 1.0 - vUv.x * 0.3;
-    baseColor *= lengthGrad;
+    // Base flesh color — very dark
+    vec3 baseColor = vec3(0.04, 0.01, 0.08);
+    // Subsurface — dark crimson bleeds through thin areas
+    vec3 subColor  = vec3(0.22, 0.01, 0.04) * (1.0 - vUv.x * 0.4);
+    // Vein color — sickly amber/crimson instead of green
+    vec3 veinColor = vec3(0.7, 0.18, 0.0) * veinPattern * pulse * (0.15 + uHover * 0.5);
 
-    vec3 color = baseColor + rimColor * fresnel * (0.6 + uHover * 0.8) + veinColor;
+    // Rim / fresnel — membrane edge, transmits subsurface color
+    vec3 rimColor = vec3(0.45 + uHover * 0.3, 0.06, 0.15 + uHover * 0.1);
 
-    float alpha = 1.0 - smoothstep(0.85, 1.0, vUv.x);
+    // Compose
+    vec3 color = mix(baseColor, subColor, fresnel * 0.7);
+    color += ridge * vec3(0.06, 0.01, 0.03);              // ridges catch slight light
+    color += surface * 0.04 * vec3(0.5, 0.1, 0.2);        // surface bump variation
+    color += rimColor * fresnel * (0.8 + uHover * 0.9);
+    color += veinColor;
+
+    // Wet specular — small bright points at surface bumps
+    float spec = pow(max(0.0, surface * 0.5 + 0.5), 12.0) * fresnel * 0.3;
+    color += vec3(0.8, 0.5, 0.4) * spec;
+
+    // Alpha — fade at tip, slight translucency at fresnel edges
+    float alpha = (1.0 - smoothstep(0.80, 1.0, vUv.x)) * (1.0 - fresnel * 0.25);
 
     gl_FragColor = vec4(color, alpha);
   }
