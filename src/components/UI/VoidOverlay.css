@@ -21,7 +21,7 @@
   right: 0;
   bottom: 0;
   z-index: 2001;
-  background: radial-gradient(ellipse at center, #0a0510 0%, #050208 50%, #000000 100%);
+  background: radial-gradient(ellipse at center, #050a02 0%, #020502 50%, #000000 100%);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -67,8 +67,8 @@
     ellipse at center,
     transparent 0%,
     transparent 30%,
-    rgba(10, 5, 16, 0.4) 60%,
-    rgba(5, 2, 8, 0.8) 80%,
+    rgba(5, 10, 3, 0.4) 60%,
+    rgba(2, 5, 1, 0.8) 80%,
     rgba(0, 0, 0, 0.95) 100%
   );
   animation: vignetteBreathe 8s ease-in-out infinite;
@@ -80,8 +80,8 @@
       ellipse at center,
       transparent 0%,
       transparent 30%,
-      rgba(10, 5, 16, 0.4) 60%,
-      rgba(5, 2, 8, 0.8) 80%,
+      rgba(5, 10, 3, 0.4) 60%,
+      rgba(2, 5, 1, 0.8) 80%,
       rgba(0, 0, 0, 0.95) 100%
     );
   }
@@ -90,8 +90,8 @@
       ellipse at center,
       transparent 0%,
       transparent 25%,
-      rgba(10, 5, 16, 0.5) 55%,
-      rgba(5, 2, 8, 0.85) 75%,
+      rgba(5, 10, 3, 0.5) 55%,
+      rgba(2, 5, 1, 0.85) 75%,
       rgba(0, 0, 0, 0.98) 100%
     );
   }
@@ -135,7 +135,7 @@
 
 .tentacle {
   fill: none;
-  stroke: #6b2fa0;
+  stroke: #4a7a10;
   stroke-width: 3;
   stroke-linecap: round;
   filter: blur(2px);
@@ -221,10 +221,10 @@
   align-items: center;
   justify-content: center;
   padding: 0.75rem;
-  background: rgba(107, 47, 160, 0.2);
-  border: 2px solid rgba(107, 47, 160, 0.5);
+  background: rgba(150, 200, 30, 0.12);
+  border: 2px solid rgba(150, 200, 30, 0.4);
   border-radius: 12px;
-  color: #9b4dca;
+  color: #96c81e;
   cursor: pointer;
   transition: all 0.3s ease;
   position: relative;
