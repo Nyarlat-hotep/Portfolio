@@ -1,9 +1,10 @@
+import * as THREE from 'three';
 import { Canvas, useThree, useFrame } from '@react-three/fiber';
 import { TrackballControls, PerspectiveCamera } from '@react-three/drei';
 import { useState, useEffect, Suspense, useMemo, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, ArrowRight, Move, ZoomIn, X, Volume2, VolumeX } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ArrowUp, ArrowDown, Move, ZoomIn, X, Volume2, VolumeX } from 'lucide-react';
 import './Galaxy.css';
 import Planet from './Planet';
 import CustomPlanet from './CustomPlanet';
@@ -147,6 +148,62 @@ function GlitchText({ children, active = true }) {
   }, [children, active]);
 
   return <span>{text}</span>;
+}
+
+// Keyboard camera: arrow L/R orbits, arrow U/D zooms — lives inside Canvas for useFrame access
+const _yAxis = new THREE.Vector3(0, 1, 0);
+function KeyboardCameraController({ controlsRef }) {
+  const keysRef = useRef({});
+
+  useEffect(() => {
+    const onDown = (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
+        e.preventDefault();
+        keysRef.current[e.key] = true;
+      }
+    };
+    const onUp = (e) => { keysRef.current[e.key] = false; };
+    window.addEventListener('keydown', onDown);
+    window.addEventListener('keyup', onUp);
+    return () => {
+      window.removeEventListener('keydown', onDown);
+      window.removeEventListener('keyup', onUp);
+    };
+  }, []);
+
+  useFrame((_, delta) => {
+    const keys = keysRef.current;
+    const controls = controlsRef.current;
+    if (!controls) return;
+    if (!keys.ArrowLeft && !keys.ArrowRight && !keys.ArrowUp && !keys.ArrowDown) return;
+
+    const ORBIT_SPEED = 1.4; // rad/sec
+    const ZOOM_SPEED  = 18;  // units/sec
+
+    const cam    = controls.object;
+    const target = controls.target;
+    const eye    = cam.position.clone().sub(target);
+
+    if (keys.ArrowLeft || keys.ArrowRight) {
+      const angle = (keys.ArrowLeft ? 1 : -1) * ORBIT_SPEED * delta;
+      eye.applyAxisAngle(_yAxis, angle);
+    }
+
+    if (keys.ArrowUp || keys.ArrowDown) {
+      const dist    = eye.length();
+      const newDist = Math.max(
+        controls.minDistance || 10,
+        Math.min(controls.maxDistance || 120, dist + (keys.ArrowUp ? -1 : 1) * ZOOM_SPEED * delta)
+      );
+      eye.normalize().multiplyScalar(newDist);
+    }
+
+    cam.position.copy(target).add(eye);
+    cam.lookAt(target);
+  });
+
+  return null;
 }
 
 export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, onCreatePlanet, onDeletePlanet, isCustomPlanetDeleting }) {
@@ -370,32 +427,18 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
   // Void position - behind the user's starting camera angle (camera faces -Z, void is at +Z)
   const voidPosition = [0, 0, 80];
 
-  // Keyboard navigation
+  // ESC returns to home view
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (presentationOpen) return;
-      if (e.key === 'ArrowLeft') {
-        const currentId = planetsData[currentPlanetIndex].id;
-        const prevPlanet = getAdjacentPlanet(currentId, 'prev');
-        const prevIndex = planetsData.findIndex(p => p.id === prevPlanet.id);
-        setCurrentPlanetIndex(prevIndex);
-        onPlanetClickRef.current?.(prevPlanet);
-      } else if (e.key === 'ArrowRight') {
-        const currentId = planetsData[currentPlanetIndex].id;
-        const nextPlanet = getAdjacentPlanet(currentId, 'next');
-        const nextIndex = planetsData.findIndex(p => p.id === nextPlanet.id);
-        setCurrentPlanetIndex(nextIndex);
-        onPlanetClickRef.current?.(nextPlanet);
-      } else if (e.key === 'Escape') {
-        // Return to home view
+      if (e.key === 'Escape') {
         const homePlanet = planetsData.find(p => p.id === 'home');
         onPlanetClickRef.current?.(homePlanet);
       }
     };
-
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentPlanetIndex, presentationOpen]);
+  }, [presentationOpen]);
 
   // Shift+P — skip codex, go straight to warp
   useEffect(() => {
@@ -430,6 +473,9 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
       >
         {/* Mobile tap → real raycast inside Canvas context */}
         <MobileTapHandler pendingTapRef={pendingTapRef} />
+
+        {/* Arrow key camera: L/R orbits, U/D zooms */}
+        <KeyboardCameraController controlsRef={controlsRef} />
 
         {/* Camera setup - starts zoomed out for intro */}
         <PerspectiveCamera makeDefault position={[0, 8, 55]} fov={60} />
@@ -791,7 +837,10 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
             ) : (
               <>
                 <div className="nav-hint-row">
-                  <ArrowLeft size={12} /> <ArrowRight size={12} /> Arrow keys to navigate
+                  <ArrowLeft size={12} /> <ArrowRight size={12} /> Orbit left / right
+                </div>
+                <div className="nav-hint-row">
+                  <ArrowUp size={12} /> <ArrowDown size={12} /> Zoom in / out
                 </div>
                 <div>Click and drag to orbit</div>
                 <div>Scroll to zoom</div>
