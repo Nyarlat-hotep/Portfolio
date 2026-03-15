@@ -35,7 +35,7 @@ const BottomNav = forwardRef(function BottomNav({ activePlanetId, onNavigate, on
   // Keyboard shortcut: 'm' to toggle menu
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key === 'm' || e.key === 'M') {
+      if (e.key === 'm') {
         // Don't trigger if user is typing in an input
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
         handleToggle(!isExpanded);

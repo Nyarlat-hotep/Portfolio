@@ -428,6 +428,22 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
   // Void position - behind the user's starting camera angle (camera faces -Z, void is at +Z)
   const voidPosition = [0, 0, 80];
 
+  // Shift+M → mute, Shift+H → toggle help hints
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      if (e.shiftKey && e.key === 'M') {
+        const next = !getMuted();
+        setMuted(next);
+        setMutedState(next);
+      } else if (e.shiftKey && e.key === 'H') {
+        setHelpVisible(v => !v);
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
+
   // ESC returns to home view
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -821,6 +837,11 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
             onMouseEnter={() => { playMenuClick(); }}
           >
             {muted ? <VolumeX size={14} /> : <Volume2 size={14} />}
+            {!isTouch && (
+              <span className="nav-tooltip hud-tooltip">
+                <span className="tooltip-key">Shift M</span>
+              </span>
+            )}
           </button>
 
           {/* Help toggle */}
@@ -831,6 +852,11 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
             onMouseEnter={() => { playMenuClick(); }}
           >
             <HelpCircle size={14} />
+            {!isTouch && (
+              <span className="nav-tooltip hud-tooltip">
+                <span className="tooltip-key">Shift H</span>
+              </span>
+            )}
           </button>
 
           {/* Navigation hints — animated drawer below buttons */}
