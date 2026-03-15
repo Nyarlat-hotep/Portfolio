@@ -298,9 +298,13 @@ const horizonFragmentShader = `
     float v2 = snoise(vec3(vUv.x * 28.0 + 4.0, vUv.y * 28.0, uTime * 0.06 + 2.0));
     float v3 = snoise(vec3(vUv.x * 6.0,  vUv.y * 6.0,  uTime * 0.02 + 5.0));
 
-    // Sharp vein lines from the noise gradient
-    float veins = abs(v1) * 0.5 + abs(v2) * 0.3 + abs(v3) * 0.2;
-    veins = 1.0 - smoothstep(0.0, 0.25, veins);
+    // Bright vein lines — detect zero-crossings in noise, thin sharp lines
+    float vein1 = pow(1.0 - smoothstep(0.0, 0.10, abs(v1)), 3.0);
+    float vein2 = pow(1.0 - smoothstep(0.0, 0.06, abs(v2)), 4.0);
+    float vein3 = pow(1.0 - smoothstep(0.0, 0.16, abs(v3)), 2.0);
+    float veins = clamp(vein1 * 0.55 + vein2 * 0.30 + vein3 * 0.15, 0.0, 1.0);
+    // Broader subsurface aura near vein lines
+    float veinAura = clamp(vein1 * 0.35 + vein3 * 0.25, 0.0, 1.0);
 
     // Slow irregular pulse (compound sine)
     float pulse = sin(uTime * 0.4) * 0.5 + sin(uTime * 0.17 + 1.3) * 0.3 + 0.5;
@@ -309,18 +313,18 @@ const horizonFragmentShader = `
     float zone  = snoise(vec3(vUv.x * 2.5,        vUv.y * 2.5,        uTime * 0.012))       * 0.5 + 0.5;
     float zone2 = snoise(vec3(vUv.x * 1.8 + 7.0,  vUv.y * 1.8 + 3.0,  uTime * 0.008 + 4.0)) * 0.5 + 0.5;
 
-    // World-space Y gradient — teal toward top, green toward bottom
+    // World-space Y gradient
     float worldY = normalize(vWorldPosition).y * 0.5 + 0.5;
 
     // Three subsurface hues: murky yellow / deep green / murky yellow-green
     vec3 subA = vec3(0.20, 0.16, 0.01);
     vec3 subB = vec3(0.01, 0.18, 0.08);
     vec3 subC = vec3(0.07, 0.14, 0.02);
-    // Blend noise zones then layer the world Y gradient on top
     vec3 subBase = mix(mix(subA, subB, zone), subC, zone2 * 0.4);
     vec3 subsurface = mix(subBase, subA * 1.3, worldY * 0.5) * pulse * 0.65;
 
-    vec3 veinColor = vec3(0.01, 0.06, 0.03);
+    // Vein glow color — bioluminescent yellow-green, shifts with zone
+    vec3 veinGlow = mix(vec3(0.55, 0.75, 0.04), vec3(0.08, 0.65, 0.18), zone) * (1.1 + pulse * 0.5);
 
     // Rim varies spatially AND by world Y
     vec3 rimA = vec3(0.45, 0.38, 0.02);
@@ -328,9 +332,12 @@ const horizonFragmentShader = `
     vec3 rimBase = mix(mix(rimA, rimB, zone), rimA, worldY * 0.4);
     vec3 rimColor = rimBase * vec3(1.0 + uHover * 0.12, 1.0 + uHover * 0.5, 1.0 + uHover * 0.18);
 
-    vec3 color = mix(veinColor, subsurface, veins * 0.7);
-    // Rim glow — kept dim
-    color += rimColor * fresnel * (0.65 + uHover * 0.7) * (0.8 + veins * 0.35);
+    // Dark base, brighten near vein aura, then overlay bright vein lines
+    vec3 color = subsurface;
+    color = mix(color, color * 1.6, veinAura * 0.55);
+    color = mix(color, veinGlow, veins * 0.88);
+    // Rim glow
+    color += rimColor * fresnel * (0.65 + uHover * 0.7) * (0.8 + veins * 0.4);
 
     // Surface stays very dark — just let rim and veins breathe
     color = clamp(color, 0.0, 1.0);
