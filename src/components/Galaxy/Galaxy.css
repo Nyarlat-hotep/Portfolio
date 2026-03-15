@@ -349,22 +349,17 @@
   color: #fff;
 }
 
-/* Tooltip — appears to the left of the HUD buttons */
-.hud-tooltip {
-  position: absolute;
+/* HUD tooltips — double-class selector beats .nav-tooltip single-class from BottomNav.css */
+.nav-tooltip.hud-tooltip {
+  bottom: auto;
+  left: auto;
   right: calc(100% + 8px);
   top: 50%;
-  left: auto;
-  bottom: auto;
   transform: translateY(-50%) scale(0.8);
-  opacity: 0;
-  transition: all 0.2s ease;
-  pointer-events: none;
-  z-index: 100;
-  white-space: nowrap;
+  width: fit-content;
 }
 
-.mute-btn:hover .hud-tooltip {
+.mute-btn:hover .nav-tooltip.hud-tooltip {
   opacity: 1;
   transform: translateY(-50%) scale(1);
 }
