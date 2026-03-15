@@ -76,8 +76,8 @@
 }
 
 .nav-toggle:hover {
-  background: rgba(255, 119, 0, 0.2);
-  border-color: #ff7700;
+  background: rgba(255, 119, 0, 0.1);
+  border-color: rgba(255,119,0,0.5);
   transform: scale(1.05);
 }
 
@@ -364,8 +364,8 @@
 }
 
 .social-link:hover {
-  background: rgba(255, 119, 0, 0.2);
-  border-color: #ff7700;
+  background: rgba(255, 119, 0, 0.1);
+  border-color: rgba(255,119,0,0.5);
   color: #ff7700;
   transform: scale(1.05);
 }
