@@ -3,6 +3,8 @@ import './HUDFrame.css';
 
 const COORDS_L  = ['X:0423 Y:1848', 'X:0891 Y:2103', 'X:0156 Y:0942'];
 const COORDS_R  = ['X:2847 Y:0431', 'X:1203 Y:0788', 'X:3341 Y:1092'];
+const READOUT_L = ['847.23', '291.64', '503.81', '174.09'];
+const READOUT_R = ['F4A2:3C', '8C71:9E', 'E239:B5', 'A017:F2'];
 const GLYPHS    = '0123456789ABCDEF:./_ ';
 
 function useScramble(target, speed = 38, cycles = 5) {
@@ -42,6 +44,8 @@ export default function HUDFrame() {
   const [coordRIdx,  setCoordRIdx]  = useState(1);
   const [signalL,    setSignalL]    = useState(94);
   const [signalR,    setSignalR]    = useState(87);
+  const [readLIdx,   setReadLIdx]   = useState(0);
+  const [readRIdx,   setReadRIdx]   = useState(2);
 
   useEffect(() => {
     const t1 = setInterval(() => setCoordLIdx(i => (i + 1) % COORDS_L.length), 6000);
@@ -50,13 +54,17 @@ export default function HUDFrame() {
       setSignalL(v => Math.min(99, Math.max(88, v + (Math.random() > 0.5 ? 1 : -1))));
       setSignalR(v => Math.min(99, Math.max(82, v + (Math.random() > 0.5 ? 1 : -1))));
     }, 2200);
-    return () => [t1, t2, t3].forEach(clearInterval);
+    const t4 = setInterval(() => setReadLIdx(i => (i + 1) % READOUT_L.length), 3800);
+    const t5 = setInterval(() => setReadRIdx(i => (i + 1) % READOUT_R.length), 4600);
+    return () => [t1, t2, t3, t4, t5].forEach(clearInterval);
   }, []);
 
   const coordLText  = useScramble(COORDS_L[coordLIdx],  55, 6);
   const coordRText  = useScramble(COORDS_R[coordRIdx],  55, 6);
   const sigLText    = useScramble(`SIG ${signalL}%`,    45, 4);
   const sigRText    = useScramble(`SIG ${signalR}%`,    45, 4);
+  const readLText   = useScramble(READOUT_L[readLIdx],  28, 4);
+  const readRText   = useScramble(READOUT_R[readRIdx],  28, 4);
 
   return (
     <div className="hud-frame" aria-hidden="true">
@@ -86,7 +94,7 @@ export default function HUDFrame() {
         <line x1="2" y1="130" x2="36" y2="130" stroke="rgba(255,119,0,0.18)" strokeWidth="1"/>
         <circle cx="36" cy="130" r="2.5" fill="rgba(255,119,0,0.4)" className="hud-blink-slow"/>
         <line x1="2" y1="155" x2="18" y2="155" stroke="rgba(255,119,0,0.15)" strokeWidth="1"/>
-        <text x="14" y="188" fontSize="7" fontFamily="monospace" fill="rgba(255,119,0,0.4)" className="hud-text">{coordLText}</text>
+        <text x="14" y="190" fontSize="7" fontFamily="monospace" fill="rgba(255,119,0,0.4)" className="hud-text">{coordLText}</text>
       </svg>
 
       {/* Top-right corner — mirror of top-left */}
@@ -114,7 +122,7 @@ export default function HUDFrame() {
         <line x1="258" y1="130" x2="224" y2="130" stroke="rgba(255,119,0,0.18)" strokeWidth="1"/>
         <circle cx="224" cy="130" r="2.5" fill="rgba(255,119,0,0.4)" className="hud-blink-slow"/>
         <line x1="258" y1="155" x2="242" y2="155" stroke="rgba(255,119,0,0.15)" strokeWidth="1"/>
-        <text x="246" y="188" fontSize="7" fontFamily="monospace" fill="rgba(255,119,0,0.4)" textAnchor="end" className="hud-text">{coordRText}</text>
+        <text x="246" y="190" fontSize="7" fontFamily="monospace" fill="rgba(255,119,0,0.4)" textAnchor="end" className="hud-text">{coordRText}</text>
       </svg>
 
       {/* Top-center — scan bar */}
@@ -178,27 +186,116 @@ export default function HUDFrame() {
       </svg>
 
       {/* Mid-left — circuit trace panel */}
-      <svg className="hud-ml" viewBox="0 0 130 80" xmlns="http://www.w3.org/2000/svg">
-        <line x1="0" y1="40" x2="100" y2="40" stroke="rgba(255,119,0,0.22)" strokeWidth="1"/>
-        <line x1="100" y1="40" x2="118" y2="22" stroke="rgba(255,119,0,0.22)" strokeWidth="1"/>
-        <line x1="100" y1="40" x2="118" y2="58" stroke="rgba(255,119,0,0.12)" strokeWidth="1"/>
-        <line x1="55" y1="40" x2="55" y2="18" stroke="rgba(255,119,0,0.15)" strokeWidth="1"/>
-        <circle cx="55" cy="14" r="2" fill="rgba(255,119,0,0.35)" className="hud-blink-offset"/>
-        <line x1="80" y1="40" x2="80" y2="32" stroke="rgba(255,119,0,0.12)" strokeWidth="1"/>
-        <circle cx="118" cy="22" r="2.5" fill="rgba(255,119,0,0.3)"/>
+      <svg className="hud-ml" viewBox="0 0 85 80" xmlns="http://www.w3.org/2000/svg">
+        <line x1="0" y1="40" x2="62" y2="40" stroke="rgba(255,119,0,0.22)" strokeWidth="1"/>
+        <line x1="62" y1="40" x2="78" y2="24" stroke="rgba(255,119,0,0.22)" strokeWidth="1"/>
+        <line x1="62" y1="40" x2="78" y2="56" stroke="rgba(255,119,0,0.12)" strokeWidth="1"/>
+        <line x1="35" y1="40" x2="35" y2="18" stroke="rgba(255,119,0,0.15)" strokeWidth="1"/>
+        <circle cx="35" cy="14" r="2" fill="rgba(255,119,0,0.35)" className="hud-blink-offset"/>
+        <line x1="50" y1="40" x2="50" y2="32" stroke="rgba(255,119,0,0.12)" strokeWidth="1"/>
+        <circle cx="78" cy="24" r="2.5" fill="rgba(255,119,0,0.3)"/>
         <text x="2" y="11" fontSize="7" fontFamily="monospace" fill="rgba(255,119,0,0.38)" className="hud-text">{sigLText}</text>
       </svg>
 
       {/* Mid-right — mirror of mid-left */}
-      <svg className="hud-mr" viewBox="0 0 130 80" xmlns="http://www.w3.org/2000/svg">
-        <line x1="130" y1="40" x2="30" y2="40" stroke="rgba(255,119,0,0.22)" strokeWidth="1"/>
-        <line x1="30" y1="40" x2="12" y2="22" stroke="rgba(255,119,0,0.22)" strokeWidth="1"/>
-        <line x1="30" y1="40" x2="12" y2="58" stroke="rgba(255,119,0,0.12)" strokeWidth="1"/>
-        <line x1="75" y1="40" x2="75" y2="18" stroke="rgba(255,119,0,0.15)" strokeWidth="1"/>
-        <circle cx="75" cy="14" r="2" fill="rgba(255,119,0,0.35)" className="hud-blink-slow"/>
-        <line x1="50" y1="40" x2="50" y2="32" stroke="rgba(255,119,0,0.12)" strokeWidth="1"/>
-        <circle cx="12" cy="22" r="2.5" fill="rgba(255,119,0,0.3)"/>
-        <text x="128" y="11" fontSize="7" fontFamily="monospace" fill="rgba(255,119,0,0.38)" textAnchor="end" className="hud-text">{sigRText}</text>
+      <svg className="hud-mr" viewBox="0 0 85 80" xmlns="http://www.w3.org/2000/svg">
+        <line x1="85" y1="40" x2="23" y2="40" stroke="rgba(255,119,0,0.22)" strokeWidth="1"/>
+        <line x1="23" y1="40" x2="7"  y2="24" stroke="rgba(255,119,0,0.22)" strokeWidth="1"/>
+        <line x1="23" y1="40" x2="7"  y2="56" stroke="rgba(255,119,0,0.12)" strokeWidth="1"/>
+        <line x1="50" y1="40" x2="50" y2="18" stroke="rgba(255,119,0,0.15)" strokeWidth="1"/>
+        <circle cx="50" cy="14" r="2" fill="rgba(255,119,0,0.35)" className="hud-blink-slow"/>
+        <line x1="35" y1="40" x2="35" y2="32" stroke="rgba(255,119,0,0.12)" strokeWidth="1"/>
+        <circle cx="7"  cy="24" r="2.5" fill="rgba(255,119,0,0.3)"/>
+        <text x="83" y="11" fontSize="7" fontFamily="monospace" fill="rgba(255,119,0,0.38)" textAnchor="end" className="hud-text">{sigRText}</text>
+      </svg>
+
+      {/* Lower-left — small tick bar */}
+      <svg className="hud-ll" viewBox="0 0 55 18" xmlns="http://www.w3.org/2000/svg">
+        <line x1="14" y1="9" x2="14" y2="16" stroke="rgba(255,119,0,0.1)"  strokeWidth="1"/>
+        <line x1="26" y1="9" x2="26" y2="15" stroke="rgba(255,119,0,0.08)" strokeWidth="1"/>
+      </svg>
+
+      {/* Lower-right — mirror */}
+      <svg className="hud-lr" viewBox="0 0 55 18" xmlns="http://www.w3.org/2000/svg">
+        <line x1="41" y1="9" x2="41" y2="16" stroke="rgba(255,119,0,0.1)"  strokeWidth="1"/>
+        <line x1="29" y1="9" x2="29" y2="15" stroke="rgba(255,119,0,0.08)" strokeWidth="1"/>
+      </svg>
+
+
+      {/* Vertical spine left 1 — main line with horizontal branches */}
+      <svg className="hud-vs1l" viewBox="0 0 22 70" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="5" cy="4" r="2" fill="rgba(255,119,0,0.45)" className="hud-blink-slow"/>
+        <line x1="5" y1="6"  x2="5" y2="66" stroke="rgba(255,119,0,0.22)" strokeWidth="1"/>
+        <line x1="5" y1="28" x2="13" y2="28" stroke="rgba(255,119,0,0.18)" strokeWidth="1"/>
+        <line x1="5" y1="56" x2="11" y2="56" stroke="rgba(255,119,0,0.14)" strokeWidth="1"/>
+        <line x1="5" y1="64" x2="15" y2="64" stroke="rgba(255,119,0,0.18)" strokeWidth="1"/>
+      </svg>
+
+      {/* Vertical spine right 1 — mirror */}
+      <svg className="hud-vs1r" viewBox="0 0 22 70" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="17" cy="4" r="2" fill="rgba(255,119,0,0.45)" className="hud-blink-offset"/>
+        <line x1="17" y1="6"  x2="17" y2="66" stroke="rgba(255,119,0,0.22)" strokeWidth="1"/>
+        <line x1="17" y1="28" x2="9"  y2="28" stroke="rgba(255,119,0,0.18)" strokeWidth="1"/>
+        <line x1="17" y1="56" x2="11" y2="56" stroke="rgba(255,119,0,0.14)" strokeWidth="1"/>
+        <line x1="17" y1="64" x2="7"  y2="64" stroke="rgba(255,119,0,0.18)" strokeWidth="1"/>
+      </svg>
+
+      {/* Vertical spine left 2 — simpler tick bar */}
+      <svg className="hud-vs2l" viewBox="0 0 18 50" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="4" cy="3" r="1.5" fill="rgba(255,119,0,0.3)" className="hud-blink"/>
+        <line x1="4" y1="5"  x2="4" y2="48" stroke="rgba(255,119,0,0.18)" strokeWidth="1"/>
+        <line x1="4" y1="11" x2="14" y2="11" stroke="rgba(255,119,0,0.25)" strokeWidth="1.5"/>
+        <line x1="4" y1="45" x2="9"  y2="45" stroke="rgba(255,119,0,0.12)" strokeWidth="1"/>
+      </svg>
+
+      {/* Vertical spine right 2 — mirror */}
+      <svg className="hud-vs2r" viewBox="0 0 18 50" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="14" cy="3" r="1.5" fill="rgba(255,119,0,0.3)" className="hud-blink-slow"/>
+        <line x1="14" y1="5"  x2="14" y2="48" stroke="rgba(255,119,0,0.18)" strokeWidth="1"/>
+        <line x1="14" y1="11" x2="4"  y2="11" stroke="rgba(255,119,0,0.25)" strokeWidth="1.5"/>
+        <line x1="14" y1="45" x2="9"  y2="45" stroke="rgba(255,119,0,0.12)" strokeWidth="1"/>
+      </svg>
+
+      {/* Vertical spine left 3 — below lbl */}
+      <svg className="hud-vs3l" viewBox="0 0 16 42" xmlns="http://www.w3.org/2000/svg">
+        <line x1="4" y1="2"  x2="4" y2="40" stroke="rgba(255,119,0,0.15)" strokeWidth="1"/>
+        <line x1="4" y1="8"  x2="12" y2="8"  stroke="rgba(255,119,0,0.22)" strokeWidth="1.5"/>
+        <line x1="4" y1="20" x2="9"  y2="20" stroke="rgba(255,119,0,0.14)" strokeWidth="1"/>
+        <circle cx="4" cy="40" r="1.5" fill="rgba(255,119,0,0.25)" className="hud-blink-offset"/>
+      </svg>
+
+      {/* Vertical spine right 3 — mirror */}
+      <svg className="hud-vs3r" viewBox="0 0 16 42" xmlns="http://www.w3.org/2000/svg">
+        <line x1="12" y1="2"  x2="12" y2="40" stroke="rgba(255,119,0,0.15)" strokeWidth="1"/>
+        <line x1="12" y1="8"  x2="4"  y2="8"  stroke="rgba(255,119,0,0.22)" strokeWidth="1.5"/>
+        <line x1="12" y1="20" x2="7"  y2="20" stroke="rgba(255,119,0,0.14)" strokeWidth="1"/>
+        <circle cx="12" cy="40" r="1.5" fill="rgba(255,119,0,0.25)" className="hud-blink-slow"/>
+      </svg>
+
+      {/* Bottom-left — minimal marks */}
+      <svg className="hud-lbl" viewBox="0 0 42 14" xmlns="http://www.w3.org/2000/svg">
+        <line x1="0" y1="7" x2="30" y2="7" stroke="rgba(255,119,0,0.14)" strokeWidth="1"/>
+        <line x1="10" y1="3" x2="10" y2="11" stroke="rgba(255,119,0,0.1)"  strokeWidth="1"/>
+        <line x1="20" y1="4" x2="20" y2="10" stroke="rgba(255,119,0,0.07)" strokeWidth="1"/>
+        <circle cx="30" cy="7" r="1.5" fill="rgba(255,119,0,0.2)" className="hud-blink"/>
+      </svg>
+
+      {/* Bottom-right — mirror */}
+      <svg className="hud-lbr" viewBox="0 0 42 14" xmlns="http://www.w3.org/2000/svg">
+        <line x1="42" y1="7" x2="12" y2="7" stroke="rgba(255,119,0,0.14)" strokeWidth="1"/>
+        <line x1="32" y1="3" x2="32" y2="11" stroke="rgba(255,119,0,0.1)"  strokeWidth="1"/>
+        <line x1="22" y1="4" x2="22" y2="10" stroke="rgba(255,119,0,0.07)" strokeWidth="1"/>
+        <circle cx="12" cy="7" r="1.5" fill="rgba(255,119,0,0.2)" className="hud-blink-slow"/>
+      </svg>
+
+      {/* Readout left */}
+      <svg className="hud-rl" viewBox="0 0 72 16" xmlns="http://www.w3.org/2000/svg">
+        <text x="0" y="13" fontSize="11" fontFamily="monospace" fill="rgba(255,155,30,0.82)">{readLText}</text>
+      </svg>
+
+      {/* Readout right */}
+      <svg className="hud-rr" viewBox="0 0 72 16" xmlns="http://www.w3.org/2000/svg">
+        <text x="72" y="13" fontSize="11" fontFamily="monospace" fill="rgba(255,155,30,0.82)" textAnchor="end">{readRText}</text>
       </svg>
 
     </div>

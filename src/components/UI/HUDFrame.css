@@ -61,7 +61,7 @@
   position: absolute;
   top: 32%;
   left: 12px;
-  width: 130px;
+  width: 85px;
   height: 80px;
 }
 
@@ -69,8 +69,107 @@
   position: absolute;
   top: 32%;
   right: 12px;
-  width: 130px;
+  width: 85px;
   height: 80px;
+}
+
+.hud-ll {
+  position: absolute;
+  top: 46%;
+  left: 12px;
+  width: 55px;
+  height: 18px;
+}
+
+.hud-lr {
+  position: absolute;
+  top: 46%;
+  right: 12px;
+  width: 55px;
+  height: 18px;
+}
+
+.hud-lbl {
+  position: absolute;
+  top: 62%;
+  left: 12px;
+  width: 42px;
+  height: 14px;
+}
+
+.hud-lbr {
+  position: absolute;
+  top: 62%;
+  right: 12px;
+  width: 42px;
+  height: 14px;
+}
+
+.hud-rl {
+  position: absolute;
+  top: 50%;
+  left: 12px;
+  width: 72px;
+  height: 16px;
+  opacity: 0.7;
+}
+
+.hud-rr {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  width: 72px;
+  height: 16px;
+  opacity: 0.7;
+}
+
+
+.hud-vs1l {
+  position: absolute;
+  top: 39%;
+  left: 12px;
+  width: 22px;
+  height: 70px;
+}
+
+.hud-vs1r {
+  position: absolute;
+  top: 39%;
+  right: 12px;
+  width: 22px;
+  height: 70px;
+}
+
+.hud-vs2l {
+  position: absolute;
+  top: 54%;
+  left: 12px;
+  width: 18px;
+  height: 50px;
+}
+
+.hud-vs2r {
+  position: absolute;
+  top: 54%;
+  right: 12px;
+  width: 18px;
+  height: 50px;
+}
+
+.hud-vs3l {
+  position: absolute;
+  top: 72%;
+  left: 12px;
+  width: 16px;
+  height: 42px;
+}
+
+.hud-vs3r {
+  position: absolute;
+  top: 72%;
+  right: 12px;
+  width: 16px;
+  height: 42px;
 }
 
 /* Animations */
@@ -86,7 +185,7 @@
 
 @keyframes hud-scan {
   0%   { transform: translateX(10px); }
-  50% { transform: translateX(260px); }
+  100% { transform: translateX(260px); }
 }
 
 .hud-blink        { animation: hud-blink 2.4s ease-in-out infinite; }
