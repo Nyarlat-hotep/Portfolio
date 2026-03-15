@@ -116,12 +116,15 @@ const ringFragmentShader = `
     // Hotspot — intense consumption point
     float hotspot = smoothstep(0.65, 0.95, turb) * equatorSharp;
 
-    // Base color — dark ichor
+    // Angular gradient — rings brighten on one arc, dim on the other
+    float angGrad = sin(angle * 3.14159) * 0.5 + 0.5;
+
+    // Base color
     vec3 col = mix(uColorCool, uColorMid, equatorSharp);
-    col = mix(col, uColorHot, equatorSharp * turb * 1.2);
-    col *= (0.4 + turb * 0.7);
-    col = mix(col, uColorHot * 1.5, hotspot * 0.75);
-    col *= (1.0 + uHover * 0.5);
+    col = mix(col, uColorHot, equatorSharp * turb * 1.0);
+    col *= (0.22 + turb * 0.38) * (0.65 + angGrad * 0.35);
+    col = mix(col, uColorHot * 1.3, hotspot * 0.65);
+    col *= (1.0 + uHover * 0.45);
 
     // Specular highlight — wet surface
     float spec = pow(hotspot, 3.0) * equatorSharp;
@@ -133,8 +136,8 @@ const ringFragmentShader = `
 
     // Edge fade with tighter falloff for crisper edge
     float edgeFade = smoothstep(0.0, 0.15, side) * smoothstep(1.0, 0.85, side);
-    float alpha = edgeFade * (0.32 + turb * 0.16 + hotspot * 0.06);
-    alpha = clamp(alpha, 0.0, 0.50);
+    float alpha = edgeFade * (0.25 + turb * 0.14 + hotspot * 0.05);
+    alpha = clamp(alpha, 0.0, 0.40);
 
     gl_FragColor = vec4(col, alpha);
   }
@@ -225,12 +228,20 @@ const tentacleFragmentShader = `
     vec3 ridgeTint = mix(mix(vec3(0.01, 0.06, 0.02), vec3(0.01, 0.04, 0.08), isTeal),
                          vec3(0.06, 0.08, 0.01), isYellow);
 
+    // Length gradient — dark at root, brightens mid-arm, fades at tip
+    float lengthGrad = sin(vUv.x * 3.14159) * 0.55 + 0.25;
+
+    // Tube highlight — soft shine along one side of the cross-section
+    float tubeHighlight = pow(sin(vUv.y * 3.14159), 2.0);
+
     // Compose
-    vec3 color = mix(baseColor, subColor, fresnel * 0.7);
-    color += ridge * ridgeTint;
-    color += surface * 0.03 * mix(vec3(0.1, 0.5, 0.2), vec3(0.3, 0.5, 0.05), isYellow);
-    color += rimColor * fresnel * (0.7 + uHover * 0.8);
-    color += veinColor;
+    vec3 color = mix(baseColor, subColor * lengthGrad, fresnel * 0.7);
+    color += ridge * ridgeTint * lengthGrad;
+    color += surface * 0.03 * mix(vec3(0.1, 0.5, 0.2), vec3(0.3, 0.5, 0.05), isYellow) * lengthGrad;
+    color += rimColor * fresnel * (0.65 + uHover * 0.75);
+    color += veinColor * lengthGrad;
+    // Tube highlight adds a soft gradient across the cross-section
+    color += veinBase * tubeHighlight * 0.025 * lengthGrad;
 
     // Wet specular — tinted to arm hue
     vec3 specTint = mix(mix(vec3(0.4, 1.0, 0.6), vec3(0.3, 0.8, 1.0), isTeal),
@@ -294,26 +305,32 @@ const horizonFragmentShader = `
     // Slow irregular pulse (compound sine)
     float pulse = sin(uTime * 0.4) * 0.5 + sin(uTime * 0.17 + 1.3) * 0.3 + 0.5;
 
-    // Large-scale spatial color zones — drifting slowly so surface reads as multi-hued
+    // Large-scale spatial color zones — drifting slowly
     float zone  = snoise(vec3(vUv.x * 2.5,        vUv.y * 2.5,        uTime * 0.012))       * 0.5 + 0.5;
     float zone2 = snoise(vec3(vUv.x * 1.8 + 7.0,  vUv.y * 1.8 + 3.0,  uTime * 0.008 + 4.0)) * 0.5 + 0.5;
+
+    // World-space Y gradient — teal toward top, green toward bottom
+    float worldY = normalize(vWorldPosition).y * 0.5 + 0.5;
 
     // Three subsurface hues: deep green / abyssal teal / murky yellow-green
     vec3 subA = vec3(0.01, 0.18, 0.08);
     vec3 subB = vec3(0.02, 0.10, 0.20);
     vec3 subC = vec3(0.07, 0.14, 0.02);
-    vec3 subsurface = mix(mix(subA, subB, zone), subC, zone2 * 0.45) * pulse * 0.7;
+    // Blend noise zones then layer the world Y gradient on top
+    vec3 subBase = mix(mix(subA, subB, zone), subC, zone2 * 0.4);
+    vec3 subsurface = mix(subBase, subB * 1.3, worldY * 0.5) * pulse * 0.65;
 
     vec3 veinColor = vec3(0.01, 0.06, 0.03);
 
-    // Rim hue also varies spatially — green through teal
-    vec3 rimA = vec3(0.04, 0.55, 0.22);
-    vec3 rimB = vec3(0.03, 0.32, 0.55);
-    vec3 rimColor = mix(rimA, rimB, zone) * vec3(1.0 + uHover * 0.15, 1.0 + uHover * 0.55, 1.0 + uHover * 0.2);
+    // Rim varies spatially AND by world Y
+    vec3 rimA = vec3(0.04, 0.50, 0.20);
+    vec3 rimB = vec3(0.03, 0.28, 0.52);
+    vec3 rimBase = mix(mix(rimA, rimB, zone), rimB, worldY * 0.4);
+    vec3 rimColor = rimBase * vec3(1.0 + uHover * 0.12, 1.0 + uHover * 0.5, 1.0 + uHover * 0.18);
 
     vec3 color = mix(veinColor, subsurface, veins * 0.7);
-    // Rim glow — ragged membrane edge, kept dim
-    color += rimColor * fresnel * (0.75 + uHover * 0.8) * (0.8 + veins * 0.4);
+    // Rim glow — kept dim
+    color += rimColor * fresnel * (0.65 + uHover * 0.7) * (0.8 + veins * 0.35);
 
     // Surface stays very dark — just let rim and veins breathe
     color = clamp(color, 0.0, 1.0);
@@ -770,7 +787,7 @@ function VoidParticles({ count = 150, radius = 25, hovered }) {
 
       pointsRef.current.rotation.y += delta * (0.015 + h * 0.045);
       pointsRef.current.rotation.z += delta * (0.004 + h * 0.012);
-      pointsRef.current.material.opacity = 0.4 + h * 0.3;
+      pointsRef.current.material.opacity = 0.18 + h * 0.18;
     }
   });
 
