@@ -205,27 +205,27 @@ const tentacleFragmentShader = `
     vec3 baseColor = vec3(0.01, 0.04, 0.02);
 
     // Subsurface bleed — varies per arm
-    vec3 subA = vec3(0.02, 0.20, 0.08);   // green
-    vec3 subB = vec3(0.20, 0.18, 0.01);   // sickly yellow
+    vec3 subA = vec3(0.20, 0.18, 0.01);   // sickly yellow
+    vec3 subB = vec3(0.02, 0.20, 0.08);   // green
     vec3 subC = vec3(0.22, 0.16, 0.01);   // murky yellow
     vec3 subColor = mix(mix(subA, subB, isTeal), subC, isYellow) * (1.0 - vUv.x * 0.4);
 
     // Vein color — varies per arm
-    vec3 veinA = vec3(0.05, 0.80, 0.28);  // phosphorescent green
-    vec3 veinB = vec3(0.80, 0.85, 0.02);  // bioluminescent yellow
+    vec3 veinA = vec3(0.80, 0.85, 0.02);  // bioluminescent yellow
+    vec3 veinB = vec3(0.05, 0.80, 0.28);  // phosphorescent green
     vec3 veinC = vec3(0.85, 0.72, 0.02);  // sickly yellow-gold
     vec3 veinBase = mix(mix(veinA, veinB, isTeal), veinC, isYellow);
     vec3 veinColor = veinBase * veinPattern * pulse * (0.12 + uHover * 0.45);
 
     // Rim — varies per arm
-    vec3 rimA = vec3(0.03, 0.38, 0.16);
-    vec3 rimB = vec3(0.42, 0.38, 0.02);
+    vec3 rimA = vec3(0.42, 0.38, 0.02);
+    vec3 rimB = vec3(0.03, 0.38, 0.16);
     vec3 rimC = vec3(0.25, 0.38, 0.03);
     vec3 rimBase = mix(mix(rimA, rimB, isTeal), rimC, isYellow);
     vec3 rimColor = rimBase + vec3(uHover * 0.05, uHover * 0.22, uHover * 0.12);
 
     // Ridge tint also varies
-    vec3 ridgeTint = mix(mix(vec3(0.01, 0.06, 0.02), vec3(0.08, 0.07, 0.01), isTeal),
+    vec3 ridgeTint = mix(mix(vec3(0.08, 0.07, 0.01), vec3(0.01, 0.06, 0.02), isTeal),
                          vec3(0.10, 0.06, 0.01), isYellow);
 
     // Length gradient — dark at root, brightens mid-arm, fades at tip
@@ -244,7 +244,7 @@ const tentacleFragmentShader = `
     color += veinBase * tubeHighlight * 0.025 * lengthGrad;
 
     // Wet specular — tinted to arm hue
-    vec3 specTint = mix(mix(vec3(0.4, 1.0, 0.6), vec3(1.0, 0.95, 0.2), isTeal),
+    vec3 specTint = mix(mix(vec3(1.0, 0.95, 0.2), vec3(0.4, 1.0, 0.6), isTeal),
                         vec3(1.0, 0.88, 0.1), isYellow);
     float spec = pow(max(0.0, surface * 0.5 + 0.5), 12.0) * fresnel * 0.25;
     color += specTint * spec;
@@ -312,20 +312,20 @@ const horizonFragmentShader = `
     // World-space Y gradient — teal toward top, green toward bottom
     float worldY = normalize(vWorldPosition).y * 0.5 + 0.5;
 
-    // Three subsurface hues: deep green / abyssal teal / murky yellow-green
-    vec3 subA = vec3(0.01, 0.18, 0.08);
-    vec3 subB = vec3(0.20, 0.16, 0.01);
+    // Three subsurface hues: murky yellow / deep green / murky yellow-green
+    vec3 subA = vec3(0.20, 0.16, 0.01);
+    vec3 subB = vec3(0.01, 0.18, 0.08);
     vec3 subC = vec3(0.07, 0.14, 0.02);
     // Blend noise zones then layer the world Y gradient on top
     vec3 subBase = mix(mix(subA, subB, zone), subC, zone2 * 0.4);
-    vec3 subsurface = mix(subBase, subB * 1.3, worldY * 0.5) * pulse * 0.65;
+    vec3 subsurface = mix(subBase, subA * 1.3, worldY * 0.5) * pulse * 0.65;
 
     vec3 veinColor = vec3(0.01, 0.06, 0.03);
 
     // Rim varies spatially AND by world Y
-    vec3 rimA = vec3(0.04, 0.50, 0.20);
-    vec3 rimB = vec3(0.45, 0.38, 0.02);
-    vec3 rimBase = mix(mix(rimA, rimB, zone), rimB, worldY * 0.4);
+    vec3 rimA = vec3(0.45, 0.38, 0.02);
+    vec3 rimB = vec3(0.04, 0.50, 0.20);
+    vec3 rimBase = mix(mix(rimA, rimB, zone), rimA, worldY * 0.4);
     vec3 rimColor = rimBase * vec3(1.0 + uHover * 0.12, 1.0 + uHover * 0.5, 1.0 + uHover * 0.18);
 
     vec3 color = mix(veinColor, subsurface, veins * 0.7);
