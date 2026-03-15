@@ -133,8 +133,8 @@ const ringFragmentShader = `
 
     // Edge fade with tighter falloff for crisper edge
     float edgeFade = smoothstep(0.0, 0.15, side) * smoothstep(1.0, 0.85, side);
-    float alpha = edgeFade * (0.45 + turb * 0.20 + hotspot * 0.08);
-    alpha = clamp(alpha, 0.0, 0.65);
+    float alpha = edgeFade * (0.32 + turb * 0.16 + hotspot * 0.06);
+    alpha = clamp(alpha, 0.0, 0.50);
 
     gl_FragColor = vec4(col, alpha);
   }
@@ -194,26 +194,49 @@ const tentacleFragmentShader = `
     // Pulse — slower, more visceral
     float pulse = sin(uTime * 0.9 + uIndex * 1.8 + vUv.x * 5.0) * 0.5 + 0.5;
 
-    // Base color — deep ocean dark
-    vec3 baseColor = vec3(0.01, 0.05, 0.03);
-    // Subsurface — murky bioluminescent green bleeds through thin areas
-    vec3 subColor  = vec3(0.02, 0.20, 0.08) * (1.0 - vUv.x * 0.4);
-    // Vein color — bioluminescent phosphorescent green
-    vec3 veinColor = vec3(0.05, 0.80, 0.30) * veinPattern * pulse * (0.15 + uHover * 0.5);
+    // Per-arm hue palette: arms 0-1 = green, 2-3 = teal, 4-5 = murky yellow-green
+    float isTeal   = step(1.5, uIndex) * (1.0 - step(3.5, uIndex));
+    float isYellow = step(3.5, uIndex);
 
-    // Rim / fresnel — membrane edge, deep sea cyan-green phosphorescence
-    vec3 rimColor = vec3(0.04 + uHover * 0.05, 0.40 + uHover * 0.25, 0.35 + uHover * 0.15);
+    // Base stays near-black for all arms
+    vec3 baseColor = vec3(0.01, 0.04, 0.02);
+
+    // Subsurface bleed — varies per arm
+    vec3 subA = vec3(0.02, 0.20, 0.08);   // green
+    vec3 subB = vec3(0.02, 0.12, 0.22);   // teal
+    vec3 subC = vec3(0.12, 0.18, 0.02);   // yellow-green
+    vec3 subColor = mix(mix(subA, subB, isTeal), subC, isYellow) * (1.0 - vUv.x * 0.4);
+
+    // Vein color — varies per arm
+    vec3 veinA = vec3(0.05, 0.80, 0.28);  // phosphorescent green
+    vec3 veinB = vec3(0.05, 0.55, 0.82);  // deep sea teal
+    vec3 veinC = vec3(0.55, 0.78, 0.04);  // sickly bioluminescent yellow-green
+    vec3 veinBase = mix(mix(veinA, veinB, isTeal), veinC, isYellow);
+    vec3 veinColor = veinBase * veinPattern * pulse * (0.12 + uHover * 0.45);
+
+    // Rim — varies per arm
+    vec3 rimA = vec3(0.03, 0.38, 0.16);
+    vec3 rimB = vec3(0.03, 0.24, 0.45);
+    vec3 rimC = vec3(0.25, 0.38, 0.03);
+    vec3 rimBase = mix(mix(rimA, rimB, isTeal), rimC, isYellow);
+    vec3 rimColor = rimBase + vec3(uHover * 0.05, uHover * 0.22, uHover * 0.12);
+
+    // Ridge tint also varies
+    vec3 ridgeTint = mix(mix(vec3(0.01, 0.06, 0.02), vec3(0.01, 0.04, 0.08), isTeal),
+                         vec3(0.06, 0.08, 0.01), isYellow);
 
     // Compose
     vec3 color = mix(baseColor, subColor, fresnel * 0.7);
-    color += ridge * vec3(0.01, 0.06, 0.03);              // ridges catch slight light
-    color += surface * 0.04 * vec3(0.1, 0.5, 0.2);        // surface bump variation
-    color += rimColor * fresnel * (0.8 + uHover * 0.9);
+    color += ridge * ridgeTint;
+    color += surface * 0.03 * mix(vec3(0.1, 0.5, 0.2), vec3(0.3, 0.5, 0.05), isYellow);
+    color += rimColor * fresnel * (0.7 + uHover * 0.8);
     color += veinColor;
 
-    // Wet specular — small bright points at surface bumps
-    float spec = pow(max(0.0, surface * 0.5 + 0.5), 12.0) * fresnel * 0.3;
-    color += vec3(0.5, 1.0, 0.65) * spec;
+    // Wet specular — tinted to arm hue
+    vec3 specTint = mix(mix(vec3(0.4, 1.0, 0.6), vec3(0.3, 0.8, 1.0), isTeal),
+                        vec3(0.8, 1.0, 0.3), isYellow);
+    float spec = pow(max(0.0, surface * 0.5 + 0.5), 12.0) * fresnel * 0.25;
+    color += specTint * spec;
 
     // Alpha — fade at tip, slight translucency at fresnel edges
     float alpha = (1.0 - smoothstep(0.80, 1.0, vUv.x)) * (1.0 - fresnel * 0.25);
@@ -271,14 +294,26 @@ const horizonFragmentShader = `
     // Slow irregular pulse (compound sine)
     float pulse = sin(uTime * 0.4) * 0.5 + sin(uTime * 0.17 + 1.3) * 0.3 + 0.5;
 
-    // Deep subsurface color — abyssal green
-    vec3 subsurface = vec3(0.02, 0.22, 0.10) * pulse * 0.6;
-    vec3 veinColor  = vec3(0.01, 0.07, 0.03);
-    vec3 rimColor   = vec3(0.04 + uHover * 0.08, 0.55 + uHover * 0.3, 0.22 + uHover * 0.1);
+    // Large-scale spatial color zones — drifting slowly so surface reads as multi-hued
+    float zone  = snoise(vec3(vUv.x * 2.5,        vUv.y * 2.5,        uTime * 0.012))       * 0.5 + 0.5;
+    float zone2 = snoise(vec3(vUv.x * 1.8 + 7.0,  vUv.y * 1.8 + 3.0,  uTime * 0.008 + 4.0)) * 0.5 + 0.5;
+
+    // Three subsurface hues: deep green / abyssal teal / murky yellow-green
+    vec3 subA = vec3(0.01, 0.18, 0.08);
+    vec3 subB = vec3(0.02, 0.10, 0.20);
+    vec3 subC = vec3(0.07, 0.14, 0.02);
+    vec3 subsurface = mix(mix(subA, subB, zone), subC, zone2 * 0.45) * pulse * 0.7;
+
+    vec3 veinColor = vec3(0.01, 0.06, 0.03);
+
+    // Rim hue also varies spatially — green through teal
+    vec3 rimA = vec3(0.04, 0.55, 0.22);
+    vec3 rimB = vec3(0.03, 0.32, 0.55);
+    vec3 rimColor = mix(rimA, rimB, zone) * vec3(1.0 + uHover * 0.15, 1.0 + uHover * 0.55, 1.0 + uHover * 0.2);
 
     vec3 color = mix(veinColor, subsurface, veins * 0.7);
-    // Rim glow — ragged membrane edge
-    color += rimColor * fresnel * (1.2 + uHover * 1.0) * (0.8 + veins * 0.4);
+    // Rim glow — ragged membrane edge, kept dim
+    color += rimColor * fresnel * (0.75 + uHover * 0.8) * (0.8 + veins * 0.4);
 
     // Surface stays very dark — just let rim and veins breathe
     color = clamp(color, 0.0, 1.0);
@@ -543,9 +578,7 @@ function BlackHoleCore({ position, onClick, onHoverChange }) {
     hoverRef.current += (target - hoverRef.current) * Math.min(delta * 3, 1);
     const h = hoverRef.current;
 
-    if (eventHorizonRef.current) {
-      eventHorizonRef.current.rotation.y += 0.002 + h * 0.006;
-    }
+    // horizon is static — biological surface animates via shader time, not rotation
     if (diskRef.current) {
       diskRef.current.rotation.z += 0.008 + h * 0.02;
       const pulse = Math.sin(time * 0.5) * (0.08 + h * 0.06) + 1;
