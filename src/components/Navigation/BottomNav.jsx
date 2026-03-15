@@ -139,10 +139,14 @@ const BottomNav = forwardRef(function BottomNav({ activePlanetId, onNavigate, on
               target="_blank"
               rel="noopener noreferrer"
               aria-label={social.name}
-              title={social.name}
               onMouseEnter={playMenuClick}
             >
               {social.icon}
+              {!isTouch && (
+                <span className="nav-tooltip">
+                  <span className="tooltip-key">{social.name}</span>
+                </span>
+              )}
             </a>
           ))}
         </div>
@@ -154,11 +158,15 @@ const BottomNav = forwardRef(function BottomNav({ activePlanetId, onNavigate, on
             onClick={() => hasCustomPlanet ? onDeletePlanet?.() : onCreatePlanet?.()}
             onMouseEnter={playMenuClick}
             aria-label={hasCustomPlanet ? "Delete your planet" : "Create your own planet"}
-            title={hasCustomPlanet ? "Delete planet" : "Create your planet"}
             role="button"
             tabIndex={0}
           >
             {hasCustomPlanet ? <Trash2 size={16} /> : <Orbit size={16} />}
+            {!isTouch && (
+              <span className="nav-tooltip">
+                <span className="tooltip-key">{hasCustomPlanet ? 'Delete planet' : 'Planet forge'}</span>
+              </span>
+            )}
           </a>
         </div>
       </div>

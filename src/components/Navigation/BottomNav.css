@@ -98,7 +98,8 @@
   z-index: 100;
 }
 
-.nav-toggle:hover .nav-tooltip {
+.nav-toggle:hover .nav-tooltip,
+.social-link:hover .nav-tooltip {
   opacity: 1;
   transform: translateX(-50%) scale(1);
 }
@@ -358,6 +359,8 @@
   text-transform: uppercase;
   transition: all 0.3s ease;
   text-decoration: none;
+  position: relative;
+  overflow: visible;
 }
 
 .social-link:hover {
