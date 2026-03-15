@@ -273,6 +273,17 @@ function updateVoidTent(geo, config, time, hoverValue, length) {
     );
   }
 
+  // ── 1b. Ring exclusion — push spine points out of ring annulus ────────────
+  const RING_INNER = 3.5;
+  const RING_OUTER = 10.0;
+  const RING_Y_CLEAR = 1.5;
+  for (let s = 1; s < CV_SEGS; s++) {
+    const xzDist = Math.sqrt(_cvSp[s].x * _cvSp[s].x + _cvSp[s].z * _cvSp[s].z);
+    if (xzDist > RING_INNER && xzDist < RING_OUTER && Math.abs(_cvSp[s].y) < RING_Y_CLEAR) {
+      _cvSp[s].y = _cvSp[s].y >= 0 ? RING_Y_CLEAR : -RING_Y_CLEAR;
+    }
+  }
+
   // ── 2. Tangents (central differences) ────────────────────────────────────
   for (let s = 0; s < CV_SEGS; s++) {
     if (s === 0)              _cvTan[s].subVectors(_cvSp[1], _cvSp[0]);
@@ -330,7 +341,7 @@ function updateVoidTent(geo, config, time, hoverValue, length) {
 // ============================================================
 
 // Fixed Y offsets — one per tentacle, avoids Math.random instability
-const TENT_Y_OFFSETS = [0.15, -0.20, 0.30, -0.10, 0.20, -0.25];
+const TENT_Y_OFFSETS = [0.85, -0.85, 1.0, -1.0, 0.75, -0.75];
 
 function VoidTentacle({ index, totalCount, length, hovered }) {
   const hoverRef = useRef(0);
