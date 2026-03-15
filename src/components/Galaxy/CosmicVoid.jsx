@@ -120,21 +120,21 @@ const ringFragmentShader = `
     vec3 col = mix(uColorCool, uColorMid, equatorSharp);
     col = mix(col, uColorHot, equatorSharp * turb * 1.2);
     col *= (0.4 + turb * 0.7);
-    col = mix(col, uColorHot * 2.2, hotspot * 0.85);
-    col *= (1.0 + uHover * 0.6);
+    col = mix(col, uColorHot * 1.5, hotspot * 0.75);
+    col *= (1.0 + uHover * 0.5);
 
     // Specular highlight — wet surface
     float spec = pow(hotspot, 3.0) * equatorSharp;
-    col += vec3(1.0, 0.92, 0.8) * spec * (0.6 + uHover * 0.4);
+    col += vec3(0.7, 1.0, 0.75) * spec * (0.4 + uHover * 0.3);
 
     // Rim lighting — edges of the tube catch light (physical volume feel)
     float rim = pow(1.0 - equator, 4.0);
-    col += uColorMid * rim * 0.4;
+    col += uColorMid * rim * 0.3;
 
     // Edge fade with tighter falloff for crisper edge
     float edgeFade = smoothstep(0.0, 0.15, side) * smoothstep(1.0, 0.85, side);
-    float alpha = edgeFade * (0.65 + turb * 0.25 + hotspot * 0.1);
-    alpha = clamp(alpha, 0.0, 0.97);
+    float alpha = edgeFade * (0.45 + turb * 0.20 + hotspot * 0.08);
+    alpha = clamp(alpha, 0.0, 0.65);
 
     gl_FragColor = vec4(col, alpha);
   }
@@ -201,8 +201,8 @@ const tentacleFragmentShader = `
     // Vein color — bioluminescent phosphorescent green
     vec3 veinColor = vec3(0.05, 0.80, 0.30) * veinPattern * pulse * (0.15 + uHover * 0.5);
 
-    // Rim / fresnel — membrane edge, deep sea phosphorescence
-    vec3 rimColor = vec3(0.04 + uHover * 0.05, 0.45 + uHover * 0.3, 0.18 + uHover * 0.1);
+    // Rim / fresnel — membrane edge, deep sea cyan-green phosphorescence
+    vec3 rimColor = vec3(0.04 + uHover * 0.05, 0.40 + uHover * 0.25, 0.35 + uHover * 0.15);
 
     // Compose
     vec3 color = mix(baseColor, subColor, fresnel * 0.7);
@@ -640,9 +640,9 @@ function BlackHoleCore({ position, onClick, onHoverChange }) {
           uniforms={{
             uTime:      { value: 0 },
             uHover:     { value: 0 },
-            uColorHot:  { value: new THREE.Color('#aaffcc') },
-            uColorMid:  { value: new THREE.Color('#1a4a2a') },
-            uColorCool: { value: new THREE.Color('#000d05') },
+            uColorHot:  { value: new THREE.Color('#44ddff') },
+            uColorMid:  { value: new THREE.Color('#0a2a3a') },
+            uColorCool: { value: new THREE.Color('#00080d') },
             uFlowSpeed: { value: 0.22 },
           }}
           vertexShader={ringVertexShader}
@@ -659,9 +659,9 @@ function BlackHoleCore({ position, onClick, onHoverChange }) {
           uniforms={{
             uTime:      { value: 0 },
             uHover:     { value: 0 },
-            uColorHot:  { value: new THREE.Color('#228844') },
-            uColorMid:  { value: new THREE.Color('#0a2a14') },
-            uColorCool: { value: new THREE.Color('#000803') },
+            uColorHot:  { value: new THREE.Color('#aadd44') },
+            uColorMid:  { value: new THREE.Color('#1a2a08') },
+            uColorCool: { value: new THREE.Color('#040600') },
             uFlowSpeed: { value: 0.07 },
           }}
           vertexShader={ringVertexShader}
@@ -783,8 +783,8 @@ export default function CosmicVoid({ position = [0, 0, -80], onClick }) {
 
       <VoidParticles hovered={hovered} />
 
-      <pointLight position={[0, 0, 5]}  color="#0a4a2a" intensity={2}   distance={30} decay={2} />
-      <pointLight position={[0, 0, -5]} color="#00ff6a" intensity={0.3} distance={20} decay={2} />
+      <pointLight position={[0, 0, 5]}  color="#0a4a2a" intensity={1}   distance={30} decay={2} />
+      <pointLight position={[0, 0, -5]} color="#00ff6a" intensity={0.15} distance={20} decay={2} />
     </group>
   );
 }
