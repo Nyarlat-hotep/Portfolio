@@ -293,10 +293,13 @@ const horizonFragmentShader = `
     vec3 viewDir = normalize(cameraPosition - vWorldPosition);
     float fresnel = pow(1.0 - max(dot(viewDir, vNormal), 0.0), 3.0);
 
-    // Each vein layer flows in a different direction — noise scrolls across the surface
-    float v1 = snoise(vec3(vUv.x * 12.0 + uTime * 0.18,  vUv.y * 12.0 + uTime * 0.10,  0.0));
-    float v2 = snoise(vec3(vUv.x * 28.0 - uTime * 0.28,  vUv.y * 28.0 + uTime * 0.16,  1.7));
-    float v3 = snoise(vec3(vUv.x *  6.0 + uTime * 0.07,  vUv.y *  6.0 - uTime * 0.12,  3.4));
+    // Use world-space position on sphere — no UV seam, true 3D coords
+    // Animating all three XYZ axes at different rates makes zero-crossings
+    // genuinely migrate across the surface in complex paths (writhing)
+    vec3 wp = normalize(vWorldPosition);
+    float v1 = snoise(vec3(wp.x * 8.0  + uTime * 0.35,  wp.y * 8.0  + uTime * 0.20,  wp.z * 8.0  + uTime * 0.15));
+    float v2 = snoise(vec3(wp.x * 18.0 - uTime * 0.45,  wp.y * 18.0 + uTime * 0.10,  wp.z * 18.0 + uTime * 0.30));
+    float v3 = snoise(vec3(wp.x * 4.5  + uTime * 0.12,  wp.y * 4.5  - uTime * 0.28,  wp.z * 4.5  + uTime * 0.08));
 
     // Bright vein lines — detect zero-crossings in noise, thin sharp lines
     float vein1 = pow(1.0 - smoothstep(0.0, 0.10, abs(v1)), 3.0);
