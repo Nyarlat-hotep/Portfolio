@@ -347,12 +347,24 @@
   color: #fff;
 }
 
+.help-btn--active {
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+}
+
 .nav-hints {
+  pointer-events: none;
+}
+
+.nav-hints-inner {
   color: rgba(255, 255, 255, 0.6);
   font-size: 12px;
   font-family: monospace;
   text-align: right;
-  pointer-events: none;
+  padding-top: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .nav-hint-row {

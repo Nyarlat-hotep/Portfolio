@@ -4,7 +4,7 @@ import { TrackballControls, PerspectiveCamera } from '@react-three/drei';
 import { useState, useEffect, Suspense, useMemo, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, ArrowRight, ArrowUp, ArrowDown, Move, ZoomIn, X, Volume2, VolumeX } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ArrowUp, ArrowDown, Move, ZoomIn, HelpCircle, X, Volume2, VolumeX } from 'lucide-react';
 import './Galaxy.css';
 import Planet from './Planet';
 import CustomPlanet from './CustomPlanet';
@@ -227,6 +227,7 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
   const containerRef = useRef(null);
   const pendingTapRef = useRef(null);
   const [muted, setMutedState] = useState(() => getMuted());
+  const [helpVisible, setHelpVisible] = useState(false);
   const [asteroidModalOpen,  setAsteroidModalOpen]  = useState(false);
   const [codexInput,         setCodexInput]         = useState('');
   const [codexError,         setCodexError]         = useState(false);
@@ -805,7 +806,7 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
         )}
       </AnimatePresence>
 
-      {/* Mute button + navigation hints — top-right on mobile, bottom-right on desktop */}
+      {/* Mute + Help buttons, collapsible hints — top-right on mobile, bottom-right on desktop */}
       {sceneReady && (
         <div className={`scene-hud${isTouch ? ' scene-hud--touch' : ''}`}>
           {/* Mute toggle */}
@@ -817,37 +818,60 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
               setMutedState(next);
             }}
             aria-label={muted ? 'Unmute' : 'Mute'}
-            onMouseEnter={e => { playMenuClick(); }}
+            onMouseEnter={() => { playMenuClick(); }}
           >
             {muted ? <VolumeX size={14} /> : <Volume2 size={14} />}
           </button>
 
-          {/* Navigation hints */}
-          <div className="nav-hints">
-            {isTouch ? (
-              <>
-                <div className="nav-hint-row">
-                  <Move size={12} /> Drag to orbit
+          {/* Help toggle */}
+          <button
+            className={`mute-btn help-btn${helpVisible ? ' help-btn--active' : ''}`}
+            onClick={() => setHelpVisible(v => !v)}
+            aria-label={helpVisible ? 'Hide controls' : 'Show controls'}
+            onMouseEnter={() => { playMenuClick(); }}
+          >
+            <HelpCircle size={14} />
+          </button>
+
+          {/* Navigation hints — animated drawer below buttons */}
+          <AnimatePresence>
+            {helpVisible && (
+              <motion.div
+                className="nav-hints"
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+                style={{ overflow: 'hidden' }}
+              >
+                <div className="nav-hints-inner">
+                  {isTouch ? (
+                    <>
+                      <div className="nav-hint-row">
+                        <Move size={12} /> Drag to orbit
+                      </div>
+                      <div className="nav-hint-row">
+                        <ZoomIn size={12} /> Pinch to zoom
+                      </div>
+                      <div>Tap planets to explore</div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="nav-hint-row">
+                        <ArrowLeft size={12} /> <ArrowRight size={12} /> Orbit left / right
+                      </div>
+                      <div className="nav-hint-row">
+                        <ArrowUp size={12} /> <ArrowDown size={12} /> Zoom in / out
+                      </div>
+                      <div>Click and drag to orbit</div>
+                      <div>Scroll to zoom</div>
+                      <div>ESC to return home</div>
+                    </>
+                  )}
                 </div>
-                <div className="nav-hint-row">
-                  <ZoomIn size={12} /> Pinch to zoom
-                </div>
-                <div>Tap planets to explore</div>
-              </>
-            ) : (
-              <>
-                <div className="nav-hint-row">
-                  <ArrowLeft size={12} /> <ArrowRight size={12} /> Orbit left / right
-                </div>
-                <div className="nav-hint-row">
-                  <ArrowUp size={12} /> <ArrowDown size={12} /> Zoom in / out
-                </div>
-                <div>Click and drag to orbit</div>
-                <div>Scroll to zoom</div>
-                <div>ESC to return home</div>
-              </>
+              </motion.div>
             )}
-          </div>
+          </AnimatePresence>
         </div>
       )}
 
