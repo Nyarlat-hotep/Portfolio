@@ -293,15 +293,10 @@ const horizonFragmentShader = `
     vec3 viewDir = normalize(cameraPosition - vWorldPosition);
     float fresnel = pow(1.0 - max(dot(viewDir, vNormal), 0.0), 3.0);
 
-    // Domain warp — distort UV with slow flow noise so veins physically writhe
-    float warpX = snoise(vec3(vUv.x * 3.5,       vUv.y * 3.5,       uTime * 0.07))       * 0.18;
-    float warpY = snoise(vec3(vUv.x * 3.5 + 4.3, vUv.y * 3.5 + 1.7, uTime * 0.07 + 2.1)) * 0.18;
-    vec2 wUv = vUv + vec2(warpX, warpY);
-
-    // Layered vein noise on warped UV — branching pattern
-    float v1 = snoise(vec3(wUv.x * 12.0, wUv.y * 12.0, uTime * 0.04));
-    float v2 = snoise(vec3(wUv.x * 28.0 + 4.0, wUv.y * 28.0, uTime * 0.06 + 2.0));
-    float v3 = snoise(vec3(wUv.x * 6.0,  wUv.y * 6.0,  uTime * 0.02 + 5.0));
+    // Each vein layer flows in a different direction — noise scrolls across the surface
+    float v1 = snoise(vec3(vUv.x * 12.0 + uTime * 0.18,  vUv.y * 12.0 + uTime * 0.10,  0.0));
+    float v2 = snoise(vec3(vUv.x * 28.0 - uTime * 0.28,  vUv.y * 28.0 + uTime * 0.16,  1.7));
+    float v3 = snoise(vec3(vUv.x *  6.0 + uTime * 0.07,  vUv.y *  6.0 - uTime * 0.12,  3.4));
 
     // Bright vein lines — detect zero-crossings in noise, thin sharp lines
     float vein1 = pow(1.0 - smoothstep(0.0, 0.10, abs(v1)), 3.0);
