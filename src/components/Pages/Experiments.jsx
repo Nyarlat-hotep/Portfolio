@@ -183,7 +183,7 @@ export default function Experiments({ scrollContainerRef, isVoidMode = false }) 
               variants={cardVariants}
               whileHover={{
                 y: -6,
-                boxShadow: '0 0 30px rgba(0, 255, 106, 0.2), inset 0 0 20px rgba(0, 255, 106, 0.05)'
+                boxShadow: '0 0 30px rgba(150, 200, 30, 0.2), inset 0 0 20px rgba(0, 255, 106, 0.05)'
               }}
               onClick={handleClick}
             >
