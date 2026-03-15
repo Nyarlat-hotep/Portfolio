@@ -194,26 +194,26 @@ const tentacleFragmentShader = `
     // Pulse — slower, more visceral
     float pulse = sin(uTime * 0.9 + uIndex * 1.8 + vUv.x * 5.0) * 0.5 + 0.5;
 
-    // Base flesh color — very dark
-    vec3 baseColor = vec3(0.04, 0.01, 0.08);
-    // Subsurface — dark crimson bleeds through thin areas
-    vec3 subColor  = vec3(0.22, 0.01, 0.04) * (1.0 - vUv.x * 0.4);
-    // Vein color — sickly amber/crimson instead of green
-    vec3 veinColor = vec3(0.7, 0.18, 0.0) * veinPattern * pulse * (0.15 + uHover * 0.5);
+    // Base color — deep ocean dark
+    vec3 baseColor = vec3(0.01, 0.05, 0.03);
+    // Subsurface — murky bioluminescent green bleeds through thin areas
+    vec3 subColor  = vec3(0.02, 0.20, 0.08) * (1.0 - vUv.x * 0.4);
+    // Vein color — bioluminescent phosphorescent green
+    vec3 veinColor = vec3(0.05, 0.80, 0.30) * veinPattern * pulse * (0.15 + uHover * 0.5);
 
-    // Rim / fresnel — membrane edge, transmits subsurface color
-    vec3 rimColor = vec3(0.45 + uHover * 0.3, 0.06, 0.15 + uHover * 0.1);
+    // Rim / fresnel — membrane edge, deep sea phosphorescence
+    vec3 rimColor = vec3(0.04 + uHover * 0.05, 0.45 + uHover * 0.3, 0.18 + uHover * 0.1);
 
     // Compose
     vec3 color = mix(baseColor, subColor, fresnel * 0.7);
-    color += ridge * vec3(0.06, 0.01, 0.03);              // ridges catch slight light
-    color += surface * 0.04 * vec3(0.5, 0.1, 0.2);        // surface bump variation
+    color += ridge * vec3(0.01, 0.06, 0.03);              // ridges catch slight light
+    color += surface * 0.04 * vec3(0.1, 0.5, 0.2);        // surface bump variation
     color += rimColor * fresnel * (0.8 + uHover * 0.9);
     color += veinColor;
 
     // Wet specular — small bright points at surface bumps
     float spec = pow(max(0.0, surface * 0.5 + 0.5), 12.0) * fresnel * 0.3;
-    color += vec3(0.8, 0.5, 0.4) * spec;
+    color += vec3(0.5, 1.0, 0.65) * spec;
 
     // Alpha — fade at tip, slight translucency at fresnel edges
     float alpha = (1.0 - smoothstep(0.80, 1.0, vUv.x)) * (1.0 - fresnel * 0.25);
@@ -271,10 +271,10 @@ const horizonFragmentShader = `
     // Slow irregular pulse (compound sine)
     float pulse = sin(uTime * 0.4) * 0.5 + sin(uTime * 0.17 + 1.3) * 0.3 + 0.5;
 
-    // Deep subsurface color — dark flesh
-    vec3 subsurface = vec3(0.28, 0.02, 0.06) * pulse * 0.6;
-    vec3 veinColor  = vec3(0.08, 0.0,  0.02);
-    vec3 rimColor   = vec3(0.55 + uHover * 0.3, 0.05, 0.12 + uHover * 0.1);
+    // Deep subsurface color — abyssal green
+    vec3 subsurface = vec3(0.02, 0.22, 0.10) * pulse * 0.6;
+    vec3 veinColor  = vec3(0.01, 0.07, 0.03);
+    vec3 rimColor   = vec3(0.04 + uHover * 0.08, 0.55 + uHover * 0.3, 0.22 + uHover * 0.1);
 
     vec3 color = mix(veinColor, subsurface, veins * 0.7);
     // Rim glow — ragged membrane edge
@@ -621,9 +621,9 @@ function BlackHoleCore({ position, onClick, onHoverChange }) {
           uniforms={{
             uTime:      { value: 0 },
             uHover:     { value: 0 },
-            uColorHot:  { value: new THREE.Color('#ff8833') },
-            uColorMid:  { value: new THREE.Color('#8a0a22') },
-            uColorCool: { value: new THREE.Color('#1a0005') },
+            uColorHot:  { value: new THREE.Color('#55ffaa') },
+            uColorMid:  { value: new THREE.Color('#0a4422') },
+            uColorCool: { value: new THREE.Color('#001408') },
             uFlowSpeed: { value: 0.14 },
           }}
           vertexShader={ringVertexShader}
@@ -640,9 +640,9 @@ function BlackHoleCore({ position, onClick, onHoverChange }) {
           uniforms={{
             uTime:      { value: 0 },
             uHover:     { value: 0 },
-            uColorHot:  { value: new THREE.Color('#ffbb66') },
-            uColorMid:  { value: new THREE.Color('#6b1a3a') },
-            uColorCool: { value: new THREE.Color('#0d0008') },
+            uColorHot:  { value: new THREE.Color('#aaffcc') },
+            uColorMid:  { value: new THREE.Color('#1a4a2a') },
+            uColorCool: { value: new THREE.Color('#000d05') },
             uFlowSpeed: { value: 0.22 },
           }}
           vertexShader={ringVertexShader}
@@ -659,9 +659,9 @@ function BlackHoleCore({ position, onClick, onHoverChange }) {
           uniforms={{
             uTime:      { value: 0 },
             uHover:     { value: 0 },
-            uColorHot:  { value: new THREE.Color('#cc4422') },
-            uColorMid:  { value: new THREE.Color('#440a10') },
-            uColorCool: { value: new THREE.Color('#080002') },
+            uColorHot:  { value: new THREE.Color('#228844') },
+            uColorMid:  { value: new THREE.Color('#0a2a14') },
+            uColorCool: { value: new THREE.Color('#000803') },
             uFlowSpeed: { value: 0.07 },
           }}
           vertexShader={ringVertexShader}
@@ -721,9 +721,9 @@ function VoidParticles({ count = 150, radius = 25, hovered }) {
       pos[i * 3 + 2] = r * Math.cos(phi);
 
       const brightness = 0.08 + Math.random() * 0.12;
-      col[i * 3]     = brightness * 1.5;
-      col[i * 3 + 1] = brightness * 0.4;
-      col[i * 3 + 2] = brightness * 2.2;
+      col[i * 3]     = brightness * 0.2;
+      col[i * 3 + 1] = brightness * 2.0;
+      col[i * 3 + 2] = brightness * 0.6;
     }
 
     return { positions: pos, colors: col };
@@ -783,8 +783,8 @@ export default function CosmicVoid({ position = [0, 0, -80], onClick }) {
 
       <VoidParticles hovered={hovered} />
 
-      <pointLight position={[0, 0, 5]}  color="#4a1a6b" intensity={2}   distance={30} decay={2} />
-      <pointLight position={[0, 0, -5]} color="#1a0008" intensity={0.3} distance={20} decay={2} />
+      <pointLight position={[0, 0, 5]}  color="#0a4a2a" intensity={2}   distance={30} decay={2} />
+      <pointLight position={[0, 0, -5]} color="#00ff6a" intensity={0.3} distance={20} decay={2} />
     </group>
   );
 }
