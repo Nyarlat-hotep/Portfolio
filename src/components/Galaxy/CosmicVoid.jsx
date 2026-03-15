@@ -100,26 +100,41 @@ const ringFragmentShader = `
     float angle = vUv.x;
     float side  = vUv.y;
 
+    // Distance from equator (0 = edge, 1 = center)
     float equator = 1.0 - abs(side - 0.5) * 2.0;
+    float equatorSharp = pow(equator, 2.0);
+
     float flowAngle = angle - uTime * uFlowSpeed;
 
-    float n1 = snoise(vec3(flowAngle * 10.0,  side * 6.0,  uTime * 0.25));
-    float n2 = snoise(vec3(flowAngle * 24.0,  side * 11.0, uTime * 0.35 + 5.0));
-    float n3 = snoise(vec3(flowAngle * 50.0,  side * 20.0, uTime * 0.15 + 10.0));
-    float turb = n1 * 0.55 + n2 * 0.30 + n3 * 0.15;
+    // Tighter, more turbulent noise for liquid feel
+    float n1 = snoise(vec3(flowAngle * 14.0,  side * 8.0,  uTime * 0.3));
+    float n2 = snoise(vec3(flowAngle * 32.0,  side * 16.0, uTime * 0.45 + 5.0));
+    float n3 = snoise(vec3(flowAngle * 70.0,  side * 30.0, uTime * 0.2  + 10.0));
+    float turb = n1 * 0.50 + n2 * 0.33 + n3 * 0.17;
     turb = turb * 0.5 + 0.5;
 
-    float hotspot = smoothstep(0.62, 0.90, turb) * equator;
+    // Hotspot — intense consumption point
+    float hotspot = smoothstep(0.65, 0.95, turb) * equatorSharp;
 
-    vec3 col = mix(uColorCool, uColorMid, equator);
-    col = mix(col, uColorHot, equator * equator * turb);
-    col *= (0.5 + turb * 0.6);
-    col = mix(col, uColorHot * 1.9, hotspot * 0.75);
-    col *= (1.0 + uHover * 0.55);
+    // Base color — dark ichor
+    vec3 col = mix(uColorCool, uColorMid, equatorSharp);
+    col = mix(col, uColorHot, equatorSharp * turb * 1.2);
+    col *= (0.4 + turb * 0.7);
+    col = mix(col, uColorHot * 2.2, hotspot * 0.85);
+    col *= (1.0 + uHover * 0.6);
 
-    float edgeFade = smoothstep(0.0, 0.12, side) * smoothstep(1.0, 0.88, side);
-    float alpha = edgeFade * (0.55 + turb * 0.3 + hotspot * 0.12);
-    alpha = clamp(alpha, 0.0, 0.95);
+    // Specular highlight — wet surface
+    float spec = pow(hotspot, 3.0) * equatorSharp;
+    col += vec3(1.0, 0.92, 0.8) * spec * (0.6 + uHover * 0.4);
+
+    // Rim lighting — edges of the tube catch light (physical volume feel)
+    float rim = pow(1.0 - equator, 4.0);
+    col += uColorMid * rim * 0.4;
+
+    // Edge fade with tighter falloff for crisper edge
+    float edgeFade = smoothstep(0.0, 0.15, side) * smoothstep(1.0, 0.85, side);
+    float alpha = edgeFade * (0.65 + turb * 0.25 + hotspot * 0.1);
+    alpha = clamp(alpha, 0.0, 0.97);
 
     gl_FragColor = vec4(col, alpha);
   }
@@ -484,7 +499,7 @@ function BlackHoleCore({ position, onClick, onHoverChange }) {
 
   const clickTargetGeo = useMemo(() => new THREE.SphereGeometry(6, 16, 16), []);
   const horizonGeo     = useMemo(() => new THREE.SphereGeometry(4, 32, 32), []);
-  const diskGeo        = useMemo(() => new THREE.TorusGeometry(7, 0.35, 16, 64), []);
+  const diskGeo        = useMemo(() => new THREE.TorusGeometry(7, 0.55, 16, 64), []);
   const innerRingGeo   = useMemo(() => new THREE.TorusGeometry(5.2, 0.3, 8, 64), []);
   const outerRingGeo   = useMemo(() => new THREE.TorusGeometry(9, 0.25, 8, 64), []);
 
@@ -583,10 +598,10 @@ function BlackHoleCore({ position, onClick, onHoverChange }) {
           uniforms={{
             uTime:      { value: 0 },
             uHover:     { value: 0 },
-            uColorHot:  { value: new THREE.Color('#ffeebb') },
-            uColorMid:  { value: new THREE.Color('#cc3388') },
-            uColorCool: { value: new THREE.Color('#5a1a8b') },
-            uFlowSpeed: { value: 0.12 },
+            uColorHot:  { value: new THREE.Color('#ff8833') },
+            uColorMid:  { value: new THREE.Color('#8a0a22') },
+            uColorCool: { value: new THREE.Color('#1a0005') },
+            uFlowSpeed: { value: 0.14 },
           }}
           vertexShader={ringVertexShader}
           fragmentShader={ringFragmentShader}
@@ -602,10 +617,10 @@ function BlackHoleCore({ position, onClick, onHoverChange }) {
           uniforms={{
             uTime:      { value: 0 },
             uHover:     { value: 0 },
-            uColorHot:  { value: new THREE.Color('#ccddff') },
-            uColorMid:  { value: new THREE.Color('#8855ee') },
-            uColorCool: { value: new THREE.Color('#2a0a5e') },
-            uFlowSpeed: { value: 0.20 },
+            uColorHot:  { value: new THREE.Color('#ffbb66') },
+            uColorMid:  { value: new THREE.Color('#6b1a3a') },
+            uColorCool: { value: new THREE.Color('#0d0008') },
+            uFlowSpeed: { value: 0.22 },
           }}
           vertexShader={ringVertexShader}
           fragmentShader={ringFragmentShader}
@@ -621,10 +636,10 @@ function BlackHoleCore({ position, onClick, onHoverChange }) {
           uniforms={{
             uTime:      { value: 0 },
             uHover:     { value: 0 },
-            uColorHot:  { value: new THREE.Color('#44aa77') },
-            uColorMid:  { value: new THREE.Color('#1a6640') },
-            uColorCool: { value: new THREE.Color('#001a0d') },
-            uFlowSpeed: { value: 0.06 },
+            uColorHot:  { value: new THREE.Color('#cc4422') },
+            uColorMid:  { value: new THREE.Color('#440a10') },
+            uColorCool: { value: new THREE.Color('#080002') },
+            uFlowSpeed: { value: 0.07 },
           }}
           vertexShader={ringVertexShader}
           fragmentShader={ringFragmentShader}
