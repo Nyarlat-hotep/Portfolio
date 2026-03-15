@@ -294,8 +294,8 @@ const horizonFragmentShader = `
     float fresnel = pow(1.0 - max(dot(viewDir, vNormal), 0.0), 3.0);
 
     // Domain warp — distort UV with slow flow noise so veins physically writhe
-    float warpX = snoise(vec3(vUv.x * 3.5,       vUv.y * 3.5,       uTime * 0.18))       * 0.45;
-    float warpY = snoise(vec3(vUv.x * 3.5 + 4.3, vUv.y * 3.5 + 1.7, uTime * 0.18 + 2.1)) * 0.45;
+    float warpX = snoise(vec3(vUv.x * 3.5,       vUv.y * 3.5,       uTime * 0.07))       * 0.18;
+    float warpY = snoise(vec3(vUv.x * 3.5 + 4.3, vUv.y * 3.5 + 1.7, uTime * 0.07 + 2.1)) * 0.18;
     vec2 wUv = vUv + vec2(warpX, warpY);
 
     // Layered vein noise on warped UV — branching pattern
