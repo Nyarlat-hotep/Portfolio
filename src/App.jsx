@@ -8,7 +8,6 @@ import CaseStudy from './components/Pages/CaseStudy';
 import About from './components/Pages/About';
 import Experiments from './components/Pages/Experiments';
 import CustomCursor from './components/UI/CustomCursor';
-import HUDFrame from './components/UI/HUDFrame';
 import { caseStudies, aboutContent } from './data/caseStudies';
 import { playCaseStudyOpen, playCaseStudyClose, playPlanetExplosion, playPlanetCreation, stopBackground, playBackground } from './utils/sounds';
 import './App.css';
@@ -109,7 +108,6 @@ function App() {
   return (
     <div className="App">
       <CustomCursor />
-      <HUDFrame />
       <ErrorBoundary>
         <Galaxy
           onPlanetClick={handlePlanetClick}

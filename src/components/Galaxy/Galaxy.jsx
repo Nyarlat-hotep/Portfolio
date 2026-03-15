@@ -17,6 +17,7 @@ import DistantGalaxy from './DistantGalaxy';
 import GravityField from './GravityField';
 import Asteroid from './Asteroid';
 import BottomNav from '../Navigation/BottomNav';
+import HUDFrame from '../UI/HUDFrame';
 import LightspeedTransition from '../UI/LightspeedTransition';
 import PresentationMode from '../UI/PresentationMode';
 import '../UI/PresentationMode.css';
@@ -845,6 +846,9 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
           onExpandChange={handleNavExpandChange}
         />
       )}
+
+      {/* HUD overlay — inside opacity wrapper so it fades in with the scene */}
+      <HUDFrame />
 
       {/* Lightspeed warp transition */}
       {warpActive && (
