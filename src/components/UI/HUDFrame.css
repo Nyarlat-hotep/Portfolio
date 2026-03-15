@@ -1,0 +1,103 @@
+.hud-frame {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* Positioned SVG elements */
+.hud-tl {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  width: 260px;
+  height: 200px;
+}
+
+.hud-tr {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 260px;
+  height: 200px;
+}
+
+.hud-tc {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 340px;
+  height: 32px;
+  overflow: visible;
+}
+
+.hud-tc2 {
+  position: absolute;
+  top: 52px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 240px;
+  height: 18px;
+}
+
+.hud-sl {
+  position: absolute;
+  top: 20%;
+  left: 12px;
+  width: 90px;
+  height: 50px;
+}
+
+.hud-sr {
+  position: absolute;
+  top: 20%;
+  right: 12px;
+  width: 90px;
+  height: 50px;
+}
+
+.hud-ml {
+  position: absolute;
+  top: 32%;
+  left: 12px;
+  width: 130px;
+  height: 80px;
+}
+
+.hud-mr {
+  position: absolute;
+  top: 32%;
+  right: 12px;
+  width: 130px;
+  height: 80px;
+}
+
+/* Animations */
+@keyframes hud-blink {
+  0%, 100% { opacity: 1; }
+  48%, 52% { opacity: 0.05; }
+}
+
+@keyframes hud-blink-slow {
+  0%, 100% { opacity: 0.7; }
+  45%, 55% { opacity: 0.05; }
+}
+
+@keyframes hud-scan {
+  0%   { transform: translateX(10px); }
+  50% { transform: translateX(260px); }
+}
+
+.hud-blink        { animation: hud-blink 2.4s ease-in-out infinite; }
+.hud-blink-slow   { animation: hud-blink-slow 4.1s ease-in-out infinite; }
+.hud-blink-offset { animation: hud-blink 2.4s ease-in-out 1.2s infinite; }
+
+.hud-scan-rect { animation: hud-scan 3s ease-in-out infinite alternate; }
+
+.hud-text { opacity: 0.45; }
+
+/* Hide on mobile */
+@media (max-width: 768px) {
+  .hud-frame { display: none; }
+}
