@@ -185,6 +185,74 @@ const tentacleFragmentShader = `
 `;
 
 // ============================================================
+// Event Horizon — Biological Surface Shaders
+// ============================================================
+const horizonVertexShader = `
+  varying vec2 vUv;
+  varying vec3 vNormal;
+  varying vec3 vWorldPosition;
+  uniform float uTime;
+
+  ${glslNoise}
+
+  void main() {
+    vUv = uv;
+    vNormal = normalize(normalMatrix * normal);
+    // Subtle organic pulsing displacement
+    float pulse = snoise(vec3(position.x * 1.2, position.y * 1.2 + uTime * 0.08, position.z * 1.2)) * 0.12;
+    vec3 displaced = position + normal * pulse;
+    vec4 worldPos = modelMatrix * vec4(displaced, 1.0);
+    vWorldPosition = worldPos.xyz;
+    gl_Position = projectionMatrix * viewMatrix * worldPos;
+  }
+`;
+
+const horizonFragmentShader = `
+  uniform float uTime;
+  uniform float uHover;
+
+  varying vec2 vUv;
+  varying vec3 vNormal;
+  varying vec3 vWorldPosition;
+
+  ${glslNoise}
+
+  void main() {
+    vec3 viewDir = normalize(cameraPosition - vWorldPosition);
+    float fresnel = pow(1.0 - max(dot(viewDir, vNormal), 0.0), 3.0);
+
+    // Layered vein noise — branching pattern
+    float v1 = snoise(vec3(vUv.x * 12.0, vUv.y * 12.0, uTime * 0.04));
+    float v2 = snoise(vec3(vUv.x * 28.0 + 4.0, vUv.y * 28.0, uTime * 0.06 + 2.0));
+    float v3 = snoise(vec3(vUv.x * 6.0,  vUv.y * 6.0,  uTime * 0.02 + 5.0));
+
+    // Sharp vein lines from the noise gradient
+    float veins = abs(v1) * 0.5 + abs(v2) * 0.3 + abs(v3) * 0.2;
+    veins = 1.0 - smoothstep(0.0, 0.25, veins);
+
+    // Slow irregular pulse (compound sine)
+    float pulse = sin(uTime * 0.4) * 0.5 + sin(uTime * 0.17 + 1.3) * 0.3 + 0.5;
+
+    // Deep subsurface color — dark flesh
+    vec3 subsurface = vec3(0.28, 0.02, 0.06) * pulse * 0.6;
+    vec3 veinColor  = vec3(0.08, 0.0,  0.02);
+    vec3 rimColor   = vec3(0.55 + uHover * 0.3, 0.05, 0.12 + uHover * 0.1);
+
+    vec3 color = mix(veinColor, subsurface, veins * 0.7);
+    // Rim glow — ragged membrane edge
+    color += rimColor * fresnel * (1.2 + uHover * 1.0) * (0.8 + veins * 0.4);
+
+    // Surface stays very dark — just let rim and veins breathe
+    color = clamp(color, 0.0, 1.0);
+
+    // Alpha: opaque core, slight translucency at very edge
+    float alpha = 1.0 - fresnel * 0.15;
+
+    gl_FragColor = vec4(color, alpha);
+  }
+`;
+
+// ============================================================
 // Tentacle geometry constants & pre-allocated working vectors
 // ============================================================
 
@@ -416,7 +484,6 @@ function BlackHoleCore({ position, onClick, onHoverChange }) {
 
   const clickTargetGeo = useMemo(() => new THREE.SphereGeometry(6, 16, 16), []);
   const horizonGeo     = useMemo(() => new THREE.SphereGeometry(4, 32, 32), []);
-  const rimGeo         = useMemo(() => new THREE.SphereGeometry(4.3, 32, 32), []);
   const diskGeo        = useMemo(() => new THREE.TorusGeometry(7, 0.35, 16, 64), []);
   const innerRingGeo   = useMemo(() => new THREE.TorusGeometry(5.2, 0.3, 8, 64), []);
   const outerRingGeo   = useMemo(() => new THREE.TorusGeometry(9, 0.25, 8, 64), []);
@@ -425,12 +492,11 @@ function BlackHoleCore({ position, onClick, onHoverChange }) {
     return () => {
       clickTargetGeo.dispose();
       horizonGeo.dispose();
-      rimGeo.dispose();
       diskGeo.dispose();
       innerRingGeo.dispose();
       outerRingGeo.dispose();
     };
-  }, [clickTargetGeo, horizonGeo, rimGeo, diskGeo, innerRingGeo, outerRingGeo]);
+  }, [clickTargetGeo, horizonGeo, diskGeo, innerRingGeo, outerRingGeo]);
 
   useFrame((state, delta) => {
     const time = state.clock.elapsedTime;
@@ -466,6 +532,7 @@ function BlackHoleCore({ position, onClick, onHoverChange }) {
       outerMatRef.current.uniforms.uHover.value = h;
     }
     if (rimGlowMaterial.current) {
+      rimGlowMaterial.current.uniforms.uTime.value  = time;
       rimGlowMaterial.current.uniforms.uHover.value = h;
     }
   });
@@ -496,37 +563,17 @@ function BlackHoleCore({ position, onClick, onHoverChange }) {
       </mesh>
 
       <mesh ref={eventHorizonRef} geometry={horizonGeo}>
-        <meshBasicMaterial color="#000000" />
-      </mesh>
-
-      <mesh geometry={rimGeo}>
         <shaderMaterial
           ref={rimGlowMaterial}
-          uniforms={{ uHover: { value: 0 } }}
-          vertexShader={`
-            varying vec3 vNormal;
-            varying vec3 vViewPosition;
-            void main() {
-              vNormal = normalize(normalMatrix * normal);
-              vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-              vViewPosition = -mvPosition.xyz;
-              gl_Position = projectionMatrix * mvPosition;
-            }
-          `}
-          fragmentShader={`
-            uniform float uHover;
-            varying vec3 vNormal;
-            varying vec3 vViewPosition;
-            void main() {
-              vec3 viewDir = normalize(vViewPosition);
-              float fresnel = pow(1.0 - max(dot(viewDir, vNormal), 0.0), 4.0);
-              vec3 color = vec3(0.3 + uHover * 0.4, 0.08, 0.55 + uHover * 0.3) * fresnel;
-              gl_FragColor = vec4(color, fresnel * (0.5 + uHover * 0.5));
-            }
-          `}
+          uniforms={{
+            uTime:  { value: 0 },
+            uHover: { value: 0 },
+          }}
+          vertexShader={horizonVertexShader}
+          fragmentShader={horizonFragmentShader}
           transparent
-          side={THREE.BackSide}
-          depthWrite={false}
+          side={THREE.FrontSide}
+          depthWrite={true}
         />
       </mesh>
 
