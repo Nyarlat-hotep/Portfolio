@@ -122,8 +122,8 @@ const ringFragmentShader = `
     // Base color
     vec3 col = mix(uColorCool, uColorMid, equatorSharp);
     col = mix(col, uColorHot, equatorSharp * turb * 1.0);
-    col *= (0.22 + turb * 0.38) * (0.65 + angGrad * 0.35);
-    col = mix(col, uColorHot * 1.3, hotspot * 0.65);
+    col *= (0.45 + turb * 0.65) * (0.65 + angGrad * 0.35);
+    col = mix(col, uColorHot * 1.6, hotspot * 0.75);
     col *= (1.0 + uHover * 0.45);
 
     // Specular highlight — wet surface
@@ -136,8 +136,8 @@ const ringFragmentShader = `
 
     // Edge fade with tighter falloff for crisper edge
     float edgeFade = smoothstep(0.0, 0.15, side) * smoothstep(1.0, 0.85, side);
-    float alpha = edgeFade * (0.25 + turb * 0.14 + hotspot * 0.05);
-    alpha = clamp(alpha, 0.0, 0.40);
+    float alpha = edgeFade * (0.45 + turb * 0.22 + hotspot * 0.08);
+    alpha = clamp(alpha, 0.0, 0.65);
 
     gl_FragColor = vec4(col, alpha);
   }
