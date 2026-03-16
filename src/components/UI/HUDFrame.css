@@ -111,7 +111,6 @@
   left: 12px;
   width: 72px;
   height: 16px;
-  opacity: 0.7;
 }
 
 .hud-rr {
@@ -120,7 +119,6 @@
   right: 12px;
   width: 72px;
   height: 16px;
-  opacity: 0.7;
 }
 
 
@@ -204,6 +202,52 @@
 .hud-scan-rect { animation: hud-scan 3s ease-in-out infinite alternate; }
 
 .hud-text { opacity: 0.45; }
+
+/* ── HUD entrance animations ──────────────────────────────────────── */
+@keyframes hud-enter-tl {
+  from { transform: translate(-80px, -80px); opacity: 0; }
+  to   { transform: translate(0, 0);         opacity: 1; }
+}
+@keyframes hud-enter-tr {
+  from { transform: translate(80px, -80px);  opacity: 0; }
+  to   { transform: translate(0, 0);         opacity: 1; }
+}
+@keyframes hud-enter-top {
+  /* preserves the translateX(-50%) centering */
+  from { transform: translateX(-50%) translateY(-80px); opacity: 0; }
+  to   { transform: translateX(-50%) translateY(0);     opacity: 1; }
+}
+@keyframes hud-enter-left {
+  from { transform: translateX(-80px); opacity: 0; }
+  to   { transform: translateX(0);     opacity: 1; }
+}
+@keyframes hud-enter-right {
+  from { transform: translateX(80px);  opacity: 0; }
+  to   { transform: translateX(0);     opacity: 1; }
+}
+
+/* Corners first, then top-center, then cascade down the sides */
+.hud-tl  { animation: hud-enter-tl    0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.00s both; }
+.hud-tr  { animation: hud-enter-tr    0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.00s both; }
+.hud-tc  { animation: hud-enter-top   0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.10s both; }
+.hud-tc2 { animation: hud-enter-top   0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.20s both; }
+
+.hud-sl   { animation: hud-enter-left  0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.30s both; }
+.hud-sr   { animation: hud-enter-right 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.30s both; }
+.hud-vs1l { animation: hud-enter-left  0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.38s both; }
+.hud-vs1r { animation: hud-enter-right 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.38s both; }
+.hud-ml   { animation: hud-enter-left  0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.44s both; }
+.hud-mr   { animation: hud-enter-right 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.44s both; }
+.hud-ll   { animation: hud-enter-left  0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.50s both; }
+.hud-lr   { animation: hud-enter-right 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.50s both; }
+.hud-vs2l { animation: hud-enter-left  0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.55s both; }
+.hud-vs2r { animation: hud-enter-right 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.55s both; }
+.hud-rl   { animation: hud-enter-left  0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.60s both; }
+.hud-rr   { animation: hud-enter-right 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.60s both; }
+.hud-lbl  { animation: hud-enter-left  0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.64s both; }
+.hud-lbr  { animation: hud-enter-right 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.64s both; }
+.hud-vs3l { animation: hud-enter-left  0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.68s both; }
+.hud-vs3r { animation: hud-enter-right 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.68s both; }
 
 /* Hide on mobile */
 @media (max-width: 768px) {
