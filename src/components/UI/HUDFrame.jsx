@@ -1,6 +1,24 @@
 import { useState, useEffect, useRef } from 'react';
 import './HUDFrame.css';
 
+// Mini graph — pre-computed wave paths for the top-right corner graph view
+// Path is 2× the clip width (72px) so animating translateX(-36px) loops seamlessly.
+// Both wave frequencies are chosen so 36px == exact N periods → seamless loop.
+function buildHudWave(totalWidth, cycles, amplitude, startX, cy, pts = 120) {
+  const freq = (2 * Math.PI * cycles) / totalWidth;
+  const d = [];
+  for (let i = 0; i <= pts; i++) {
+    const x = startX + (i / pts) * totalWidth;
+    const y = cy + Math.sin(x * freq) * amplitude;
+    d.push(`${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`);
+  }
+  return d.join(' ');
+}
+// Clip area: x=213, y=21, w=36, h=50 → cy=46. Path: 72px wide starting at x=212.
+const HUD_GR_CY = 46;
+const HUD_WAVE_1 = buildHudWave(72, 4, 11, 212, HUD_GR_CY); // 4 cycles, bright
+const HUD_WAVE_2 = buildHudWave(72, 2,  7, 212, HUD_GR_CY); // 2 cycles, dimmer
+
 const COORDS_L  = ['X:0423 Y:1848', 'X:0891 Y:2103', 'X:0156 Y:0942'];
 const COORDS_R  = ['X:2847 Y:0431', 'X:1203 Y:0788', 'X:3341 Y:1092'];
 const READOUT_L = ['847.23', '291.64', '503.81', '174.09'];
@@ -97,21 +115,35 @@ export default function HUDFrame() {
         <text x="14" y="190" fontSize="7" fontFamily="monospace" fill="rgba(255,119,0,0.4)" className="hud-text">{coordLText}</text>
       </svg>
 
-      {/* Top-right corner — mirror of top-left */}
+      {/* Top-right corner — mirror of top-left, with mini graph replacing hatch */}
       <svg className="hud-tr" viewBox="0 0 260 200" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <clipPath id="clip-tr">
-            <rect x="212" y="20" width="28" height="58"/>
+            <rect x="213" y="21" width="36" height="50"/>
           </clipPath>
         </defs>
+
+        {/* Graph frame */}
+        <rect x="212" y="20" width="38" height="52"
+          fill="rgba(255,119,0,0.03)"
+          stroke="rgba(255,119,0,0.28)"
+          strokeWidth="0.75" rx="1"/>
+        {/* Baseline */}
+        <line x1="213" y1="46" x2="250" y2="46"
+          stroke="rgba(255,119,0,0.12)" strokeWidth="0.5"/>
+
+        {/* Wave 1 — brighter orange, faster */}
         <g clipPath="url(#clip-tr)">
-          <line x1="-100" y1="306" x2="400" y2="-194" stroke="rgba(255,119,0,0.2)" strokeWidth="5"/>
-          <line x1="-100" y1="324" x2="400" y2="-176" stroke="rgba(255,119,0,0.2)" strokeWidth="5"/>
-          <line x1="-100" y1="342" x2="400" y2="-158" stroke="rgba(255,119,0,0.2)" strokeWidth="5"/>
-          <line x1="-100" y1="360" x2="400" y2="-140" stroke="rgba(255,119,0,0.2)" strokeWidth="5"/>
-          <line x1="-100" y1="378" x2="400" y2="-122" stroke="rgba(255,119,0,0.2)" strokeWidth="5"/>
-          <line x1="-100" y1="396" x2="400" y2="-104" stroke="rgba(255,119,0,0.2)" strokeWidth="5"/>
-          <line x1="-100" y1="414" x2="400" y2="-86"  stroke="rgba(255,119,0,0.2)" strokeWidth="5"/>
+          <g className="hud-wave-1">
+            <path d={HUD_WAVE_1} fill="none" stroke="rgba(255,119,0,0.75)" strokeWidth="1.2"/>
+          </g>
+        </g>
+
+        {/* Wave 2 — dimmer amber, slower */}
+        <g clipPath="url(#clip-tr)">
+          <g className="hud-wave-2">
+            <path d={HUD_WAVE_2} fill="none" stroke="rgba(255,185,55,0.38)" strokeWidth="0.9"/>
+          </g>
         </g>
         <polyline points="170,2 258,2 258,90" fill="none" stroke="rgba(255,119,0,0.55)" strokeWidth="2"/>
         <polyline points="182,10 250,10 250,78" fill="none" stroke="rgba(255,119,0,0.2)" strokeWidth="1"/>
