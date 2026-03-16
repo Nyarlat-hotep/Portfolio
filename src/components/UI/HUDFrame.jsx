@@ -27,6 +27,7 @@ const COORDS_L  = ['X:0423 Y:1848', 'X:0891 Y:2103', 'X:0156 Y:0942'];
 const COORDS_R  = ['X:2847 Y:0431', 'X:1203 Y:0788', 'X:3341 Y:1092'];
 const READOUT_L = ['847.23', '291.64', '503.81', '174.09'];
 const READOUT_R = ['F4A2:3C', '8C71:9E', 'E239:B5', 'A017:F2'];
+const READOUT_GR = ['3.847', '12.09', '0.531', '7.284', '4.162', '9.003'];
 const GLYPHS    = '0123456789ABCDEF:./_ ';
 
 function useScramble(target, speed = 38, cycles = 5) {
@@ -68,6 +69,7 @@ export default function HUDFrame() {
   const [signalR,    setSignalR]    = useState(87);
   const [readLIdx,   setReadLIdx]   = useState(0);
   const [readRIdx,   setReadRIdx]   = useState(2);
+  const [readGrIdx,  setReadGrIdx]  = useState(0);
 
   useEffect(() => {
     const t1 = setInterval(() => setCoordLIdx(i => (i + 1) % COORDS_L.length), 6000);
@@ -78,7 +80,8 @@ export default function HUDFrame() {
     }, 2200);
     const t4 = setInterval(() => setReadLIdx(i => (i + 1) % READOUT_L.length), 3800);
     const t5 = setInterval(() => setReadRIdx(i => (i + 1) % READOUT_R.length), 4600);
-    return () => [t1, t2, t3, t4, t5].forEach(clearInterval);
+    const t6 = setInterval(() => setReadGrIdx(i => (i + 1) % READOUT_GR.length), 3200);
+    return () => [t1, t2, t3, t4, t5, t6].forEach(clearInterval);
   }, []);
 
   const coordLText  = useScramble(COORDS_L[coordLIdx],  55, 6);
@@ -87,6 +90,7 @@ export default function HUDFrame() {
   const sigRText    = useScramble(`SIG ${signalR}%`,    45, 4);
   const readLText   = useScramble(READOUT_L[readLIdx],  28, 4);
   const readRText   = useScramble(READOUT_R[readRIdx],  28, 4);
+  const readGrText  = useScramble(READOUT_GR[readGrIdx], 28, 4);
 
   return (
     <div className="hud-frame" aria-hidden="true">
@@ -149,6 +153,11 @@ export default function HUDFrame() {
             <path d={HUD_WAVE_2} fill="none" stroke="rgba(255,185,55,0.38)" strokeWidth="0.9"/>
           </g>
         </g>
+
+        {/* Graph readout — tiny number below graph frame */}
+        <text x="244" y="74" fontSize="9" fontFamily="monospace"
+          fill="rgba(255,155,30,0.6)" textAnchor="end" className="hud-text">{readGrText}</text>
+
         <polyline points="170,2 258,2 258,90" fill="none" stroke="rgba(255,119,0,0.55)" strokeWidth="2"/>
         <polyline points="182,10 250,10 250,78" fill="none" stroke="rgba(255,119,0,0.2)" strokeWidth="1"/>
         <line x1="170" y1="2" x2="40" y2="2" stroke="rgba(255,119,0,0.25)" strokeWidth="1"/>
