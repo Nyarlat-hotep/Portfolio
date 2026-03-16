@@ -172,10 +172,10 @@
   height: 42px;
 }
 
-/* Mini graph scroll — 72px path, shift by 36px (half) for seamless loop */
+/* Mini graph scroll — 108px path, shift by 54px (half) for seamless loop */
 @keyframes hud-wave-scroll {
   from { transform: translateX(0); }
-  to   { transform: translateX(-36px); }
+  to   { transform: translateX(-54px); }
 }
 
 .hud-wave-1 { animation: hud-wave-scroll 2.4s linear infinite; }

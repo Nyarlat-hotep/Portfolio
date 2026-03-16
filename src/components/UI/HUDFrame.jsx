@@ -14,10 +14,14 @@ function buildHudWave(totalWidth, cycles, amplitude, startX, cy, pts = 120) {
   }
   return d.join(' ');
 }
-// Clip area: x=213, y=21, w=36, h=50 → cy=46. Path: 72px wide starting at x=212.
-const HUD_GR_CY = 46;
-const HUD_WAVE_1 = buildHudWave(72, 4, 11, 212, HUD_GR_CY); // 4 cycles, bright
-const HUD_WAVE_2 = buildHudWave(72, 2,  7, 212, HUD_GR_CY); // 2 cycles, dimmer
+// Graph sits inside inner bracket (182,10)→(250,10)→(250,78) with G=6 equal gap on all sides.
+// Frame: x=188 y=16 w=56 h=48. Clip interior: x=189 y=17 w=54 h=46 → cy=40.
+// Path: 2×54=108px wide for seamless −54px scroll.
+// Wave 1: 4 cycles/108 → period 27, 54/27=2 full periods → seamless ✓
+// Wave 2: 2 cycles/108 → period 54, 54/54=1 full period  → seamless ✓
+const HUD_GR_CY = 40;
+const HUD_WAVE_1 = buildHudWave(108, 4, 11, 188, HUD_GR_CY); // 4 cycles, bright
+const HUD_WAVE_2 = buildHudWave(108, 2,  7, 188, HUD_GR_CY); // 2 cycles, dimmer
 
 const COORDS_L  = ['X:0423 Y:1848', 'X:0891 Y:2103', 'X:0156 Y:0942'];
 const COORDS_R  = ['X:2847 Y:0431', 'X:1203 Y:0788', 'X:3341 Y:1092'];
@@ -119,17 +123,17 @@ export default function HUDFrame() {
       <svg className="hud-tr" viewBox="0 0 260 200" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <clipPath id="clip-tr">
-            <rect x="213" y="21" width="36" height="50"/>
+            <rect x="189" y="17" width="54" height="46"/>
           </clipPath>
         </defs>
 
-        {/* Graph frame */}
-        <rect x="212" y="20" width="38" height="52"
+        {/* Graph frame — equal 6px gap from inner bracket lines (top y=10, left x=182, right x=250) */}
+        <rect x="188" y="16" width="56" height="48"
           fill="rgba(255,119,0,0.03)"
           stroke="rgba(255,119,0,0.28)"
           strokeWidth="0.75" rx="1"/>
         {/* Baseline */}
-        <line x1="213" y1="46" x2="250" y2="46"
+        <line x1="189" y1="40" x2="243" y2="40"
           stroke="rgba(255,119,0,0.12)" strokeWidth="0.5"/>
 
         {/* Wave 1 — brighter orange, faster */}
