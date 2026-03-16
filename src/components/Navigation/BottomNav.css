@@ -118,6 +118,7 @@
   font-family: monospace;
   white-space: nowrap;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), 0 0 8px rgba(255, 119, 0, 0.3);
+  text-transform: none;
 }
 
 .nav-title {

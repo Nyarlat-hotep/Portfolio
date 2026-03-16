@@ -164,7 +164,7 @@ const BottomNav = forwardRef(function BottomNav({ activePlanetId, onNavigate, on
             {hasCustomPlanet ? <Trash2 size={16} /> : <Orbit size={16} />}
             {!isTouch && (
               <span className="nav-tooltip">
-                <span className="tooltip-key">{hasCustomPlanet ? 'Delete planet' : 'Planet forge'}</span>
+                <span className="tooltip-key">{hasCustomPlanet ? 'Delete planet' : 'Planet Forge'}</span>
               </span>
             )}
           </a>
