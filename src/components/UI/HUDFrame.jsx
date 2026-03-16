@@ -139,7 +139,7 @@ export default function HUDFrame() {
         {/* Wave 1 — brighter orange, faster */}
         <g clipPath="url(#clip-tr)">
           <g className="hud-wave-1">
-            <path d={HUD_WAVE_1} fill="none" stroke="rgba(255,119,0,0.75)" strokeWidth="1.2"/>
+            <path d={HUD_WAVE_1} fill="none" stroke="rgba(255,119,0,0.35)" strokeWidth="1.2"/>
           </g>
         </g>
 
