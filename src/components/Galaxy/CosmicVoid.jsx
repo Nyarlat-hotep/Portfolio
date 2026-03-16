@@ -264,14 +264,15 @@ const horizonVertexShader = `
   varying vec3 vNormal;
   varying vec3 vWorldPosition;
   uniform float uTime;
+  uniform float uHover;
 
   ${glslNoise}
 
   void main() {
     vUv = uv;
     vNormal = normalize(normalMatrix * normal);
-    // Subtle organic pulsing displacement
-    float pulse = snoise(vec3(position.x * 1.2, position.y * 1.2 + uTime * 0.08, position.z * 1.2)) * 0.12;
+    // Organic pulsing displacement — swells more on hover
+    float pulse = snoise(vec3(position.x * 1.2, position.y * 1.2 + uTime * 0.08, position.z * 1.2)) * (0.12 + uHover * 0.10);
     vec3 displaced = position + normal * pulse;
     vec4 worldPos = modelMatrix * vec4(displaced, 1.0);
     vWorldPosition = worldPos.xyz;
@@ -291,60 +292,67 @@ const horizonFragmentShader = `
 
   void main() {
     vec3 viewDir = normalize(cameraPosition - vWorldPosition);
-    float fresnel = pow(1.0 - max(dot(viewDir, vNormal), 0.0), 3.0);
+    float NdotV   = max(dot(viewDir, vNormal), 0.0);
+    float fresnel = pow(1.0 - NdotV, 3.0);
 
-    // Each vein layer flows in a different direction — noise scrolls across the surface
-    float v1 = snoise(vec3(vUv.x * 12.0 + uTime * 0.18,  vUv.y * 12.0 + uTime * 0.10,  0.0));
-    float v2 = snoise(vec3(vUv.x * 28.0 - uTime * 0.28,  vUv.y * 28.0 + uTime * 0.16,  1.7));
-    float v3 = snoise(vec3(vUv.x *  6.0 + uTime * 0.07,  vUv.y *  6.0 - uTime * 0.12,  3.4));
+    // Noise fields — same for base and hover veins
+    float v1 = snoise(vec3(vUv.x * 12.0 + uTime * 0.18, vUv.y * 12.0 + uTime * 0.10, 0.0));
+    float v2 = snoise(vec3(vUv.x * 28.0 - uTime * 0.28, vUv.y * 28.0 + uTime * 0.16, 1.7));
+    float v3 = snoise(vec3(vUv.x *  6.0 + uTime * 0.07, vUv.y *  6.0 - uTime * 0.12, 3.4));
 
-    // Bright vein lines — detect zero-crossings in noise, thin sharp lines
+    // BASE veins — thin sharp lines, unchanged
     float vein1 = pow(1.0 - smoothstep(0.0, 0.10, abs(v1)), 3.0);
     float vein2 = pow(1.0 - smoothstep(0.0, 0.06, abs(v2)), 4.0);
     float vein3 = pow(1.0 - smoothstep(0.0, 0.16, abs(v3)), 2.0);
-    float veins = clamp(vein1 * 0.55 + vein2 * 0.30 + vein3 * 0.15, 0.0, 1.0);
-    // Broader subsurface aura near vein lines
+    float veins    = clamp(vein1 * 0.55 + vein2 * 0.30 + vein3 * 0.15, 0.0, 1.0);
     float veinAura = clamp(vein1 * 0.35 + vein3 * 0.25, 0.0, 1.0);
 
-    // Slow irregular pulse (compound sine)
+    // HOVER VEIN MAP — separate wide-threshold calculation, purely additive
+    // These are broad soft bands around each zero-crossing, independent of base veins
+    float hv1 = 1.0 - smoothstep(0.0, 0.42, abs(v1));
+    float hv2 = 1.0 - smoothstep(0.0, 0.32, abs(v2));
+    float hv3 = 1.0 - smoothstep(0.0, 0.48, abs(v3));
+    float hoverVeins = clamp(hv1 * 0.5 + hv2 * 0.3 + hv3 * 0.2, 0.0, 1.0);
+
+    // Pulse
     float pulse = sin(uTime * 0.4) * 0.5 + sin(uTime * 0.17 + 1.3) * 0.3 + 0.5;
 
-    // Large-scale spatial color zones — drifting slowly
-    float zone  = snoise(vec3(vUv.x * 2.5,        vUv.y * 2.5,        uTime * 0.012))       * 0.5 + 0.5;
-    float zone2 = snoise(vec3(vUv.x * 1.8 + 7.0,  vUv.y * 1.8 + 3.0,  uTime * 0.008 + 4.0)) * 0.5 + 0.5;
-
-    // World-space Y gradient
+    // Color zones
+    float zone  = snoise(vec3(vUv.x * 2.5,       vUv.y * 2.5,       uTime * 0.012))       * 0.5 + 0.5;
+    float zone2 = snoise(vec3(vUv.x * 1.8 + 7.0, vUv.y * 1.8 + 3.0, uTime * 0.008 + 4.0)) * 0.5 + 0.5;
     float worldY = normalize(vWorldPosition).y * 0.5 + 0.5;
 
-    // Three subsurface hues: murky yellow / deep green / murky yellow-green
+    // Subsurface
     vec3 subA = vec3(0.20, 0.16, 0.01);
     vec3 subB = vec3(0.01, 0.18, 0.08);
     vec3 subC = vec3(0.07, 0.14, 0.02);
-    vec3 subBase = mix(mix(subA, subB, zone), subC, zone2 * 0.4);
+    vec3 subBase    = mix(mix(subA, subB, zone), subC, zone2 * 0.4);
     vec3 subsurface = mix(subBase, subA * 1.3, worldY * 0.5) * pulse * 0.65;
 
-    // Vein glow color — bioluminescent yellow-green, shifts with zone
+    // Vein glow
     vec3 veinGlow = mix(vec3(0.55, 0.75, 0.04), vec3(0.08, 0.65, 0.18), zone) * (1.1 + pulse * 0.5);
 
-    // Rim varies spatially AND by world Y
-    vec3 rimA = vec3(0.45, 0.38, 0.02);
-    vec3 rimB = vec3(0.04, 0.50, 0.20);
+    // Rim
+    vec3 rimA    = vec3(0.45, 0.38, 0.02);
+    vec3 rimB    = vec3(0.04, 0.50, 0.20);
     vec3 rimBase = mix(mix(rimA, rimB, zone), rimA, worldY * 0.4);
-    vec3 rimColor = rimBase * vec3(1.0 + uHover * 0.12, 1.0 + uHover * 0.5, 1.0 + uHover * 0.18);
 
-    // Dark base, brighten near vein aura, then overlay bright vein lines
+    // ── Base composite (unchanged from before) ──────────────────────
     vec3 color = subsurface;
     color = mix(color, color * 1.6, veinAura * 0.55);
     color = mix(color, veinGlow, veins * 0.88);
-    // Rim glow
-    color += rimColor * fresnel * (0.65 + uHover * 0.7) * (0.8 + veins * 0.4);
+    color += rimBase * fresnel * 0.65 * (0.8 + veins * 0.4);
 
-    // Surface stays very dark — just let rim and veins breathe
+    // ── Hover effects — purely additive, stacked on top ─────────────
+    // Vein bloom: wide bands of bioluminescent glow
+    vec3 bloomCol = mix(vec3(0.75, 1.10, 0.05), vec3(0.10, 0.95, 0.35), zone);
+    color += bloomCol * hoverVeins * uHover * 0.5;
+
+    // Rim pulse: brighter edge on hover
+    color += rimBase * fresnel * uHover * 3.0;
+
     color = clamp(color, 0.0, 1.0);
-
-    // Alpha: opaque core, slight translucency at very edge
     float alpha = 1.0 - fresnel * 0.15;
-
     gl_FragColor = vec4(color, alpha);
   }
 `;
@@ -575,7 +583,6 @@ function BlackHoleCore({ position, onClick, onHoverChange }) {
   const diskMatRef = useRef();
   const innerMatRef = useRef();
   const outerMatRef = useRef();
-  const horizonMatRef = useRef();
   const hoverRef = useRef(0);
   const isHovered = useRef(false);
 
@@ -585,10 +592,23 @@ function BlackHoleCore({ position, onClick, onHoverChange }) {
   const innerRingGeo   = useMemo(() => new THREE.TorusGeometry(5.2, 0.3, 8, 64), []);
   const outerRingGeo   = useMemo(() => new THREE.TorusGeometry(9, 0.25, 8, 64), []);
 
+  const horizonMat = useMemo(() => new THREE.ShaderMaterial({
+    uniforms: {
+      uTime:  { value: 0 },
+      uHover: { value: 0 },
+    },
+    vertexShader:   horizonVertexShader,
+    fragmentShader: horizonFragmentShader,
+    transparent: true,
+    side:        THREE.FrontSide,
+    depthWrite:  true,
+  }), []);
+
   useEffect(() => {
     return () => {
       clickTargetGeo.dispose();
       horizonGeo.dispose();
+      horizonMat.dispose();
       diskGeo.dispose();
       innerRingGeo.dispose();
       outerRingGeo.dispose();
@@ -602,7 +622,10 @@ function BlackHoleCore({ position, onClick, onHoverChange }) {
     hoverRef.current += (target - hoverRef.current) * Math.min(delta * 3, 1);
     const h = hoverRef.current;
 
-    // horizon is static — biological surface animates via shader time, not rotation
+    // Event horizon breathes larger on hover
+    if (eventHorizonRef.current) {
+      eventHorizonRef.current.scale.setScalar(1.0 + h * 0.04);
+    }
     if (diskRef.current) {
       diskRef.current.rotation.z += 0.008 + h * 0.02;
       const pulse = Math.sin(time * 0.5) * (0.08 + h * 0.06) + 1;
@@ -626,10 +649,8 @@ function BlackHoleCore({ position, onClick, onHoverChange }) {
       outerMatRef.current.uniforms.uTime.value  = time;
       outerMatRef.current.uniforms.uHover.value = h;
     }
-    if (horizonMatRef.current) {
-      horizonMatRef.current.uniforms.uTime.value  = time;
-      horizonMatRef.current.uniforms.uHover.value = h;
-    }
+    horizonMat.uniforms.uTime.value  = time;
+    horizonMat.uniforms.uHover.value = h;
   });
 
   const handlePointerOver = () => {
@@ -657,20 +678,7 @@ function BlackHoleCore({ position, onClick, onHoverChange }) {
         <meshBasicMaterial visible={false} />
       </mesh>
 
-      <mesh ref={eventHorizonRef} geometry={horizonGeo}>
-        <shaderMaterial
-          ref={horizonMatRef}
-          uniforms={{
-            uTime:  { value: 0 },
-            uHover: { value: 0 },
-          }}
-          vertexShader={horizonVertexShader}
-          fragmentShader={horizonFragmentShader}
-          transparent
-          side={THREE.FrontSide}
-          depthWrite={true}
-        />
-      </mesh>
+      <mesh ref={eventHorizonRef} geometry={horizonGeo} material={horizonMat} />
 
       <mesh ref={diskRef} geometry={diskGeo} rotation={[Math.PI / 2, 0, 0]}>
         <shaderMaterial
