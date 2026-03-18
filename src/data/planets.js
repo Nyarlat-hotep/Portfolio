@@ -7,6 +7,7 @@ export const planetsData = [
     position: [0, 0, 0],
     scale: 1.5,
     color: '#00d4ff',
+    particleColor: '#f97316',
     texture: '/textures/sun.jpg',
     tooltipColor: '#ff8c00',
     emissive: '#00d4ff',

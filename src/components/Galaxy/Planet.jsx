@@ -10,6 +10,7 @@ function Planet({
   position,
   scale,
   color,
+  particleColor,
   texture,
   tooltipColor,
   emissive,
@@ -216,7 +217,7 @@ function Planet({
             <pointsMaterial
               map={particleTexture}
               size={0.1}
-              color={color}
+              color={particleColor || color}
               transparent
               opacity={0.9}
               sizeAttenuation
