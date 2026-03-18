@@ -34,11 +34,11 @@
 
 .hud-tc2 {
   position: absolute;
-  top: 52px;
+  top: 48px;
   left: 50%;
   transform: translateX(-50%);
-  width: 240px;
-  height: 18px;
+  width: 360px;
+  height: 28px;
 }
 
 .hud-sl {
