@@ -170,6 +170,78 @@ function getDiskTex() {
   return (_diskTex = new THREE.CanvasTexture(canvas));
 }
 
+let _cloudTex = null;
+function getCloudTex() {
+  if (_cloudTex) return _cloudTex;
+  const size = 256, c = size / 2;
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  const g = ctx.createRadialGradient(c, c, 0, c, c, c);
+  g.addColorStop(0,    'rgba(255,255,255,0.9)');
+  g.addColorStop(0.20, 'rgba(255,255,255,0.65)');
+  g.addColorStop(0.50, 'rgba(255,255,255,0.20)');
+  g.addColorStop(0.80, 'rgba(255,255,255,0.04)');
+  g.addColorStop(1.0,  'rgba(255,255,255,0)');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, size, size);
+  return (_cloudTex = new THREE.CanvasTexture(canvas));
+}
+
+// 11 cloud knots placed within the nebula's particle spread
+const CLOUD_KNOTS = [
+  { x:  8,  y:  1.5, z:  3,  s: 13, color: '#a855f7', opacity: 0.13 },
+  { x: -7,  y: -1,   z: -4,  s: 10, color: '#7c3aed', opacity: 0.11 },
+  { x:  2,  y:  2,   z:  6,  s: 14, color: '#c084fc', opacity: 0.10 },
+  { x: -12, y:  0.5, z:  2,  s: 11, color: '#6d28d9', opacity: 0.12 },
+  { x:  14, y: -1.5, z: -2,  s:  9, color: '#a855f7', opacity: 0.09 },
+  { x:  0,  y:  3,   z: -5,  s: 12, color: '#9333ea', opacity: 0.11 },
+  { x: -5,  y: -2.5, z:  7,  s:  8, color: '#7c3aed', opacity: 0.10 },
+  { x:  10, y:  1,   z: -6,  s: 10, color: '#c084fc', opacity: 0.09 },
+  { x: -9,  y:  2,   z: -3,  s: 13, color: '#a855f7', opacity: 0.12 },
+  { x:  3,  y: -1,   z:  4,  s:  9, color: '#6d28d9', opacity: 0.10 },
+  { x: -3,  y:  0,   z: -8,  s: 11, color: '#9333ea', opacity: 0.11 },
+];
+
+function NebulaCloudLayer() {
+  const cloudRefs = useRef([]);
+  const cloudTex  = useMemo(() => getCloudTex(), []);
+
+  useFrame((state) => {
+    const t = state.clock.elapsedTime;
+    CLOUD_KNOTS.forEach((knot, i) => {
+      const mesh = cloudRefs.current[i];
+      if (!mesh) return;
+      // Very slow independent drift rotation per puff
+      const drift = t * (0.0008 + i * 0.0003);
+      mesh.rotation.z = drift;
+    });
+  });
+
+  return (
+    <>
+      {CLOUD_KNOTS.map((knot, i) => (
+        <mesh
+          key={i}
+          ref={el => { cloudRefs.current[i] = el; }}
+          position={[knot.x, knot.y, knot.z]}
+        >
+          <planeGeometry args={[knot.s, knot.s]} />
+          <meshBasicMaterial
+            map={cloudTex}
+            color={knot.color}
+            transparent
+            opacity={knot.opacity}
+            blending={THREE.AdditiveBlending}
+            depthWrite={false}
+            side={THREE.DoubleSide}
+          />
+        </mesh>
+      ))}
+    </>
+  );
+}
+
 let _tex = null;
 function getDotTex() {
   if (_tex) return _tex;
@@ -322,9 +394,10 @@ export default function GravityField() {
     geo.dispose();
     hazeGeo.dispose();
     blinkGeo.dispose();
-    if (_tex)     { _tex.dispose();     _tex     = null; }
-    if (_glowTex) { _glowTex.dispose(); _glowTex = null; }
-    if (_diskTex) { _diskTex.dispose(); _diskTex = null; }
+    if (_tex)       { _tex.dispose();       _tex       = null; }
+    if (_glowTex)   { _glowTex.dispose();   _glowTex   = null; }
+    if (_diskTex)   { _diskTex.dispose();   _diskTex   = null; }
+    if (_cloudTex)  { _cloudTex.dispose();  _cloudTex  = null; }
   }, [geo, hazeGeo, blinkGeo]);
 
   useFrame((_, delta) => {
@@ -462,6 +535,9 @@ export default function GravityField() {
         <planeGeometry args={[80, 40]} />
         <meshBasicMaterial visible={false} side={THREE.DoubleSide} />
       </mesh>
+
+      {/* Gaseous cloud knots — dense bright patches within the nebula */}
+      <NebulaCloudLayer />
 
       {/* Volumetric haze */}
       <points geometry={hazeGeo}>
