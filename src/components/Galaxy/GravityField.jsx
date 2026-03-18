@@ -204,39 +204,25 @@ const CLOUD_KNOTS = [
 ];
 
 function NebulaCloudLayer() {
-  const cloudRefs = useRef([]);
-  const cloudTex  = useMemo(() => getCloudTex(), []);
-
-  useFrame((state) => {
-    const t = state.clock.elapsedTime;
-    CLOUD_KNOTS.forEach((knot, i) => {
-      const mesh = cloudRefs.current[i];
-      if (!mesh) return;
-      // Very slow independent drift rotation per puff
-      const drift = t * (0.0008 + i * 0.0003);
-      mesh.rotation.z = drift;
-    });
-  });
+  const cloudTex = useMemo(() => getCloudTex(), []);
 
   return (
     <>
       {CLOUD_KNOTS.map((knot, i) => (
-        <mesh
+        <sprite
           key={i}
-          ref={el => { cloudRefs.current[i] = el; }}
           position={[knot.x, knot.y, knot.z]}
+          scale={[knot.s, knot.s, 1]}
         >
-          <planeGeometry args={[knot.s, knot.s]} />
-          <meshBasicMaterial
+          <spriteMaterial
             map={cloudTex}
             color={knot.color}
             transparent
             opacity={knot.opacity}
             blending={THREE.AdditiveBlending}
             depthWrite={false}
-            side={THREE.DoubleSide}
           />
-        </mesh>
+        </sprite>
       ))}
     </>
   );
