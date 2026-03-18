@@ -190,17 +190,17 @@ function getCloudTex() {
 
 // 11 cloud knots placed within the nebula's particle spread
 const CLOUD_KNOTS = [
-  { x:  8,  y:  1.5, z:  3,  s: 13, color: '#a855f7', opacity: 0.13 },
-  { x: -7,  y: -1,   z: -4,  s: 10, color: '#7c3aed', opacity: 0.11 },
-  { x:  2,  y:  2,   z:  6,  s: 14, color: '#c084fc', opacity: 0.10 },
-  { x: -12, y:  0.5, z:  2,  s: 11, color: '#6d28d9', opacity: 0.12 },
-  { x:  14, y: -1.5, z: -2,  s:  9, color: '#a855f7', opacity: 0.09 },
-  { x:  0,  y:  3,   z: -5,  s: 12, color: '#9333ea', opacity: 0.11 },
-  { x: -5,  y: -2.5, z:  7,  s:  8, color: '#7c3aed', opacity: 0.10 },
-  { x:  10, y:  1,   z: -6,  s: 10, color: '#c084fc', opacity: 0.09 },
-  { x: -9,  y:  2,   z: -3,  s: 13, color: '#a855f7', opacity: 0.12 },
-  { x:  3,  y: -1,   z:  4,  s:  9, color: '#6d28d9', opacity: 0.10 },
-  { x: -3,  y:  0,   z: -8,  s: 11, color: '#9333ea', opacity: 0.11 },
+  { x:  8,  y:  1.5, z:  3,  s: 13, color: '#c026d3', opacity: 0.13 },
+  { x: -7,  y: -1,   z: -4,  s: 10, color: '#be185d', opacity: 0.12 },
+  { x:  2,  y:  2,   z:  6,  s: 14, color: '#a855f7', opacity: 0.10 },
+  { x: -12, y:  0.5, z:  2,  s: 11, color: '#9d174d', opacity: 0.13 },
+  { x:  14, y: -1.5, z: -2,  s:  9, color: '#c026d3', opacity: 0.11 },
+  { x:  0,  y:  3,   z: -5,  s: 12, color: '#a21caf', opacity: 0.12 },
+  { x: -5,  y: -2.5, z:  7,  s:  8, color: '#be185d', opacity: 0.11 },
+  { x:  10, y:  1,   z: -6,  s: 10, color: '#7c3aed', opacity: 0.10 },
+  { x: -9,  y:  2,   z: -3,  s: 13, color: '#c026d3', opacity: 0.13 },
+  { x:  3,  y: -1,   z:  4,  s:  9, color: '#9d174d', opacity: 0.11 },
+  { x: -3,  y:  0,   z: -8,  s: 11, color: '#a21caf', opacity: 0.12 },
 ];
 
 function NebulaCloudLayer() {
