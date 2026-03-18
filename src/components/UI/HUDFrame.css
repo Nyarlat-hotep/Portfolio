@@ -201,7 +201,7 @@
 
 .hud-scan-rect { animation: hud-scan 3s ease-in-out infinite alternate; }
 
-.hud-text { opacity: 0.45; }
+.hud-text { opacity: 0.70; }
 
 /* ── HUD entrance animations ──────────────────────────────────────── */
 @keyframes hud-enter-tl {
