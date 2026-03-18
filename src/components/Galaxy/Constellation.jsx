@@ -9,9 +9,9 @@ import { playMenuClick } from '../../utils/sounds';
 const SCALE = 1.6;
 const STAR_SIZE = 3.0;
 const TUBE_RADIUS = 0.018;
-const TOOLTIP_COLOR = '#00d4ff';
+const TOOLTIP_COLOR = '#fbbf24';
 
-// Cyan-white glow texture for stars — matches planet palette
+// Amber-orange glow texture for stars
 function createGlowTexture() {
   const size = 128;
   const canvas = document.createElement('canvas');
@@ -21,18 +21,18 @@ function createGlowTexture() {
   const center = size / 2;
 
   const glow = ctx.createRadialGradient(center, center, 0, center, center, center);
-  glow.addColorStop(0,    'rgba(160, 232, 255, 0.9)');
-  glow.addColorStop(0.2,  'rgba(0, 212, 255, 0.65)');
-  glow.addColorStop(0.45, 'rgba(0, 160, 220, 0.28)');
-  glow.addColorStop(0.7,  'rgba(0, 100, 180, 0.1)');
-  glow.addColorStop(1.0,  'rgba(0, 50, 140, 0)');
+  glow.addColorStop(0,    'rgba(253, 224, 71, 0.9)');
+  glow.addColorStop(0.2,  'rgba(251, 146, 60, 0.65)');
+  glow.addColorStop(0.45, 'rgba(234, 88, 12, 0.28)');
+  glow.addColorStop(0.7,  'rgba(180, 60, 10, 0.1)');
+  glow.addColorStop(1.0,  'rgba(120, 40, 8, 0)');
   ctx.fillStyle = glow;
   ctx.fillRect(0, 0, size, size);
 
   const core = ctx.createRadialGradient(center, center, 0, center, center, center * 0.25);
-  core.addColorStop(0,   'rgba(255, 252, 255, 0.95)');
-  core.addColorStop(0.5, 'rgba(200, 242, 255, 0.5)');
-  core.addColorStop(1,   'rgba(0, 212, 255, 0)');
+  core.addColorStop(0,   'rgba(255, 252, 240, 0.95)');
+  core.addColorStop(0.5, 'rgba(254, 240, 138, 0.5)');
+  core.addColorStop(1,   'rgba(251, 191, 36, 0)');
   ctx.fillStyle = core;
   ctx.fillRect(0, 0, size, size);
 
@@ -111,8 +111,8 @@ export default function Constellation({ position = [0, 2, -55], onSelect, onHove
     const haloCount  = 55;
     const hPositions = new Float32Array(haloCount * 3);
     const hColors    = new Float32Array(haloCount * 3);
-    const purpleCol  = new THREE.Color('#a855f7');
-    const greenCol   = new THREE.Color('#00ff7a');
+    const purpleCol  = new THREE.Color('#f97316');
+    const greenCol   = new THREE.Color('#fbbf24');
 
     for (let i = 0; i < haloCount; i++) {
       const angle  = Math.random() * Math.PI * 2;
@@ -215,7 +215,7 @@ export default function Constellation({ position = [0, 2, -55], onSelect, onHove
 
   useEffect(() => {
     if (starMatRef.current) {
-      starMatRef.current.color.set(hovered ? '#ffffff' : '#a0e8ff');
+      starMatRef.current.color.set(hovered ? '#ffffff' : '#fde68a');
     }
   }, [hovered]);
 
@@ -255,7 +255,7 @@ export default function Constellation({ position = [0, 2, -55], onSelect, onHove
           ref={starMatRef}
           size={STAR_SIZE}
           map={glowTexture}
-          color="#a0e8ff"
+          color="#fde68a"
           transparent
           opacity={0.55}
           alphaTest={0.01}
@@ -267,7 +267,7 @@ export default function Constellation({ position = [0, 2, -55], onSelect, onHove
       {/* Single merged line mesh */}
       {mergedLineGeo && (
         <mesh geometry={mergedLineGeo}>
-          <meshBasicMaterial color="#a855f7" transparent opacity={0.25} />
+          <meshBasicMaterial color="#f97316" transparent opacity={0.25} />
         </mesh>
       )}
 

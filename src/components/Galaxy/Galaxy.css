@@ -127,8 +127,8 @@
 
 /* Tooltip shown on hover over constellation stars */
 .constellation-tooltip {
-  background: rgba(8, 4, 18, 0.92);
-  border: 1px solid rgba(107, 47, 160, 0.6);
+  background: rgba(20, 10, 3, 0.92);
+  border: 1px solid rgba(194, 88, 10, 0.6);
   border-radius: 6px;
   padding: 0.4rem 0.9rem;
   font-family: monospace;
@@ -136,18 +136,18 @@
   font-weight: 500;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: #d4c0f0;
+  color: #fde68a;
   white-space: nowrap;
   pointer-events: none;
   box-shadow:
-    0 0 16px rgba(107, 47, 160, 0.4),
-    0 0 6px rgba(0, 255, 106, 0.15);
+    0 0 16px rgba(194, 88, 10, 0.4),
+    0 0 6px rgba(250, 204, 21, 0.15);
   animation: tooltipPulse 2s ease-in-out infinite;
 }
 
 @keyframes tooltipPulse {
-  0%, 100% { box-shadow: 0 0 16px rgba(107, 47, 160, 0.4), 0 0 6px rgba(0, 255, 106, 0.15); }
-  50%       { box-shadow: 0 0 24px rgba(107, 47, 160, 0.6), 0 0 10px rgba(0, 255, 106, 0.25); }
+  0%, 100% { box-shadow: 0 0 16px rgba(194, 88, 10, 0.4), 0 0 6px rgba(250, 204, 21, 0.15); }
+  50%       { box-shadow: 0 0 24px rgba(194, 88, 10, 0.6), 0 0 10px rgba(250, 204, 21, 0.25); }
 }
 
 /* Modal card — fixed bottom-right */
@@ -159,16 +159,16 @@
   max-height: 320px;
   background: linear-gradient(
     135deg,
-    rgba(8, 4, 18, 0.97) 0%,
-    rgba(15, 8, 30, 0.97) 100%
+    rgba(20, 10, 3, 0.97) 0%,
+    rgba(30, 15, 5, 0.97) 100%
   );
-  border: 1px solid rgba(107, 47, 160, 0.5);
+  border: 1px solid rgba(194, 88, 10, 0.5);
   border-radius: 12px;
   overflow: hidden;
   z-index: 1500;
   box-shadow:
-    0 0 40px rgba(107, 47, 160, 0.3),
-    0 0 10px rgba(0, 255, 106, 0.1),
+    0 0 40px rgba(194, 88, 10, 0.3),
+    0 0 10px rgba(250, 204, 21, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
@@ -182,8 +182,8 @@
   background: linear-gradient(
     90deg,
     transparent,
-    rgba(107, 47, 160, 0.8),
-    rgba(0, 255, 106, 0.4),
+    rgba(234, 88, 12, 0.8),
+    rgba(250, 204, 21, 0.4),
     transparent
   );
 }
@@ -193,7 +193,7 @@
   align-items: flex-start;
   justify-content: space-between;
   padding: 1rem 1rem 0.75rem;
-  border-bottom: 1px solid rgba(107, 47, 160, 0.2);
+  border-bottom: 1px solid rgba(194, 88, 10, 0.2);
 }
 
 .constellation-modal-title-group {
@@ -206,7 +206,7 @@
   font-family: monospace;
   font-size: 0.55rem;
   letter-spacing: 3px;
-  color: rgba(0, 255, 106, 0.7);
+  color: rgba(251, 191, 36, 0.8);
   text-transform: uppercase;
 }
 
@@ -216,7 +216,7 @@
   font-weight: 500;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: #e0d0ff;
+  color: #fef3c7;
   margin: 0;
 }
 
@@ -225,20 +225,20 @@
   align-items: center;
   justify-content: center;
   padding: 0.6rem 0.6rem;
-  background: rgba(107, 47, 160, 0.1);
-  border: 1px solid rgba(107, 47, 160, 0.4);
+  background: rgba(194, 88, 10, 0.1);
+  border: 1px solid rgba(194, 88, 10, 0.4);
   border-radius: 8px;
-  color: rgba(200, 180, 220, 0.7);
+  color: rgba(253, 224, 71, 0.7);
   cursor: pointer;
   transition: all 0.3s ease;
   flex-shrink: 0;
 }
 
 .constellation-modal-close:hover {
-  background: rgba(107, 47, 160, 0.2);
-  border-color: rgba(107, 47, 160, 0.8);
-  color: #e0d0ff;
-  box-shadow: 0 0 10px rgba(107, 47, 160, 0.4);
+  background: rgba(194, 88, 10, 0.2);
+  border-color: rgba(194, 88, 10, 0.8);
+  color: #fef3c7;
+  box-shadow: 0 0 10px rgba(194, 88, 10, 0.4);
 }
 
 .constellation-modal-body {
@@ -256,14 +256,14 @@
 }
 
 .constellation-modal-body::-webkit-scrollbar-thumb {
-  background: rgba(107, 47, 160, 0.4);
+  background: rgba(194, 88, 10, 0.4);
   border-radius: 2px;
 }
 
 .constellation-modal-text {
   font-size: 0.8rem;
   line-height: 1.7;
-  color: rgba(200, 180, 220, 1);
+  color: rgba(254, 240, 138, 0.9);
   margin: 0;
   font-weight: 300;
 }
@@ -272,7 +272,7 @@
   font-family: monospace;
   font-size: 0.65rem;
   letter-spacing: 2px;
-  color: rgba(107, 47, 160, 0.7);
+  color: rgba(194, 88, 10, 0.7);
   text-transform: uppercase;
   animation: loadingBlink 1.2s ease-in-out infinite;
 }
