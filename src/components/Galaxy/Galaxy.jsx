@@ -234,6 +234,10 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
   const [gateModal,          setGateModal]          = useState({ open: false, planet: null });
   const [gateInput,          setGateInput]          = useState('');
   const [gateError,          setGateError]          = useState(false);
+  const gateInputRef  = useRef('');
+  const gateModalRef  = useRef({ open: false, planet: null });
+  gateInputRef.current = gateInput;
+  gateModalRef.current = gateModal;
   const [warpActive,         setWarpActive]          = useState(false);
   const [presentationOpen,   setPresentationOpen]   = useState(false);
 
@@ -359,8 +363,8 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
   handlePlanetClickGatedRef.current = handlePlanetClickGated;
 
   const handleGateSubmit = useCallback(() => {
-    if (gateInput.trim().toLowerCase() === 'cosmic1') {
-      const planet = gateModal.planet;
+    if (gateInputRef.current.trim().toLowerCase() === 'cosmic1') {
+      const planet = gateModalRef.current.planet;
       setGateModal({ open: false, planet: null });
       setGateInput('');
       setGateError(false);
@@ -368,7 +372,7 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
     } else {
       setGateError(true);
     }
-  }, [gateInput, gateModal.planet]);
+  }, []); // stable — reads current values via refs
 
   const handleGateKeyDown = useCallback((e) => {
     if (e.key === 'Enter') handleGateSubmit();
