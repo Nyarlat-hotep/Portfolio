@@ -39,6 +39,7 @@
   transform: translateX(-50%);
   width: 360px;
   height: 28px;
+  opacity: 0.35;
 }
 
 .hud-sl {
