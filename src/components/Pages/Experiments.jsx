@@ -567,8 +567,8 @@ export default function Experiments({ scrollContainerRef, isVoidMode = false }) 
         const dy = e.clientY - lastMouseY;
         rotRef.current -= dx * DRAG_SENS;
         velRef.current = -dx * DRAG_SENS;
-        tiltRef.current = Math.max(TILT_MIN, Math.min(TILT_MAX, tiltRef.current + dy * DRAG_SENS));
-        tiltVelRef.current = dy * DRAG_SENS;
+        tiltRef.current = Math.max(TILT_MIN, Math.min(TILT_MAX, tiltRef.current - dy * DRAG_SENS));
+        tiltVelRef.current = -dy * DRAG_SENS;
         mouseDownX = e.clientX; lastMouseY = e.clientY;
       } else {
         const hit = getHit(e.clientX, e.clientY);
