@@ -626,10 +626,10 @@ export default function Experiments({ scrollContainerRef, isVoidMode = false }) 
       const t = e.touches[0];
       const dx = t.clientX - lastTouchX;
       const dy = t.clientY - lastTouchY;
-      rotRef.current -= dx * DRAG_SENS;
-      velRef.current = -dx * DRAG_SENS;
-      tiltRef.current = Math.max(TILT_MIN, Math.min(TILT_MAX, tiltRef.current + dy * DRAG_SENS));
-      tiltVelRef.current = dy * DRAG_SENS;
+      rotRef.current += dx * DRAG_SENS;
+      velRef.current = dx * DRAG_SENS;
+      tiltRef.current = Math.max(TILT_MIN, Math.min(TILT_MAX, tiltRef.current - dy * DRAG_SENS));
+      tiltVelRef.current = -dy * DRAG_SENS;
       lastTouchX = t.clientX; lastTouchY = t.clientY;
     };
 
