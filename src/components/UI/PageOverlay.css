@@ -170,6 +170,14 @@
   text-shadow: none;
 }
 
+.overlay--case-study-2 .overlay-title {
+  background: linear-gradient(135deg, #22d3ee 0%, #0891b2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: none;
+}
+
 .overlay--case-study-3 .overlay-title {
   background: linear-gradient(135deg, #ff3300 0%, #db2777 100%);
   -webkit-background-clip: text;
