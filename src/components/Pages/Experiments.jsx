@@ -107,7 +107,7 @@ function drawDecorations(ctx, ox, oy, sc, t) {
 
   // Text: main title near back area
   const titlePos = iso(-4, -7.5, 0.1, ox, oy, sc);
-  const fs = Math.max(10, 13 * sc);
+  const fs = Math.max(13, 17 * sc);
   ctx.font = `${fs}px monospace`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'bottom';
@@ -117,7 +117,7 @@ function drawDecorations(ctx, ox, oy, sc, t) {
 
   // Text: scanning block along right-forward edge
   const scanPos = iso(8.2, -2, 0.1, ox, oy, sc);
-  const ss = Math.max(8, 10 * sc);
+  const ss = Math.max(11, 14 * sc);
   ctx.font = `${ss}px monospace`;
   ctx.textAlign = 'left';
   ctx.textBaseline = 'top';
@@ -129,7 +129,7 @@ function drawDecorations(ctx, ox, oy, sc, t) {
 
   // Text: coordinate label near back-right corner
   const coordPos = iso(7.5, -7.5, 0.05, ox, oy, sc);
-  ctx.font = `${Math.max(7, 9 * sc)}px monospace`;
+  ctx.font = `${Math.max(9, 12 * sc)}px monospace`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'bottom';
   ctx.fillStyle = 'rgba(150,200,30,0.20)';
@@ -692,7 +692,6 @@ export default function Experiments({ scrollContainerRef, isVoidMode = false }) 
                     <span key={tag} className="iso-panel-tag">{tag}</span>
                   ))}
                 </div>
-                <span className="iso-panel-hint">click to enter</span>
               </div>
             </motion.div>
           )}
