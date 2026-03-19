@@ -20,28 +20,29 @@ function iso(gx, gy, gz, ox, oy, sc) {
 // ── Grid ─────────────────────────────────────────────────────────────────
 const NODE_POS = [[-3, -3], [3, -3], [-3, 3], [3, 3]];
 
-function drawGrid(ctx, ox, oy, sc) {
+function drawGrid(ctx, ox, oy, sc, gz = 0, lineAlpha = 0.10, nearAlpha = 0.22, withDetails = true) {
   const N = 7;
   ctx.save();
   for (let j = -N; j <= N; j++) {
     const near = NODE_POS.some(([, ny]) => Math.abs(ny - j) <= 1);
-    ctx.strokeStyle = near ? 'rgba(255,119,0,0.22)' : 'rgba(255,119,0,0.10)';
+    ctx.strokeStyle = near ? `rgba(255,119,0,${nearAlpha})` : `rgba(255,119,0,${lineAlpha})`;
     ctx.lineWidth = 0.75;
-    const a = iso(-N, j, 0, ox, oy, sc), b = iso(N, j, 0, ox, oy, sc);
+    const a = iso(-N, j, gz, ox, oy, sc), b = iso(N, j, gz, ox, oy, sc);
     ctx.beginPath(); ctx.moveTo(a.sx, a.sy); ctx.lineTo(b.sx, b.sy); ctx.stroke();
   }
   for (let i = -N; i <= N; i++) {
     const near = NODE_POS.some(([nx]) => Math.abs(nx - i) <= 1);
-    ctx.strokeStyle = near ? 'rgba(255,119,0,0.22)' : 'rgba(255,119,0,0.10)';
+    ctx.strokeStyle = near ? `rgba(255,119,0,${nearAlpha})` : `rgba(255,119,0,${lineAlpha})`;
     ctx.lineWidth = 0.75;
-    const a = iso(i, -N, 0, ox, oy, sc), b = iso(i, N, 0, ox, oy, sc);
+    const a = iso(i, -N, gz, ox, oy, sc), b = iso(i, N, gz, ox, oy, sc);
     ctx.beginPath(); ctx.moveTo(a.sx, a.sy); ctx.lineTo(b.sx, b.sy); ctx.stroke();
   }
+  if (!withDetails) { ctx.restore(); return; }
   // Vertex dots
   ctx.fillStyle = 'rgba(255,119,0,0.28)';
   for (let i = -N; i <= N; i += 3) {
     for (let j = -N; j <= N; j += 3) {
-      const p = iso(i, j, 0, ox, oy, sc);
+      const p = iso(i, j, gz, ox, oy, sc);
       ctx.beginPath(); ctx.arc(p.sx, p.sy, 1.5, 0, Math.PI * 2); ctx.fill();
     }
   }
@@ -57,10 +58,10 @@ function drawGrid(ctx, ox, oy, sc) {
   ];
   for (const trace of traces) {
     ctx.beginPath();
-    const s = iso(trace[0][0], trace[0][1], 0, ox, oy, sc);
+    const s = iso(trace[0][0], trace[0][1], gz, ox, oy, sc);
     ctx.moveTo(s.sx, s.sy);
     for (let k = 1; k < trace.length; k++) {
-      const p = iso(trace[k][0], trace[k][1], 0, ox, oy, sc);
+      const p = iso(trace[k][0], trace[k][1], gz, ox, oy, sc);
       ctx.lineTo(p.sx, p.sy);
     }
     ctx.stroke();
@@ -70,28 +71,8 @@ function drawGrid(ctx, ox, oy, sc) {
 }
 
 // ── Void decorations ─────────────────────────────────────────────────────
-const VOID_CURVES = [
-  { p0: [-9, -3, 0.5], c1: [-3, -9, 1.8], c2: [4, -7, 1.2], p3: [8, -1, 0.3] },
-  { p0: [-7,  5, 0.2], c1: [-2,  8, 1.0], c2: [5,  7, 0.6], p3: [8,  0, 0.1] },
-  { p0: [-8, -7, 0.0], c1: [ 1, -4, 0.8], c2: [-1,  5, 0.5], p3: [6,  7, 0.0] },
-];
-
 function drawDecorations(ctx, ox, oy, sc, t) {
   ctx.save();
-
-  // Organic void curves (faint green, world-space beziers)
-  ctx.lineWidth = 1;
-  for (const { p0, c1, c2, p3 } of VOID_CURVES) {
-    const a = iso(p0[0], p0[1], p0[2], ox, oy, sc);
-    const b = iso(c1[0], c1[1], c1[2], ox, oy, sc);
-    const c = iso(c2[0], c2[1], c2[2], ox, oy, sc);
-    const d = iso(p3[0], p3[1], p3[2], ox, oy, sc);
-    ctx.strokeStyle = 'rgba(0,200,80,0.09)';
-    ctx.beginPath();
-    ctx.moveTo(a.sx, a.sy);
-    ctx.bezierCurveTo(b.sx, b.sy, c.sx, c.sy, d.sx, d.sy);
-    ctx.stroke();
-  }
 
   // Center scanning reticle — two partial dashed arcs
   const center = iso(0, 0, 0.05, ox, oy, sc);
@@ -407,7 +388,8 @@ function drawFrame(ctx, cssW, cssH, t, hoveredId, nodesRef, rot) {
   const oy = cssH * 0.50;
 
   drawDecorations(ctx, ox, oy, sc, t);
-  drawGrid(ctx, ox, oy, sc);
+  drawGrid(ctx, ox, oy, sc, -0.4, 0.06, 0.11, false);  // lower grid — depth layer
+  drawGrid(ctx, ox, oy, sc);                             // main grid
   drawPulseRings(ctx, EXPERIMENT_CONFIGS, t, hoveredId, ox, oy, sc);
 
   const sorted = [...EXPERIMENT_CONFIGS].sort(
@@ -461,7 +443,7 @@ const galleryImages = [
 ];
 
 // ── Component ─────────────────────────────────────────────────────────────
-const DRAG_SENS  = 0.005;  // rad/px
+const DRAG_SENS  = 0.002;  // rad/px
 const DRAG_DAMP  = 0.95;   // velocity multiplier per frame (≈ Three.js orbit damping)
 
 export default function Experiments({ scrollContainerRef, isVoidMode = false }) {
@@ -582,8 +564,8 @@ export default function Experiments({ scrollContainerRef, isVoidMode = false }) 
     const onMouseMove = e => {
       if (isDraggingRef.current) {
         const dx = e.clientX - mouseDownX;
-        rotRef.current += dx * DRAG_SENS;
-        velRef.current = dx * DRAG_SENS;
+        rotRef.current -= dx * DRAG_SENS;
+        velRef.current = -dx * DRAG_SENS;
         mouseDownX = e.clientX;
       } else {
         const hit = getHit(e.clientX, e.clientY);
@@ -638,8 +620,8 @@ export default function Experiments({ scrollContainerRef, isVoidMode = false }) 
       if (!isDraggingRef.current) return;
       const t = e.touches[0];
       const dx = t.clientX - lastTouchX;
-      rotRef.current += dx * DRAG_SENS;
-      velRef.current = dx * DRAG_SENS;
+      rotRef.current -= dx * DRAG_SENS;
+      velRef.current = -dx * DRAG_SENS;
       lastTouchX = t.clientX;
     };
 
@@ -707,7 +689,6 @@ export default function Experiments({ scrollContainerRef, isVoidMode = false }) 
                     <span key={tag} className="iso-panel-tag">{tag}</span>
                   ))}
                 </div>
-                <span className="iso-panel-hint">click to enter</span>
               </div>
             </motion.div>
           )}
