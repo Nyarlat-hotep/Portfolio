@@ -34,6 +34,7 @@ function App() {
     if (!pendingPlanet) return;
     setActivePlanet(pendingPlanet);
     stopBackground();
+    playCaseStudyOpen();
     setIsOverlayOpen(true);
     setPendingPlanet(null);
   }, [pendingPlanet]);
@@ -196,7 +197,7 @@ function App() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 8 }}
                 transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
-                className={`asteroid-message${gateError ? ' codex-rejected' : ''}`}
+                className={`asteroid-message gate-modal${gateError ? ' codex-rejected' : ''}`}
               >
                 <div className="asteroid-message-header">
                   <span className="asteroid-message-label">

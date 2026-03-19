@@ -13,6 +13,53 @@
   background: var(--space-dark);
 }
 
+/* ── Case study gate modal — amber/orange palette ── */
+.gate-modal {
+  border-color: rgba(255, 140, 0, 0.7);
+  box-shadow:
+    0 0 40px rgba(255, 119, 0, 0.15),
+    0 0 12px rgba(180, 80, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.gate-modal::before {
+  background: linear-gradient(90deg, transparent, rgba(255, 140, 0, 0.7), rgba(200, 100, 0, 0.5), transparent);
+}
+
+.gate-modal .asteroid-message-header {
+  border-bottom-color: rgba(255, 140, 0, 0.15);
+}
+
+.gate-modal .asteroid-message-label {
+  color: rgba(255, 165, 0, 0.8);
+}
+
+.gate-modal .asteroid-message-close {
+  background: rgba(255, 140, 0, 0.08);
+  border-color: rgba(255, 140, 0, 0.6);
+  color: rgba(255, 165, 0, 0.8);
+}
+
+.gate-modal .asteroid-message-close:hover {
+  background: rgba(255, 140, 0, 0.2);
+  border-color: rgba(255, 165, 0, 0.9);
+  color: rgba(255, 200, 50, 1);
+  box-shadow: 0 0 10px rgba(255, 140, 0, 0.3);
+}
+
+.gate-modal .asteroid-codex-label {
+  color: rgba(255, 165, 0, 0.65);
+}
+
+.gate-modal .asteroid-codex-input {
+  border-color: rgba(255, 140, 0, 0.4);
+  color: rgba(255, 220, 150, 1);
+}
+
+.gate-modal .asteroid-codex-input:focus {
+  border-color: rgba(255, 165, 0, 0.85);
+}
+
 /* Mobile-specific improvements */
 @media (max-width: 768px) {
   /* Prevent pull-to-refresh and overscroll */
