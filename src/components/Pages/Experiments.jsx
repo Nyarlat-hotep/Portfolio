@@ -39,7 +39,7 @@ function drawGrid(ctx, ox, oy, sc, gz = 0, lineAlpha = 0.10, nearAlpha = 0.22, w
   }
   if (!withDetails) { ctx.restore(); return; }
   // Vertex dots
-  ctx.fillStyle = 'rgba(255,119,0,0.28)';
+  ctx.fillStyle = 'rgba(150,200,30,0.28)';
   for (let i = -N; i <= N; i += 3) {
     for (let j = -N; j <= N; j += 3) {
       const p = iso(i, j, gz, ox, oy, sc);
@@ -47,7 +47,7 @@ function drawGrid(ctx, ox, oy, sc, gz = 0, lineAlpha = 0.10, nearAlpha = 0.22, w
     }
   }
   // Circuit traces
-  ctx.strokeStyle = 'rgba(255,119,0,0.22)';
+  ctx.strokeStyle = 'rgba(150,200,30,0.22)';
   ctx.lineWidth = 1.0;
   ctx.setLineDash([3, 5]);
   const traces = [
@@ -80,7 +80,7 @@ function drawDecorations(ctx, ox, oy, sc, t) {
   ctx.lineWidth = 0.75;
   for (const r of [1.6, 2.8]) {
     const rx = r * (TW / 2) * sc, ry = r * (TH / 2) * sc;
-    ctx.strokeStyle = 'rgba(255,119,0,0.13)';
+    ctx.strokeStyle = 'rgba(150,200,30,0.13)';
     ctx.beginPath();
     ctx.ellipse(center.sx, center.sy, rx, ry, 0, Math.PI * 0.15, Math.PI * 0.85);
     ctx.stroke();
@@ -91,7 +91,7 @@ function drawDecorations(ctx, ox, oy, sc, t) {
   ctx.setLineDash([]);
 
   // Tick marks along front-right grid rail (gy=7, gx varies)
-  ctx.strokeStyle = 'rgba(255,119,0,0.28)';
+  ctx.strokeStyle = 'rgba(150,200,30,0.28)';
   ctx.lineWidth = 0.75;
   for (let gx = -6; gx <= 6; gx += 2) {
     const p = iso(gx, 7, 0, ox, oy, sc);
@@ -132,14 +132,14 @@ function drawDecorations(ctx, ox, oy, sc, t) {
   ctx.font = `${Math.max(7, 9 * sc)}px monospace`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'bottom';
-  ctx.fillStyle = 'rgba(255,119,0,0.20)';
+  ctx.fillStyle = 'rgba(150,200,30,0.20)';
   ctx.fillText('[ 0 : 0 : 0 ]', coordPos.sx, coordPos.sy);
 
   // Corner bracket markers at each experiment node
   for (const [gx, gy] of NODE_POS) {
     const p = iso(gx, gy, 0, ox, oy, sc);
     const bs = 7 * sc;
-    ctx.strokeStyle = 'rgba(255,119,0,0.28)';
+    ctx.strokeStyle = 'rgba(150,200,30,0.28)';
     ctx.lineWidth = 0.8;
     // Four tiny L-corners
     [[-1,-0.5],[-1,0.5],[1,-0.5],[1,0.5]].forEach(([sx, sy]) => {
@@ -176,7 +176,7 @@ function drawPulseRings(ctx, configs, t, hoveredId, ox, oy, sc) {
       const phase = (t * 0.35 + ni * 0.7 + ri * 0.33) % 1;
       const r = 0.5 + phase * 2.2;
       const alpha = (1 - phase) * (hov ? 0.55 : 0.28);
-      ctx.strokeStyle = hov ? `rgba(34,211,238,${alpha})` : `rgba(255,119,0,${alpha})`;
+      ctx.strokeStyle = hov ? `rgba(0,255,106,${alpha})` : `rgba(255,119,0,${alpha})`;
       ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.ellipse(base.sx, base.sy, r * (TW / 2) * sc, r * (TH / 2) * sc, 0, 0, Math.PI * 2);
@@ -188,7 +188,7 @@ function drawPulseRings(ctx, configs, t, hoveredId, ox, oy, sc) {
 
 // ── Crystal — VISUAL_ARCHIVE ──────────────────────────────────────────────
 function drawCrystal(ctx, gx, gy, ox, oy, sc, bob, hov) {
-  const c = hov ? '34,211,238' : '255,119,0';
+  const c = hov ? '0,255,106' : '150,200,30';
   const layers = [{ gz: 0, s: 1.4 }, { gz: 0.65, s: 0.9 }, { gz: 1.25, s: 0.4 }];
   const pts = layers.map(({ gz, s }) => [
     iso(gx, gy - s, gz, ox, oy, sc), iso(gx + s, gy, gz, ox, oy, sc),
@@ -222,7 +222,7 @@ function drawCrystal(ctx, gx, gy, ox, oy, sc, bob, hov) {
 
 // ── Stepped Cube — CONDITION_BUILDER ─────────────────────────────────────
 function drawCube(ctx, gx, gy, ox, oy, sc, bob, hov) {
-  const c = hov ? '34,211,238' : '255,119,0';
+  const c = hov ? '0,255,106' : '150,200,30';
   const hs = 0.8, h = 1.25;
   const mkC = (hs, z0, z1) => [
     iso(gx+hs,gy+hs,z0,ox,oy,sc), iso(gx-hs,gy+hs,z0,ox,oy,sc),
@@ -254,7 +254,7 @@ function drawCube(ctx, gx, gy, ox, oy, sc, bob, hov) {
 
 // ── Sphere — DICE_ROLLER ──────────────────────────────────────────────────
 function drawSphere(ctx, gx, gy, ox, oy, sc, bob, hov) {
-  const c = hov ? '34,211,238' : '255,119,0';
+  const c = hov ? '0,255,106' : '150,200,30';
   const rings = [
     {gz:0.1,r:0.5},{gz:0.55,r:1.0},{gz:1.0,r:1.2},{gz:1.45,r:1.0},{gz:1.9,r:0.5},
   ];
@@ -284,7 +284,7 @@ function drawSphere(ctx, gx, gy, ox, oy, sc, bob, hov) {
 
 // ── Dome — DRAG_INTERACTION ───────────────────────────────────────────────
 function drawDome(ctx, gx, gy, ox, oy, sc, bob, hov) {
-  const c = hov ? '34,211,238' : '255,119,0';
+  const c = hov ? '0,255,106' : '150,200,30';
   const rings = [
     {gz:0,r:1.4},{gz:0.38,r:1.25},{gz:0.70,r:1.0},
     {gz:0.95,r:0.70},{gz:1.15,r:0.38},{gz:1.28,r:0.10},
@@ -294,7 +294,7 @@ function drawDome(ctx, gx, gy, ox, oy, sc, bob, hov) {
     const { gz, r } = rings[ri];
     const p = iso(gx, gy, gz, ox, oy, sc);
     const isCyan = hov && ri <= 1;
-    ctx.strokeStyle = isCyan ? 'rgba(34,211,238,0.90)' : `rgba(${c},${ri===0?(hov?0.85:0.65):(hov?0.78:0.55)})`;
+    ctx.strokeStyle = isCyan ? 'rgba(0,255,106,0.90)' : `rgba(${c},${ri===0?(hov?0.85:0.65):(hov?0.78:0.55)})`;
     ctx.lineWidth = ri === 0 ? 1.2 : 1;
     ctx.beginPath();
     ctx.ellipse(p.sx, p.sy-bob, r*(TW/2)*sc, r*(TH/2)*sc, 0, 0, Math.PI*2);
@@ -325,12 +325,12 @@ function drawLabel(ctx, sx, sy, title, hov, sc) {
     const w = ctx.measureText(title).width + 16, h = fs + 8;
     ctx.fillStyle = 'rgba(8,4,0,0.82)';
     ctx.fillRect(sx - w/2, sy - h, w, h);
-    ctx.strokeStyle = 'rgba(34,211,238,0.45)';
+    ctx.strokeStyle = 'rgba(0,255,106,0.45)';
     ctx.lineWidth = 0.75;
     ctx.strokeRect(sx - w/2, sy - h, w, h);
-    ctx.fillStyle = 'rgba(34,211,238,0.95)';
+    ctx.fillStyle = 'rgba(0,255,106,0.95)';
   } else {
-    ctx.fillStyle = 'rgba(255,119,0,0.45)';
+    ctx.fillStyle = 'rgba(150,200,30,0.45)';
   }
   ctx.fillText(title, sx, sy);
   ctx.restore();
