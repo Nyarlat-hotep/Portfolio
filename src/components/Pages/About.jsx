@@ -129,6 +129,9 @@ export default function About({ aboutData, planetColor = '#10b981', scrollContai
           >
             <div className="about-photo-frame">
               <img src="/images/taylor.jpg" alt="Taylor Cornelius" />
+              <div className="about-photo-invert">
+                <img src="/images/taylor.jpg" alt="" aria-hidden="true" />
+              </div>
             </div>
           </motion.div>
         </div>

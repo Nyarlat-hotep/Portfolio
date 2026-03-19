@@ -80,6 +80,31 @@
   opacity: 0;
 }
 
+/* Inverted photo layer — clip-path reveals top-to-bottom as scan line sweeps */
+.about-photo-invert {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  clip-path: inset(0 0 100% 0);
+  pointer-events: none;
+  overflow: hidden;
+  border-radius: inherit;
+}
+
+.about-photo-invert img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: calc(100% - 0px) calc(-100px);
+  display: block;
+  filter: invert(1) hue-rotate(100deg) saturate(1.2);
+}
+
+@keyframes photoInvert {
+  0%   { clip-path: inset(0 0 100% 0); }
+  100% { clip-path: inset(0 0 0% 0); }
+}
+
 /* ── Hover state ── */
 .about-photo-frame:hover {
   border-color: rgba(var(--planet-color-rgb, 16, 185, 129), 0.9);
@@ -88,6 +113,10 @@
 
 .about-photo-frame:hover::before {
   animation: photoScanline 1.6s ease-in-out forwards;
+}
+
+.about-photo-frame:hover .about-photo-invert {
+  animation: photoInvert 1.6s ease-in-out forwards;
 }
 
 /* ── Keyframes ── */
