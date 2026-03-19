@@ -388,7 +388,7 @@ function drawFrame(ctx, cssW, cssH, t, hoveredId, nodesRef, rot) {
   const oy = cssH * 0.50;
 
   drawDecorations(ctx, ox, oy, sc, t);
-  drawGrid(ctx, ox, oy, sc, -0.4, 0.06, 0.11, false);  // lower grid — depth layer
+  drawGrid(ctx, ox, oy, sc, -0.9, 0.04, 0.07, false);  // lower grid — depth layer
   drawGrid(ctx, ox, oy, sc);                             // main grid
   drawPulseRings(ctx, EXPERIMENT_CONFIGS, t, hoveredId, ox, oy, sc);
 
