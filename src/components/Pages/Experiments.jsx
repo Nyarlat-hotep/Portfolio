@@ -108,7 +108,7 @@ function drawDecorations(ctx, ox, oy, sc, t) {
   // Text: main title near back area
   const titlePos = iso(-4, -7.5, 0.1, ox, oy, sc);
   const fs = Math.max(13, 17 * sc);
-  ctx.font = `${fs}px monospace`;
+  ctx.font = `${fs}px 'Orbitron', monospace`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'bottom';
   const titleAlpha = 0.40 + 0.08 * Math.sin(t * 0.4);
@@ -118,7 +118,7 @@ function drawDecorations(ctx, ox, oy, sc, t) {
   // Text: scanning block along right-forward edge
   const scanPos = iso(8.2, -2, 0.1, ox, oy, sc);
   const ss = Math.max(11, 14 * sc);
-  ctx.font = `${ss}px monospace`;
+  ctx.font = `${ss}px 'Orbitron', monospace`;
   ctx.textAlign = 'left';
   ctx.textBaseline = 'top';
   const scanAlpha = 0.30 + 0.12 * Math.sin(t * 0.9 + 1.2);
@@ -129,7 +129,7 @@ function drawDecorations(ctx, ox, oy, sc, t) {
 
   // Text: coordinate label near back-right corner
   const coordPos = iso(7.5, -7.5, 0.05, ox, oy, sc);
-  ctx.font = `${Math.max(9, 12 * sc)}px monospace`;
+  ctx.font = `${Math.max(9, 12 * sc)}px 'Orbitron', monospace`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'bottom';
   ctx.fillStyle = 'rgba(150,200,30,0.20)';
@@ -318,20 +318,10 @@ function drawDome(ctx, gx, gy, ox, oy, sc, bob, hov) {
 function drawLabel(ctx, sx, sy, title, hov, sc) {
   ctx.save();
   const fs = Math.max(9, 11 * sc);
-  ctx.font = `${fs}px monospace`;
+  ctx.font = `${fs}px 'Orbitron', monospace`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'bottom';
-  if (hov) {
-    const w = ctx.measureText(title).width + 16, h = fs + 8;
-    ctx.fillStyle = 'rgba(8,4,0,0.82)';
-    ctx.fillRect(sx - w/2, sy - h, w, h);
-    ctx.strokeStyle = 'rgba(0,255,106,0.45)';
-    ctx.lineWidth = 0.75;
-    ctx.strokeRect(sx - w/2, sy - h, w, h);
-    ctx.fillStyle = 'rgba(0,255,106,0.95)';
-  } else {
-    ctx.fillStyle = 'rgba(150,200,30,0.45)';
-  }
+  ctx.fillStyle = hov ? 'rgba(0,255,106,0.95)' : 'rgba(150,200,30,0.45)';
   ctx.fillText(title, sx, sy);
   ctx.restore();
 }

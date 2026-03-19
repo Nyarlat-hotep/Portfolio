@@ -57,7 +57,7 @@
 }
 
 .iso-panel-title {
-  font-family: monospace;
+  font-family: 'Orbitron', monospace;
   font-size: 0.95rem;
   letter-spacing: 2.5px;
   color: rgba(150, 200, 30, 0.95);
@@ -92,7 +92,7 @@
   border-radius: 3px;
   font-size: 0.6rem;
   color: rgba(150, 200, 30, 0.75);
-  font-family: monospace;
+  font-family: 'Orbitron', monospace;
   letter-spacing: 0.5px;
   text-transform: uppercase;
 }
@@ -104,7 +104,7 @@
   border: 1px solid rgba(150, 200, 30, 0.50);
   border-radius: 4px;
   color: #96c81e;
-  font-family: monospace;
+  font-family: 'Orbitron', monospace;
   font-size: 0.7rem;
   letter-spacing: 1.5px;
   cursor: pointer;
@@ -119,7 +119,7 @@
 
 .iso-panel-hint {
   font-size: 0.65rem;
-  font-family: monospace;
+  font-family: 'Orbitron', monospace;
   color: rgba(150, 200, 30, 0.45);
   letter-spacing: 1px;
   text-transform: uppercase;
@@ -208,7 +208,7 @@
   color: #e0e0e0;
   margin: 0;
   letter-spacing: 3px;
-  font-family: monospace;
+  font-family: 'Orbitron', monospace;
   text-transform: uppercase;
 }
 
