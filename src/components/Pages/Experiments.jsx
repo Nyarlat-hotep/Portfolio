@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useAnimation } from 'framer-motion';
 import './Experiments.css';
 
 // ── Isometric projection ──────────────────────────────────────────────────
@@ -461,18 +461,21 @@ export default function Experiments({ scrollContainerRef, isVoidMode = false }) 
   const isDraggingRef  = useRef(false);
   const panelRef       = useRef(null);
   const itemRefs       = useRef([]);
-  const touchStartY    = useRef(0);
+  const galleryControls = useAnimation();
 
-  // Gallery handlers (unchanged)
+  // Gallery open/close animation
+  useEffect(() => {
+    galleryControls.start({
+      y: galleryOpen ? 0 : '100%',
+      transition: { type: 'spring', damping: 27, stiffness: 300 },
+    });
+  }, [galleryOpen]);
+
   const handleItemClick = (i) => {
     const newIndex = expandedIndex === i ? null : i;
     setExpandedIndex(newIndex);
     if (newIndex !== null)
       setTimeout(() => itemRefs.current[i]?.scrollIntoView({ behavior:'smooth', block:'center' }), 420);
-  };
-  const handleTouchStart = (e) => { touchStartY.current = e.touches[0].clientY; };
-  const handleTouchEnd   = (e) => {
-    if (e.changedTouches[0].clientY - touchStartY.current > 150) setGalleryOpen(false);
   };
 
   // Animation loop
@@ -628,8 +631,8 @@ export default function Experiments({ scrollContainerRef, isVoidMode = false }) 
       const dy = t.clientY - lastTouchY;
       rotRef.current -= dx * DRAG_SENS;
       velRef.current = -dx * DRAG_SENS;
-      tiltRef.current = Math.max(TILT_MIN, Math.min(TILT_MAX, tiltRef.current + dy * DRAG_SENS));
-      tiltVelRef.current = dy * DRAG_SENS;
+      tiltRef.current = Math.max(TILT_MIN, Math.min(TILT_MAX, tiltRef.current - dy * DRAG_SENS));
+      tiltVelRef.current = -dy * DRAG_SENS;
       lastTouchX = t.clientX; lastTouchY = t.clientY;
     };
 
@@ -726,12 +729,20 @@ export default function Experiments({ scrollContainerRef, isVoidMode = false }) 
           <motion.div
             ref={panelRef}
             className="gallery-clipper"
-            animate={{ y: galleryOpen ? 0 : '100%' }}
+            animate={galleryControls}
             initial={{ y: '100%' }}
-            transition={{ type: 'spring', damping: 27, stiffness: 300 }}
+            drag="y"
+            dragConstraints={{ top: 0 }}
+            dragElastic={{ top: 0.05, bottom: 0.3 }}
+            dragMomentum={false}
             style={{ pointerEvents: galleryOpen ? 'auto' : 'none' }}
-            onTouchStart={handleTouchStart}
-            onTouchEnd={handleTouchEnd}
+            onDragEnd={(_, info) => {
+              if (info.offset.y > 120 || info.velocity.y > 350) {
+                setGalleryOpen(false);
+              } else {
+                galleryControls.start({ y: 0, transition: { type: 'spring', damping: 27, stiffness: 300 } });
+              }
+            }}
           >
             <div className="gallery-panel">
               <div className="gallery-swipe-indicator"><div className="swipe-bar" /></div>
