@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
@@ -27,46 +27,47 @@ function App() {
   const [gateModal, setGateModal] = useState({ open: false, planet: null });
   const [gateInput, setGateInput] = useState('');
   const [gateError, setGateError] = useState(false);
-  const gateInputRef = useRef('');
-  const gateModalRef = useRef({ open: false, planet: null });
-  gateInputRef.current = gateInput;
-  gateModalRef.current = gateModal;
+  const [pendingPlanet, setPendingPlanet] = useState(null);
 
-  const openPlanet = useCallback((planet) => {
-    setActivePlanet(planet);
-    if (planet.id !== 'home') {
-      stopBackground();
-      playCaseStudyOpen();
-      setIsOverlayOpen(true);
-    } else {
-      setIsOverlayOpen(false);
-    }
-  }, []);
+  // After gate modal closes, navigate to the planet
+  useEffect(() => {
+    if (!pendingPlanet) return;
+    setActivePlanet(pendingPlanet);
+    stopBackground();
+    setIsOverlayOpen(true);
+    setPendingPlanet(null);
+  }, [pendingPlanet]);
 
   const handlePlanetClick = useCallback((planet) => {
     if (GATED_IDS.has(planet.id)) {
-      playCaseStudyOpen();
       setGateModal({ open: true, planet });
       setGateInput('');
       setGateError(false);
     } else {
-      openPlanet(planet);
+      setActivePlanet(planet);
+      if (planet.id !== 'home') {
+        stopBackground();
+        playCaseStudyOpen();
+        setIsOverlayOpen(true);
+      } else {
+        setIsOverlayOpen(false);
+      }
     }
-  }, [openPlanet]);
+  }, []);
 
-  const handleGateSubmit = useCallback(() => {
-    if (gateInputRef.current.trim().toLowerCase() === 'cosmic1') {
-      const planet = gateModalRef.current.planet;
+  function handleGateSubmit() {
+    if (gateInput.trim().toLowerCase() === 'cosmic1') {
+      const planet = gateModal.planet;
       setGateModal({ open: false, planet: null });
-      openPlanet(planet);
+      setPendingPlanet(planet);
     } else {
       setGateError(true);
     }
-  }, [openPlanet]);
+  }
 
-  const handleGateKeyDown = useCallback((e) => {
+  function handleGateKeyDown(e) {
     if (e.key === 'Enter') handleGateSubmit();
-  }, [handleGateSubmit]);
+  }
 
   const handleCloseOverlay = useCallback(() => {
     playCaseStudyClose();
