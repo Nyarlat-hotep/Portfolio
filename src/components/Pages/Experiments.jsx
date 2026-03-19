@@ -4,16 +4,18 @@ import { motion, AnimatePresence } from 'framer-motion';
 import './Experiments.css';
 
 // ── Isometric projection ──────────────────────────────────────────────────
-// _rot is set at the top of drawFrame each tick (single-threaded, safe)
-let _rot = 0;
+// _rot/_tilt set at top of drawFrame each tick (single-threaded, safe)
+let _rot = 0, _tilt = 0;
 const TW = 80, TH = 40, CH = 40;
 
 function iso(gx, gy, gz, ox, oy, sc) {
   const rx = gx * Math.cos(_rot) - gy * Math.sin(_rot);
   const ry = gx * Math.sin(_rot) + gy * Math.cos(_rot);
+  const ct = Math.cos(_tilt), st = Math.sin(_tilt);
   return {
     sx: ox + (rx - ry) * (TW / 2) * sc,
-    sy: oy + (rx + ry) * (TH / 2) * sc - gz * CH * sc,
+    sy: oy + (rx + ry) * (ct * (TH / 2) - st * CH) * sc
+           - gz      * (st * (TH / 2) + ct * CH) * sc,
   };
 }
 
@@ -370,8 +372,8 @@ const EXPERIMENT_META = [
 ];
 
 // ── Main drawFrame ────────────────────────────────────────────────────────
-function drawFrame(ctx, cssW, cssH, t, hoveredId, nodesRef, rot) {
-  _rot = rot;
+function drawFrame(ctx, cssW, cssH, t, hoveredId, nodesRef, rot, tilt) {
+  _rot = rot; _tilt = tilt;
   // Scale so the grid fills ~95% of the viewport width
   const sc = Math.min(1.4, cssW / 700);
   const ox = cssW / 2;
@@ -435,6 +437,8 @@ const galleryImages = [
 // ── Component ─────────────────────────────────────────────────────────────
 const DRAG_SENS  = 0.002;  // rad/px
 const DRAG_DAMP  = 0.95;   // velocity multiplier per frame (≈ Three.js orbit damping)
+const TILT_MIN   = -0.35;  // ~-20° — looking more side-on
+const TILT_MAX   =  0.45;  // ~+26° — looking more top-down
 
 export default function Experiments({ scrollContainerRef, isVoidMode = false }) {
   const [hoveredNodeId, setHoveredNodeId] = useState(null);
@@ -450,6 +454,8 @@ export default function Experiments({ scrollContainerRef, isVoidMode = false }) 
   const hoveredIdRef   = useRef(null);
   const rotRef         = useRef(0);
   const velRef         = useRef(0);
+  const tiltRef        = useRef(0);
+  const tiltVelRef     = useRef(0);
   const isDraggingRef  = useRef(false);
   const panelRef       = useRef(null);
   const itemRefs       = useRef([]);
@@ -484,13 +490,17 @@ export default function Experiments({ scrollContainerRef, isVoidMode = false }) 
         rotRef.current += velRef.current;
         velRef.current *= DRAG_DAMP;
         if (Math.abs(velRef.current) < 0.0001) velRef.current = 0;
+
+        tiltRef.current = Math.max(TILT_MIN, Math.min(TILT_MAX, tiltRef.current + tiltVelRef.current));
+        tiltVelRef.current *= DRAG_DAMP;
+        if (Math.abs(tiltVelRef.current) < 0.0001) tiltVelRef.current = 0;
       }
 
       const { w, h } = cssSizeRef.current;
       const dpr = window.devicePixelRatio || 1;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, w, h);
-      drawFrame(ctx, w, h, timeRef.current, hoveredIdRef.current, nodesRef, rotRef.current);
+      drawFrame(ctx, w, h, timeRef.current, hoveredIdRef.current, nodesRef, rotRef.current, tiltRef.current);
       rafId = requestAnimationFrame(loop);
     }
 
@@ -539,12 +549,12 @@ export default function Experiments({ scrollContainerRef, isVoidMode = false }) 
     }
 
     // ─ Mouse ─
-    let mouseDownX = 0, mouseDownY = 0;
+    let mouseDownX = 0, mouseDownY = 0, lastMouseY = 0;
 
     const onMouseDown = e => {
       isDraggingRef.current = true;
-      mouseDownX = e.clientX; mouseDownY = e.clientY;
-      velRef.current = 0;
+      mouseDownX = e.clientX; mouseDownY = e.clientY; lastMouseY = e.clientY;
+      velRef.current = 0; tiltVelRef.current = 0;
       // Clear hover — panel disappears while dragging
       hoveredIdRef.current = null;
       setHoveredNodeId(null);
@@ -554,9 +564,12 @@ export default function Experiments({ scrollContainerRef, isVoidMode = false }) 
     const onMouseMove = e => {
       if (isDraggingRef.current) {
         const dx = e.clientX - mouseDownX;
+        const dy = e.clientY - lastMouseY;
         rotRef.current -= dx * DRAG_SENS;
         velRef.current = -dx * DRAG_SENS;
-        mouseDownX = e.clientX;
+        tiltRef.current = Math.max(TILT_MIN, Math.min(TILT_MAX, tiltRef.current + dy * DRAG_SENS));
+        tiltVelRef.current = dy * DRAG_SENS;
+        mouseDownX = e.clientX; lastMouseY = e.clientY;
       } else {
         const hit = getHit(e.clientX, e.clientY);
         const id = hit?.id ?? null;
@@ -594,14 +607,14 @@ export default function Experiments({ scrollContainerRef, isVoidMode = false }) 
     };
 
     // ─ Touch ─
-    let tapStart = null, lastTouchX = 0;
+    let tapStart = null, lastTouchX = 0, lastTouchY = 0;
 
     const onTouchStart = e => {
       const t = e.touches[0];
       tapStart = { x: t.clientX, y: t.clientY, time: Date.now() };
-      lastTouchX = t.clientX;
+      lastTouchX = t.clientX; lastTouchY = t.clientY;
       isDraggingRef.current = true;
-      velRef.current = 0;
+      velRef.current = 0; tiltVelRef.current = 0;
       hoveredIdRef.current = null;
       setHoveredNodeId(null);
     };
@@ -610,9 +623,12 @@ export default function Experiments({ scrollContainerRef, isVoidMode = false }) 
       if (!isDraggingRef.current) return;
       const t = e.touches[0];
       const dx = t.clientX - lastTouchX;
+      const dy = t.clientY - lastTouchY;
       rotRef.current -= dx * DRAG_SENS;
       velRef.current = -dx * DRAG_SENS;
-      lastTouchX = t.clientX;
+      tiltRef.current = Math.max(TILT_MIN, Math.min(TILT_MAX, tiltRef.current + dy * DRAG_SENS));
+      tiltVelRef.current = dy * DRAG_SENS;
+      lastTouchX = t.clientX; lastTouchY = t.clientY;
     };
 
     const onTouchEnd = e => {
