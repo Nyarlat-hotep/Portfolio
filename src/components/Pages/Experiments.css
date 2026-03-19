@@ -24,7 +24,6 @@
   position: fixed;
   bottom: 2rem;
   left: 50%;
-  transform: translateX(-50%);
   width: min(480px, calc(100% - 3rem));
   background: rgba(2, 6, 1, 0.92);
   border: 1px solid rgba(150, 200, 30, 0.40);

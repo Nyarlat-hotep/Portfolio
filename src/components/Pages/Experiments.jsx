@@ -676,9 +676,9 @@ export default function Experiments({ scrollContainerRef, isVoidMode = false }) 
             <motion.div
               key={activeExp.id}
               className="iso-info-panel"
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 30, x: '-50%' }}
+              animate={{ opacity: 1, y: 0,  x: '-50%' }}
+              exit={{ opacity: 0, y: 20,  x: '-50%' }}
               transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
             >
               <div className="iso-panel-header">
