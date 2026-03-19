@@ -667,7 +667,10 @@ export default function Experiments({ scrollContainerRef, isVoidMode = false }) 
       <div className="iso-canvas-container" ref={containerRef}>
         <canvas className="iso-canvas" ref={canvasRef} />
 
-        {/* Info panel — no Enter button; clicking the node directly triggers action */}
+      </div>
+
+      {/* Info panel — portaled to body to escape void-container stacking context */}
+      {createPortal(
         <AnimatePresence>
           {activeExp && (
             <motion.div
@@ -689,11 +692,13 @@ export default function Experiments({ scrollContainerRef, isVoidMode = false }) 
                     <span key={tag} className="iso-panel-tag">{tag}</span>
                   ))}
                 </div>
+                <span className="iso-panel-hint">click to enter</span>
               </div>
             </motion.div>
           )}
-        </AnimatePresence>
-      </div>
+        </AnimatePresence>,
+        document.body
+      )}
 
       {/* Gallery portal (unchanged) */}
       {createPortal(
