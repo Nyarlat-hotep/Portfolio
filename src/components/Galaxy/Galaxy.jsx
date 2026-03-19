@@ -231,13 +231,6 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
   const [asteroidModalOpen,  setAsteroidModalOpen]  = useState(false);
   const [codexInput,         setCodexInput]         = useState('');
   const [codexError,         setCodexError]         = useState(false);
-  const [gateModal,          setGateModal]          = useState({ open: false, planet: null });
-  const [gateInput,          setGateInput]          = useState('');
-  const [gateError,          setGateError]          = useState(false);
-  const gateInputRef  = useRef('');
-  const gateModalRef  = useRef({ open: false, planet: null });
-  gateInputRef.current = gateInput;
-  gateModalRef.current = gateModal;
   const [warpActive,         setWarpActive]          = useState(false);
   const [presentationOpen,   setPresentationOpen]   = useState(false);
 
@@ -344,40 +337,6 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
     if (e.key === 'Enter') handleCodexSubmit();
   }, [handleCodexSubmit]);
 
-  // Planets that require a password before navigation
-  const GATED_PLANET_IDS = new Set(['case-study-1', 'case-study-3']);
-
-  // Gated navigation — intercept restricted planets, else navigate normally
-  const handlePlanetClickGated = useCallback((planet) => {
-    if (GATED_PLANET_IDS.has(planet.id)) {
-      playCaseStudyOpen();
-      setGateModal({ open: true, planet });
-      setGateInput('');
-      setGateError(false);
-    } else {
-      onPlanetClickRef.current?.(planet);
-    }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const handlePlanetClickGatedRef = useRef(handlePlanetClickGated);
-  handlePlanetClickGatedRef.current = handlePlanetClickGated;
-
-  const handleGateSubmit = useCallback(() => {
-    if (gateInputRef.current.trim().toLowerCase() === 'cosmic1') {
-      const planet = gateModalRef.current.planet;
-      setGateModal({ open: false, planet: null });
-      setGateInput('');
-      setGateError(false);
-      onPlanetClickRef.current?.(planet);
-    } else {
-      setGateError(true);
-    }
-  }, []); // stable — reads current values via refs
-
-  const handleGateKeyDown = useCallback((e) => {
-    if (e.key === 'Enter') handleGateSubmit();
-  }, [handleGateSubmit]);
-
   // Memoized click handlers per planet — stable forever via ref, no dep on onPlanetClick
   const planetClickHandlers = useMemo(() => {
     return planetsData.reduce((handlers, planet, index) => {
@@ -389,7 +348,7 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
       } else {
         handlers[planet.id] = () => {
           setCurrentPlanetIndex(index);
-          handlePlanetClickGatedRef.current(planet);
+          onPlanetClickRef.current?.(planet);
         };
       }
       return handlers;
@@ -742,57 +701,6 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
         document.body
       )}
 
-      {/* Case study gate modal — password protection for restricted planets */}
-      {createPortal(
-        <AnimatePresence>
-          {gateModal.open && (
-            <div className="asteroid-message-overlay">
-              <motion.div
-                key="case-gate"
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 8 }}
-                transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
-                className={`asteroid-message${gateError ? ' codex-rejected' : ''}`}
-              >
-                <div className="asteroid-message-header">
-                  <span className="asteroid-message-label">
-                    {gateError ? 'ACCESS DENIED' : 'CLEARANCE REQUIRED'}
-                  </span>
-                  <button
-                    className="asteroid-message-close"
-                    onClick={() => { playCaseStudyClose(); setGateModal({ open: false, planet: null }); }}
-                    aria-label="Close"
-                  ><X size={16} /></button>
-                </div>
-                <div className="asteroid-codex-body">
-                  <label className="asteroid-codex-label" htmlFor="gate-input">
-                    {gateModal.planet?.id === 'case-study-1'
-                      ? 'Restricted transmission detected. Supply clearance code to decrypt file.'
-                      : 'Classified intelligence archive. Authorization code required to proceed.'}
-                  </label>
-                  <input
-                    id="gate-input"
-                    className={`asteroid-codex-input${gateError ? ' codex-error' : ''}`}
-                    type="password"
-                    value={gateInput}
-                    onChange={(e) => {
-                      setGateInput(e.target.value);
-                      if (gateError) setGateError(false);
-                    }}
-                    onKeyDown={handleGateKeyDown}
-                    autoFocus
-                    autoComplete="off"
-                    placeholder="_ _ _ _ _ _ _"
-                  />
-                </div>
-              </motion.div>
-            </div>
-          )}
-        </AnimatePresence>,
-        document.body
-      )}
-
       {/* Planet name label - futuristic HUD style (hide for Home planet) */}
       <AnimatePresence>
         {hoveredPlanet && hoveredPlanet !== 'Home' && hoveredPlanetPosition && (
@@ -1021,7 +929,7 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
         <BottomNav
           ref={bottomNavRef}
           activePlanetId={activePlanetId}
-          onNavigate={handlePlanetClickGated}
+          onNavigate={onPlanetClick}
           onCreatePlanet={onCreatePlanet}
           onDeletePlanet={onDeletePlanet}
           hasCustomPlanet={!!customPlanet}

@@ -1,4 +1,7 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { X } from 'lucide-react';
 import Galaxy from './components/Galaxy/Galaxy';
 import PageOverlay from './components/UI/PageOverlay';
 import VoidOverlay from './components/UI/VoidOverlay';
@@ -12,6 +15,8 @@ import { caseStudies, aboutContent } from './data/caseStudies';
 import { playCaseStudyOpen, playCaseStudyClose, playPlanetExplosion, playPlanetCreation, stopBackground, playBackground } from './utils/sounds';
 import './App.css';
 
+const GATED_IDS = new Set(['case-study-1', 'case-study-3']);
+
 function App() {
   const [activePlanet, setActivePlanet] = useState(null);
   const [isOverlayOpen, setIsOverlayOpen] = useState(false);
@@ -19,9 +24,16 @@ function App() {
   const [customPlanet, setCustomPlanet] = useState(null);
   const [isCustomPlanetDeleting, setIsCustomPlanetDeleting] = useState(false);
 
-  const handlePlanetClick = useCallback((planet) => {
-    setActivePlanet(planet);
+  const [gateModal, setGateModal] = useState({ open: false, planet: null });
+  const [gateInput, setGateInput] = useState('');
+  const [gateError, setGateError] = useState(false);
+  const gateInputRef = useRef('');
+  const gateModalRef = useRef({ open: false, planet: null });
+  gateInputRef.current = gateInput;
+  gateModalRef.current = gateModal;
 
+  const openPlanet = useCallback((planet) => {
+    setActivePlanet(planet);
     if (planet.id !== 'home') {
       stopBackground();
       playCaseStudyOpen();
@@ -30,6 +42,31 @@ function App() {
       setIsOverlayOpen(false);
     }
   }, []);
+
+  const handlePlanetClick = useCallback((planet) => {
+    if (GATED_IDS.has(planet.id)) {
+      playCaseStudyOpen();
+      setGateModal({ open: true, planet });
+      setGateInput('');
+      setGateError(false);
+    } else {
+      openPlanet(planet);
+    }
+  }, [openPlanet]);
+
+  const handleGateSubmit = useCallback(() => {
+    if (gateInputRef.current.trim().toLowerCase() === 'cosmic1') {
+      const planet = gateModalRef.current.planet;
+      setGateModal({ open: false, planet: null });
+      openPlanet(planet);
+    } else {
+      setGateError(true);
+    }
+  }, [openPlanet]);
+
+  const handleGateKeyDown = useCallback((e) => {
+    if (e.key === 'Enter') handleGateSubmit();
+  }, [handleGateSubmit]);
 
   const handleCloseOverlay = useCallback(() => {
     playCaseStudyClose();
@@ -145,6 +182,57 @@ function App() {
         >
           {getOverlayContent()}
         </PageOverlay>
+      )}
+
+      {/* Case study gate modal */}
+      {createPortal(
+        <AnimatePresence>
+          {gateModal.open && (
+            <div className="asteroid-message-overlay">
+              <motion.div
+                key="case-gate"
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 8 }}
+                transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
+                className={`asteroid-message${gateError ? ' codex-rejected' : ''}`}
+              >
+                <div className="asteroid-message-header">
+                  <span className="asteroid-message-label">
+                    {gateError ? 'ACCESS DENIED' : 'CLEARANCE REQUIRED'}
+                  </span>
+                  <button
+                    className="asteroid-message-close"
+                    onClick={() => { playCaseStudyClose(); setGateModal({ open: false, planet: null }); }}
+                    aria-label="Close"
+                  ><X size={16} /></button>
+                </div>
+                <div className="asteroid-codex-body">
+                  <label className="asteroid-codex-label" htmlFor="gate-input">
+                    {gateModal.planet?.id === 'case-study-1'
+                      ? 'Restricted transmission detected. Supply clearance code to decrypt file.'
+                      : 'Classified intelligence archive. Authorization code required to proceed.'}
+                  </label>
+                  <input
+                    id="gate-input"
+                    className={`asteroid-codex-input${gateError ? ' codex-error' : ''}`}
+                    type="password"
+                    value={gateInput}
+                    onChange={(e) => {
+                      setGateInput(e.target.value);
+                      if (gateError) setGateError(false);
+                    }}
+                    onKeyDown={handleGateKeyDown}
+                    autoFocus
+                    autoComplete="off"
+                    placeholder="_ _ _ _ _ _ _"
+                  />
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>,
+        document.body
       )}
     </div>
   );
