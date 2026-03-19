@@ -4,11 +4,16 @@ import { motion, AnimatePresence } from 'framer-motion';
 import './Experiments.css';
 
 // ── Isometric projection ──────────────────────────────────────────────────
+// _rot is set at the top of drawFrame each tick (single-threaded, safe)
+let _rot = 0;
 const TW = 80, TH = 40, CH = 40;
+
 function iso(gx, gy, gz, ox, oy, sc) {
+  const rx = gx * Math.cos(_rot) - gy * Math.sin(_rot);
+  const ry = gx * Math.sin(_rot) + gy * Math.cos(_rot);
   return {
-    sx: ox + (gx - gy) * (TW / 2) * sc,
-    sy: oy + (gx + gy) * (TH / 2) * sc - gz * CH * sc,
+    sx: ox + (rx - ry) * (TW / 2) * sc,
+    sy: oy + (rx + ry) * (TH / 2) * sc - gz * CH * sc,
   };
 }
 
@@ -32,7 +37,7 @@ function drawGrid(ctx, ox, oy, sc) {
     const a = iso(i, -N, 0, ox, oy, sc), b = iso(i, N, 0, ox, oy, sc);
     ctx.beginPath(); ctx.moveTo(a.sx, a.sy); ctx.lineTo(b.sx, b.sy); ctx.stroke();
   }
-  // Dots at every 3rd vertex
+  // Vertex dots
   ctx.fillStyle = 'rgba(255,119,0,0.28)';
   for (let i = -N; i <= N; i += 3) {
     for (let j = -N; j <= N; j += 3) {
@@ -40,7 +45,7 @@ function drawGrid(ctx, ox, oy, sc) {
       ctx.beginPath(); ctx.arc(p.sx, p.sy, 1.5, 0, Math.PI * 2); ctx.fill();
     }
   }
-  // Circuit traces (dashed L-paths from each node)
+  // Circuit traces
   ctx.strokeStyle = 'rgba(255,119,0,0.22)';
   ctx.lineWidth = 1.0;
   ctx.setLineDash([3, 5]);
@@ -61,6 +66,121 @@ function drawGrid(ctx, ox, oy, sc) {
     ctx.stroke();
   }
   ctx.setLineDash([]);
+  ctx.restore();
+}
+
+// ── Void decorations ─────────────────────────────────────────────────────
+const VOID_CURVES = [
+  { p0: [-9, -3, 0.5], c1: [-3, -9, 1.8], c2: [4, -7, 1.2], p3: [8, -1, 0.3] },
+  { p0: [-7,  5, 0.2], c1: [-2,  8, 1.0], c2: [5,  7, 0.6], p3: [8,  0, 0.1] },
+  { p0: [-8, -7, 0.0], c1: [ 1, -4, 0.8], c2: [-1,  5, 0.5], p3: [6,  7, 0.0] },
+];
+
+function drawDecorations(ctx, ox, oy, sc, t) {
+  ctx.save();
+
+  // Organic void curves (faint green, world-space beziers)
+  ctx.lineWidth = 1;
+  for (const { p0, c1, c2, p3 } of VOID_CURVES) {
+    const a = iso(p0[0], p0[1], p0[2], ox, oy, sc);
+    const b = iso(c1[0], c1[1], c1[2], ox, oy, sc);
+    const c = iso(c2[0], c2[1], c2[2], ox, oy, sc);
+    const d = iso(p3[0], p3[1], p3[2], ox, oy, sc);
+    ctx.strokeStyle = 'rgba(0,200,80,0.09)';
+    ctx.beginPath();
+    ctx.moveTo(a.sx, a.sy);
+    ctx.bezierCurveTo(b.sx, b.sy, c.sx, c.sy, d.sx, d.sy);
+    ctx.stroke();
+  }
+
+  // Center scanning reticle — two partial dashed arcs
+  const center = iso(0, 0, 0.05, ox, oy, sc);
+  ctx.setLineDash([4, 6]);
+  ctx.lineWidth = 0.75;
+  for (const r of [1.6, 2.8]) {
+    const rx = r * (TW / 2) * sc, ry = r * (TH / 2) * sc;
+    ctx.strokeStyle = 'rgba(255,119,0,0.13)';
+    ctx.beginPath();
+    ctx.ellipse(center.sx, center.sy, rx, ry, 0, Math.PI * 0.15, Math.PI * 0.85);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.ellipse(center.sx, center.sy, rx, ry, 0, Math.PI * 1.15, Math.PI * 1.85);
+    ctx.stroke();
+  }
+  ctx.setLineDash([]);
+
+  // Tick marks along front-right grid rail (gy=7, gx varies)
+  ctx.strokeStyle = 'rgba(255,119,0,0.28)';
+  ctx.lineWidth = 0.75;
+  for (let gx = -6; gx <= 6; gx += 2) {
+    const p = iso(gx, 7, 0, ox, oy, sc);
+    const up = iso(gx, 7, 0.15, ox, oy, sc);
+    ctx.beginPath(); ctx.moveTo(p.sx, p.sy); ctx.lineTo(up.sx, up.sy); ctx.stroke();
+  }
+  // Front-left rail (gx=-7, gy varies)
+  for (let gy = -6; gy <= 6; gy += 2) {
+    const p = iso(-7, gy, 0, ox, oy, sc);
+    const up = iso(-7, gy, 0.15, ox, oy, sc);
+    ctx.beginPath(); ctx.moveTo(p.sx, p.sy); ctx.lineTo(up.sx, up.sy); ctx.stroke();
+  }
+
+  // Text: main title near back area
+  const titlePos = iso(-4, -7.5, 0.1, ox, oy, sc);
+  const fs = Math.max(10, 13 * sc);
+  ctx.font = `${fs}px monospace`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'bottom';
+  const titleAlpha = 0.40 + 0.08 * Math.sin(t * 0.4);
+  ctx.fillStyle = `rgba(255,119,0,${titleAlpha})`;
+  ctx.fillText('VOID // EXPERIMENTS', titlePos.sx, titlePos.sy);
+
+  // Text: scanning block along right-forward edge
+  const scanPos = iso(8.2, -2, 0.1, ox, oy, sc);
+  const ss = Math.max(8, 10 * sc);
+  ctx.font = `${ss}px monospace`;
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'top';
+  const scanAlpha = 0.30 + 0.12 * Math.sin(t * 0.9 + 1.2);
+  ctx.fillStyle = `rgba(255,119,0,${scanAlpha})`;
+  ctx.fillText('SCANNING...', scanPos.sx, scanPos.sy);
+  ctx.fillStyle = `rgba(255,119,0,${scanAlpha * 0.80})`;
+  ctx.fillText('// 4 ANOMALIES DETECTED', scanPos.sx, scanPos.sy + ss * 1.6);
+
+  // Text: coordinate label near back-right corner
+  const coordPos = iso(7.5, -7.5, 0.05, ox, oy, sc);
+  ctx.font = `${Math.max(7, 9 * sc)}px monospace`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'bottom';
+  ctx.fillStyle = 'rgba(255,119,0,0.20)';
+  ctx.fillText('[ 0 : 0 : 0 ]', coordPos.sx, coordPos.sy);
+
+  // Corner bracket markers at each experiment node
+  for (const [gx, gy] of NODE_POS) {
+    const p = iso(gx, gy, 0, ox, oy, sc);
+    const bs = 7 * sc;
+    ctx.strokeStyle = 'rgba(255,119,0,0.28)';
+    ctx.lineWidth = 0.8;
+    // Four tiny L-corners
+    [[-1,-0.5],[-1,0.5],[1,-0.5],[1,0.5]].forEach(([sx, sy]) => {
+      ctx.beginPath();
+      ctx.moveTo(p.sx + sx * bs, p.sy + sy * bs * 0.4);
+      ctx.lineTo(p.sx + sx * bs, p.sy);
+      ctx.lineTo(p.sx + sx * bs * 0.4, p.sy);
+      ctx.stroke();
+    });
+  }
+
+  // Faint depth lines near two back corners
+  ctx.strokeStyle = 'rgba(0,220,80,0.07)';
+  ctx.lineWidth = 0.75;
+  ctx.setLineDash([2, 8]);
+  for (const [gx, gy] of [[-7,-7],[7,-7]]) {
+    const base = iso(gx, gy, 0, ox, oy, sc);
+    const top  = iso(gx, gy, 3, ox, oy, sc);
+    ctx.beginPath(); ctx.moveTo(base.sx, base.sy); ctx.lineTo(top.sx, top.sy); ctx.stroke();
+  }
+  ctx.setLineDash([]);
+
   ctx.restore();
 }
 
@@ -90,32 +210,26 @@ function drawCrystal(ctx, gx, gy, ox, oy, sc, bob, hov) {
   const c = hov ? '34,211,238' : '255,119,0';
   const layers = [{ gz: 0, s: 1.4 }, { gz: 0.65, s: 0.9 }, { gz: 1.25, s: 0.4 }];
   const pts = layers.map(({ gz, s }) => [
-    iso(gx,   gy - s, gz, ox, oy, sc),
-    iso(gx + s, gy,   gz, ox, oy, sc),
-    iso(gx,   gy + s, gz, ox, oy, sc),
-    iso(gx - s, gy,   gz, ox, oy, sc),
+    iso(gx, gy - s, gz, ox, oy, sc), iso(gx + s, gy, gz, ox, oy, sc),
+    iso(gx, gy + s, gz, ox, oy, sc), iso(gx - s, gy, gz, ox, oy, sc),
   ].map(p => ({ sx: p.sx, sy: p.sy - bob })));
-
   ctx.save();
-  // Dashed vertical edges between layers
   ctx.setLineDash([3, 4]);
   ctx.strokeStyle = `rgba(${c},0.45)`;
   ctx.lineWidth = 0.75;
-  for (let li = 0; li < layers.length - 1; li++) {
+  for (let li = 0; li < layers.length - 1; li++)
     for (let vi = 0; vi < 4; vi++) {
       ctx.beginPath();
       ctx.moveTo(pts[li][vi].sx, pts[li][vi].sy);
       ctx.lineTo(pts[li + 1][vi].sx, pts[li + 1][vi].sy);
       ctx.stroke();
     }
-  }
   ctx.setLineDash([]);
-  // Diamond faces
   for (let li = 0; li < layers.length; li++) {
     const [n, e, s, w] = pts[li];
-    const isTop = li === layers.length - 1;
-    ctx.fillStyle = `rgba(${c},${isTop ? (hov ? 0.18 : 0.06) : (hov ? 0.10 : 0.04)})`;
-    ctx.strokeStyle = `rgba(${c},${isTop ? (hov ? 0.95 : 0.72) : (hov ? 0.80 : 0.55)})`;
+    const top = li === layers.length - 1;
+    ctx.fillStyle = `rgba(${c},${top ? (hov ? 0.18 : 0.06) : (hov ? 0.10 : 0.04)})`;
+    ctx.strokeStyle = `rgba(${c},${top ? (hov ? 0.95 : 0.72) : (hov ? 0.80 : 0.55)})`;
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(n.sx, n.sy); ctx.lineTo(e.sx, e.sy);
@@ -129,38 +243,30 @@ function drawCrystal(ctx, gx, gy, ox, oy, sc, bob, hov) {
 function drawCube(ctx, gx, gy, ox, oy, sc, bob, hov) {
   const c = hov ? '34,211,238' : '255,119,0';
   const hs = 0.8, h = 1.25;
-
-  const mkCorners = (hs, gz0, gz1) => [
-    iso(gx + hs, gy + hs, gz0, ox, oy, sc), iso(gx - hs, gy + hs, gz0, ox, oy, sc),
-    iso(gx - hs, gy - hs, gz0, ox, oy, sc), iso(gx + hs, gy - hs, gz0, ox, oy, sc),
-    iso(gx + hs, gy + hs, gz1, ox, oy, sc), iso(gx - hs, gy + hs, gz1, ox, oy, sc),
-    iso(gx - hs, gy - hs, gz1, ox, oy, sc), iso(gx + hs, gy - hs, gz1, ox, oy, sc),
+  const mkC = (hs, z0, z1) => [
+    iso(gx+hs,gy+hs,z0,ox,oy,sc), iso(gx-hs,gy+hs,z0,ox,oy,sc),
+    iso(gx-hs,gy-hs,z0,ox,oy,sc), iso(gx+hs,gy-hs,z0,ox,oy,sc),
+    iso(gx+hs,gy+hs,z1,ox,oy,sc), iso(gx-hs,gy+hs,z1,ox,oy,sc),
+    iso(gx-hs,gy-hs,z1,ox,oy,sc), iso(gx+hs,gy-hs,z1,ox,oy,sc),
   ].map(p => ({ sx: p.sx, sy: p.sy - bob }));
-
-  const c8 = mkCorners(hs, 0, h);
-  const st = mkCorners(0.44, h, h + 0.4);
-
+  const c8 = mkC(hs, 0, h), st = mkC(0.44, h, h + 0.4);
   ctx.save();
   const face = (ps, fill, stroke, sw = 1) => {
-    ctx.fillStyle = `rgba(${c},${fill})`;
-    ctx.strokeStyle = `rgba(${c},${stroke})`;
-    ctx.lineWidth = sw;
-    ctx.beginPath();
-    ps.forEach((p, k) => k === 0 ? ctx.moveTo(p.sx, p.sy) : ctx.lineTo(p.sx, p.sy));
+    ctx.fillStyle = `rgba(${c},${fill})`; ctx.strokeStyle = `rgba(${c},${stroke})`; ctx.lineWidth = sw;
+    ctx.beginPath(); ps.forEach((p, k) => k ? ctx.lineTo(p.sx, p.sy) : ctx.moveTo(p.sx, p.sy));
     ctx.closePath(); ctx.fill(); ctx.stroke();
   };
-  face([c8[2], c8[3], c8[7], c8[6]], 0.04, 0.45);
-  face([c8[0], c8[1], c8[5], c8[4]], 0.04, 0.45);
-  face([c8[4], c8[5], c8[6], c8[7]], hov ? 0.14 : 0.07, hov ? 0.85 : 0.65);
-  face([c8[1], c8[2], c8[6], c8[5]], 0.04, 0.50);
-  face([c8[3], c8[0], c8[4], c8[7]], 0.04, 0.50);
-  face([st[4], st[5], st[6], st[7]], hov ? 0.20 : 0.09, hov ? 0.95 : 0.72);
-  face([st[2], st[3], st[7], st[6]], 0.03, hov ? 0.70 : 0.40);
-  face([st[1], st[2], st[6], st[5]], 0.03, hov ? 0.70 : 0.40);
-  ctx.strokeStyle = `rgba(${c},${hov ? 0.70 : 0.55})`;
-  ctx.lineWidth = 0.75;
-  [[0,4],[1,5],[2,6],[3,7]].forEach(([a, b]) => {
-    ctx.beginPath(); ctx.moveTo(c8[a].sx, c8[a].sy); ctx.lineTo(c8[b].sx, c8[b].sy); ctx.stroke();
+  face([c8[2],c8[3],c8[7],c8[6]], 0.04, 0.45);
+  face([c8[0],c8[1],c8[5],c8[4]], 0.04, 0.45);
+  face([c8[4],c8[5],c8[6],c8[7]], hov ? 0.14 : 0.07, hov ? 0.85 : 0.65);
+  face([c8[1],c8[2],c8[6],c8[5]], 0.04, 0.50);
+  face([c8[3],c8[0],c8[4],c8[7]], 0.04, 0.50);
+  face([st[4],st[5],st[6],st[7]], hov ? 0.20 : 0.09, hov ? 0.95 : 0.72);
+  face([st[2],st[3],st[7],st[6]], 0.03, hov ? 0.70 : 0.40);
+  face([st[1],st[2],st[6],st[5]], 0.03, hov ? 0.70 : 0.40);
+  ctx.strokeStyle = `rgba(${c},${hov ? 0.70 : 0.55})`; ctx.lineWidth = 0.75;
+  [[0,4],[1,5],[2,6],[3,7]].forEach(([a,b]) => {
+    ctx.beginPath(); ctx.moveTo(c8[a].sx,c8[a].sy); ctx.lineTo(c8[b].sx,c8[b].sy); ctx.stroke();
   });
   ctx.restore();
 }
@@ -169,31 +275,26 @@ function drawCube(ctx, gx, gy, ox, oy, sc, bob, hov) {
 function drawSphere(ctx, gx, gy, ox, oy, sc, bob, hov) {
   const c = hov ? '34,211,238' : '255,119,0';
   const rings = [
-    { gz: 0.1, r: 0.5 }, { gz: 0.55, r: 1.0 },
-    { gz: 1.0, r: 1.2 }, { gz: 1.45, r: 1.0 }, { gz: 1.9, r: 0.5 },
+    {gz:0.1,r:0.5},{gz:0.55,r:1.0},{gz:1.0,r:1.2},{gz:1.45,r:1.0},{gz:1.9,r:0.5},
   ];
   ctx.save();
   for (let ri = 0; ri < rings.length; ri++) {
     const { gz, r } = rings[ri];
     const p = iso(gx, gy, gz, ox, oy, sc);
     const eq = ri === 2;
-    ctx.strokeStyle = `rgba(${c},${eq ? (hov ? 0.90 : 0.70) : (hov ? 0.65 : 0.48)})`;
+    ctx.strokeStyle = `rgba(${c},${eq ? (hov?0.90:0.70) : (hov?0.65:0.48)})`;
     ctx.lineWidth = eq ? (hov ? 1.5 : 1.2) : 0.9;
     ctx.beginPath();
-    ctx.ellipse(p.sx, p.sy - bob, r * (TW / 2) * sc, r * (TH / 2) * sc, 0, 0, Math.PI * 2);
+    ctx.ellipse(p.sx, p.sy - bob, r*(TW/2)*sc, r*(TH/2)*sc, 0, 0, Math.PI*2);
     ctx.stroke();
   }
-  // Meridian lines
   for (let ai = 0; ai < 4; ai++) {
     const angle = (ai / 4) * Math.PI * 2;
-    ctx.strokeStyle = `rgba(${c},${hov ? 0.45 : 0.30})`;
-    ctx.lineWidth = 0.75;
-    ctx.beginPath();
-    let first = true;
+    ctx.strokeStyle = `rgba(${c},${hov?0.45:0.30})`; ctx.lineWidth = 0.75;
+    ctx.beginPath(); let first = true;
     for (const { gz, r } of rings) {
-      const p = iso(gx + Math.cos(angle) * r, gy + Math.sin(angle) * r, gz, ox, oy, sc);
-      if (first) { ctx.moveTo(p.sx, p.sy - bob); first = false; }
-      else ctx.lineTo(p.sx, p.sy - bob);
+      const p = iso(gx+Math.cos(angle)*r, gy+Math.sin(angle)*r, gz, ox, oy, sc);
+      if (first) { ctx.moveTo(p.sx, p.sy-bob); first=false; } else ctx.lineTo(p.sx, p.sy-bob);
     }
     ctx.stroke();
   }
@@ -204,33 +305,29 @@ function drawSphere(ctx, gx, gy, ox, oy, sc, bob, hov) {
 function drawDome(ctx, gx, gy, ox, oy, sc, bob, hov) {
   const c = hov ? '34,211,238' : '255,119,0';
   const rings = [
-    { gz: 0,    r: 1.4 }, { gz: 0.38, r: 1.25 }, { gz: 0.70, r: 1.0 },
-    { gz: 0.95, r: 0.70 }, { gz: 1.15, r: 0.38 }, { gz: 1.28, r: 0.10 },
+    {gz:0,r:1.4},{gz:0.38,r:1.25},{gz:0.70,r:1.0},
+    {gz:0.95,r:0.70},{gz:1.15,r:0.38},{gz:1.28,r:0.10},
   ];
   ctx.save();
   for (let ri = 0; ri < rings.length; ri++) {
     const { gz, r } = rings[ri];
     const p = iso(gx, gy, gz, ox, oy, sc);
     const isCyan = hov && ri <= 1;
-    ctx.strokeStyle = isCyan ? `rgba(34,211,238,0.90)` : `rgba(${c},${ri === 0 ? (hov ? 0.85 : 0.65) : (hov ? 0.78 : 0.55)})`;
+    ctx.strokeStyle = isCyan ? 'rgba(34,211,238,0.90)' : `rgba(${c},${ri===0?(hov?0.85:0.65):(hov?0.78:0.55)})`;
     ctx.lineWidth = ri === 0 ? 1.2 : 1;
     ctx.beginPath();
-    ctx.ellipse(p.sx, p.sy - bob, r * (TW / 2) * sc, r * (TH / 2) * sc, 0, 0, Math.PI * 2);
+    ctx.ellipse(p.sx, p.sy-bob, r*(TW/2)*sc, r*(TH/2)*sc, 0, 0, Math.PI*2);
     ctx.stroke();
   }
-  // Lattice connectors
   ctx.lineWidth = 0.6;
   for (let ai = 0; ai < 8; ai++) {
     const angle = (ai / 8) * Math.PI * 2;
-    ctx.strokeStyle = `rgba(${c},${hov ? 0.45 : 0.30})`;
-    for (let ri = 0; ri < rings.length - 1; ri++) {
-      const { r: r1, gz: gz1 } = rings[ri];
-      const { r: r2, gz: gz2 } = rings[ri + 1];
-      const p1 = iso(gx + Math.cos(angle) * r1, gy + Math.sin(angle) * r1, gz1, ox, oy, sc);
-      const p2 = iso(gx + Math.cos(angle) * r2, gy + Math.sin(angle) * r2, gz2, ox, oy, sc);
-      ctx.beginPath();
-      ctx.moveTo(p1.sx, p1.sy - bob); ctx.lineTo(p2.sx, p2.sy - bob);
-      ctx.stroke();
+    ctx.strokeStyle = `rgba(${c},${hov?0.45:0.30})`;
+    for (let ri = 0; ri < rings.length-1; ri++) {
+      const {r:r1,gz:gz1}=rings[ri], {r:r2,gz:gz2}=rings[ri+1];
+      const p1=iso(gx+Math.cos(angle)*r1,gy+Math.sin(angle)*r1,gz1,ox,oy,sc);
+      const p2=iso(gx+Math.cos(angle)*r2,gy+Math.sin(angle)*r2,gz2,ox,oy,sc);
+      ctx.beginPath(); ctx.moveTo(p1.sx,p1.sy-bob); ctx.lineTo(p2.sx,p2.sy-bob); ctx.stroke();
     }
   }
   ctx.restore();
@@ -239,18 +336,17 @@ function drawDome(ctx, gx, gy, ox, oy, sc, bob, hov) {
 // ── Label ─────────────────────────────────────────────────────────────────
 function drawLabel(ctx, sx, sy, title, hov, sc) {
   ctx.save();
-  const fontSize = Math.max(9, 11 * sc);
-  ctx.font = `${fontSize}px monospace`;
+  const fs = Math.max(9, 11 * sc);
+  ctx.font = `${fs}px monospace`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'bottom';
   if (hov) {
-    const w = ctx.measureText(title).width + 16;
-    const h = fontSize + 8;
+    const w = ctx.measureText(title).width + 16, h = fs + 8;
     ctx.fillStyle = 'rgba(8,4,0,0.82)';
-    ctx.fillRect(sx - w / 2, sy - h, w, h);
+    ctx.fillRect(sx - w/2, sy - h, w, h);
     ctx.strokeStyle = 'rgba(34,211,238,0.45)';
     ctx.lineWidth = 0.75;
-    ctx.strokeRect(sx - w / 2, sy - h, w, h);
+    ctx.strokeRect(sx - w/2, sy - h, w, h);
     ctx.fillStyle = 'rgba(34,211,238,0.95)';
   } else {
     ctx.fillStyle = 'rgba(255,119,0,0.45)';
@@ -262,9 +358,9 @@ function drawLabel(ctx, sx, sy, title, hov, sc) {
 // ── Particles ─────────────────────────────────────────────────────────────
 function makePts(seed) {
   let s = seed;
-  const rng = () => { s = (s * 1664525 + 1013904223) & 0xffffffff; return (s >>> 0) / 0xffffffff; };
-  return Array.from({ length: 35 }, () => ({
-    x: rng(), y: rng(), baseOpacity: 0.08 + rng() * 0.16, speed: 0.4 + rng() * 1.2, phase: rng() * Math.PI * 2,
+  const rng = () => { s=(s*1664525+1013904223)&0xffffffff; return (s>>>0)/0xffffffff; };
+  return Array.from({length:35}, () => ({
+    x:rng(), y:rng(), baseOpacity:0.08+rng()*0.16, speed:0.4+rng()*1.2, phase:rng()*Math.PI*2,
   }));
 }
 const PARTICLES = makePts(42);
@@ -273,54 +369,49 @@ function drawParticles(ctx, t, cssW, cssH) {
   for (const p of PARTICLES) {
     const a = p.baseOpacity * (0.5 + 0.5 * Math.sin(t * p.speed + p.phase));
     ctx.fillStyle = `rgba(255,119,0,${a})`;
-    ctx.beginPath(); ctx.arc(p.x * cssW, p.y * cssH, 1.5, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(p.x*cssW, p.y*cssH, 1.5, 0, Math.PI*2); ctx.fill();
   }
 }
 
 // ── Config ────────────────────────────────────────────────────────────────
 const EXPERIMENT_CONFIGS = [
-  { id: 'VISUAL_ARCHIVE',    gridPos: [-3, -3], structureType: 'crystal', bobPhase: 0.0  },
-  { id: 'CONDITION_BUILDER', gridPos: [ 3, -3], structureType: 'cube',    bobPhase: 1.57 },
-  { id: 'DICE_ROLLER',       gridPos: [-3,  3], structureType: 'sphere',  bobPhase: 3.14 },
-  { id: 'DRAG_INTERACTION',  gridPos: [ 3,  3], structureType: 'dome',    bobPhase: 4.71 },
+  { id:'VISUAL_ARCHIVE',    gridPos:[-3,-3], structureType:'crystal', bobPhase:0.0  },
+  { id:'CONDITION_BUILDER', gridPos:[ 3,-3], structureType:'cube',    bobPhase:1.57 },
+  { id:'DICE_ROLLER',       gridPos:[-3, 3], structureType:'sphere',  bobPhase:3.14 },
+  { id:'DRAG_INTERACTION',  gridPos:[ 3, 3], structureType:'dome',    bobPhase:4.71 },
 ];
-const STRUCT_FNS = { crystal: drawCrystal, cube: drawCube, sphere: drawSphere, dome: drawDome };
-const STRUCT_H   = { crystal: 1.25, cube: 1.65, sphere: 1.9, dome: 1.28 };
+const STRUCT_FNS = { crystal:drawCrystal, cube:drawCube, sphere:drawSphere, dome:drawDome };
+const STRUCT_H   = { crystal:1.25, cube:1.65, sphere:1.9, dome:1.28 };
 
 const EXPERIMENT_META = [
-  {
-    id: 'VISUAL_ARCHIVE', title: 'VISUAL_ARCHIVE',
-    description: 'Fragments of creation. Images pulled from the spaces between projects. Handle with care.',
-    tags: ['Gallery', 'Art'], link: null, isGallery: true,
-  },
-  {
-    id: 'CONDITION_BUILDER', title: 'CONDITION_BUILDER',
-    description: 'Visual logic builder. Drag conditions into groups, toggle AND/OR, watch the expression form.',
-    tags: ['Tool', 'Logic'], link: 'https://nyarlat-hotep.github.io/better-condition-builder/', isGallery: false,
-  },
-  {
-    id: 'DICE_ROLLER', title: 'DICE_ROLLER',
-    description: 'Seven sacred polyhedra. d4 through d100, advantage, disadvantage, and the chronicle of every roll.',
-    tags: ['Tool', '3D', 'D&D'], link: 'https://nyarlat-hotep.github.io/dice-roller/', isGallery: false,
-  },
-  {
-    id: 'DRAG_INTERACTION', title: 'DRAG_INTERACTION',
-    description: 'How much time do you really spend? Drag to paint weekly screen time. Physics-driven dots pile up as the hours grow.',
-    tags: ['Interaction', 'Physics', 'Data Viz'], link: 'https://nyarlat-hotep.github.io/drag-interaction/', isGallery: false,
-  },
+  { id:'VISUAL_ARCHIVE',    title:'VISUAL_ARCHIVE',
+    description:'Fragments of creation. Images pulled from the spaces between projects. Handle with care.',
+    tags:['Gallery','Art'], link:null, isGallery:true },
+  { id:'CONDITION_BUILDER', title:'CONDITION_BUILDER',
+    description:'Visual logic builder. Drag conditions into groups, toggle AND/OR, watch the expression form.',
+    tags:['Tool','Logic'], link:'https://nyarlat-hotep.github.io/better-condition-builder/', isGallery:false },
+  { id:'DICE_ROLLER',       title:'DICE_ROLLER',
+    description:'Seven sacred polyhedra. d4 through d100, advantage, disadvantage, and the chronicle of every roll.',
+    tags:['Tool','3D','D&D'], link:'https://nyarlat-hotep.github.io/dice-roller/', isGallery:false },
+  { id:'DRAG_INTERACTION',  title:'DRAG_INTERACTION',
+    description:'How much time do you really spend? Drag to paint weekly screen time. Physics-driven dots pile up as the hours grow.',
+    tags:['Interaction','Physics','Data Viz'], link:'https://nyarlat-hotep.github.io/drag-interaction/', isGallery:false },
 ];
 
 // ── Main drawFrame ────────────────────────────────────────────────────────
-function drawFrame(ctx, cssW, cssH, t, hoveredId, nodesRef) {
-  const sc = Math.min(1, cssW / 700);
+function drawFrame(ctx, cssW, cssH, t, hoveredId, nodesRef, rot) {
+  _rot = rot;
+  // Scale so the grid fills ~95% of the viewport width
+  const sc = Math.min(1.4, cssW / 700);
   const ox = cssW / 2;
   const oy = cssH * 0.50;
 
+  drawDecorations(ctx, ox, oy, sc, t);
   drawGrid(ctx, ox, oy, sc);
   drawPulseRings(ctx, EXPERIMENT_CONFIGS, t, hoveredId, ox, oy, sc);
 
   const sorted = [...EXPERIMENT_CONFIGS].sort(
-    (a, b) => (a.gridPos[0] + a.gridPos[1]) - (b.gridPos[0] + b.gridPos[1])
+    (a, b) => (a.gridPos[0]+a.gridPos[1]) - (b.gridPos[0]+b.gridPos[1])
   );
 
   nodesRef.current = [];
@@ -329,13 +420,10 @@ function drawFrame(ctx, cssW, cssH, t, hoveredId, nodesRef) {
     const base = iso(gx, gy, 0, ox, oy, sc);
     const hov = cfg.id === hoveredId;
     const bob = Math.sin(t * 0.8 + cfg.bobPhase) * 4 * sc;
-
     STRUCT_FNS[cfg.structureType]?.(ctx, gx, gy, ox, oy, sc, bob, hov);
-
     const labelSy = base.sy - STRUCT_H[cfg.structureType] * CH * sc - bob - 10;
     drawLabel(ctx, base.sx, labelSy, cfg.id, hov, sc);
-
-    nodesRef.current.push({ id: cfg.id, sx: base.sx, sy: base.sy, hitW: 55 * sc, hitH: 28 * sc });
+    nodesRef.current.push({ id:cfg.id, sx:base.sx, sy:base.sy, hitW:55*sc, hitH:28*sc });
   }
 
   drawParticles(ctx, t, cssW, cssH);
@@ -373,29 +461,34 @@ const galleryImages = [
 ];
 
 // ── Component ─────────────────────────────────────────────────────────────
+const DRAG_SENS  = 0.005;  // rad/px
+const DRAG_DAMP  = 0.95;   // velocity multiplier per frame (≈ Three.js orbit damping)
+
 export default function Experiments({ scrollContainerRef, isVoidMode = false }) {
   const [hoveredNodeId, setHoveredNodeId] = useState(null);
-  const [galleryOpen, setGalleryOpen] = useState(false);
+  const [galleryOpen, setGalleryOpen]     = useState(false);
   const [expandedIndex, setExpandedIndex] = useState(null);
 
-  const canvasRef    = useRef(null);
-  const containerRef = useRef(null);
-  const rafRef       = useRef(null);
-  const timeRef      = useRef(0);
-  const cssSizeRef   = useRef({ w: 700, h: 500 });
-  const nodesRef     = useRef([]);
-  const hoveredIdRef = useRef(null);
-  const panelRef     = useRef(null);
-  const itemRefs     = useRef([]);
-  const touchStartY  = useRef(0);
+  const canvasRef      = useRef(null);
+  const containerRef   = useRef(null);
+  const rafRef         = useRef(null);
+  const timeRef        = useRef(0);
+  const cssSizeRef     = useRef({ w: 700, h: 500 });
+  const nodesRef       = useRef([]);
+  const hoveredIdRef   = useRef(null);
+  const rotRef         = useRef(0);
+  const velRef         = useRef(0);
+  const isDraggingRef  = useRef(false);
+  const panelRef       = useRef(null);
+  const itemRefs       = useRef([]);
+  const touchStartY    = useRef(0);
 
-  // Gallery handlers (unchanged from original)
+  // Gallery handlers (unchanged)
   const handleItemClick = (i) => {
     const newIndex = expandedIndex === i ? null : i;
     setExpandedIndex(newIndex);
-    if (newIndex !== null) {
-      setTimeout(() => itemRefs.current[i]?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 420);
-    }
+    if (newIndex !== null)
+      setTimeout(() => itemRefs.current[i]?.scrollIntoView({ behavior:'smooth', block:'center' }), 420);
   };
   const handleTouchStart = (e) => { touchStartY.current = e.touches[0].clientY; };
   const handleTouchEnd   = (e) => {
@@ -407,18 +500,25 @@ export default function Experiments({ scrollContainerRef, isVoidMode = false }) 
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
-    let lastT = performance.now();
-    let rafId;
+    let lastT = performance.now(), rafId;
 
     function loop(now) {
       const delta = Math.min((now - lastT) / 1000, 0.05);
       lastT = now;
       timeRef.current += delta;
+
+      // Inertia when not dragging
+      if (!isDraggingRef.current) {
+        rotRef.current += velRef.current;
+        velRef.current *= DRAG_DAMP;
+        if (Math.abs(velRef.current) < 0.0001) velRef.current = 0;
+      }
+
       const { w, h } = cssSizeRef.current;
       const dpr = window.devicePixelRatio || 1;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, w, h);
-      drawFrame(ctx, w, h, timeRef.current, hoveredIdRef.current, nodesRef);
+      drawFrame(ctx, w, h, timeRef.current, hoveredIdRef.current, nodesRef, rotRef.current);
       rafId = requestAnimationFrame(loop);
     }
 
@@ -435,89 +535,146 @@ export default function Experiments({ scrollContainerRef, isVoidMode = false }) 
 
   // Resize observer
   useEffect(() => {
-    const container = containerRef.current;
-    const canvas    = canvasRef.current;
+    const container = containerRef.current, canvas = canvasRef.current;
     if (!container || !canvas) return;
     const observer = new ResizeObserver(entries => {
       const { width: w, height: h } = entries[0].contentRect;
       cssSizeRef.current = { w, h };
       const dpr = window.devicePixelRatio || 1;
-      canvas.width  = w * dpr;
-      canvas.height = h * dpr;
+      canvas.width = w * dpr; canvas.height = h * dpr;
     });
     observer.observe(container);
     return () => observer.disconnect();
   }, []);
 
-  // Interaction
+  // Interaction (hover + drag + click)
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
     function getHit(clientX, clientY) {
       const rect = canvas.getBoundingClientRect();
-      const mx = clientX - rect.left;
-      const my = clientY - rect.top;
+      const mx = clientX - rect.left, my = clientY - rect.top;
       return nodesRef.current.find(n =>
-        ((mx - n.sx) / n.hitW) ** 2 + ((my - n.sy) / n.hitH) ** 2 <= 1
+        ((mx-n.sx)/n.hitW)**2 + ((my-n.sy)/n.hitH)**2 <= 1
       );
     }
 
+    function triggerNode(id) {
+      const meta = EXPERIMENT_META.find(m => m.id === id);
+      if (meta?.isGallery) setGalleryOpen(true);
+      else if (meta?.link) window.open(meta.link, '_blank', 'noopener,noreferrer');
+    }
+
+    // ─ Mouse ─
+    let mouseDownX = 0, mouseDownY = 0;
+
+    const onMouseDown = e => {
+      isDraggingRef.current = true;
+      mouseDownX = e.clientX; mouseDownY = e.clientY;
+      velRef.current = 0;
+      // Clear hover — panel disappears while dragging
+      hoveredIdRef.current = null;
+      setHoveredNodeId(null);
+      canvas.style.cursor = 'grabbing';
+    };
+
     const onMouseMove = e => {
-      const hit = getHit(e.clientX, e.clientY);
-      const id = hit?.id ?? null;
-      hoveredIdRef.current = id;
-      setHoveredNodeId(id);
-      canvas.style.cursor = hit ? 'pointer' : 'default';
+      if (isDraggingRef.current) {
+        const dx = e.clientX - mouseDownX;
+        rotRef.current += dx * DRAG_SENS;
+        velRef.current = dx * DRAG_SENS;
+        mouseDownX = e.clientX;
+      } else {
+        const hit = getHit(e.clientX, e.clientY);
+        const id = hit?.id ?? null;
+        hoveredIdRef.current = id;
+        setHoveredNodeId(id);
+        canvas.style.cursor = hit ? 'pointer' : 'grab';
+      }
+    };
+
+    const onMouseUp = e => {
+      if (isDraggingRef.current) {
+        isDraggingRef.current = false;
+        canvas.style.cursor = 'grab';
+        // Check if it was a click (small movement)
+        const dx = e.clientX - mouseDownX, dy = e.clientY - mouseDownY;
+        if (dx*dx + dy*dy < 25) {
+          const hit = getHit(e.clientX, e.clientY);
+          if (hit) triggerNode(hit.id);
+        }
+      }
     };
 
     const onMouseLeave = () => {
+      isDraggingRef.current = false;
       hoveredIdRef.current = null;
       setHoveredNodeId(null);
       canvas.style.cursor = 'default';
     };
 
     const onClick = e => {
-      const hit = getHit(e.clientX, e.clientY);
-      if (!hit) return;
-      const meta = EXPERIMENT_META.find(m => m.id === hit.id);
-      if (meta?.isGallery) setGalleryOpen(true);
-      else if (meta?.link) window.open(meta.link, '_blank', 'noopener,noreferrer');
+      if (!isDraggingRef.current) {
+        const hit = getHit(e.clientX, e.clientY);
+        if (hit) triggerNode(hit.id);
+      }
     };
 
-    let tapStart = null;
+    // ─ Touch ─
+    let tapStart = null, lastTouchX = 0;
+
     const onTouchStart = e => {
       const t = e.touches[0];
-      tapStart = { x: t.clientX, y: t.clientY };
-      const hit = getHit(t.clientX, t.clientY);
-      if (hit) { hoveredIdRef.current = hit.id; setHoveredNodeId(hit.id); }
+      tapStart = { x: t.clientX, y: t.clientY, time: Date.now() };
+      lastTouchX = t.clientX;
+      isDraggingRef.current = true;
+      velRef.current = 0;
+      hoveredIdRef.current = null;
+      setHoveredNodeId(null);
     };
+
+    const onTouchMove = e => {
+      if (!isDraggingRef.current) return;
+      const t = e.touches[0];
+      const dx = t.clientX - lastTouchX;
+      rotRef.current += dx * DRAG_SENS;
+      velRef.current = dx * DRAG_SENS;
+      lastTouchX = t.clientX;
+    };
+
     const onTouchEnd = e => {
+      isDraggingRef.current = false;
       if (!tapStart) return;
       const t = e.changedTouches[0];
       const dx = t.clientX - tapStart.x, dy = t.clientY - tapStart.y;
-      if (dx * dx + dy * dy < 144) {
+      const elapsed = Date.now() - tapStart.time;
+      if (dx*dx + dy*dy < 144 && elapsed < 300) {
         const hit = getHit(t.clientX, t.clientY);
-        if (hit) {
-          const meta = EXPERIMENT_META.find(m => m.id === hit.id);
-          if (meta?.isGallery) setGalleryOpen(true);
-          else if (meta?.link) window.open(meta.link, '_blank', 'noopener,noreferrer');
-        }
+        if (hit) triggerNode(hit.id);
       }
       tapStart = null;
     };
 
-    canvas.addEventListener('mousemove', onMouseMove);
+    canvas.style.cursor = 'grab';
+    canvas.addEventListener('mousedown',  onMouseDown);
+    canvas.addEventListener('mousemove',  onMouseMove);
+    canvas.addEventListener('mouseup',    onMouseUp);
     canvas.addEventListener('mouseleave', onMouseLeave);
-    canvas.addEventListener('click', onClick);
+    canvas.addEventListener('click',      onClick);
     canvas.addEventListener('touchstart', onTouchStart, { passive: true });
-    canvas.addEventListener('touchend', onTouchEnd);
+    canvas.addEventListener('touchmove',  onTouchMove,  { passive: true });
+    canvas.addEventListener('touchend',   onTouchEnd);
+
     return () => {
-      canvas.removeEventListener('mousemove', onMouseMove);
+      canvas.removeEventListener('mousedown',  onMouseDown);
+      canvas.removeEventListener('mousemove',  onMouseMove);
+      canvas.removeEventListener('mouseup',    onMouseUp);
       canvas.removeEventListener('mouseleave', onMouseLeave);
-      canvas.removeEventListener('click', onClick);
+      canvas.removeEventListener('click',      onClick);
       canvas.removeEventListener('touchstart', onTouchStart);
-      canvas.removeEventListener('touchend', onTouchEnd);
+      canvas.removeEventListener('touchmove',  onTouchMove);
+      canvas.removeEventListener('touchend',   onTouchEnd);
     };
   }, []);
 
@@ -525,11 +682,10 @@ export default function Experiments({ scrollContainerRef, isVoidMode = false }) 
 
   return (
     <div className={`experiments-page${isVoidMode ? ' void-mode' : ''}`}>
-      {/* Isometric canvas */}
       <div className="iso-canvas-container" ref={containerRef}>
         <canvas className="iso-canvas" ref={canvasRef} />
 
-        {/* Info panel */}
+        {/* Info panel — no Enter button; clicking the node directly triggers action */}
         <AnimatePresence>
           {activeExp && (
             <motion.div
@@ -551,15 +707,7 @@ export default function Experiments({ scrollContainerRef, isVoidMode = false }) 
                     <span key={tag} className="iso-panel-tag">{tag}</span>
                   ))}
                 </div>
-                <button
-                  className="iso-panel-action"
-                  onClick={() => {
-                    if (activeExp.isGallery) setGalleryOpen(true);
-                    else if (activeExp.link) window.open(activeExp.link, '_blank', 'noopener,noreferrer');
-                  }}
-                >
-                  ENTER →
-                </button>
+                <span className="iso-panel-hint">click to enter</span>
               </div>
             </motion.div>
           )}

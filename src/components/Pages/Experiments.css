@@ -22,7 +22,7 @@
 /* ── Info panel ───────────────────────────────────────────────────────── */
 .iso-info-panel {
   position: absolute;
-  bottom: 2rem;
+  bottom: 8.5rem;
   left: 50%;
   transform: translateX(-50%);
   width: min(480px, calc(100% - 3rem));
@@ -118,10 +118,19 @@
   box-shadow: 0 0 12px rgba(255, 119, 0, 0.20);
 }
 
+.iso-panel-hint {
+  font-size: 0.65rem;
+  font-family: monospace;
+  color: rgba(255, 119, 0, 0.45);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
 /* ── Mobile ───────────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
   .iso-info-panel {
-    bottom: 1rem;
+    bottom: 7rem;
     width: calc(100% - 2rem);
     padding: 1rem 1.25rem;
   }
