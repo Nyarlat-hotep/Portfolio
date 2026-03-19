@@ -39,7 +39,6 @@
   transform: translateX(-50%);
   width: 360px;
   height: 28px;
-  opacity: 0.35;
 }
 
 .hud-sl {
@@ -218,6 +217,10 @@
   from { transform: translateX(-50%) translateY(-80px); opacity: 0; }
   to   { transform: translateX(-50%) translateY(0);     opacity: 1; }
 }
+@keyframes hud-enter-top-dim {
+  from { transform: translateX(-50%) translateY(-80px); opacity: 0; }
+  to   { transform: translateX(-50%) translateY(0);     opacity: 0.3; }
+}
 @keyframes hud-enter-left {
   from { transform: translateX(-80px); opacity: 0; }
   to   { transform: translateX(0);     opacity: 1; }
@@ -231,7 +234,7 @@
 .hud-tl  { animation: hud-enter-tl    0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.00s both; }
 .hud-tr  { animation: hud-enter-tr    0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.00s both; }
 .hud-tc  { animation: hud-enter-top   0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.10s both; }
-.hud-tc2 { animation: hud-enter-top   0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.20s both; }
+.hud-tc2 { animation: hud-enter-top-dim 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.20s both; }
 
 .hud-sl   { animation: hud-enter-left  0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.30s both; }
 .hud-sr   { animation: hud-enter-right 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.30s both; }
