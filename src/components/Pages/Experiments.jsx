@@ -247,6 +247,8 @@ function drawCube(ctx, gx, gy, ox, oy, sc, bob, hov) {
   face([st[4],st[5],st[6],st[7]], hov ? 0.20 : 0.09, hov ? 0.95 : 0.72);
   face([st[2],st[3],st[7],st[6]], 0.03, hov ? 0.70 : 0.40);
   face([st[1],st[2],st[6],st[5]], 0.03, hov ? 0.70 : 0.40);
+  face([st[0],st[1],st[5],st[4]], 0.03, hov ? 0.70 : 0.40);
+  face([st[3],st[0],st[4],st[7]], 0.03, hov ? 0.70 : 0.40);
   ctx.strokeStyle = `rgba(${c},${hov ? 0.70 : 0.55})`; ctx.lineWidth = 0.75;
   [[0,4],[1,5],[2,6],[3,7]].forEach(([a,b]) => {
     ctx.beginPath(); ctx.moveTo(c8[a].sx,c8[a].sy); ctx.lineTo(c8[b].sx,c8[b].sy); ctx.stroke();
