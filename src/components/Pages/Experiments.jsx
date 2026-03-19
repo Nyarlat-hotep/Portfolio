@@ -641,7 +641,10 @@ export default function Experiments({ scrollContainerRef, isVoidMode = false }) 
       const elapsed = Date.now() - tapStart.time;
       if (dx*dx + dy*dy < 144 && elapsed < 300) {
         const hit = getHit(t.clientX, t.clientY);
-        if (hit) triggerNode(hit.id);
+        if (hit) {
+          e.preventDefault(); // suppress synthetic click — prevents backdrop from closing gallery immediately
+          triggerNode(hit.id);
+        }
       }
       tapStart = null;
     };
