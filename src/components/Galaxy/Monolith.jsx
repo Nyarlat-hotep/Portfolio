@@ -84,7 +84,7 @@ function drawSymbol(ctx, idx, cx, cy, r, alpha) {
   ctx.restore();
 }
 
-function createSymbolTexture(size = 256) {
+function createSymbolTexture(size = 512) {
   const canvas = document.createElement('canvas');
   canvas.width = canvas.height = size;
   const ctx = canvas.getContext('2d');
@@ -103,7 +103,12 @@ function createSymbolTexture(size = 256) {
     drawSymbol(ctx, i % 8, x, y, r, alpha);
   }
 
-  return new THREE.CanvasTexture(canvas);
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.generateMipmaps = true;
+  tex.minFilter = THREE.LinearMipmapLinearFilter;
+  tex.magFilter  = THREE.LinearFilter;
+  tex.anisotropy = 16;
+  return tex;
 }
 
 let _symbolTexCache = null;
@@ -270,32 +275,6 @@ export default function Monolith({ position = [2, 35, -3] }) {
           blending={THREE.AdditiveBlending}
         />
       </lineSegments>
-
-      {/* Rim glow — upper */}
-      <mesh position={[0, 1.75, 0]}>
-        <coneGeometry args={[1.15, 4.0, 4]} />
-        <meshBasicMaterial
-          color="#00ff6a"
-          side={THREE.BackSide}
-          transparent
-          opacity={0.18}
-          depthWrite={false}
-          blending={THREE.AdditiveBlending}
-        />
-      </mesh>
-
-      {/* Rim glow — lower */}
-      <mesh position={[0, -1.75, 0]} rotation={[Math.PI, 0, 0]}>
-        <coneGeometry args={[1.15, 4.0, 4]} />
-        <meshBasicMaterial
-          color="#00ff6a"
-          side={THREE.BackSide}
-          transparent
-          opacity={0.18}
-          depthWrite={false}
-          blending={THREE.AdditiveBlending}
-        />
-      </mesh>
 
       {/* Energy wisps */}
       <points renderOrder={1} geometry={wispGeo}>
