@@ -117,39 +117,6 @@ function WebGLFallback() {
 }
 
 // Glitchy text effect - randomly corrupts characters
-function GlitchText({ children, active = true }) {
-  const [text, setText] = useState(children);
-  const glitchChars = '!@#$%^&*_+-=|;:<>?/\\~`01';
-
-  useEffect(() => {
-    if (!active || typeof children !== 'string') return;
-
-    let restoreTimeout = null;
-    const interval = setInterval(() => {
-      // More frequent glitches (60% chance each interval)
-      if (Math.random() > 0.4) {
-        const chars = children.split('');
-        // Glitch 1-2 characters at a time
-        const numGlitches = Math.random() > 0.5 ? 2 : 1;
-        for (let g = 0; g < numGlitches; g++) {
-          const idx = Math.floor(Math.random() * chars.length);
-          chars[idx] = glitchChars[Math.floor(Math.random() * glitchChars.length)];
-        }
-        setText(chars.join(''));
-        // Restore after brief glitch — tracked so it can be cancelled on unmount
-        restoreTimeout = setTimeout(() => setText(children), 60);
-      }
-    }, 800);
-
-    return () => {
-      clearInterval(interval);
-      if (restoreTimeout) clearTimeout(restoreTimeout);
-    };
-  }, [children, active]);
-
-  return <span>{text}</span>;
-}
-
 // Keyboard camera: arrow L/R orbits, arrow U/D zooms — lives inside Canvas for useFrame access
 const _yAxis = new THREE.Vector3(0, 1, 0);
 function KeyboardCameraController({ controlsRef }) {
@@ -218,10 +185,7 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
   const [sceneReady, setSceneReady] = useState(false);
   const [isIntroActive, setIsIntroActive] = useState(false);
   const [isNavExpanded, setIsNavExpanded] = useState(false);
-  const [showWelcome, setShowWelcome] = useState(false);
   const introCompletedRef = useRef(false);
-  const welcomeTimeoutRef = useRef(null);
-  const welcomeShownRef   = useRef(false);
   const controlsRef = useRef(null);
   const shootingStarsRef = useRef();
   const containerRef = useRef(null);
@@ -399,26 +363,6 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
   const handleNavExpandChange = useCallback((expanded) => {
     setIsNavExpanded(expanded);
   }, []);
-
-  // Show welcome text once per page load — only on first nav open, never again
-  useEffect(() => {
-    if (isNavExpanded && !welcomeShownRef.current) {
-      welcomeShownRef.current = true; // mark immediately so re-opens don't re-trigger
-      welcomeTimeoutRef.current = setTimeout(() => {
-        setShowWelcome(true);
-      }, 1600);
-    }
-
-    if (!isNavExpanded) {
-      setShowWelcome(false); // hide when nav closes
-    }
-
-    return () => {
-      if (welcomeTimeoutRef.current) {
-        clearTimeout(welcomeTimeoutRef.current);
-      }
-    };
-  }, [isNavExpanded]);
 
   // Return fallback UI if WebGL is not supported
   if (!webGLSupported) {
@@ -599,57 +543,6 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
           zIndex: 10
         }}
       />
-
-      {/* Welcome text - appears once per session after nav animation completes */}
-      <AnimatePresence>
-        {showWelcome && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{
-              duration: 0.4,
-              ease: [0.4, 0, 0.2, 1],
-              exit: { duration: 0.15 }
-            }}
-            style={{
-              position: 'absolute',
-              ...(isTouch ? { top: '8%' } : { bottom: '5%' }),
-              left: 0,
-              right: 0,
-              display: 'flex',
-              justifyContent: 'center',
-              pointerEvents: 'none',
-              zIndex: 15
-            }}
-          >
-            <motion.div
-              initial={{ width: 0 }}
-              animate={{ width: 'auto' }}
-              transition={{
-                duration: 0.8,
-                delay: 0.1,
-                ease: 'easeOut'
-              }}
-              style={{
-                color: 'rgba(255, 255, 255, 0.85)',
-                fontSize: '1.25rem',
-                fontWeight: 300,
-                opacity: 0.75,
-                fontFamily: 'monospace',
-                letterSpacing: '3px',
-                textTransform: 'uppercase',
-                textShadow: '0 0 20px rgba(0, 212, 255, 0.5), 0 0 40px rgba(168, 85, 247, 0.3)',
-                textAlign: 'center',
-                overflow: 'hidden',
-                whiteSpace: 'nowrap'
-              }}
-            >
-              <GlitchText active={showWelcome}>Welcome traveler</GlitchText>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* Asteroid codex modal — flex wrapper guarantees centering */}
       {createPortal(
