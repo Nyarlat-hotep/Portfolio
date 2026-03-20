@@ -164,7 +164,8 @@ export default function Monolith({ position = [2, 35, -3] }) {
   const wispData  = useMemo(() => buildWispData(),     []);
 
   // Diamond — one half shared between upper and lower meshes
-  const halfGeo   = useMemo(() => new THREE.ConeGeometry(1.6, 3.5, 4), []);
+  // Each half is offset ±HALF_H so bases meet at equator and tips point out
+  const halfGeo   = useMemo(() => new THREE.ConeGeometry(1.0, 3.5, 4), []);
   const halfEdges = useMemo(() => new THREE.EdgesGeometry(halfGeo), [halfGeo]);
   const mainMat   = useMemo(() => new THREE.MeshStandardMaterial({
     color: '#0a0a0f',
@@ -234,20 +235,20 @@ export default function Monolith({ position = [2, 35, -3] }) {
         <meshBasicMaterial transparent opacity={0} depthWrite={false} />
       </mesh>
 
-      {/* Upper half */}
-      <mesh>
+      {/* Upper half — base at y=0, tip at y=+3.5 */}
+      <mesh position={[0, 1.75, 0]}>
         <primitive object={halfGeo} attach="geometry" />
         <primitive object={mainMat} attach="material" />
       </mesh>
 
-      {/* Lower half — flipped */}
-      <mesh rotation={[Math.PI, 0, 0]}>
+      {/* Lower half — base at y=0, tip at y=-3.5 */}
+      <mesh position={[0, -1.75, 0]} rotation={[Math.PI, 0, 0]}>
         <primitive object={halfGeo} attach="geometry" />
         <primitive object={mainMat} attach="material" />
       </mesh>
 
       {/* Edge outlines — upper */}
-      <lineSegments>
+      <lineSegments position={[0, 1.75, 0]}>
         <primitive object={halfEdges} attach="geometry" />
         <lineBasicMaterial
           color="#00ff6a"
@@ -259,7 +260,7 @@ export default function Monolith({ position = [2, 35, -3] }) {
       </lineSegments>
 
       {/* Edge outlines — lower */}
-      <lineSegments rotation={[Math.PI, 0, 0]}>
+      <lineSegments position={[0, -1.75, 0]} rotation={[Math.PI, 0, 0]}>
         <primitive object={halfEdges} attach="geometry" />
         <lineBasicMaterial
           color="#00ff6a"
@@ -271,8 +272,8 @@ export default function Monolith({ position = [2, 35, -3] }) {
       </lineSegments>
 
       {/* Rim glow — upper */}
-      <mesh>
-        <coneGeometry args={[1.84, 4.0, 4]} />
+      <mesh position={[0, 1.75, 0]}>
+        <coneGeometry args={[1.15, 4.0, 4]} />
         <meshBasicMaterial
           color="#00ff6a"
           side={THREE.BackSide}
@@ -284,8 +285,8 @@ export default function Monolith({ position = [2, 35, -3] }) {
       </mesh>
 
       {/* Rim glow — lower */}
-      <mesh rotation={[Math.PI, 0, 0]}>
-        <coneGeometry args={[1.84, 4.0, 4]} />
+      <mesh position={[0, -1.75, 0]} rotation={[Math.PI, 0, 0]}>
+        <coneGeometry args={[1.15, 4.0, 4]} />
         <meshBasicMaterial
           color="#00ff6a"
           side={THREE.BackSide}
