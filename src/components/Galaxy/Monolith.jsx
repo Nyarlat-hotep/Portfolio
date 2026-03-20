@@ -10,7 +10,6 @@ const HOVER_SPIN = 0.9;
 export default function Monolith({ position = [2, 35, -3] }) {
   const groupRef     = useRef();
   const hoverRef     = useRef(false);
-  const pulseRef     = useRef(0);
   const spinSpeedRef = useRef(IDLE_SPIN);
   const basePosRef   = useRef(position);
 
@@ -26,11 +25,9 @@ export default function Monolith({ position = [2, 35, -3] }) {
   }, [halfEdges]);
 
   const mainMat = useMemo(() => new THREE.MeshStandardMaterial({
-    color: '#0a0a0f',
-    emissive: new THREE.Color('#00ff6a'),
-    emissiveIntensity: 0.15,
-    metalness: 0.7,
-    roughness: 0.4,
+    color: '#050508',
+    metalness: 0.8,
+    roughness: 0.3,
   }), []);
 
   useEffect(() => {
@@ -52,10 +49,6 @@ export default function Monolith({ position = [2, 35, -3] }) {
     g.position.y = basePosRef.current[1] + Math.sin(t * 0.5) * 0.2;
     g.position.z = basePosRef.current[2];
 
-    // Emissive intensity lerp
-    const targetIntensity = hoverRef.current ? 0.55 : 0.15;
-    pulseRef.current += (targetIntensity - pulseRef.current) * Math.min(delta * 3, 1);
-    mainMat.emissiveIntensity = pulseRef.current;
   });
 
   return (
