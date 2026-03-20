@@ -8,17 +8,16 @@ const ROWS = 20;
 const WIN_SCORE = 800;
 
 const PIECES = {
-  I: { cells: [[0,0],[0,1],[0,2],[0,3]], color: '#00ffff', glyph: 'ᚠ' },
-  O: { cells: [[0,0],[0,1],[1,0],[1,1]], color: '#ffd700', glyph: 'ᛒ' },
-  T: { cells: [[0,1],[1,0],[1,1],[1,2]], color: '#cc44ff', glyph: 'ᚢ' },
-  S: { cells: [[0,1],[0,2],[1,0],[1,1]], color: '#00ff6a', glyph: 'ᛖ' },
-  Z: { cells: [[0,0],[0,1],[1,1],[1,2]], color: '#ff4444', glyph: 'ᛗ' },
-  J: { cells: [[0,0],[1,0],[1,1],[1,2]], color: '#4488ff', glyph: 'ᚾ' },
-  L: { cells: [[0,2],[1,0],[1,1],[1,2]], color: '#ff8844', glyph: 'ᛏ' },
+  I: { cells: [[0,0],[0,1],[0,2],[0,3]], color: '#00ffff' },
+  O: { cells: [[0,0],[0,1],[1,0],[1,1]], color: '#ffd700' },
+  T: { cells: [[0,1],[1,0],[1,1],[1,2]], color: '#cc44ff' },
+  S: { cells: [[0,1],[0,2],[1,0],[1,1]], color: '#00ff6a' },
+  Z: { cells: [[0,0],[0,1],[1,1],[1,2]], color: '#ff4444' },
+  J: { cells: [[0,0],[1,0],[1,1],[1,2]], color: '#4488ff' },
+  L: { cells: [[0,2],[1,0],[1,1],[1,2]], color: '#ff8844' },
 };
 const PIECE_TYPES = Object.keys(PIECES);
 const SCORE_TABLE = [0, 40, 100, 300, 1200];
-const RUNE_CHARS = ['ᚠ', 'ᛒ', 'ᚢ', 'ᛖ', 'ᛗ', 'ᚾ', 'ᛏ'];
 
 function randomType() {
   return PIECE_TYPES[Math.floor(Math.random() * PIECE_TYPES.length)];
@@ -77,7 +76,7 @@ function spawnPiece(type) {
 
 function NextPiecePreview({ type }) {
   if (!type) return null;
-  const { cells, color, glyph } = PIECES[type];
+  const { cells, color } = PIECES[type];
   const maxR = Math.max(...cells.map(c => c[0]));
   const maxC = Math.max(...cells.map(c => c[1]));
   const grid = Array.from({ length: maxR + 1 }, () => new Array(maxC + 1).fill(false));
@@ -88,14 +87,11 @@ function NextPiecePreview({ type }) {
         <div key={ri} style={{ display: 'flex', gap: 2 }}>
           {row.map((filled, ci) => (
             <div key={ci} style={{
-              width: 18, height: 18,
-              background: filled ? color : 'rgba(0,0,0,0.3)',
-              border: filled ? '1px solid rgba(255,255,255,0.2)' : '1px solid rgba(0,255,106,0.05)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 9, color: 'rgba(255,255,255,0.4)',
-            }}>
-              {filled ? glyph : ''}
-            </div>
+              width: 20, height: 20,
+              background: 'transparent',
+              border: filled ? `2px solid ${color}` : '1px solid rgba(0,255,106,0.06)',
+              boxShadow: filled ? `0 0 5px ${color}` : 'none',
+            }} />
           ))}
         </div>
       ))}
@@ -104,6 +100,7 @@ function NextPiecePreview({ type }) {
 }
 
 function WinParticles() {
+  const GEO_CHARS = ['+', '×', '◆', '◇', '△', '▽', '○'];
   const particles = useRef(
     Array.from({ length: 28 }, (_, i) => {
       const angle = (i / 28) * Math.PI * 2;
@@ -112,7 +109,7 @@ function WinParticles() {
         px: `${Math.cos(angle) * dist}px`,
         py: `${Math.sin(angle) * dist}px`,
         delay: `${Math.random() * 400}ms`,
-        char: RUNE_CHARS[i % RUNE_CHARS.length],
+        char: GEO_CHARS[i % GEO_CHARS.length],
       };
     })
   );
@@ -338,27 +335,27 @@ export default function AlienTetris({ onClose, onWin, tetrisActiveRef }) {
         <div style={{ display: 'flex', gap: 24 }}>
           {/* Sidebar */}
           <div className="tetris-sidebar">
+            {/* Next piece */}
             <div>
               <div className="tetris-sidebar-label">INCOMING</div>
               <div className="tetris-next-box">
                 <NextPiecePreview type={nextType} />
               </div>
             </div>
-            <div className="tetris-stat">
-              <div>SIGNAL</div>
-              <div className="tetris-stat-value">{score}</div>
+
+            {/* Signal block — score + bar + secondary stats */}
+            <div className="tetris-signal-block">
+              <div className="tetris-signal-label">SIGNAL</div>
+              <div className="tetris-signal-value">{score}</div>
               <div className="signal-bar-track">
                 <div className="signal-bar-fill" style={{ width: `${pct}%` }} />
               </div>
-              <div style={{ marginTop: 2, fontSize: 8, opacity: 0.5 }}>TARGET: {WIN_SCORE}</div>
-            </div>
-            <div className="tetris-stat">
-              <div>LINES</div>
-              <div className="tetris-stat-value">{lines}</div>
-            </div>
-            <div className="tetris-stat">
-              <div>LEVEL</div>
-              <div className="tetris-stat-value">{level}</div>
+              <div style={{ marginTop: 2, fontSize: 9, opacity: 0.4, letterSpacing: '0.1em' }}>
+                TARGET: {WIN_SCORE}
+              </div>
+              <div className="tetris-signal-secondary">
+                L:{level} &nbsp;|&nbsp; {lines} LINES
+              </div>
             </div>
           </div>
 
@@ -382,16 +379,10 @@ export default function AlienTetris({ onClose, onWin, tetrisActiveRef }) {
                         winPhase >= 2 ? 'cascade' : '',
                       ].filter(Boolean).join(' ')}
                       style={{
-                        background: cell && !cell.ghost ? color : undefined,
-                        color: color,
+                        '--cell-color': color || undefined,
                         '--cascade-delay': winPhase >= 2 ? (ri * 18 + ci * 5) : 0,
-                        borderColor: cell && !cell.ghost ? `${color}44` : undefined,
                       }}
-                    >
-                      {cell && !cell.ghost && (
-                        <span className="cell-glyph">{PIECES[cell.type].glyph}</span>
-                      )}
-                    </div>
+                    />
                   );
                 })
               )}
