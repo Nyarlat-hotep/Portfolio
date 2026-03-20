@@ -1,8 +1,8 @@
 import { useRef, useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
+import { Line } from '@react-three/drei';
 import * as THREE from 'three';
-
-const EMISSIVE_IDLE = new THREE.Color('#00ff6a');
+import { playCosmicVoid, stopCosmicVoid } from '../../utils/sounds';
 
 const IDLE_SPIN  = 0.09;
 const HOVER_SPIN = 0.9;
@@ -172,6 +172,14 @@ export default function Monolith({ position = [2, 35, -3] }) {
   // Each half is offset ±HALF_H so bases meet at equator and tips point out
   const halfGeo   = useMemo(() => new THREE.ConeGeometry(1.0, 3.5, 4), []);
   const halfEdges = useMemo(() => new THREE.EdgesGeometry(halfGeo), [halfGeo]);
+
+  // Extract edge vertex pairs for drei <Line segments> — screen-space lineWidth
+  const edgePoints = useMemo(() => {
+    const arr = halfEdges.attributes.position.array;
+    const pts = [];
+    for (let i = 0; i < arr.length; i += 3) pts.push([arr[i], arr[i + 1], arr[i + 2]]);
+    return pts;
+  }, [halfEdges]);
   const mainMat   = useMemo(() => new THREE.MeshStandardMaterial({
     color: '#0a0a0f',
     map: symbolTex,
@@ -233,8 +241,8 @@ export default function Monolith({ position = [2, 35, -3] }) {
     <group ref={groupRef} position={position}>
       {/* Hit zone — sphere covers full diamond */}
       <mesh
-        onPointerOver={(e) => { e.stopPropagation(); hoverRef.current = true; }}
-        onPointerOut={() => { hoverRef.current = false; }}
+        onPointerOver={(e) => { e.stopPropagation(); hoverRef.current = true; playCosmicVoid(); }}
+        onPointerOut={() => { hoverRef.current = false; stopCosmicVoid(); }}
       >
         <sphereGeometry args={[2.5, 8, 8]} />
         <meshBasicMaterial transparent opacity={0} depthWrite={false} />
@@ -252,29 +260,21 @@ export default function Monolith({ position = [2, 35, -3] }) {
         <primitive object={mainMat} attach="material" />
       </mesh>
 
-      {/* Edge outlines — upper */}
-      <lineSegments position={[0, 1.75, 0]}>
-        <primitive object={halfEdges} attach="geometry" />
-        <lineBasicMaterial
-          color="#00ff6a"
-          transparent
-          opacity={0.55}
-          depthWrite={false}
-          blending={THREE.AdditiveBlending}
+      {/* Edge outlines — upper (Line2: screen-space px, holds thickness at any zoom) */}
+      <group position={[0, 1.75, 0]}>
+        <Line points={edgePoints} segments lineWidth={1.8}
+          color="#00ff6a" opacity={0.6} transparent
+          depthWrite={false} blending={THREE.AdditiveBlending}
         />
-      </lineSegments>
+      </group>
 
       {/* Edge outlines — lower */}
-      <lineSegments position={[0, -1.75, 0]} rotation={[Math.PI, 0, 0]}>
-        <primitive object={halfEdges} attach="geometry" />
-        <lineBasicMaterial
-          color="#00ff6a"
-          transparent
-          opacity={0.55}
-          depthWrite={false}
-          blending={THREE.AdditiveBlending}
+      <group position={[0, -1.75, 0]} rotation={[Math.PI, 0, 0]}>
+        <Line points={edgePoints} segments lineWidth={1.8}
+          color="#00ff6a" opacity={0.6} transparent
+          depthWrite={false} blending={THREE.AdditiveBlending}
         />
-      </lineSegments>
+      </group>
 
       {/* Energy wisps */}
       <points renderOrder={1} geometry={wispGeo}>
