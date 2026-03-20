@@ -2,8 +2,7 @@ import { useRef, useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
-const EMISSIVE_IDLE  = new THREE.Color('#00ff6a');
-const EMISSIVE_PULSE = new THREE.Color('#aaffee');
+const EMISSIVE_IDLE = new THREE.Color('#00ff6a');
 
 const IDLE_SPIN  = 0.09;
 const HOVER_SPIN = 0.9;
@@ -153,7 +152,7 @@ function buildWispData() {
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export default function Monolith({ position = [2, 28, -3], onOpen, pulse = false }) {
+export default function Monolith({ position = [2, 28, -3] }) {
   const groupRef     = useRef();
   const mainMatRef   = useRef();
   const hoverRef     = useRef(false);
@@ -201,11 +200,10 @@ export default function Monolith({ position = [2, 28, -3], onOpen, pulse = false
     g.position.z = basePosRef.current[2];
 
     // Emissive intensity lerp
-    const targetIntensity = pulse ? 1.8 : (hoverRef.current ? 0.55 : 0.15);
+    const targetIntensity = hoverRef.current ? 0.55 : 0.15;
     pulseRef.current += (targetIntensity - pulseRef.current) * Math.min(delta * 3, 1);
     if (mainMatRef.current) {
       mainMatRef.current.emissiveIntensity = pulseRef.current;
-      mainMatRef.current.emissive.copy(pulse ? EMISSIVE_PULSE : EMISSIVE_IDLE);
     }
 
     // Wisp orbit
@@ -220,11 +218,10 @@ export default function Monolith({ position = [2, 28, -3], onOpen, pulse = false
 
   return (
     <group ref={groupRef} position={position}>
-      {/* Invisible hit zone — generous cone around the pyramid */}
+      {/* Invisible hit zone — hover acceleration */}
       <mesh
-        onClick={(e) => { e.stopPropagation(); onOpen?.(); }}
-        onPointerOver={(e) => { e.stopPropagation(); document.body.style.cursor = 'pointer'; hoverRef.current = true; }}
-        onPointerOut={() => { document.body.style.cursor = 'auto'; hoverRef.current = false; }}
+        onPointerOver={(e) => { e.stopPropagation(); hoverRef.current = true; }}
+        onPointerOut={() => { hoverRef.current = false; }}
       >
         <coneGeometry args={[3.5, 9, 4]} />
         <meshBasicMaterial transparent opacity={0} depthWrite={false} />
