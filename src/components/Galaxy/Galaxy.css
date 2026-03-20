@@ -298,8 +298,8 @@
   }
 
   .asteroid-message-overlay {
-    align-items: center;
-    padding-bottom: 0;
+    align-items: flex-end;
+    padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
   }
 
   .asteroid-message {
