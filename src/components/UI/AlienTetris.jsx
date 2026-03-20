@@ -135,8 +135,10 @@ export default function AlienTetris({ onClose, onWin, tetrisActiveRef }) {
   const [gameState,  setGameState]  = useState('playing');
   const [clearing,   setClearing]   = useState([]);
   const [winPhase,   setWinPhase]   = useState(0);
+  const [scale,      setScale]      = useState(1);
 
   const wonFiredRef       = useRef(false);
+  const containerRef      = useRef();
   const tickRef           = useRef(null);
   const clearingTimerRef  = useRef(null);
   const lockingRef        = useRef(false);
@@ -146,6 +148,19 @@ export default function AlienTetris({ onClose, onWin, tetrisActiveRef }) {
     if (tetrisActiveRef) tetrisActiveRef.current = true;
     return () => { if (tetrisActiveRef) tetrisActiveRef.current = false; };
   }, [tetrisActiveRef]);
+
+  // Scale-to-fit on short viewports
+  useEffect(() => {
+    const update = () => {
+      if (!containerRef.current) return;
+      const h = containerRef.current.scrollHeight;
+      const available = window.innerHeight - 32;
+      setScale(h > available ? available / h : 1);
+    };
+    const id = setTimeout(update, 80);
+    window.addEventListener('resize', update);
+    return () => { clearTimeout(id); window.removeEventListener('resize', update); };
+  }, []);
 
   // Cancel clearing timer on unmount
   useEffect(() => {
@@ -316,7 +331,9 @@ export default function AlienTetris({ onClose, onWin, tetrisActiveRef }) {
 
   return createPortal(
     <div className="alien-tetris-overlay">
+      <div style={{ transform: `scale(${scale})`, transformOrigin: 'center center' }}>
       <motion.div
+        ref={containerRef}
         initial={{ opacity: 0, scale: 0.96, y: 12 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.96, y: 8 }}
@@ -417,6 +434,7 @@ export default function AlienTetris({ onClose, onWin, tetrisActiveRef }) {
           </div>
         </div>
       </motion.div>
+      </div>
     </div>,
     document.body
   );

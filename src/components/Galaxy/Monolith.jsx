@@ -165,6 +165,9 @@ export default function Monolith({ position = [2, 28, -3], onOpen, pulse = false
   const wispTex   = useMemo(() => getWispTex(),        []);
   const wispData  = useMemo(() => buildWispData(),     []);
 
+  const pyramidGeo   = useMemo(() => new THREE.ConeGeometry(2.5, 7, 4), []);
+  const pyramidEdges = useMemo(() => new THREE.EdgesGeometry(pyramidGeo), [pyramidGeo]);
+
   const wispGeo = useMemo(() => {
     const positions = new Float32Array(WISP_COUNT * 3);
     const geo  = new THREE.BufferGeometry();
@@ -177,6 +180,10 @@ export default function Monolith({ position = [2, 28, -3], onOpen, pulse = false
   useEffect(() => {
     return () => { wispGeo.dispose(); };
   }, [wispGeo]);
+
+  useEffect(() => {
+    return () => { pyramidGeo.dispose(); pyramidEdges.dispose(); };
+  }, [pyramidGeo, pyramidEdges]);
 
   useFrame((state, delta) => {
     const g = groupRef.current;
@@ -225,7 +232,7 @@ export default function Monolith({ position = [2, 28, -3], onOpen, pulse = false
 
       {/* Main pyramid */}
       <mesh>
-        <coneGeometry args={[2.5, 7, 4]} />
+        <primitive object={pyramidGeo} attach="geometry" />
         <meshStandardMaterial
           ref={mainMatRef}
           color="#0a0a0f"
@@ -237,6 +244,18 @@ export default function Monolith({ position = [2, 28, -3], onOpen, pulse = false
           roughness={0.4}
         />
       </mesh>
+
+      {/* Edge outlines — trace pyramid faces */}
+      <lineSegments>
+        <primitive object={pyramidEdges} attach="geometry" />
+        <lineBasicMaterial
+          color="#00ff6a"
+          transparent
+          opacity={0.55}
+          depthWrite={false}
+          blending={THREE.AdditiveBlending}
+        />
+      </lineSegments>
 
       {/* Rim glow — slightly larger BackSide copy */}
       <mesh>
