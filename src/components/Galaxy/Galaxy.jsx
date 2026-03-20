@@ -388,18 +388,23 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
     return () => window.removeEventListener('keydown', handler);
   }, []);
 
-  // ESC returns to home view
+  // ESC closes asteroid modal first; if none open, returns to home view
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (presentationOpen) return;
       if (e.key === 'Escape') {
+        if (asteroidModalOpen) {
+          playCaseStudyClose();
+          setAsteroidModalOpen(false);
+          return;
+        }
         const homePlanet = planetsData.find(p => p.id === 'home');
         onPlanetClickRef.current?.(homePlanet);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [presentationOpen]);
+  }, [presentationOpen, asteroidModalOpen]);
 
   // Shift+P — skip codex, go straight to warp
   useEffect(() => {

@@ -70,6 +70,18 @@ function App() {
     if (e.key === 'Enter') handleGateSubmit();
   }
 
+  useEffect(() => {
+    if (!gateModal.open) return;
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        playCaseStudyClose();
+        setGateModal({ open: false, planet: null });
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [gateModal.open]);
+
   const handleCloseOverlay = useCallback(() => {
     playCaseStudyClose();
     playBackground();
