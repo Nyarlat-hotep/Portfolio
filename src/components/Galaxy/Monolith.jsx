@@ -7,116 +7,6 @@ import { playCosmicVoid, stopCosmicVoid } from '../../utils/sounds';
 const IDLE_SPIN  = 0.09;
 const HOVER_SPIN = 0.9;
 
-// ── 8 canvas-drawn geometric symbols ─────────────────────────────────────────
-
-function drawSymbol(ctx, idx, cx, cy, r, alpha) {
-  ctx.save();
-  ctx.strokeStyle = `rgba(0, 255, 106, ${alpha})`;
-  ctx.lineWidth   = Math.max(1, r * 0.12);
-  ctx.fillStyle   = `rgba(0, 255, 106, ${alpha})`;
-  ctx.lineCap     = 'round';
-  ctx.lineJoin    = 'round';
-
-  switch (idx) {
-    case 0: // Dotted circle
-      ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
-      ctx.beginPath(); ctx.arc(cx, cy, r * 0.15, 0, Math.PI * 2); ctx.fill();
-      break;
-    case 1: // Bisected triangle (upward, horizontal line through center)
-      ctx.beginPath();
-      ctx.moveTo(cx, cy - r);
-      ctx.lineTo(cx + r * 0.87, cy + r * 0.5);
-      ctx.lineTo(cx - r * 0.87, cy + r * 0.5);
-      ctx.closePath(); ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(cx - r * 0.44, cy); ctx.lineTo(cx + r * 0.44, cy);
-      ctx.stroke();
-      break;
-    case 2: { // Crossed square
-      const hs = r * 0.8;
-      ctx.beginPath(); ctx.rect(cx - hs, cy - hs, hs * 2, hs * 2); ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(cx - hs, cy - hs); ctx.lineTo(cx + hs, cy + hs);
-      ctx.moveTo(cx + hs, cy - hs); ctx.lineTo(cx - hs, cy + hs);
-      ctx.stroke();
-      break;
-    }
-    case 3: // Concentric rings
-      ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
-      ctx.beginPath(); ctx.arc(cx, cy, r * 0.5, 0, Math.PI * 2); ctx.stroke();
-      break;
-    case 4: // Inverted triangle
-      ctx.beginPath();
-      ctx.moveTo(cx, cy + r);
-      ctx.lineTo(cx + r * 0.87, cy - r * 0.5);
-      ctx.lineTo(cx - r * 0.87, cy - r * 0.5);
-      ctx.closePath(); ctx.stroke();
-      break;
-    case 5: // Diamond + center dot
-      ctx.beginPath();
-      ctx.moveTo(cx,            cy - r);
-      ctx.lineTo(cx + r * 0.65, cy);
-      ctx.lineTo(cx,            cy + r);
-      ctx.lineTo(cx - r * 0.65, cy);
-      ctx.closePath(); ctx.stroke();
-      ctx.beginPath(); ctx.arc(cx, cy, r * 0.12, 0, Math.PI * 2); ctx.fill();
-      break;
-    case 6: // Mirrored arcs
-      ctx.beginPath();
-      ctx.arc(cx - r * 0.3, cy, r * 0.65, -Math.PI * 0.6, Math.PI * 0.6);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.arc(cx + r * 0.3, cy, r * 0.65, Math.PI - Math.PI * 0.6, Math.PI + Math.PI * 0.6);
-      ctx.stroke();
-      break;
-    case 7: // Radial spokes (6 lines from a central ring)
-      ctx.beginPath(); ctx.arc(cx, cy, r * 0.28, 0, Math.PI * 2); ctx.stroke();
-      for (let s = 0; s < 6; s++) {
-        const a = (s / 6) * Math.PI * 2;
-        ctx.beginPath();
-        ctx.moveTo(cx + Math.cos(a) * r * 0.35, cy + Math.sin(a) * r * 0.35);
-        ctx.lineTo(cx + Math.cos(a) * r,         cy + Math.sin(a) * r);
-        ctx.stroke();
-      }
-      break;
-    default: break;
-  }
-  ctx.restore();
-}
-
-function createSymbolTexture(size = 512) {
-  const canvas = document.createElement('canvas');
-  canvas.width = canvas.height = size;
-  const ctx = canvas.getContext('2d');
-
-  ctx.fillStyle = '#050508';
-  ctx.fillRect(0, 0, size, size);
-
-  const seed = 99;
-  const rng = (i) => ((Math.sin(i * 127.1 + seed) * 43758.5453) % 1 + 1) % 1;
-
-  for (let i = 0; i < 14; i++) {
-    const x     = rng(i * 4)     * size;
-    const y     = rng(i * 4 + 1) * size;
-    const r     = size * (0.03 + rng(i * 4 + 2) * 0.04);
-    const alpha = 0.2 + rng(i * 4 + 3) * 0.3;
-    drawSymbol(ctx, i % 8, x, y, r, alpha);
-  }
-
-  const tex = new THREE.CanvasTexture(canvas);
-  tex.generateMipmaps = true;
-  tex.minFilter = THREE.LinearMipmapLinearFilter;
-  tex.magFilter  = THREE.LinearFilter;
-  tex.anisotropy = 16;
-  return tex;
-}
-
-let _symbolTexCache = null;
-function getSymbolTexture() {
-  if (!_symbolTexCache) _symbolTexCache = createSymbolTexture();
-  return _symbolTexCache;
-}
-
 // ── Wisp glow sprite ──────────────────────────────────────────────────────────
 
 function createWispGlow() {
@@ -155,40 +45,61 @@ function buildWispData() {
   }));
 }
 
+// ── Fragment orbit data ───────────────────────────────────────────────────────
+
+function buildFragData() {
+  return [
+    { theta: 0,                speed:  0.7,  radius: 1.8, yOff:  0.4, bobPhase: 0.0 },
+    { theta: Math.PI * 0.55,   speed: -0.5,  radius: 2.2, yOff: -0.3, bobPhase: 1.5 },
+    { theta: Math.PI,          speed:  0.9,  radius: 1.6, yOff:  0.7, bobPhase: 0.8 },
+    { theta: Math.PI * 1.55,   speed: -0.65, radius: 2.0, yOff: -0.6, bobPhase: 2.3 },
+  ];
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function Monolith({ position = [2, 35, -3] }) {
   const groupRef     = useRef();
   const hoverRef     = useRef(false);
   const pulseRef     = useRef(0);
+  const fragRef      = useRef(0);   // lerped fragment opacity 0→1
   const spinSpeedRef = useRef(IDLE_SPIN);
   const basePosRef   = useRef(position);
+  const fragRefs     = useRef([]);
 
-  const symbolTex = useMemo(() => getSymbolTexture(), []);
-  const wispTex   = useMemo(() => getWispTex(),        []);
-  const wispData  = useMemo(() => buildWispData(),     []);
+  const wispTex  = useMemo(() => getWispTex(),    []);
+  const wispData = useMemo(() => buildWispData(),  []);
+  const fragData = useMemo(() => buildFragData(),  []);
 
-  // Diamond — one half shared between upper and lower meshes
-  // Each half is offset ±HALF_H so bases meet at equator and tips point out
+  // Diamond halves
   const halfGeo   = useMemo(() => new THREE.ConeGeometry(1.0, 3.5, 4), []);
   const halfEdges = useMemo(() => new THREE.EdgesGeometry(halfGeo), [halfGeo]);
 
-  // Extract edge vertex pairs for drei <Line segments> — screen-space lineWidth
   const edgePoints = useMemo(() => {
     const arr = halfEdges.attributes.position.array;
     const pts = [];
     for (let i = 0; i < arr.length; i += 3) pts.push([arr[i], arr[i + 1], arr[i + 2]]);
     return pts;
   }, [halfEdges]);
-  const mainMat   = useMemo(() => new THREE.MeshStandardMaterial({
+
+  const mainMat = useMemo(() => new THREE.MeshStandardMaterial({
     color: '#0a0a0f',
-    map: symbolTex,
-    emissiveMap: symbolTex,
     emissive: new THREE.Color('#00ff6a'),
     emissiveIntensity: 0.15,
     metalness: 0.7,
     roughness: 0.4,
-  }), [symbolTex]);
+  }), []);
+
+  // Fragment geometry + shared material (wireframe octahedron shards)
+  const fragGeo = useMemo(() => new THREE.OctahedronGeometry(0.18, 0), []);
+  const fragMat = useMemo(() => new THREE.MeshBasicMaterial({
+    color: '#00ff6a',
+    transparent: true,
+    opacity: 0,
+    wireframe: true,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  }), []);
 
   const wispGeo = useMemo(() => {
     const positions = new Float32Array(WISP_COUNT * 3);
@@ -204,8 +115,8 @@ export default function Monolith({ position = [2, 35, -3] }) {
   }, [wispGeo]);
 
   useEffect(() => {
-    return () => { halfGeo.dispose(); halfEdges.dispose(); mainMat.dispose(); };
-  }, [halfGeo, halfEdges, mainMat]);
+    return () => { halfGeo.dispose(); halfEdges.dispose(); mainMat.dispose(); fragGeo.dispose(); fragMat.dispose(); };
+  }, [halfGeo, halfEdges, mainMat, fragGeo, fragMat]);
 
   useFrame((state, delta) => {
     const g = groupRef.current;
@@ -222,10 +133,27 @@ export default function Monolith({ position = [2, 35, -3] }) {
     g.position.y = basePosRef.current[1] + Math.sin(t * 0.5) * 0.2;
     g.position.z = basePosRef.current[2];
 
-    // Emissive intensity lerp — shared material updates both halves
+    // Emissive intensity lerp
     const targetIntensity = hoverRef.current ? 0.55 : 0.15;
     pulseRef.current += (targetIntensity - pulseRef.current) * Math.min(delta * 3, 1);
     mainMat.emissiveIntensity = pulseRef.current;
+
+    // Fragment fade + orbit
+    const targetFrag = hoverRef.current ? 0.75 : 0;
+    fragRef.current += (targetFrag - fragRef.current) * Math.min(delta * 3, 1);
+    fragMat.opacity = fragRef.current;
+
+    fragData.forEach((f, i) => {
+      f.theta += f.speed * delta;
+      const mesh = fragRefs.current[i];
+      if (!mesh) return;
+      mesh.position.x = Math.cos(f.theta) * f.radius;
+      mesh.position.y = f.yOff + Math.sin(t * 0.4 + f.bobPhase) * 0.25;
+      mesh.position.z = Math.sin(f.theta) * f.radius;
+      // gentle independent tumble
+      mesh.rotation.y = t * f.speed * 0.8;
+      mesh.rotation.x = Math.sin(t * 0.35 + f.bobPhase) * 0.6;
+    });
 
     // Wisp orbit
     const posAttr = wispGeo.attributes.position;
@@ -239,7 +167,7 @@ export default function Monolith({ position = [2, 35, -3] }) {
 
   return (
     <group ref={groupRef} position={position}>
-      {/* Hit zone — sphere covers full diamond */}
+      {/* Hit zone */}
       <mesh
         onPointerOver={(e) => { e.stopPropagation(); hoverRef.current = true; playCosmicVoid(); }}
         onPointerOut={() => { hoverRef.current = false; stopCosmicVoid(); }}
@@ -260,7 +188,7 @@ export default function Monolith({ position = [2, 35, -3] }) {
         <primitive object={mainMat} attach="material" />
       </mesh>
 
-      {/* Edge outlines — upper (Line2: screen-space px, holds thickness at any zoom) */}
+      {/* Edge outlines — upper */}
       <group position={[0, 1.75, 0]}>
         <Line points={edgePoints} segments lineWidth={1.8}
           color="#00ff6a" opacity={0.6} transparent
@@ -275,6 +203,14 @@ export default function Monolith({ position = [2, 35, -3] }) {
           depthWrite={false} blending={THREE.AdditiveBlending}
         />
       </group>
+
+      {/* Orbiting fragments — fade in on hover */}
+      {fragData.map((_, i) => (
+        <mesh key={i} ref={el => { fragRefs.current[i] = el; }}>
+          <primitive object={fragGeo} attach="geometry" />
+          <primitive object={fragMat} attach="material" />
+        </mesh>
+      ))}
 
       {/* Energy wisps */}
       <points renderOrder={1} geometry={wispGeo}>
