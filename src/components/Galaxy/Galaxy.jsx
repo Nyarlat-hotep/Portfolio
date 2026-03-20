@@ -17,6 +17,8 @@ import ShootingStars from './ShootingStars';
 import DistantGalaxy from './DistantGalaxy';
 import GravityField from './GravityField';
 import Asteroid from './Asteroid';
+import Monolith from './Monolith';
+import AlienTetris from '../UI/AlienTetris';
 import BottomNav from '../Navigation/BottomNav';
 import HUDFrame from '../UI/HUDFrame';
 import LightspeedTransition from '../UI/LightspeedTransition';
@@ -119,7 +121,7 @@ function WebGLFallback() {
 // Glitchy text effect - randomly corrupts characters
 // Keyboard camera: arrow L/R orbits, arrow U/D zooms — lives inside Canvas for useFrame access
 const _yAxis = new THREE.Vector3(0, 1, 0);
-function KeyboardCameraController({ controlsRef }) {
+function KeyboardCameraController({ controlsRef, tetrisActiveRef }) {
   const keysRef = useRef({});
 
   useEffect(() => {
@@ -143,6 +145,7 @@ function KeyboardCameraController({ controlsRef }) {
     const keys = keysRef.current;
     const controls = controlsRef.current;
     if (!controls) return;
+    if (tetrisActiveRef?.current) return;
     if (!keys.ArrowLeft && !keys.ArrowRight && !keys.ArrowUp && !keys.ArrowDown) return;
 
     const ORBIT_SPEED = 1.4; // rad/sec
@@ -197,6 +200,10 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
   const [codexError,         setCodexError]         = useState(false);
   const [warpActive,         setWarpActive]          = useState(false);
   const [presentationOpen,   setPresentationOpen]   = useState(false);
+  const [tetrisOpen,    setTetrisOpen]    = useState(false);
+  const [monolithPulse, setMonolithPulse] = useState(false);
+  const tetrisActiveRef = useRef(false);
+  const monolithPulseTimerRef = useRef(null);
 
   // Ref-stable wrapper — prevents handler useMemo/useCallback deps from invalidating
   // when parent passes a new onPlanetClick function reference on each render
@@ -301,6 +308,15 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
     if (e.key === 'Enter') handleCodexSubmit();
   }, [handleCodexSubmit]);
 
+  const handleTetrisWin = useCallback(() => {
+    setMonolithPulse(true);
+    monolithPulseTimerRef.current = setTimeout(() => setMonolithPulse(false), 3000);
+  }, []);
+
+  useEffect(() => {
+    return () => { clearTimeout(monolithPulseTimerRef.current); };
+  }, []);
+
   // Memoized click handlers per planet — stable forever via ref, no dep on onPlanetClick
   const planetClickHandlers = useMemo(() => {
     return planetsData.reduce((handlers, planet, index) => {
@@ -393,6 +409,7 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
     const handleKeyDown = (e) => {
       if (presentationOpen) return;
       if (e.key === 'Escape') {
+        if (tetrisOpen) return;
         if (asteroidModalOpen) {
           playCaseStudyClose();
           setAsteroidModalOpen(false);
@@ -404,7 +421,7 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [presentationOpen, asteroidModalOpen]);
+  }, [presentationOpen, asteroidModalOpen, tetrisOpen]);
 
   // Shift+P — skip codex, go straight to warp
   useEffect(() => {
@@ -441,7 +458,7 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
         <MobileTapHandler pendingTapRef={pendingTapRef} />
 
         {/* Arrow key camera: L/R orbits, U/D zooms */}
-        <KeyboardCameraController controlsRef={controlsRef} />
+        <KeyboardCameraController controlsRef={controlsRef} tetrisActiveRef={tetrisActiveRef} />
 
         {/* Camera setup - starts zoomed out for intro */}
         <PerspectiveCamera makeDefault position={[0, 8, 55]} fov={60} />
@@ -488,6 +505,13 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
 
         {/* Drifting alien asteroid — clickable */}
         <Asteroid onAsteroidClick={handleAsteroidClick} />
+
+        {/* Alien monolith — floating above planet cluster */}
+        <Monolith
+          position={[2, 28, -3]}
+          onOpen={() => { playCaseStudyOpen(); setTetrisOpen(true); }}
+          pulse={monolithPulse}
+        />
 
         {/* Daily constellation — opposite side of planet cluster from Cosmic Void */}
         <Constellation position={[-28, 18, -55]} onSelect={handleConstellationSelect} onHover={handleHover} />
@@ -598,6 +622,17 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
         </AnimatePresence>,
         document.body
       )}
+
+      {/* Alien Tetris game overlay */}
+      <AnimatePresence>
+        {tetrisOpen && (
+          <AlienTetris
+            onClose={() => { playCaseStudyClose(); setTetrisOpen(false); }}
+            onWin={handleTetrisWin}
+            tetrisActiveRef={tetrisActiveRef}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Planet name label - futuristic HUD style (hide for Home planet) */}
       <AnimatePresence>
