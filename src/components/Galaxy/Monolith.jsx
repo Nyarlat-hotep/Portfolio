@@ -5,13 +5,30 @@ import * as THREE from 'three';
 import { playCosmicVoid, stopCosmicVoid } from '../../utils/sounds';
 
 const IDLE_SPIN  = 0.09;
-const HOVER_SPIN = 0.9;
+const HOVER_SPIN = 2.5;
+
+// ── Fragment orbit data ───────────────────────────────────────────────────────
+
+function buildFragData() {
+  return [
+    { theta: 0,                speed:  0.7,  radius: 1.8, yOff:  0.4, bobPhase: 0.0 },
+    { theta: Math.PI * 0.55,   speed: -0.5,  radius: 2.2, yOff: -0.3, bobPhase: 1.5 },
+    { theta: Math.PI,          speed:  0.9,  radius: 1.6, yOff:  0.7, bobPhase: 0.8 },
+    { theta: Math.PI * 1.55,   speed: -0.65, radius: 2.0, yOff: -0.6, bobPhase: 2.3 },
+  ];
+}
+
+// ── Component ─────────────────────────────────────────────────────────────────
 
 export default function Monolith({ position = [2, 35, -3] }) {
   const groupRef     = useRef();
   const hoverRef     = useRef(false);
+  const fragRef      = useRef(0);
   const spinSpeedRef = useRef(IDLE_SPIN);
   const basePosRef   = useRef(position);
+  const fragRefs     = useRef([]);
+
+  const fragData = useMemo(() => buildFragData(), []);
 
   // Diamond halves
   const halfGeo   = useMemo(() => new THREE.ConeGeometry(1.0, 3.5, 4), []);
@@ -30,9 +47,19 @@ export default function Monolith({ position = [2, 35, -3] }) {
     roughness: 0.3,
   }), []);
 
+  const fragGeo = useMemo(() => new THREE.OctahedronGeometry(0.18, 0), []);
+  const fragMat = useMemo(() => new THREE.MeshBasicMaterial({
+    color: '#00ff6a',
+    transparent: true,
+    opacity: 0,
+    wireframe: true,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  }), []);
+
   useEffect(() => {
-    return () => { halfGeo.dispose(); halfEdges.dispose(); mainMat.dispose(); };
-  }, [halfGeo, halfEdges, mainMat]);
+    return () => { halfGeo.dispose(); halfEdges.dispose(); mainMat.dispose(); fragGeo.dispose(); fragMat.dispose(); };
+  }, [halfGeo, halfEdges, mainMat, fragGeo, fragMat]);
 
   useFrame((state, delta) => {
     const g = groupRef.current;
@@ -49,6 +76,21 @@ export default function Monolith({ position = [2, 35, -3] }) {
     g.position.y = basePosRef.current[1] + Math.sin(t * 0.5) * 0.2;
     g.position.z = basePosRef.current[2];
 
+    // Fragment fade + orbit
+    const targetFrag = hoverRef.current ? 0.75 : 0;
+    fragRef.current += (targetFrag - fragRef.current) * Math.min(delta * 3, 1);
+    fragMat.opacity = fragRef.current;
+
+    fragData.forEach((f, i) => {
+      f.theta += f.speed * delta;
+      const mesh = fragRefs.current[i];
+      if (!mesh) return;
+      mesh.position.x = Math.cos(f.theta) * f.radius;
+      mesh.position.y = f.yOff + Math.sin(t * 0.4 + f.bobPhase) * 0.25;
+      mesh.position.z = Math.sin(f.theta) * f.radius;
+      mesh.rotation.y = t * f.speed * 0.8;
+      mesh.rotation.x = Math.sin(t * 0.35 + f.bobPhase) * 0.6;
+    });
   });
 
   return (
@@ -89,6 +131,14 @@ export default function Monolith({ position = [2, 35, -3] }) {
           depthWrite={false} blending={THREE.AdditiveBlending}
         />
       </group>
+
+      {/* Orbiting fragments — fade in on hover */}
+      {fragData.map((_, i) => (
+        <mesh key={i} ref={el => { fragRefs.current[i] = el; }}>
+          <primitive object={fragGeo} attach="geometry" />
+          <primitive object={fragMat} attach="material" />
+        </mesh>
+      ))}
     </group>
   );
 }
