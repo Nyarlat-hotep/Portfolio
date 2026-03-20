@@ -152,9 +152,8 @@ function buildWispData() {
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export default function Monolith({ position = [2, 28, -3] }) {
+export default function Monolith({ position = [2, 35, -3] }) {
   const groupRef     = useRef();
-  const mainMatRef   = useRef();
   const hoverRef     = useRef(false);
   const pulseRef     = useRef(0);
   const spinSpeedRef = useRef(IDLE_SPIN);
@@ -164,8 +163,18 @@ export default function Monolith({ position = [2, 28, -3] }) {
   const wispTex   = useMemo(() => getWispTex(),        []);
   const wispData  = useMemo(() => buildWispData(),     []);
 
-  const pyramidGeo   = useMemo(() => new THREE.ConeGeometry(2.5, 7, 4), []);
-  const pyramidEdges = useMemo(() => new THREE.EdgesGeometry(pyramidGeo), [pyramidGeo]);
+  // Diamond — one half shared between upper and lower meshes
+  const halfGeo   = useMemo(() => new THREE.ConeGeometry(1.6, 3.5, 4), []);
+  const halfEdges = useMemo(() => new THREE.EdgesGeometry(halfGeo), [halfGeo]);
+  const mainMat   = useMemo(() => new THREE.MeshStandardMaterial({
+    color: '#0a0a0f',
+    map: symbolTex,
+    emissiveMap: symbolTex,
+    emissive: new THREE.Color('#00ff6a'),
+    emissiveIntensity: 0.15,
+    metalness: 0.7,
+    roughness: 0.4,
+  }), [symbolTex]);
 
   const wispGeo = useMemo(() => {
     const positions = new Float32Array(WISP_COUNT * 3);
@@ -181,8 +190,8 @@ export default function Monolith({ position = [2, 28, -3] }) {
   }, [wispGeo]);
 
   useEffect(() => {
-    return () => { pyramidGeo.dispose(); pyramidEdges.dispose(); };
-  }, [pyramidGeo, pyramidEdges]);
+    return () => { halfGeo.dispose(); halfEdges.dispose(); mainMat.dispose(); };
+  }, [halfGeo, halfEdges, mainMat]);
 
   useFrame((state, delta) => {
     const g = groupRef.current;
@@ -199,12 +208,10 @@ export default function Monolith({ position = [2, 28, -3] }) {
     g.position.y = basePosRef.current[1] + Math.sin(t * 0.5) * 0.2;
     g.position.z = basePosRef.current[2];
 
-    // Emissive intensity lerp
+    // Emissive intensity lerp — shared material updates both halves
     const targetIntensity = hoverRef.current ? 0.55 : 0.15;
     pulseRef.current += (targetIntensity - pulseRef.current) * Math.min(delta * 3, 1);
-    if (mainMatRef.current) {
-      mainMatRef.current.emissiveIntensity = pulseRef.current;
-    }
+    mainMat.emissiveIntensity = pulseRef.current;
 
     // Wisp orbit
     const posAttr = wispGeo.attributes.position;
@@ -218,33 +225,30 @@ export default function Monolith({ position = [2, 28, -3] }) {
 
   return (
     <group ref={groupRef} position={position}>
-      {/* Invisible hit zone — hover acceleration */}
+      {/* Hit zone — sphere covers full diamond */}
       <mesh
         onPointerOver={(e) => { e.stopPropagation(); hoverRef.current = true; }}
         onPointerOut={() => { hoverRef.current = false; }}
       >
-        <coneGeometry args={[3.5, 9, 4]} />
+        <sphereGeometry args={[2.5, 8, 8]} />
         <meshBasicMaterial transparent opacity={0} depthWrite={false} />
       </mesh>
 
-      {/* Main pyramid */}
+      {/* Upper half */}
       <mesh>
-        <primitive object={pyramidGeo} attach="geometry" />
-        <meshStandardMaterial
-          ref={mainMatRef}
-          color="#0a0a0f"
-          map={symbolTex}
-          emissiveMap={symbolTex}
-          emissive="#00ff6a"
-          emissiveIntensity={0.15}
-          metalness={0.7}
-          roughness={0.4}
-        />
+        <primitive object={halfGeo} attach="geometry" />
+        <primitive object={mainMat} attach="material" />
       </mesh>
 
-      {/* Edge outlines — trace pyramid faces */}
+      {/* Lower half — flipped */}
+      <mesh rotation={[Math.PI, 0, 0]}>
+        <primitive object={halfGeo} attach="geometry" />
+        <primitive object={mainMat} attach="material" />
+      </mesh>
+
+      {/* Edge outlines — upper */}
       <lineSegments>
-        <primitive object={pyramidEdges} attach="geometry" />
+        <primitive object={halfEdges} attach="geometry" />
         <lineBasicMaterial
           color="#00ff6a"
           transparent
@@ -254,9 +258,34 @@ export default function Monolith({ position = [2, 28, -3] }) {
         />
       </lineSegments>
 
-      {/* Rim glow — slightly larger BackSide copy */}
+      {/* Edge outlines — lower */}
+      <lineSegments rotation={[Math.PI, 0, 0]}>
+        <primitive object={halfEdges} attach="geometry" />
+        <lineBasicMaterial
+          color="#00ff6a"
+          transparent
+          opacity={0.55}
+          depthWrite={false}
+          blending={THREE.AdditiveBlending}
+        />
+      </lineSegments>
+
+      {/* Rim glow — upper */}
       <mesh>
-        <coneGeometry args={[2.85, 7.98, 4]} />
+        <coneGeometry args={[1.84, 4.0, 4]} />
+        <meshBasicMaterial
+          color="#00ff6a"
+          side={THREE.BackSide}
+          transparent
+          opacity={0.18}
+          depthWrite={false}
+          blending={THREE.AdditiveBlending}
+        />
+      </mesh>
+
+      {/* Rim glow — lower */}
+      <mesh rotation={[Math.PI, 0, 0]}>
+        <coneGeometry args={[1.84, 4.0, 4]} />
         <meshBasicMaterial
           color="#00ff6a"
           side={THREE.BackSide}

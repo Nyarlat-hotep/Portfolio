@@ -490,7 +490,7 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
         <Asteroid onAsteroidClick={handleAsteroidClick} />
 
         {/* Alien monolith — floating above planet cluster */}
-        <Monolith position={[2, 28, -3]} />
+        <Monolith position={[2, 35, -3]} />
 
         {/* Daily constellation — opposite side of planet cluster from Cosmic Void */}
         <Constellation position={[-28, 18, -55]} onSelect={handleConstellationSelect} onHover={handleHover} />
