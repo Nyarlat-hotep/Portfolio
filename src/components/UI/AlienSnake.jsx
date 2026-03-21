@@ -582,10 +582,10 @@ export default function AlienSnake({ onClose }) {
     ctx.save();
     ctx.strokeStyle = 'rgba(0, 255, 106, 0.13)';
     ctx.lineWidth = 1;
-    for (let x = 0; x < W; x += 60) {
+    for (let x = 0; x < W; x += 32) {
       ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
     }
-    for (let y = 0; y < H; y += 60) {
+    for (let y = 0; y < H; y += 32) {
       ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
     }
     ctx.restore();
