@@ -20,7 +20,7 @@ function buildFragData() {
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export default function Monolith({ position = [2, 35, -3] }) {
+export default function Monolith({ position = [2, 35, -3], onOpen }) {
   const groupRef     = useRef();
   const hoverRef     = useRef(false);
   const fragRef      = useRef(0);
@@ -99,6 +99,7 @@ export default function Monolith({ position = [2, 35, -3] }) {
       <mesh
         onPointerOver={(e) => { e.stopPropagation(); hoverRef.current = true; playCosmicVoid(); }}
         onPointerOut={() => { hoverRef.current = false; stopCosmicVoid(); }}
+        onClick={(e) => { e.stopPropagation(); onOpen?.(); }}
       >
         <sphereGeometry args={[2.5, 8, 8]} />
         <meshBasicMaterial transparent opacity={0} depthWrite={false} />

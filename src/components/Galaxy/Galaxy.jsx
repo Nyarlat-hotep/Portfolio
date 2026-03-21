@@ -23,6 +23,7 @@ import HUDFrame from '../UI/HUDFrame';
 import LightspeedTransition from '../UI/LightspeedTransition';
 import PresentationMode from '../UI/PresentationMode';
 import '../UI/PresentationMode.css';
+import AlienSnake from '../UI/AlienSnake';
 import { planetsData, getAdjacentPlanet } from '../../data/planets';
 import { isWebGLSupported } from '../../utils/webglDetect';
 import { isTouchDevice } from '../../utils/isTouchDevice';
@@ -198,6 +199,8 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
   const [codexError,         setCodexError]         = useState(false);
   const [warpActive,         setWarpActive]          = useState(false);
   const [presentationOpen,   setPresentationOpen]   = useState(false);
+  const [showSnake,          setShowSnake]           = useState(false);
+  const snakeActiveRef = useRef(false);
   // Ref-stable wrapper — prevents handler useMemo/useCallback deps from invalidating
   // when parent passes a new onPlanetClick function reference on each render
   const onPlanetClickRef = useRef(onPlanetClick);
@@ -388,10 +391,14 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
     return () => window.removeEventListener('keydown', handler);
   }, []);
 
+  // Keep snakeActiveRef in sync for ESC guard
+  useEffect(() => { snakeActiveRef.current = showSnake; }, [showSnake]);
+
   // ESC closes asteroid modal first; if none open, returns to home view
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (presentationOpen) return;
+      if (snakeActiveRef.current) return;
       if (e.key === 'Escape') {
         if (asteroidModalOpen) {
           playCaseStudyClose();
@@ -490,7 +497,7 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
         <Asteroid onAsteroidClick={handleAsteroidClick} />
 
         {/* Alien monolith — floating above planet cluster */}
-        <Monolith position={[2, 35, -3]} />
+        <Monolith position={[2, 35, -3]} onOpen={() => setShowSnake(true)} />
 
         {/* Daily constellation — opposite side of planet cluster from Cosmic Void */}
         <Constellation position={[-28, 18, -55]} onSelect={handleConstellationSelect} onHover={handleHover} />
@@ -859,6 +866,14 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
           onPlanetClickRef.current?.(planetsData.find(p => p.id === 'home'));
         }}
       />
+
+      {/* Alien Snake game — opened from monolith */}
+      {createPortal(
+        <AnimatePresence>
+          {showSnake && <AlienSnake onClose={() => setShowSnake(false)} />}
+        </AnimatePresence>,
+        document.body
+      )}
     </div>
   );
 }
