@@ -205,22 +205,43 @@ function drawCreature(ctx, x, y, stage, damaged, time, scale = 1, alpha = 1) {
 function drawTrail(ctx, trail, headR, damaged, time, stage) {
   if (trail.length < 2) return;
   const flickerOn = damaged ? Math.floor(time / 120) % 2 === 0 : false;
-  const color = (damaged && flickerOn) ? '#ff4444' : '#00ff6a';
+  const isDamaged = damaged && flickerOn;
+  const colorFade  = isDamaged ? 'rgba(255,68,68,0)'    : 'rgba(0,255,106,0)';
+  const colorHalo  = isDamaged ? 'rgba(255,68,68,0.13)' : 'rgba(0,255,106,0.13)';
+  const colorCore  = isDamaged ? 'rgba(255,68,68,0.45)' : 'rgba(0,255,106,0.45)';
 
-  // No shadowBlur per dot — too expensive at long trail lengths.
-  // Single save/restore around the whole loop.
-  // At stage 4+, skip every other point to halve arc calls.
   const step = stage >= 4 ? 2 : 1;
+  const head = trail[0];
+  const tail = trail[trail.length - 1];
+
+  // Build path once, reuse for both strokes
+  const path = new Path2D();
+  for (let i = 0; i < trail.length; i += step) {
+    if (i === 0) path.moveTo(trail[i].x, trail[i].y);
+    else path.lineTo(trail[i].x, trail[i].y);
+  }
+
   ctx.save();
   ctx.shadowBlur = 0;
-  ctx.fillStyle = color;
-  for (let i = 0; i < trail.length; i += step) {
-    const frac = 1 - i / trail.length;
-    ctx.globalAlpha = frac * frac * 0.3; // squared falloff — dimmer, faster fade
-    ctx.beginPath();
-    ctx.arc(trail[i].x, trail[i].y, Math.max(1, headR * 0.45 * frac), 0, Math.PI * 2);
-    ctx.fill();
-  }
+  ctx.lineJoin = 'round';
+  ctx.lineCap = 'round';
+
+  // Outer halo — wide, soft
+  const haloGrad = ctx.createLinearGradient(head.x, head.y, tail.x, tail.y);
+  haloGrad.addColorStop(0, colorHalo);
+  haloGrad.addColorStop(1, colorFade);
+  ctx.strokeStyle = haloGrad;
+  ctx.lineWidth = headR * 0.75;
+  ctx.stroke(path);
+
+  // Inner core — narrow, bright
+  const coreGrad = ctx.createLinearGradient(head.x, head.y, tail.x, tail.y);
+  coreGrad.addColorStop(0, colorCore);
+  coreGrad.addColorStop(1, colorFade);
+  ctx.strokeStyle = coreGrad;
+  ctx.lineWidth = headR * 0.28;
+  ctx.stroke(path);
+
   ctx.restore();
 }
 
@@ -388,8 +409,6 @@ function buildInitialState(W, H) {
     enemies: [
       spawnEnemy('patroller', W, H),
       spawnEnemy('patroller', W, H),
-      spawnEnemy('patroller', W, H),
-      spawnEnemy('patroller', W, H),
     ],
     particles: [],
     effects: [],  // ring pulse absorb animations
@@ -486,9 +505,16 @@ export default function AlienSnake({ onClose }) {
     window.addEventListener('resize', resize);
 
     let prevTime = performance.now();
+    let lastFrameTime = 0;
+    const TARGET_INTERVAL = 1000 / 60;
     let raf;
 
     const loop = (now) => {
+      if (now - lastFrameTime < TARGET_INTERVAL) {
+        raf = requestAnimationFrame(loop);
+        return;
+      }
+      lastFrameTime = now;
       const delta = Math.min((now - prevTime) / 1000, 0.05);
       prevTime = now;
       if (gameStateRef.current === 'playing' && gRef.current) {
@@ -679,8 +705,8 @@ export default function AlienSnake({ onClose }) {
     ctx.strokeStyle = 'rgba(0,255,106,0.13)';
     ctx.lineWidth = 1;
     ctx.beginPath();
-    for (let x = 0; x < W; x += 32) { ctx.moveTo(x, 0); ctx.lineTo(x, H); }
-    for (let y = 0; y < H; y += 32) { ctx.moveTo(0, y); ctx.lineTo(W, y); }
+    for (let x = 0; x < W; x += 64) { ctx.moveTo(x, 0); ctx.lineTo(x, H); }
+    for (let y = 0; y < H; y += 64) { ctx.moveTo(0, y); ctx.lineTo(W, y); }
     ctx.stroke();
     ctx.restore();
 
