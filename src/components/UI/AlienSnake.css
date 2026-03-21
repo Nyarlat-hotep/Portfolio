@@ -13,14 +13,18 @@
 
 .snake-controls-hint {
   position: absolute;
-  bottom: 20px;
+  bottom: 24px;
   left: 24px;
   font-family: 'Orbitron', monospace;
-  font-size: 11px;
-  color: rgba(0, 255, 106, 0.35);
-  letter-spacing: 0.08em;
+  font-size: 13px;
+  color: rgba(0, 255, 106, 0.8);
+  letter-spacing: 0.1em;
   pointer-events: none;
   user-select: none;
+  background: rgba(0, 255, 106, 0.05);
+  border: 1px solid rgba(0, 255, 106, 0.18);
+  padding: 8px 14px;
+  text-shadow: 0 0 10px rgba(0, 255, 106, 0.5);
 }
 
 .snake-game-over {
