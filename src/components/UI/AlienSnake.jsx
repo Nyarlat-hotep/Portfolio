@@ -729,25 +729,9 @@ export default function AlienSnake({ onClose }) {
     ctx.globalAlpha = 1;
     ctx.restore();
 
-    // Player trail
+    // Player trail + head
     const stageDef = STAGES[player.stage];
     drawTrail(ctx, player.trail, stageDef?.headR ?? 10, damaged, now, player.stage);
-
-    // Player segments — taper from head to tail
-    const segCount = stageDef?.segments ?? 0;
-    const trail = player.trail;
-    for (let s = 0; s < segCount; s++) {
-      const offset = Math.floor(((s + 1) / (segCount + 1)) * trail.length);
-      const pt = trail[offset];
-      if (!pt) continue;
-      // t=0 nearest head, t=1 farthest
-      const t = (s + 1) / (segCount + 1);
-      const segScale = 0.85 - t * 0.5;   // 0.85 → 0.35
-      const segAlpha = 0.7 - t * 0.4;    // 0.70 → 0.30
-      drawCreature(ctx, pt.x, pt.y, player.stage, damaged, now, segScale, segAlpha, false);
-    }
-
-    // Player head
     drawCreature(ctx, player.x, player.y, player.stage, damaged, now);
 
     // Stage label
