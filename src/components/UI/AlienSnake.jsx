@@ -149,6 +149,16 @@ function applyGlow(ctx, color, blur = 14) {
 }
 
 // ── Offscreen canvas cache — draw each stage shape once, blit every frame ────
+// All caches are DPR-aware: physical px = logical * _cachedDPR → sharp on retina.
+// Caches are cleared whenever DPR changes (window moves between monitors).
+
+let _cachedDPR = 1;
+
+function clearShapeCaches() {
+  _creatureCache.clear();
+  _collectibleCache.clear();
+  _enemyCache.clear();
+}
 
 const _creatureCache = new Map();
 const CACHE_PAD = 28; // extra pixels around shape for glow bleed
@@ -158,12 +168,13 @@ function getCreatureCanvas(stage, color) {
   if (_creatureCache.has(key)) return _creatureCache.get(key);
 
   const stageDef = STAGES[stage];
-  const size = (stageDef.headR + CACHE_PAD) * 2;
+  const logSize = (stageDef.headR + CACHE_PAD) * 2;
   const oc = document.createElement('canvas');
-  oc.width = size;
-  oc.height = size;
+  oc.width = logSize * _cachedDPR;
+  oc.height = logSize * _cachedDPR;
   const octx = oc.getContext('2d');
-  octx.translate(size / 2, size / 2);
+  octx.scale(_cachedDPR, _cachedDPR);
+  octx.translate(logSize / 2, logSize / 2);
   octx.shadowColor = color;
   octx.shadowBlur = 18;
   octx.strokeStyle = color;
@@ -249,12 +260,13 @@ function getCollectibleCanvas(shapeIdx, r) {
 
   const sides = COLLECTIBLE_SIDES[shapeIdx % COLLECTIBLE_SIDES.length];
   const rot = sides === 4 && shapeIdx === 4 ? Math.PI / 4 : 0;
-  const size = (rKey + COLL_PAD) * 2;
+  const logSize = (rKey + COLL_PAD) * 2;
   const oc = document.createElement('canvas');
-  oc.width = size;
-  oc.height = size;
+  oc.width = logSize * _cachedDPR;
+  oc.height = logSize * _cachedDPR;
   const octx = oc.getContext('2d');
-  octx.translate(size / 2, size / 2);
+  octx.scale(_cachedDPR, _cachedDPR);
+  octx.translate(logSize / 2, logSize / 2);
   octx.shadowColor = '#00ff6a';
   octx.shadowBlur = 12;
   octx.strokeStyle = 'rgba(0,255,106,0.85)';
@@ -265,12 +277,13 @@ function getCollectibleCanvas(shapeIdx, r) {
 }
 
 function drawCollectible(ctx, c) {
+  const rKey = Math.round(c.r);
+  const logSize = (rKey + COLL_PAD) * 2;
   const oc = getCollectibleCanvas(c.shapeIdx, c.r);
-  const half = oc.width / 2;
   ctx.save();
   ctx.translate(c.x, c.y);
   ctx.rotate(c.rotation);
-  ctx.drawImage(oc, -half, -half);
+  ctx.drawImage(oc, -logSize / 2, -logSize / 2, logSize, logSize);
   ctx.restore();
 }
 
@@ -283,12 +296,13 @@ function getEnemyCanvas(type) {
   if (_enemyCache.has(type)) return _enemyCache.get(type);
 
   const color = type === 'chaser' ? '#ff6644' : '#ff4400';
-  const size = (15 + ENEMY_PAD) * 2;
+  const logSize = (15 + ENEMY_PAD) * 2;
   const oc = document.createElement('canvas');
-  oc.width = size;
-  oc.height = size;
+  oc.width = logSize * _cachedDPR;
+  oc.height = logSize * _cachedDPR;
   const octx = oc.getContext('2d');
-  octx.translate(size / 2, size / 2);
+  octx.scale(_cachedDPR, _cachedDPR);
+  octx.translate(logSize / 2, logSize / 2);
   octx.shadowColor = '#ff3300';
   octx.shadowBlur = 16;
   octx.strokeStyle = color;
@@ -299,12 +313,12 @@ function getEnemyCanvas(type) {
 }
 
 function drawEnemy(ctx, e) {
+  const logSize = (15 + ENEMY_PAD) * 2;
   const oc = getEnemyCanvas(e.type);
-  const half = oc.width / 2;
   ctx.save();
   ctx.translate(e.x, e.y);
   ctx.rotate(e.rotation);
-  ctx.drawImage(oc, -half, -half);
+  ctx.drawImage(oc, -logSize / 2, -logSize / 2, logSize, logSize);
   ctx.restore();
 }
 
@@ -454,9 +468,16 @@ export default function AlienSnake({ onClose }) {
     if (!canvas) return;
 
     const resize = () => {
-      canvas.width  = canvas.clientWidth;
-      canvas.height = canvas.clientHeight;
-      ctxRef.current = canvas.getContext('2d');
+      const dpr = window.devicePixelRatio || 1;
+      if (dpr !== _cachedDPR) {
+        _cachedDPR = dpr;
+        clearShapeCaches();
+      }
+      canvas.width  = canvas.clientWidth  * dpr;
+      canvas.height = canvas.clientHeight * dpr;
+      const ctx = canvas.getContext('2d');
+      ctx.scale(dpr, dpr);
+      ctxRef.current = ctx;
       if (!gRef.current) {
         gRef.current = buildInitialState(canvas.clientWidth, canvas.clientHeight);
       }
