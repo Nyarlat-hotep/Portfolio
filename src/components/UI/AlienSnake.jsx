@@ -191,17 +191,19 @@ function drawCreature(ctx, x, y, stage, damaged, time, scale = 1, alpha = 1) {
   ctx.restore();
 }
 
-function drawTrail(ctx, trail, headR, damaged, time) {
+function drawTrail(ctx, trail, headR, damaged, time, stage) {
   if (trail.length < 2) return;
   const flickerOn = damaged ? Math.floor(time / 120) % 2 === 0 : false;
   const color = (damaged && flickerOn) ? '#ff4444' : '#00ff6a';
 
   // No shadowBlur per dot — too expensive at long trail lengths.
   // Single save/restore around the whole loop.
+  // At stage 4+, skip every other point to halve arc calls.
+  const step = stage >= 4 ? 2 : 1;
   ctx.save();
   ctx.shadowBlur = 0;
   ctx.fillStyle = color;
-  for (let i = 0; i < trail.length; i++) {
+  for (let i = 0; i < trail.length; i += step) {
     const frac = 1 - i / trail.length;
     ctx.globalAlpha = frac * frac * 0.3; // squared falloff — dimmer, faster fade
     ctx.beginPath();
@@ -236,28 +238,73 @@ function drawRingPulse(ctx, fx, now) {
 
 const COLLECTIBLE_SIDES = [3, 4, 5, 6, 4];
 
+// Offscreen cache — draw each collectible shape once (glow baked in), blit every frame
+const _collectibleCache = new Map();
+const COLL_PAD = 18;
+
+function getCollectibleCanvas(shapeIdx, r) {
+  const rKey = Math.round(r);
+  const key = `${shapeIdx}|${rKey}`;
+  if (_collectibleCache.has(key)) return _collectibleCache.get(key);
+
+  const sides = COLLECTIBLE_SIDES[shapeIdx % COLLECTIBLE_SIDES.length];
+  const rot = sides === 4 && shapeIdx === 4 ? Math.PI / 4 : 0;
+  const size = (rKey + COLL_PAD) * 2;
+  const oc = document.createElement('canvas');
+  oc.width = size;
+  oc.height = size;
+  const octx = oc.getContext('2d');
+  octx.translate(size / 2, size / 2);
+  octx.shadowColor = '#00ff6a';
+  octx.shadowBlur = 12;
+  octx.strokeStyle = 'rgba(0,255,106,0.85)';
+  octx.lineWidth = 1.5;
+  drawPolygon(octx, rKey, sides, rot);
+  _collectibleCache.set(key, oc);
+  return oc;
+}
+
 function drawCollectible(ctx, c) {
+  const oc = getCollectibleCanvas(c.shapeIdx, c.r);
+  const half = oc.width / 2;
   ctx.save();
   ctx.translate(c.x, c.y);
   ctx.rotate(c.rotation);
-  applyGlow(ctx, '#00ff6a', 12);
-  ctx.strokeStyle = 'rgba(0,255,106,0.85)';
-  ctx.lineWidth = 1.5;
-  const sides = COLLECTIBLE_SIDES[c.shapeIdx % COLLECTIBLE_SIDES.length];
-  const rot = sides === 4 && c.shapeIdx === 4 ? Math.PI / 4 : 0;
-  drawPolygon(ctx, c.r, sides, rot);
+  ctx.drawImage(oc, -half, -half);
   ctx.restore();
 }
 
 // ── Enemy drawing ─────────────────────────────────────────────────────────────
 
+const _enemyCache = new Map();
+const ENEMY_PAD = 20;
+
+function getEnemyCanvas(type) {
+  if (_enemyCache.has(type)) return _enemyCache.get(type);
+
+  const color = type === 'chaser' ? '#ff6644' : '#ff4400';
+  const size = (15 + ENEMY_PAD) * 2;
+  const oc = document.createElement('canvas');
+  oc.width = size;
+  oc.height = size;
+  const octx = oc.getContext('2d');
+  octx.translate(size / 2, size / 2);
+  octx.shadowColor = '#ff3300';
+  octx.shadowBlur = 16;
+  octx.strokeStyle = color;
+  octx.lineWidth = 1.8;
+  drawStar(octx, 15, 8, 4, 0);
+  _enemyCache.set(type, oc);
+  return oc;
+}
+
 function drawEnemy(ctx, e) {
+  const oc = getEnemyCanvas(e.type);
+  const half = oc.width / 2;
   ctx.save();
   ctx.translate(e.x, e.y);
-  applyGlow(ctx, '#ff3300', 16);
-  ctx.strokeStyle = e.type === 'chaser' ? '#ff6644' : '#ff4400';
-  ctx.lineWidth = 1.8;
-  drawStar(ctx, 15, 8, 4, e.rotation);
+  ctx.rotate(e.rotation);
+  ctx.drawImage(oc, -half, -half);
   ctx.restore();
 }
 
@@ -340,6 +387,7 @@ function buildInitialState(W, H) {
 
 export default function AlienSnake({ onClose }) {
   const canvasRef = useRef(null);
+  const ctxRef = useRef(null);
   const gRef = useRef(null);
   const keysRef = useRef(new Set());
   const gameStateRef = useRef('playing');
@@ -406,10 +454,9 @@ export default function AlienSnake({ onClose }) {
     if (!canvas) return;
 
     const resize = () => {
-      canvas.width  = canvas.clientWidth  * window.devicePixelRatio;
-      canvas.height = canvas.clientHeight * window.devicePixelRatio;
-      const ctx = canvas.getContext('2d');
-      ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+      canvas.width  = canvas.clientWidth;
+      canvas.height = canvas.clientHeight;
+      ctxRef.current = canvas.getContext('2d');
       if (!gRef.current) {
         gRef.current = buildInitialState(canvas.clientWidth, canvas.clientHeight);
       }
@@ -600,11 +647,21 @@ export default function AlienSnake({ onClose }) {
     const canvas = canvasRef.current;
     const g = gRef.current;
     if (!canvas || !g) return;
-    const ctx = canvas.getContext('2d');
+    const ctx = ctxRef.current;
+    if (!ctx) return;
 
     ctx.fillStyle = '#030308';
     ctx.fillRect(0, 0, W, H);
 
+    // Grid — single batched path, no per-line stroke call
+    ctx.save();
+    ctx.strokeStyle = 'rgba(0,255,106,0.13)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let x = 0; x < W; x += 32) { ctx.moveTo(x, 0); ctx.lineTo(x, H); }
+    for (let y = 0; y < H; y += 32) { ctx.moveTo(0, y); ctx.lineTo(W, y); }
+    ctx.stroke();
+    ctx.restore();
 
     const { player, collectibles, enemies, particles, effects } = g;
     const damaged = now < player.damagedUntil;
@@ -627,7 +684,7 @@ export default function AlienSnake({ onClose }) {
 
     // Player trail
     const stageDef = STAGES[player.stage];
-    drawTrail(ctx, player.trail, stageDef?.headR ?? 10, damaged, now);
+    drawTrail(ctx, player.trail, stageDef?.headR ?? 10, damaged, now, player.stage);
 
     // Player segments — taper from head to tail
     const segCount = stageDef?.segments ?? 0;
