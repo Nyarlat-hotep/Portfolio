@@ -605,15 +605,6 @@ export default function AlienSnake({ onClose }) {
     ctx.fillStyle = '#030308';
     ctx.fillRect(0, 0, W, H);
 
-    // Grid — single path + single stroke for all lines
-    ctx.save();
-    ctx.strokeStyle = 'rgba(0, 255, 106, 0.13)';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    for (let x = 0; x < W; x += 32) { ctx.moveTo(x, 0); ctx.lineTo(x, H); }
-    for (let y = 0; y < H; y += 32) { ctx.moveTo(0, y); ctx.lineTo(W, y); }
-    ctx.stroke();
-    ctx.restore();
 
     const { player, collectibles, enemies, particles, effects } = g;
     const damaged = now < player.damagedUntil;
