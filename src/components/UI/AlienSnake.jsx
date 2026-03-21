@@ -339,11 +339,27 @@ export default function AlienSnake({ onClose }) {
     setScore(0);
   }, []);
 
+  const resumeGame = useCallback(() => {
+    gameStateRef.current = 'playing';
+    setGameState('playing');
+  }, []);
+
   // ── Keyboard ────────────────────────────────────────────────────────────────
 
   useEffect(() => {
     const down = (e) => {
-      if (e.key === 'Escape') { onClose(); return; }
+      if (e.key === 'Escape') {
+        if (gameStateRef.current === 'playing') {
+          gameStateRef.current = 'paused';
+          setGameState('paused');
+        } else if (gameStateRef.current === 'paused') {
+          gameStateRef.current = 'playing';
+          setGameState('playing');
+        } else if (gameStateRef.current === 'dead') {
+          onClose();
+        }
+        return;
+      }
       keysRef.current.add(e.key);
       if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) {
         e.preventDefault();
@@ -406,7 +422,7 @@ export default function AlienSnake({ onClose }) {
 
     // --- Movement ---
     const stage = player.stage;
-    const SPEED = 185 + stage * 15;
+    const SPEED = 290 + stage * 20;
     let ax = 0, ay = 0;
     if (keys.has('ArrowLeft'))  ax = -1;
     if (keys.has('ArrowRight')) ax =  1;
@@ -634,16 +650,26 @@ export default function AlienSnake({ onClose }) {
       <canvas ref={canvasRef} style={{ width: '100%', height: '100%' }} />
 
       <div className="snake-controls-hint">
-        ← → ↑ ↓&nbsp;&nbsp;MOVE&nbsp;&nbsp;&nbsp;&nbsp;ESC&nbsp;&nbsp;QUIT
+        ← → ↑ ↓&nbsp;&nbsp;MOVE&nbsp;&nbsp;&nbsp;&nbsp;ESC&nbsp;&nbsp;PAUSE
       </div>
+
+      {gameState === 'paused' && (
+        <div className="snake-game-over">
+          <h2 className="snake-paused-title">PAUSED</h2>
+          <div className="snake-game-over-btns">
+            <button className="snake-btn snake-btn-primary" onClick={resumeGame}>RESUME</button>
+            <button className="snake-btn" onClick={onClose}>QUIT</button>
+          </div>
+        </div>
+      )}
 
       {gameState === 'dead' && (
         <div className="snake-game-over">
           <h2>SIGNAL LOST</h2>
           <p>ENTITY DISSOLVED — {score} ABSORPTIONS</p>
           <div className="snake-game-over-btns">
-            <button className="snake-btn" onClick={initGame}>RETRY</button>
-            <button className="snake-btn danger" onClick={onClose}>QUIT</button>
+            <button className="snake-btn snake-btn-primary" onClick={initGame}>RETRY</button>
+            <button className="snake-btn" onClick={onClose}>QUIT</button>
           </div>
         </div>
       )}

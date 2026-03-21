@@ -48,6 +48,12 @@
   margin: 0;
 }
 
+.snake-paused-title {
+  color: #ff7700 !important;
+  text-shadow: 0 0 24px rgba(255, 119, 0, 0.6) !important;
+  animation: none !important;
+}
+
 .snake-game-over p {
   font-size: 13px;
   color: rgba(0, 255, 106, 0.6);
@@ -65,27 +71,48 @@
   font-size: 12px;
   letter-spacing: 0.15em;
   padding: 10px 28px;
-  background: transparent;
-  border: 1px solid #00ff6a;
-  color: #00ff6a;
+  background: rgba(5, 5, 5, 0.85);
+  border: 1px solid rgba(255, 119, 0, 0.25);
+  border-radius: 10px;
+  color: rgba(255, 255, 255, 0.8);
   cursor: pointer;
   text-transform: uppercase;
-  transition: background 0.2s, box-shadow 0.2s;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.snake-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 100%;
+  background: linear-gradient(90deg, rgba(255, 119, 0, 0.12), rgba(204, 34, 0, 0.12));
+  transition: width 0.3s ease;
+  z-index: 0;
+}
+
+.snake-btn:hover::before {
+  width: 100%;
 }
 
 .snake-btn:hover {
-  background: rgba(0, 255, 106, 0.1);
-  box-shadow: 0 0 12px rgba(0, 255, 106, 0.4);
+  border-color: rgba(255, 119, 0, 0.5);
+  color: #ffffff;
 }
 
-.snake-btn.danger {
-  border-color: #ff4444;
-  color: #ff4444;
+/* Primary action (Resume / Retry) — orange accent */
+.snake-btn-primary {
+  background: rgba(255, 119, 0, 0.05);
+  border-color: rgba(255, 119, 0, 0.4);
+  color: #ff7700;
 }
 
-.snake-btn.danger:hover {
-  background: rgba(255, 68, 68, 0.1);
-  box-shadow: 0 0 12px rgba(255, 68, 68, 0.4);
+.snake-btn-primary:hover {
+  border-color: #ff7700;
+  color: #ffffff;
 }
 
 @keyframes glitchRed {
