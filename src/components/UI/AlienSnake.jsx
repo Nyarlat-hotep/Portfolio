@@ -147,7 +147,7 @@ function applyGlow(ctx, color, blur = 14) {
   ctx.lineWidth = 1.5;
 }
 
-function drawCreature(ctx, x, y, stage, damaged, time, scale = 1, alpha = 1) {
+function drawCreature(ctx, x, y, stage, damaged, time, scale = 1, alpha = 1, isHead = true) {
   const stageDef = STAGES[stage];
   if (!stageDef) return;
 
@@ -159,7 +159,7 @@ function drawCreature(ctx, x, y, stage, damaged, time, scale = 1, alpha = 1) {
   ctx.globalAlpha = alpha;
   ctx.translate(x, y);
   ctx.scale(scale, scale);
-  applyGlow(ctx, glowColor, 18);
+  applyGlow(ctx, glowColor, isHead ? 16 : 6);
   ctx.strokeStyle = color;
   ctx.fillStyle = color;
   stageDef.draw(ctx);
@@ -171,21 +171,19 @@ function drawTrail(ctx, trail, headR, damaged, time) {
   const flickerOn = damaged ? Math.floor(time / 120) % 2 === 0 : false;
   const color = (damaged && flickerOn) ? '#ff4444' : '#00ff6a';
 
+  // No shadowBlur per dot — too expensive at long trail lengths.
+  // Single save/restore around the whole loop.
+  ctx.save();
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = color;
   for (let i = 0; i < trail.length; i++) {
-    const t = trail[i];
     const frac = 1 - i / trail.length;
-    const opacity = frac * 0.45;
-    const r = Math.max(1, headR * 0.55 * frac);
-    ctx.save();
-    ctx.globalAlpha = opacity;
-    ctx.shadowColor = color;
-    ctx.shadowBlur = 8;
-    ctx.fillStyle = color;
+    ctx.globalAlpha = frac * frac * 0.3; // squared falloff — dimmer, faster fade
     ctx.beginPath();
-    ctx.arc(t.x, t.y, r, 0, Math.PI * 2);
+    ctx.arc(trail[i].x, trail[i].y, Math.max(1, headR * 0.45 * frac), 0, Math.PI * 2);
     ctx.fill();
-    ctx.restore();
   }
+  ctx.restore();
 }
 
 // ── Ring pulse effect ─────────────────────────────────────────────────────────
@@ -532,7 +530,7 @@ export default function AlienSnake({ onClose }) {
 
       if (now >= player.damagedUntil) {
         const pdx = player.x - p.x, pdy = player.y - p.y;
-        const hitR = 10 + stage * 2;
+        const hitR = (STAGES[stage]?.headR ?? 10) * 0.85;
         if (pdx * pdx + pdy * pdy < hitR * hitR) {
           particles.splice(i, 1);
           player.damagedUntil = now + 1500;
@@ -582,7 +580,7 @@ export default function AlienSnake({ onClose }) {
 
     // Grid
     ctx.save();
-    ctx.strokeStyle = 'rgba(0, 255, 106, 0.06)';
+    ctx.strokeStyle = 'rgba(0, 255, 106, 0.13)';
     ctx.lineWidth = 1;
     for (let x = 0; x < W; x += 60) {
       ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
@@ -622,7 +620,7 @@ export default function AlienSnake({ onClose }) {
       const t = (s + 1) / (segCount + 1);
       const segScale = 0.85 - t * 0.5;   // 0.85 → 0.35
       const segAlpha = 0.7 - t * 0.4;    // 0.70 → 0.30
-      drawCreature(ctx, pt.x, pt.y, player.stage, damaged, now, segScale, segAlpha);
+      drawCreature(ctx, pt.x, pt.y, player.stage, damaged, now, segScale, segAlpha, false);
     }
 
     // Player head
