@@ -1,5 +1,6 @@
 import { useRef, useEffect, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
+import { stopBackground, playBackground } from '../../utils/sounds';
 import './AlienSnake.css';
 
 // ── Geometry helpers ──────────────────────────────────────────────────────────
@@ -147,22 +148,46 @@ function applyGlow(ctx, color, blur = 14) {
   ctx.lineWidth = 1.5;
 }
 
-function drawCreature(ctx, x, y, stage, damaged, time, scale = 1, alpha = 1, isHead = true) {
+// ── Offscreen canvas cache — draw each stage shape once, blit every frame ────
+
+const _creatureCache = new Map();
+const CACHE_PAD = 28; // extra pixels around shape for glow bleed
+
+function getCreatureCanvas(stage, color) {
+  const key = `${stage}|${color}`;
+  if (_creatureCache.has(key)) return _creatureCache.get(key);
+
+  const stageDef = STAGES[stage];
+  const size = (stageDef.headR + CACHE_PAD) * 2;
+  const oc = document.createElement('canvas');
+  oc.width = size;
+  oc.height = size;
+  const octx = oc.getContext('2d');
+  octx.translate(size / 2, size / 2);
+  octx.shadowColor = color;
+  octx.shadowBlur = 18;
+  octx.strokeStyle = color;
+  octx.fillStyle = color;
+  octx.lineWidth = 1.5;
+  stageDef.draw(octx);
+
+  _creatureCache.set(key, oc);
+  return oc;
+}
+
+function drawCreature(ctx, x, y, stage, damaged, time, scale = 1, alpha = 1) {
   const stageDef = STAGES[stage];
   if (!stageDef) return;
 
   const flickerOn = damaged ? Math.floor(time / 120) % 2 === 0 : false;
   const color = (damaged && flickerOn) ? '#ff4444' : '#00ff6a';
-  const glowColor = (damaged && flickerOn) ? '#ff2222' : '#00ff6a';
+
+  const oc = getCreatureCanvas(stage, color);
+  const size = (stageDef.headR + CACHE_PAD) * 2 * scale;
 
   ctx.save();
   ctx.globalAlpha = alpha;
-  ctx.translate(x, y);
-  ctx.scale(scale, scale);
-  applyGlow(ctx, glowColor, isHead ? 16 : 6);
-  ctx.strokeStyle = color;
-  ctx.fillStyle = color;
-  stageDef.draw(ctx);
+  ctx.drawImage(oc, x - size / 2, y - size / 2, size, size);
   ctx.restore();
 }
 
@@ -241,15 +266,10 @@ function drawEnemy(ctx, e) {
 function drawParticle(ctx, p, now) {
   const age = (now - p.createdAt) / 1500;
   const opacity = Math.max(0, 1 - age);
-  ctx.save();
   ctx.globalAlpha = opacity;
-  ctx.fillStyle = '#ff8844';
-  ctx.shadowColor = '#ff4400';
-  ctx.shadowBlur = 6;
   ctx.beginPath();
   ctx.arc(p.x, p.y, 3.5, 0, Math.PI * 2);
   ctx.fill();
-  ctx.restore();
 }
 
 // ── Init helpers ──────────────────────────────────────────────────────────────
@@ -340,6 +360,13 @@ export default function AlienSnake({ onClose }) {
   const resumeGame = useCallback(() => {
     gameStateRef.current = 'playing';
     setGameState('playing');
+  }, []);
+
+  // ── Music ───────────────────────────────────────────────────────────────────
+
+  useEffect(() => {
+    stopBackground();
+    return () => { playBackground(); };
   }, []);
 
   // ── Keyboard ────────────────────────────────────────────────────────────────
@@ -578,16 +605,14 @@ export default function AlienSnake({ onClose }) {
     ctx.fillStyle = '#030308';
     ctx.fillRect(0, 0, W, H);
 
-    // Grid
+    // Grid — single path + single stroke for all lines
     ctx.save();
     ctx.strokeStyle = 'rgba(0, 255, 106, 0.13)';
     ctx.lineWidth = 1;
-    for (let x = 0; x < W; x += 32) {
-      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
-    }
-    for (let y = 0; y < H; y += 32) {
-      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
-    }
+    ctx.beginPath();
+    for (let x = 0; x < W; x += 32) { ctx.moveTo(x, 0); ctx.lineTo(x, H); }
+    for (let y = 0; y < H; y += 32) { ctx.moveTo(0, y); ctx.lineTo(W, y); }
+    ctx.stroke();
     ctx.restore();
 
     const { player, collectibles, enemies, particles, effects } = g;
@@ -602,8 +627,12 @@ export default function AlienSnake({ onClose }) {
     // Enemies
     enemies.forEach(e => drawEnemy(ctx, e));
 
-    // Particles
+    // Particles — batched, no shadowBlur
+    ctx.save();
+    ctx.fillStyle = '#ff8844';
     particles.forEach(p => drawParticle(ctx, p, now));
+    ctx.globalAlpha = 1;
+    ctx.restore();
 
     // Player trail
     const stageDef = STAGES[player.stage];
