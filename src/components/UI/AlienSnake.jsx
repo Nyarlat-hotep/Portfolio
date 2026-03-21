@@ -158,6 +158,7 @@ function clearShapeCaches() {
   _creatureCache.clear();
   _collectibleCache.clear();
   _enemyCache.clear();
+  _obstacleCache.clear();
 }
 
 const _creatureCache = new Map();
@@ -343,6 +344,56 @@ function drawEnemy(ctx, e) {
   ctx.restore();
 }
 
+// ── Obstacle drawing ─────────────────────────────────────────────────────────
+// 3 distinct static shapes: mine (circle + spikes), crystal (6-star), barrier (tri)
+
+const _obstacleCache = new Map();
+const OBSTACLE_PAD = 22;
+const OBSTACLE_SHAPES = ['mine', 'crystal', 'barrier'];
+
+function getObstacleCanvas(shapeType, r) {
+  const rKey = Math.round(r);
+  const key = `${shapeType}|${rKey}`;
+  if (_obstacleCache.has(key)) return _obstacleCache.get(key);
+
+  const logSize = (rKey + OBSTACLE_PAD) * 2;
+  const oc = document.createElement('canvas');
+  oc.width = logSize * _cachedDPR;
+  oc.height = logSize * _cachedDPR;
+  const octx = oc.getContext('2d');
+  octx.scale(_cachedDPR, _cachedDPR);
+  octx.translate(logSize / 2, logSize / 2);
+  octx.shadowColor = '#ff2200';
+  octx.shadowBlur = 16;
+  octx.strokeStyle = '#ff3300';
+  octx.lineWidth = 1.8;
+
+  if (shapeType === 'mine') {
+    drawCircle(octx, rKey);
+    drawTicks(octx, rKey, 8, 10);
+  } else if (shapeType === 'crystal') {
+    drawStar(octx, rKey, rKey * 0.45, 6, -Math.PI / 2);
+    drawCircle(octx, rKey * 0.3);
+  } else {
+    drawPolygon(octx, rKey, 3, -Math.PI / 2);
+    drawPolygon(octx, rKey * 0.5, 3, Math.PI / 2); // inner inverted triangle
+  }
+
+  _obstacleCache.set(key, oc);
+  return oc;
+}
+
+function drawObstacle(ctx, o) {
+  const rKey = Math.round(o.r);
+  const logSize = (rKey + OBSTACLE_PAD) * 2;
+  const oc = getObstacleCanvas(o.shapeType, o.r);
+  ctx.save();
+  ctx.translate(o.x, o.y);
+  ctx.rotate(o.rotation);
+  ctx.drawImage(oc, -logSize / 2, -logSize / 2, logSize, logSize);
+  ctx.restore();
+}
+
 // ── Particle drawing ──────────────────────────────────────────────────────────
 
 function drawParticle(ctx, p, now) {
@@ -370,6 +421,16 @@ function spawnCollectible(W, H) {
     r: 12 + Math.random() * 10,
     rotation: Math.random() * Math.PI * 2,
     rotSpeed: (0.4 + Math.random() * 0.6) * (Math.random() < 0.5 ? 1 : -1),
+  };
+}
+
+function spawnObstacle(W, H, shapeType) {
+  return {
+    ...randomPos(W, H, 140),
+    shapeType,
+    r: 26 + Math.random() * 8,
+    rotation: Math.random() * Math.PI * 2,
+    rotSpeed: (0.08 + Math.random() * 0.12) * (Math.random() < 0.5 ? 1 : -1),
   };
 }
 
@@ -412,6 +473,7 @@ function buildInitialState(W, H) {
     ],
     particles: [],
     effects: [],  // ring pulse absorb animations
+    obstacles: OBSTACLE_SHAPES.map(shape => spawnObstacle(W, H, shape)),
     absorbCount: 0,
   };
 }
@@ -534,9 +596,24 @@ export default function AlienSnake({ onClose }) {
 
   // ── Update ──────────────────────────────────────────────────────────────────
 
+  function applyDamage(player, g) {
+    player.hp--;
+    if (player.hp <= 0) {
+      if (player.stage <= 1) {
+        gameStateRef.current = 'dead';
+        setScore(player.totalAbsorbs);
+        setGameState('dead');
+      } else {
+        player.stage--;
+        player.hp = 2;
+        g.absorbCount = 0;
+      }
+    }
+  }
+
   function update(delta, now, W, H) {
     const g = gRef.current;
-    const { player, collectibles, enemies, particles, effects } = g;
+    const { player, collectibles, enemies, particles, effects, obstacles } = g;
     const keys = keysRef.current;
 
     // --- Movement ---
@@ -655,21 +732,24 @@ export default function AlienSnake({ onClose }) {
         if (pdx * pdx + pdy * pdy < hitR * hitR) {
           particles.splice(i, 1);
           player.damagedUntil = now + 1500;
-          player.hp--;
-          if (player.hp <= 0) {
-            if (player.stage <= 1) {
-              gameStateRef.current = 'dead';
-              setScore(player.totalAbsorbs);
-              setGameState('dead');
-            } else {
-              player.stage--;
-              player.hp = 2;
-              g.absorbCount = 0;
-            }
-          }
+          applyDamage(player, g);
         }
       }
     }
+
+    // --- Rotate obstacles + check collision ---
+    const playerHitR = (STAGES[stage]?.headR ?? 10) * 0.85;
+    obstacles.forEach(o => {
+      o.rotation += o.rotSpeed * delta;
+      if (now >= player.damagedUntil) {
+        const dx = player.x - o.x, dy = player.y - o.y;
+        const hitR = playerHitR + o.r * 0.75;
+        if (dx * dx + dy * dy < hitR * hitR) {
+          player.damagedUntil = now + 1500;
+          applyDamage(player, g);
+        }
+      }
+    });
   }
 
   function spawnEnemiesForStage(stage, W, H, enemies) {
@@ -710,8 +790,11 @@ export default function AlienSnake({ onClose }) {
     ctx.stroke();
     ctx.restore();
 
-    const { player, collectibles, enemies, particles, effects } = g;
+    const { player, collectibles, enemies, particles, effects, obstacles } = g;
     const damaged = now < player.damagedUntil;
+
+    // Obstacles
+    obstacles.forEach(o => drawObstacle(ctx, o));
 
     // Collectibles
     collectibles.forEach(c => drawCollectible(ctx, c));
