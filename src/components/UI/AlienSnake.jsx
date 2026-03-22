@@ -1123,15 +1123,21 @@ export default function AlienSnake({ onClose }) {
       const flickerOn = damaged ? Math.floor(now / 120) % 2 === 0 : false;
       const innerColor = (damaged && flickerOn) ? 'rgba(255,68,68,0.5)' : 'rgba(0,255,106,0.5)';
       const r = stageDef.headR;
+      const s = player.stage;
       ctx.save();
       ctx.translate(player.x, player.y);
       ctx.rotate(player.innerAngle);
       ctx.strokeStyle = innerColor;
       ctx.lineWidth = 0.8;
-      if (player.stage === 2) drawPolygon(ctx, r * 0.45, 5, -Math.PI / 2);
-      else if (player.stage === 3) drawPolygon(ctx, r * 0.4, 3, Math.PI);
-      else if (player.stage === 4) drawPolygon(ctx, r * 0.5, 4, Math.PI / 8);
-      else if (player.stage === 5) drawStar(ctx, r * 0.45, r * 0.2, 6, 0);
+      if (s === 2) drawPolygon(ctx, r * 0.4, 3, -Math.PI / 2);
+      else if (s === 3) drawPolygon(ctx, r * 0.4, 3, -Math.PI / 2);
+      else if (s === 4) drawPolygon(ctx, r * 0.4, 3, -Math.PI / 2);
+      else if (s === 5) drawPolygon(ctx, r * 0.45, 5, -Math.PI / 2);
+      else if (s === 6) drawPolygon(ctx, r * 0.4, 3, Math.PI / 2);
+      else if (s === 7) drawPolygon(ctx, r * 0.45, 4, Math.PI / 8);
+      else if (s === 8) drawStar(ctx, r * 0.4, r * 0.18, 6, 0);
+      else if (s === 9) drawStar(ctx, r * 0.4, r * 0.18, 6, 0);
+      else if (s === 10) drawStar(ctx, r * 0.45, r * 0.2, 6, 0);
       ctx.restore();
     }
 
@@ -1140,7 +1146,7 @@ export default function AlienSnake({ onClose }) {
     ctx.font = '10px Orbitron, monospace';
     ctx.fillStyle = 'rgba(0,255,106,0.25)';
     ctx.textAlign = 'right';
-    ctx.fillText(`${stageDef?.name ?? ''} — ${player.totalAbsorbs} ABSORBS`, W - 20, 28);
+    ctx.fillText(`STAGE ${player.stage} — ${player.totalAbsorbs} ABSORBS`, W - 20, 28);
     ctx.restore();
   }
 
