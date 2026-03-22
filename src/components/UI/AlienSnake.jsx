@@ -407,12 +407,13 @@ function drawCollectible(ctx, c) {
 
 const _enemyCache = new Map();
 const ENEMY_PAD = 20;
+const ENEMY_R = 15;
 
 function getEnemyCanvas(type) {
   if (_enemyCache.has(type)) return _enemyCache.get(type);
 
   const color = type === 'chaser' ? '#ff6644' : '#ff4400';
-  const r = 15;
+  const r = ENEMY_R;
   const logSize = (r + ENEMY_PAD) * 2;
   const oc = document.createElement('canvas');
   oc.width = logSize * _cachedDPR;
@@ -467,10 +468,10 @@ function getEnemyCanvas(type) {
 }
 
 function drawEnemy(ctx, e, now) {
-  const logSize = (15 + ENEMY_PAD) * 2;
+  const logSize = (ENEMY_R + ENEMY_PAD) * 2;
   const oc = getEnemyCanvas(e.type);
   const breatheScale = 1 + 0.06 * Math.sin(now * e.breatheSpeed + e.breathePhase);
-  drawDropShadow(ctx, e.x, e.y, 15 * breatheScale);
+  drawDropShadow(ctx, e.x, e.y, ENEMY_R * breatheScale);
   ctx.save();
   ctx.translate(e.x, e.y);
   ctx.rotate(e.rotation);
