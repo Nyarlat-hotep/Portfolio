@@ -268,6 +268,7 @@ function drawBlobCreature(ctx, x, y, stage, damaged, now, phases) {
     const ri = r + amplitude * Math.sin(now * 0.0009 + phases[i]);
     pts.push({ x: x + Math.cos(baseAngle) * ri, y: y + Math.sin(baseAngle) * ri });
   }
+  if (n === 0) return;
 
   ctx.save();
   ctx.strokeStyle = color;
