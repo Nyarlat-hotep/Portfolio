@@ -15,6 +15,9 @@
   position: absolute;
   bottom: 24px;
   left: 24px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
   font-family: 'Orbitron', monospace;
   font-size: 13px;
   color: rgba(0, 255, 106, 0.8);
@@ -56,7 +59,7 @@
 
 .snake-game-over p {
   font-size: 13px;
-  color: rgba(0, 255, 106, 0.6);
+  color: #ff4444;
   letter-spacing: 0.15em;
   margin: 0;
 }
@@ -100,7 +103,6 @@
 
 .snake-btn:hover {
   border-color: rgba(255, 119, 0, 0.5);
-  color: #ffffff;
 }
 
 /* Primary action (Resume / Retry) — orange accent */
@@ -112,7 +114,6 @@
 
 .snake-btn-primary:hover {
   border-color: #ff7700;
-  color: #ffffff;
 }
 
 @keyframes glitchRed {

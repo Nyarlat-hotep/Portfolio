@@ -1,5 +1,6 @@
 import { useRef, useEffect, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
+import { ArrowUp, ArrowDown, ArrowLeft, ArrowRight } from 'lucide-react';
 import { stopBackground, playBackground } from '../../utils/sounds';
 import './AlienSnake.css';
 
@@ -215,11 +216,19 @@ function drawTrail(ctx, trail, headR, damaged, time, stage) {
   const head = trail[0];
   const tail = trail[trail.length - 1];
 
-  // Build path once, reuse for both strokes
+  // Build path once, reuse for both strokes.
+  // Lift pen on wrap-around teleports (consecutive points > 200px apart).
+  const WRAP_GAP = 200;
   const path = new Path2D();
+  let prev = null;
   for (let i = 0; i < trail.length; i += step) {
-    if (i === 0) path.moveTo(trail[i].x, trail[i].y);
-    else path.lineTo(trail[i].x, trail[i].y);
+    const pt = trail[i];
+    if (!prev || Math.abs(pt.x - prev.x) > WRAP_GAP || Math.abs(pt.y - prev.y) > WRAP_GAP) {
+      path.moveTo(pt.x, pt.y);
+    } else {
+      path.lineTo(pt.x, pt.y);
+    }
+    prev = pt;
   }
 
   ctx.save();
@@ -424,14 +433,30 @@ function spawnCollectible(W, H) {
   };
 }
 
-function spawnObstacle(W, H, shapeType) {
-  return {
-    ...randomPos(W, H, 140),
-    shapeType,
-    r: 26 + Math.random() * 8,
-    rotation: Math.random() * Math.PI * 2,
-    rotSpeed: (0.08 + Math.random() * 0.12) * (Math.random() < 0.5 ? 1 : -1),
-  };
+function spawnObstacles(W, H) {
+  const MIN_DIST = 300; // min px between obstacle centers
+  const CENTER_CLEAR = 220; // keep away from player spawn (W/2, H/2)
+  const placed = [];
+  return OBSTACLE_SHAPES.map(shapeType => {
+    let pos;
+    let tries = 0;
+    do {
+      pos = randomPos(W, H, 140);
+      tries++;
+    } while (
+      tries < 60 &&
+      (placed.some(p => Math.hypot(p.x - pos.x, p.y - pos.y) < MIN_DIST) ||
+       Math.hypot(pos.x - W / 2, pos.y - H / 2) < CENTER_CLEAR)
+    );
+    placed.push(pos);
+    return {
+      ...pos,
+      shapeType,
+      r: 26 + Math.random() * 8,
+      rotation: Math.random() * Math.PI * 2,
+      rotSpeed: (0.08 + Math.random() * 0.12) * (Math.random() < 0.5 ? 1 : -1),
+    };
+  });
 }
 
 function makeWaypoints(W, H) {
@@ -473,7 +498,7 @@ function buildInitialState(W, H) {
     ],
     particles: [],
     effects: [],  // ring pulse absorb animations
-    obstacles: OBSTACLE_SHAPES.map(shape => spawnObstacle(W, H, shape)),
+    obstacles: spawnObstacles(W, H),
     absorbCount: 0,
   };
 }
@@ -782,7 +807,7 @@ export default function AlienSnake({ onClose }) {
 
     // Grid — single batched path, no per-line stroke call
     ctx.save();
-    ctx.strokeStyle = 'rgba(0,255,106,0.13)';
+    ctx.strokeStyle = 'rgba(0,255,106,0.05)';
     ctx.lineWidth = 1;
     ctx.beginPath();
     for (let x = 0; x < W; x += 64) { ctx.moveTo(x, 0); ctx.lineTo(x, H); }
@@ -836,10 +861,11 @@ export default function AlienSnake({ onClose }) {
       exit={{ opacity: 0 }}
       transition={{ duration: 0.3 }}
     >
-      <canvas ref={canvasRef} style={{ width: '100%', height: '100%' }} />
+      <canvas ref={canvasRef} style={{ width: '100%', height: '100%', cursor: gameState === 'playing' ? 'none' : 'default' }} />
 
       <div className="snake-controls-hint">
-        ← → ↑ ↓&nbsp;&nbsp;MOVE&nbsp;&nbsp;&nbsp;&nbsp;ESC&nbsp;&nbsp;PAUSE
+        <ArrowLeft size={13} /><ArrowRight size={13} /><ArrowUp size={13} /><ArrowDown size={13} />
+        &nbsp;&nbsp;MOVE&nbsp;&nbsp;&nbsp;&nbsp;ESC&nbsp;&nbsp;PAUSE
       </div>
 
       {gameState === 'paused' && (
