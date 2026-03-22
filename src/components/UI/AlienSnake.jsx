@@ -175,12 +175,13 @@ function getCreatureCanvas(stage, color) {
 
   // — Volumetric fill (shadowBlur OFF) —
   // Subtle tinted body volume
+  octx.save();
   octx.globalAlpha = 0.18;
   octx.fillStyle = color;
   octx.beginPath();
   octx.arc(0, 0, r, 0, Math.PI * 2);
   octx.fill();
-  octx.globalAlpha = 1;
+  octx.restore();
 
   // Dark edge shading (bottom-right)
   const shadowGrad = octx.createRadialGradient(r * 0.1, r * 0.15, 0, 0, 0, r);
@@ -216,6 +217,7 @@ function getCreatureCanvas(stage, color) {
   octx.fillStyle = color;
   octx.lineWidth = 1.5;
   stageDef.draw(octx);
+  octx.shadowBlur = 0;
 
   _creatureCache.set(key, oc);
   return oc;
