@@ -71,42 +71,24 @@ function drawTicks(ctx, r, count, len = 5) {
 
 const STAGES = [
   null, // 0-indexed placeholder
-  // Stage 1 — Cellular: 3 dots in triangle
-  {
-    headR: 8,
-    trailLen: 12,
-    draw(ctx) {
-      const triR = 3.5, dotR = 1.5;
-      for (let i = 0; i < 3; i++) {
-        const a = (i / 3) * Math.PI * 2 - Math.PI / 2;
-        ctx.beginPath();
-        ctx.arc(Math.cos(a) * triR, Math.sin(a) * triR, dotR, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    },
-  },
-  // Stage 2 — Cellular: 3 dots + outer circle
-  {
-    headR: 10,
-    trailLen: 18,
-    draw(ctx) {
-      drawCircle(ctx, 10);
-      const triR = 3.5, dotR = 1.5;
-      for (let i = 0; i < 3; i++) {
-        const a = (i / 3) * Math.PI * 2 - Math.PI / 2;
-        ctx.beginPath();
-        ctx.arc(Math.cos(a) * triR, Math.sin(a) * triR, dotR, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    },
-  },
-  // Stage 3 — Cellular: 3 dots + outer circle + inner ring
+  // Stage 1 — Cellular: center dot
   {
     headR: 12,
-    trailLen: 24,
+    trailLen: 12,
+    blobAnchors: 5,
+    blobAmpR: 0.30,
     draw(ctx) {
-      drawRing(ctx, 12, 7);
-      const triR = 3.5, dotR = 1.5;
+      drawDot(ctx, 2);
+    },
+  },
+  // Stage 2 — Cellular: 3 dots in triangle
+  {
+    headR: 16,
+    trailLen: 18,
+    blobAnchors: 5,
+    blobAmpR: 0.28,
+    draw(ctx) {
+      const triR = 5, dotR = 1.8;
       for (let i = 0; i < 3; i++) {
         const a = (i / 3) * Math.PI * 2 - Math.PI / 2;
         ctx.beginPath();
@@ -115,75 +97,95 @@ const STAGES = [
       }
     },
   },
-  // Stage 4 — Crystalline: outer triangle + inner triangle (same dir) + dot
+  // Stage 3 — Cellular: inner ring
   {
-    headR: 15,
+    headR: 20,
+    trailLen: 24,
+    blobAnchors: 6,
+    blobAmpR: 0.25,
+    draw(ctx) {
+      drawCircle(ctx, 7);
+    },
+  },
+  // Stage 4 — Crystalline: two triangles (same dir) + inner dot
+  {
+    headR: 25,
     trailLen: 32,
+    blobAnchors: 6,
+    blobAmpR: 0.20,
     draw(ctx) {
       drawPolygon(ctx, 15, 3, -Math.PI / 2);
       drawPolygon(ctx, 7, 3, -Math.PI / 2);
       drawDot(ctx, 2);
     },
   },
-  // Stage 5 — Crystalline: pentagon + circle outline
+  // Stage 5 — Crystalline: pentagon + inner circle
   {
-    headR: 17,
+    headR: 28,
     trailLen: 40,
+    blobAnchors: 7,
+    blobAmpR: 0.18,
     draw(ctx) {
-      drawCircle(ctx, 17);
-      drawPolygon(ctx, 11, 5, -Math.PI / 2);
+      drawPolygon(ctx, 15, 5, -Math.PI / 2);
+      drawCircle(ctx, 8);
     },
   },
-  // Stage 6 — Crystalline: hexagon + inner inverted triangle
+  // Stage 6 — Crystalline: hexagon + inverted triangle
   {
-    headR: 19,
+    headR: 31,
     trailLen: 50,
+    blobAnchors: 7,
+    blobAmpR: 0.15,
     draw(ctx) {
       drawPolygon(ctx, 19, 6, 0);
       drawPolygon(ctx, 9, 3, Math.PI / 2);
     },
   },
-  // Stage 7 — Crystalline: octagram (two squares) + outer ring
+  // Stage 7 — Crystalline: two overlapping squares (octagram)
   {
-    headR: 22,
+    headR: 34,
     trailLen: 60,
+    blobAnchors: 8,
+    blobAmpR: 0.13,
     draw(ctx) {
-      drawCircle(ctx, 22);
-      drawPolygon(ctx, 14, 4, 0);
-      drawPolygon(ctx, 14, 4, Math.PI / 4);
+      drawPolygon(ctx, 19, 4, 0);
+      drawPolygon(ctx, 19, 4, Math.PI / 4);
     },
   },
-  // Stage 8 — Apex: 6-star + bounding circle + dot
+  // Stage 8 — Apex: 6-star + center dot
   {
-    headR: 25,
+    headR: 37,
     trailLen: 70,
+    blobAnchors: 8,
+    blobAmpR: 0.10,
     draw(ctx) {
-      drawCircle(ctx, 25);
-      drawStar(ctx, 18, 10, 6, 0);
+      drawStar(ctx, 22, 12, 6, 0);
       drawDot(ctx, 2.5);
     },
   },
-  // Stage 9 — Apex: 6-star + octagon + inner ring
+  // Stage 9 — Apex: 6-star + octagon
   {
-    headR: 29,
+    headR: 40,
     trailLen: 80,
+    blobAnchors: 10,
+    blobAmpR: 0.07,
     draw(ctx) {
-      drawStar(ctx, 22, 13, 6, 0);
-      drawPolygon(ctx, 13, 8, Math.PI / 8);
-      drawCircle(ctx, 8);
+      drawStar(ctx, 23, 13, 6, 0);
+      drawPolygon(ctx, 15, 8, Math.PI / 8);
     },
   },
-  // Stage 10 — Apex: full complexity (unchanged from original APEX)
+  // Stage 10 — Apex: full complexity
   {
-    headR: 33,
+    headR: 43,
     trailLen: 95,
+    blobAnchors: 12,
+    blobAmpR: 0.05,
     draw(ctx) {
-      drawCircle(ctx, 33);
-      drawStar(ctx, 25, 15, 6, 0);
-      drawPolygon(ctx, 16, 8, Math.PI / 8);
-      drawCircle(ctx, 10);
+      drawStar(ctx, 26, 16, 6, 0);
+      drawPolygon(ctx, 17, 8, Math.PI / 8);
+      drawCircle(ctx, 11);
       drawDot(ctx, 2.5);
-      drawTicks(ctx, 33, 12, 6);
+      drawTicks(ctx, 26, 12, 5);
     },
   },
 ];
@@ -224,51 +226,16 @@ function getCreatureCanvas(stage, color) {
   octx.scale(_cachedDPR, _cachedDPR);
   octx.translate(logSize / 2, logSize / 2);
 
-  // — Volumetric fill (shadowBlur OFF) —
-  // Subtle tinted body volume
-  octx.save();
-  octx.globalAlpha = 0.18;
-  octx.fillStyle = color;
-  octx.beginPath();
-  octx.arc(0, 0, r, 0, Math.PI * 2);
-  octx.fill();
-  octx.restore();
-
-  // Dark edge shading (bottom-right)
-  const shadowGrad = octx.createRadialGradient(r * 0.1, r * 0.15, 0, 0, 0, r);
-  shadowGrad.addColorStop(0, 'rgba(0,0,0,0)');
-  shadowGrad.addColorStop(1, 'rgba(0,0,0,0.55)');
-  octx.fillStyle = shadowGrad;
-  octx.beginPath();
-  octx.arc(0, 0, r, 0, Math.PI * 2);
-  octx.fill();
-
-  // Top-left highlight
-  const hlGrad = octx.createRadialGradient(-r * 0.35, -r * 0.35, 0, 0, 0, r);
-  hlGrad.addColorStop(0, 'rgba(255,255,255,0.22)');
-  hlGrad.addColorStop(0.45, 'rgba(255,255,255,0)');
-  octx.fillStyle = hlGrad;
-  octx.beginPath();
-  octx.arc(0, 0, r, 0, Math.PI * 2);
-  octx.fill();
-
-  // Specular dot (small bright highlight)
-  const specGrad = octx.createRadialGradient(-r * 0.3, -r * 0.32, 0, -r * 0.3, -r * 0.32, r * 0.22);
-  specGrad.addColorStop(0, 'rgba(255,255,255,0.65)');
-  specGrad.addColorStop(1, 'rgba(255,255,255,0)');
-  octx.fillStyle = specGrad;
-  octx.beginPath();
-  octx.arc(-r * 0.3, -r * 0.32, r * 0.22, 0, Math.PI * 2);
-  octx.fill();
-
-  // — Glow strokes (shadowBlur ON) —
+  // Ambient glow — soft blurred filled circle, no shape geometry
   octx.shadowColor = color;
-  octx.shadowBlur = 18;
-  octx.strokeStyle = color;
+  octx.shadowBlur = 22;
+  octx.globalAlpha = 0.35;
   octx.fillStyle = color;
-  octx.lineWidth = 1.5;
-  stageDef.draw(octx);
+  octx.beginPath();
+  octx.arc(0, 0, r * 0.6, 0, Math.PI * 2);
+  octx.fill();
   octx.shadowBlur = 0;
+  octx.globalAlpha = 1;
 
   _creatureCache.set(key, oc);
   return oc;
