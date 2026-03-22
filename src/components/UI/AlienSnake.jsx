@@ -235,6 +235,7 @@ function drawCreature(ctx, x, y, stage, damaged, time, scale = 1, alpha = 1) {
 
   ctx.save();
   ctx.globalAlpha = alpha;
+  drawDropShadow(ctx, x, y, stageDef.headR * scale);
   ctx.drawImage(oc, x - size / 2, y - size / 2, size, size);
   ctx.restore();
 }
@@ -381,6 +382,7 @@ function drawCollectible(ctx, c) {
   const rKey = Math.round(c.r);
   const logSize = (rKey + COLL_PAD) * 2;
   const oc = getCollectibleCanvas(c.shapeIdx, c.r);
+  drawDropShadow(ctx, c.x, c.y, c.r);
   ctx.save();
   ctx.translate(c.x, c.y);
   ctx.rotate(c.rotation);
@@ -454,6 +456,7 @@ function getEnemyCanvas(type) {
 function drawEnemy(ctx, e) {
   const logSize = (15 + ENEMY_PAD) * 2;
   const oc = getEnemyCanvas(e.type);
+  drawDropShadow(ctx, e.x, e.y, 15);
   ctx.save();
   ctx.translate(e.x, e.y);
   ctx.rotate(e.rotation);
@@ -539,10 +542,24 @@ function drawObstacle(ctx, o) {
   const rKey = Math.round(o.r);
   const logSize = (rKey + OBSTACLE_PAD) * 2;
   const oc = getObstacleCanvas(o.shapeType, o.r);
+  drawDropShadow(ctx, o.x, o.y, o.r);
   ctx.save();
   ctx.translate(o.x, o.y);
   ctx.rotate(o.rotation);
   ctx.drawImage(oc, -logSize / 2, -logSize / 2, logSize, logSize);
+  ctx.restore();
+}
+
+// ── Drop shadow helper ────────────────────────────────────────────────────────
+
+function drawDropShadow(ctx, x, y, r) {
+  ctx.save();
+  ctx.translate(x + 4, y + 6);
+  ctx.scale(1, 0.3);
+  ctx.beginPath();
+  ctx.arc(0, 0, r * 0.9, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(0,0,0,0.28)';
+  ctx.fill();
   ctx.restore();
 }
 
