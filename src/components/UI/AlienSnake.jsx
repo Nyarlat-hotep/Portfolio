@@ -189,7 +189,7 @@ const STAGES = [
 ];
 
 // Absorptions needed per stage to advance
-const ABSORB_THRESHOLDS = [0, 3, 6, 10, 15];
+const ABSORB_THRESHOLDS = [0, 2, 4, 7, 10, 14, 18, 23, 29, 36];
 
 // ── Drawing helpers ───────────────────────────────────────────────────────────
 
@@ -968,7 +968,7 @@ export default function AlienSnake({ onClose }) {
         player.totalAbsorbs++;
 
         const threshold = ABSORB_THRESHOLDS[stage] ?? 999;
-        if (stage < 5 && g.absorbCount >= threshold) {
+        if (stage < 10 && g.absorbCount >= threshold) {
           player.stage++;
           g.absorbCount = 0;
           player.hp = 2;
@@ -1054,16 +1054,16 @@ export default function AlienSnake({ onClose }) {
   }
 
   function spawnEnemiesForStage(stage, W, H, enemies) {
-    if (stage === 2) {
+    if (stage === 3) {
       enemies.push(spawnEnemy('chaser', W, H));
-    } else if (stage === 3) {
+    } else if (stage === 5) {
       enemies.push(spawnEnemy('chaser', W, H));
       enemies.forEach(e => { if (e.type === 'patroller') e.speed = 110; });
-    } else if (stage === 4) {
+    } else if (stage === 7) {
       enemies.push(spawnEnemy('chaser', W, H));
       enemies.push(spawnEnemy('chaser', W, H));
       enemies.forEach(e => { if (e.type === 'patroller') e.speed = 125; });
-    } else if (stage === 5) {
+    } else if (stage === 9) {
       enemies.push(spawnEnemy('chaser', W, H));
       enemies.forEach(e => { if (e.type === 'patroller') e.speed = 145; });
     }
