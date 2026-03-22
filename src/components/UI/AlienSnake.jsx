@@ -891,7 +891,7 @@ export default function AlienSnake({ onClose }) {
     if (player.y < 0)  player.y += H;
     if (player.y > H)  player.y -= H;
 
-    player.innerAngle += delta * 2.2; // ~2.2 rad/sec counter-rotation
+    player.innerAngle = (player.innerAngle + delta * 2.2) % (Math.PI * 2); // ~2.2 rad/sec counter-rotation
 
     // Trail
     const moved = Math.hypot(player.x - prevX, player.y - prevY);
