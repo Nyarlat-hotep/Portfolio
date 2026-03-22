@@ -121,3 +121,54 @@
   25%       { transform: translate(-2px, 1px); }
   75%       { transform: translate(2px, -1px); }
 }
+
+/* ── Virtual joystick (touch devices) ───────────────────────────────────────── */
+
+.snake-touch-zone {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.snake-joystick-base {
+  position: absolute;
+  bottom: 80px;
+  left: 44px;
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  border: 2px solid rgba(0, 255, 106, 0.25);
+  background: rgba(0, 255, 106, 0.04);
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: none;
+}
+
+.snake-joystick-knob {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 2px solid rgba(0, 255, 106, 0.55);
+  background: rgba(0, 255, 106, 0.15);
+  pointer-events: none;
+  will-change: transform;
+}
+
+.snake-mobile-pause {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: rgba(5, 5, 5, 0.7);
+  border: 1px solid rgba(255, 119, 0, 0.3);
+  color: rgba(255, 255, 255, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  pointer-events: auto;
+}

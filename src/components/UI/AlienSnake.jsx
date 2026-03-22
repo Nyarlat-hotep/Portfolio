@@ -1,7 +1,8 @@
 import { useRef, useEffect, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowUp, ArrowDown, ArrowLeft, ArrowRight } from 'lucide-react';
+import { ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Pause } from 'lucide-react';
 import { stopBackground, playBackground } from '../../utils/sounds';
+import { isTouchDevice } from '../../utils/isTouchDevice';
 import './AlienSnake.css';
 
 // ── Geometry helpers ──────────────────────────────────────────────────────────
@@ -505,6 +506,9 @@ function buildInitialState(W, H) {
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
+const JOYSTICK_MAX_R = 44;
+const IS_TOUCH = isTouchDevice();
+
 export default function AlienSnake({ onClose }) {
   const canvasRef = useRef(null);
   const ctxRef = useRef(null);
@@ -513,6 +517,44 @@ export default function AlienSnake({ onClose }) {
   const gameStateRef = useRef('playing');
   const [gameState, setGameState] = useState('playing');
   const [score, setScore] = useState(0);
+
+  // ── Joystick (touch only) ────────────────────────────────────────────────────
+  const joystickInputRef = useRef({ dx: 0, dy: 0 });
+  const joystickBaseRef  = useRef(null);
+  const joystickKnobRef  = useRef(null);
+
+  const handleTouchStart = useCallback((e) => {
+    if (gameStateRef.current !== 'playing') return;
+    e.preventDefault();
+  }, []);
+
+  const handleTouchMove = useCallback((e) => {
+    if (gameStateRef.current !== 'playing') return;
+    e.preventDefault();
+    const touch = e.touches[0];
+    const base = joystickBaseRef.current?.getBoundingClientRect();
+    if (!base) return;
+    const cx = base.left + base.width  / 2;
+    const cy = base.top  + base.height / 2;
+    let dx = touch.clientX - cx;
+    let dy = touch.clientY - cy;
+    const dist = Math.hypot(dx, dy);
+    if (dist > JOYSTICK_MAX_R) { dx = (dx / dist) * JOYSTICK_MAX_R; dy = (dy / dist) * JOYSTICK_MAX_R; }
+    joystickInputRef.current.dx = dx / JOYSTICK_MAX_R;
+    joystickInputRef.current.dy = dy / JOYSTICK_MAX_R;
+    if (joystickKnobRef.current) {
+      joystickKnobRef.current.style.transform = `translate(${dx}px, ${dy}px)`;
+    }
+  }, []);
+
+  const handleTouchEnd = useCallback((e) => {
+    e.preventDefault();
+    joystickInputRef.current.dx = 0;
+    joystickInputRef.current.dy = 0;
+    if (joystickKnobRef.current) {
+      joystickKnobRef.current.style.transform = 'translate(0px, 0px)';
+    }
+  }, []);
 
   // ── Init / reset ────────────────────────────────────────────────────────────
 
@@ -650,6 +692,12 @@ export default function AlienSnake({ onClose }) {
     if (keys.has('ArrowUp'))    ay = -1;
     if (keys.has('ArrowDown'))  ay =  1;
     if (ax && ay) { ax *= 0.707; ay *= 0.707; }
+
+    // Joystick supplements keys when no key is held
+    if (!ax && !ay) {
+      ax = joystickInputRef.current.dx;
+      ay = joystickInputRef.current.dy;
+    }
 
     if (ax || ay) {
       player.vx = ax * SPEED;
@@ -863,9 +911,34 @@ export default function AlienSnake({ onClose }) {
     >
       <canvas ref={canvasRef} style={{ width: '100%', height: '100%', cursor: gameState === 'playing' ? 'none' : 'default' }} />
 
+      {IS_TOUCH && (
+        <div
+          className="snake-touch-zone"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
+          <div className="snake-joystick-base" ref={joystickBaseRef}>
+            <div className="snake-joystick-knob" ref={joystickKnobRef} />
+          </div>
+        </div>
+      )}
+
+      {IS_TOUCH && gameState === 'playing' && (
+        <button className="snake-mobile-pause" onClick={() => {
+          gameStateRef.current = 'paused';
+          setGameState('paused');
+        }}>
+          <Pause size={18} />
+        </button>
+      )}
+
       <div className="snake-controls-hint">
-        <ArrowLeft size={13} /><ArrowRight size={13} /><ArrowUp size={13} /><ArrowDown size={13} />
-        &nbsp;&nbsp;MOVE&nbsp;&nbsp;&nbsp;&nbsp;ESC&nbsp;&nbsp;PAUSE
+        {IS_TOUCH ? (
+          <>DRAG&nbsp;&nbsp;MOVE</>
+        ) : (
+          <><ArrowLeft size={13} /><ArrowRight size={13} /><ArrowUp size={13} /><ArrowDown size={13} />&nbsp;&nbsp;MOVE&nbsp;&nbsp;&nbsp;&nbsp;ESC&nbsp;&nbsp;PAUSE</>
+        )}
       </div>
 
       {gameState === 'paused' && (
