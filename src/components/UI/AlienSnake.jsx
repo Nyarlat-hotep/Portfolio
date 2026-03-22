@@ -466,13 +466,15 @@ function getEnemyCanvas(type) {
   return oc;
 }
 
-function drawEnemy(ctx, e) {
+function drawEnemy(ctx, e, now) {
   const logSize = (15 + ENEMY_PAD) * 2;
   const oc = getEnemyCanvas(e.type);
-  drawDropShadow(ctx, e.x, e.y, 15);
+  const breatheScale = 1 + 0.06 * Math.sin(now * e.breatheSpeed + e.breathePhase);
+  drawDropShadow(ctx, e.x, e.y, 15 * breatheScale);
   ctx.save();
   ctx.translate(e.x, e.y);
   ctx.rotate(e.rotation);
+  ctx.scale(breatheScale, breatheScale);
   ctx.drawImage(oc, -logSize / 2, -logSize / 2, logSize, logSize);
   ctx.restore();
 }
@@ -635,6 +637,8 @@ function spawnEnemy(type, W, H) {
     waypointIdx: 0,
     vx: 0,
     vy: 0,
+    breathePhase: Math.random() * Math.PI * 2,
+    breatheSpeed: 0.0015 + Math.random() * 0.001,
   };
 }
 
@@ -1045,7 +1049,7 @@ export default function AlienSnake({ onClose }) {
     effects.forEach(fx => drawRingPulse(ctx, fx, now));
 
     // Enemies
-    enemies.forEach(e => drawEnemy(ctx, e));
+    enemies.forEach(e => drawEnemy(ctx, e, now));
 
     // Particles — batched, no shadowBlur
     ctx.save();
