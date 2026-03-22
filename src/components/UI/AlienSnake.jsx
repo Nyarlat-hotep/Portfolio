@@ -359,7 +359,7 @@ function drawEnemy(ctx, e) {
 
 const _obstacleCache = new Map();
 const OBSTACLE_PAD = 22;
-const OBSTACLE_SHAPES = ['mine', 'crystal', 'barrier'];
+const OBSTACLE_SHAPES = ['mine', 'crystal'];
 
 function getObstacleCanvas(shapeType, r) {
   const rKey = Math.round(r);
@@ -937,13 +937,11 @@ export default function AlienSnake({ onClose }) {
         </motion.button>
       )}
 
-      <div className="snake-controls-hint">
-        {IS_TOUCH ? (
-          <>DRAG&nbsp;&nbsp;MOVE</>
-        ) : (
-          <><ArrowLeft size={13} /><ArrowRight size={13} /><ArrowUp size={13} /><ArrowDown size={13} />&nbsp;&nbsp;MOVE&nbsp;&nbsp;&nbsp;&nbsp;ESC&nbsp;&nbsp;PAUSE</>
-        )}
-      </div>
+      {!IS_TOUCH && (
+        <div className="snake-controls-hint">
+          <ArrowLeft size={13} /><ArrowRight size={13} /><ArrowUp size={13} /><ArrowDown size={13} />&nbsp;&nbsp;MOVE&nbsp;&nbsp;&nbsp;&nbsp;ESC&nbsp;&nbsp;PAUSE
+        </div>
+      )}
 
       {gameState === 'paused' && (
         <div className="snake-game-over">
