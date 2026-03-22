@@ -399,39 +399,6 @@ function getCollectibleCanvas(shapeIdx, r) {
   octx.scale(_cachedDPR, _cachedDPR);
   octx.translate(logSize / 2, logSize / 2);
 
-  // Volumetric fill (shadowBlur OFF)
-  octx.save();
-  octx.globalAlpha = 0.15;
-  octx.fillStyle = '#00ff6a';
-  octx.beginPath();
-  octx.arc(0, 0, rKey, 0, Math.PI * 2);
-  octx.fill();
-  octx.restore();
-
-  const cShadowGrad = octx.createRadialGradient(rKey * 0.1, rKey * 0.15, 0, 0, 0, rKey);
-  cShadowGrad.addColorStop(0, 'rgba(0,0,0,0)');
-  cShadowGrad.addColorStop(1, 'rgba(0,0,0,0.5)');
-  octx.fillStyle = cShadowGrad;
-  octx.beginPath();
-  octx.arc(0, 0, rKey, 0, Math.PI * 2);
-  octx.fill();
-
-  const cHlGrad = octx.createRadialGradient(-rKey * 0.35, -rKey * 0.35, 0, 0, 0, rKey);
-  cHlGrad.addColorStop(0, 'rgba(255,255,255,0.2)');
-  cHlGrad.addColorStop(0.45, 'rgba(255,255,255,0)');
-  octx.fillStyle = cHlGrad;
-  octx.beginPath();
-  octx.arc(0, 0, rKey, 0, Math.PI * 2);
-  octx.fill();
-
-  const cSpecGrad = octx.createRadialGradient(-rKey * 0.3, -rKey * 0.32, 0, -rKey * 0.3, -rKey * 0.32, rKey * 0.22);
-  cSpecGrad.addColorStop(0, 'rgba(255,255,255,0.5)');
-  cSpecGrad.addColorStop(1, 'rgba(255,255,255,0)');
-  octx.fillStyle = cSpecGrad;
-  octx.beginPath();
-  octx.arc(-rKey * 0.3, -rKey * 0.32, rKey * 0.22, 0, Math.PI * 2);
-  octx.fill();
-
   octx.shadowColor = '#00ff6a';
   octx.shadowBlur = 12;
   octx.strokeStyle = 'rgba(0,255,106,0.85)';
@@ -472,39 +439,6 @@ function getEnemyCanvas(type) {
   const octx = oc.getContext('2d');
   octx.scale(_cachedDPR, _cachedDPR);
   octx.translate(logSize / 2, logSize / 2);
-
-  // Volumetric fill (shadowBlur OFF)
-  octx.save();
-  octx.globalAlpha = 0.18;
-  octx.fillStyle = color;
-  octx.beginPath();
-  octx.arc(0, 0, r, 0, Math.PI * 2);
-  octx.fill();
-  octx.restore();
-
-  const shadowGrad = octx.createRadialGradient(r * 0.1, r * 0.15, 0, 0, 0, r);
-  shadowGrad.addColorStop(0, 'rgba(0,0,0,0)');
-  shadowGrad.addColorStop(1, 'rgba(0,0,0,0.6)');
-  octx.fillStyle = shadowGrad;
-  octx.beginPath();
-  octx.arc(0, 0, r, 0, Math.PI * 2);
-  octx.fill();
-
-  const hlGrad = octx.createRadialGradient(-r * 0.35, -r * 0.35, 0, 0, 0, r);
-  hlGrad.addColorStop(0, 'rgba(255,255,255,0.2)');
-  hlGrad.addColorStop(0.45, 'rgba(255,255,255,0)');
-  octx.fillStyle = hlGrad;
-  octx.beginPath();
-  octx.arc(0, 0, r, 0, Math.PI * 2);
-  octx.fill();
-
-  const specGrad = octx.createRadialGradient(-r * 0.3, -r * 0.32, 0, -r * 0.3, -r * 0.32, r * 0.22);
-  specGrad.addColorStop(0, 'rgba(255,255,255,0.55)');
-  specGrad.addColorStop(1, 'rgba(255,255,255,0)');
-  octx.fillStyle = specGrad;
-  octx.beginPath();
-  octx.arc(-r * 0.3, -r * 0.32, r * 0.22, 0, Math.PI * 2);
-  octx.fill();
 
   // Glow strokes (shadowBlur ON)
   octx.shadowColor = '#ff3300';
@@ -550,39 +484,6 @@ function getObstacleCanvas(shapeType, r) {
   const octx = oc.getContext('2d');
   octx.scale(_cachedDPR, _cachedDPR);
   octx.translate(logSize / 2, logSize / 2);
-
-  // Volumetric fill (shadowBlur OFF)
-  octx.save();
-  octx.globalAlpha = 0.2;
-  octx.fillStyle = '#ff3300';
-  octx.beginPath();
-  octx.arc(0, 0, rKey, 0, Math.PI * 2);
-  octx.fill();
-  octx.restore();
-
-  const oShadowGrad = octx.createRadialGradient(rKey * 0.1, rKey * 0.15, 0, 0, 0, rKey);
-  oShadowGrad.addColorStop(0, 'rgba(0,0,0,0)');
-  oShadowGrad.addColorStop(1, 'rgba(0,0,0,0.6)');
-  octx.fillStyle = oShadowGrad;
-  octx.beginPath();
-  octx.arc(0, 0, rKey, 0, Math.PI * 2);
-  octx.fill();
-
-  const oHlGrad = octx.createRadialGradient(-rKey * 0.35, -rKey * 0.35, 0, 0, 0, rKey);
-  oHlGrad.addColorStop(0, 'rgba(255,255,255,0.15)');
-  oHlGrad.addColorStop(0.45, 'rgba(255,255,255,0)');
-  octx.fillStyle = oHlGrad;
-  octx.beginPath();
-  octx.arc(0, 0, rKey, 0, Math.PI * 2);
-  octx.fill();
-
-  const oSpecGrad = octx.createRadialGradient(-rKey * 0.3, -rKey * 0.32, 0, -rKey * 0.3, -rKey * 0.32, rKey * 0.2);
-  oSpecGrad.addColorStop(0, 'rgba(255,200,180,0.5)');
-  oSpecGrad.addColorStop(1, 'rgba(255,200,180,0)');
-  octx.fillStyle = oSpecGrad;
-  octx.beginPath();
-  octx.arc(-rKey * 0.3, -rKey * 0.32, rKey * 0.2, 0, Math.PI * 2);
-  octx.fill();
 
   octx.shadowColor = '#ff2200';
   octx.shadowBlur = 16;
