@@ -564,6 +564,17 @@ export default function AlienSnake({ onClose }) {
     setGameState('playing');
   }, []);
 
+  // ── Hide custom cursor while playing ────────────────────────────────────────
+
+  useEffect(() => {
+    if (gameState === 'playing') {
+      document.body.classList.add('game-playing');
+    } else {
+      document.body.classList.remove('game-playing');
+    }
+    return () => { document.body.classList.remove('game-playing'); };
+  }, [gameState]);
+
   // ── Music ───────────────────────────────────────────────────────────────────
 
   useEffect(() => {
@@ -895,7 +906,7 @@ export default function AlienSnake({ onClose }) {
 
   return (
     <motion.div
-      className={`alien-snake-overlay${gameState === 'playing' ? ' snake-playing' : ''}`}
+      className="alien-snake-overlay"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}

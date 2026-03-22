@@ -17,6 +17,12 @@
   box-shadow: 0 0 6px #ff7700, 0 0 14px rgba(255, 119, 0, 0.6);
 }
 
+/* Hide custom cursor during game */
+body.game-playing .cursor-dot,
+body.game-playing .cursor-ring {
+  display: none;
+}
+
 /* Outer ring — follows with spring lag */
 .cursor-ring {
   position: fixed;
