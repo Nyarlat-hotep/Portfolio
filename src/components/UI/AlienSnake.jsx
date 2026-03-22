@@ -44,6 +44,15 @@ function drawStar(ctx, outerR, innerR, points, rotation = 0) {
   ctx.stroke();
 }
 
+function drawRing(ctx, outerR, innerR) {
+  ctx.beginPath();
+  ctx.arc(0, 0, outerR, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(0, 0, innerR, 0, Math.PI * 2);
+  ctx.stroke();
+}
+
 function drawTicks(ctx, r, count, len = 5) {
   for (let i = 0; i < count; i++) {
     const a = (i / count) * Math.PI * 2;
@@ -62,24 +71,21 @@ function drawTicks(ctx, r, count, len = 5) {
 
 const STAGES = [
   null, // 0-indexed placeholder
-  // Stage 1 — Cellular: center dot
+  // Stage 1 — Cellular: filled dot
   {
     headR: 12,
     trailLen: 12,
-    blobAnchors: 5,
-    blobAmpR: 0.30,
     draw(ctx) {
-      drawDot(ctx, 2);
+      drawDot(ctx, 6);
     },
   },
-  // Stage 2 — Cellular: 3 dots in triangle
+  // Stage 2 — Cellular: circle + 3 dots in triangle
   {
     headR: 16,
     trailLen: 18,
-    blobAnchors: 5,
-    blobAmpR: 0.28,
     draw(ctx) {
-      const triR = 5, dotR = 1.8;
+      drawCircle(ctx, 16);
+      const triR = 7, dotR = 2;
       for (let i = 0; i < 3; i++) {
         const a = (i / 3) * Math.PI * 2 - Math.PI / 2;
         ctx.beginPath();
@@ -88,95 +94,86 @@ const STAGES = [
       }
     },
   },
-  // Stage 3 — Cellular: inner ring
+  // Stage 3 — Cellular: double ring + 3 dots
   {
     headR: 20,
     trailLen: 24,
-    blobAnchors: 6,
-    blobAmpR: 0.25,
     draw(ctx) {
-      drawCircle(ctx, 7);
+      drawRing(ctx, 20, 10);
+      const triR = 6, dotR = 1.8;
+      for (let i = 0; i < 3; i++) {
+        const a = (i / 3) * Math.PI * 2 - Math.PI / 2;
+        ctx.beginPath();
+        ctx.arc(Math.cos(a) * triR, Math.sin(a) * triR, dotR, 0, Math.PI * 2);
+        ctx.fill();
+      }
     },
   },
-  // Stage 4 — Crystalline: two triangles (same dir) + inner dot
+  // Stage 4 — Crystalline: outer tri + inner tri (same dir) + dot
   {
     headR: 25,
     trailLen: 32,
-    blobAnchors: 6,
-    blobAmpR: 0.20,
     draw(ctx) {
-      drawPolygon(ctx, 15, 3, -Math.PI / 2);
-      drawPolygon(ctx, 7, 3, -Math.PI / 2);
-      drawDot(ctx, 2);
+      drawPolygon(ctx, 25, 3, -Math.PI / 2);
+      drawPolygon(ctx, 12, 3, -Math.PI / 2);
+      drawDot(ctx, 3);
     },
   },
-  // Stage 5 — Crystalline: pentagon + inner circle
+  // Stage 5 — Crystalline: circle + pentagon
   {
     headR: 28,
     trailLen: 40,
-    blobAnchors: 7,
-    blobAmpR: 0.18,
     draw(ctx) {
-      drawPolygon(ctx, 15, 5, -Math.PI / 2);
-      drawCircle(ctx, 8);
+      drawCircle(ctx, 28);
+      drawPolygon(ctx, 18, 5, -Math.PI / 2);
     },
   },
   // Stage 6 — Crystalline: hexagon + inverted triangle
   {
     headR: 31,
     trailLen: 50,
-    blobAnchors: 7,
-    blobAmpR: 0.15,
     draw(ctx) {
-      drawPolygon(ctx, 19, 6, 0);
-      drawPolygon(ctx, 9, 3, Math.PI / 2);
+      drawPolygon(ctx, 31, 6, 0);
+      drawPolygon(ctx, 14, 3, Math.PI / 2);
     },
   },
-  // Stage 7 — Crystalline: two overlapping squares (octagram)
+  // Stage 7 — Crystalline: one square (static; second square is rotating Layer 2)
   {
     headR: 34,
     trailLen: 60,
-    blobAnchors: 8,
-    blobAmpR: 0.13,
     draw(ctx) {
-      drawPolygon(ctx, 19, 4, 0);
-      drawPolygon(ctx, 19, 4, Math.PI / 4);
+      drawPolygon(ctx, 26, 4, 0);
     },
   },
-  // Stage 8 — Apex: 6-star + center dot
+  // Stage 8 — Apex: circle + 6-star
   {
     headR: 37,
     trailLen: 70,
-    blobAnchors: 8,
-    blobAmpR: 0.10,
     draw(ctx) {
-      drawStar(ctx, 22, 12, 6, 0);
-      drawDot(ctx, 2.5);
+      drawCircle(ctx, 37);
+      drawStar(ctx, 27, 15, 6, 0);
     },
   },
-  // Stage 9 — Apex: 6-star + octagon
+  // Stage 9 — Apex: 6-star + inner ring
   {
     headR: 40,
     trailLen: 80,
-    blobAnchors: 10,
-    blobAmpR: 0.07,
     draw(ctx) {
-      drawStar(ctx, 23, 13, 6, 0);
-      drawPolygon(ctx, 15, 8, Math.PI / 8);
+      drawStar(ctx, 31, 18, 6, 0);
+      drawCircle(ctx, 14);
     },
   },
   // Stage 10 — Apex: full complexity
   {
     headR: 43,
     trailLen: 95,
-    blobAnchors: 12,
-    blobAmpR: 0.05,
     draw(ctx) {
-      drawStar(ctx, 26, 16, 6, 0);
-      drawPolygon(ctx, 17, 8, Math.PI / 8);
+      drawCircle(ctx, 43);
+      drawStar(ctx, 34, 19, 6, 0);
+      drawPolygon(ctx, 19, 8, Math.PI / 8);
       drawCircle(ctx, 11);
-      drawDot(ctx, 2.5);
-      drawTicks(ctx, 26, 12, 5);
+      drawDot(ctx, 3);
+      drawTicks(ctx, 43, 12, 5);
     },
   },
 ];
@@ -214,16 +211,14 @@ function getCreatureCanvas(stage, color) {
   octx.scale(_cachedDPR, _cachedDPR);
   octx.translate(logSize / 2, logSize / 2);
 
-  // Ambient glow — soft blurred filled circle, no shape geometry
+  // Glow strokes (shadowBlur ON)
   octx.shadowColor = color;
-  octx.shadowBlur = 22;
-  octx.globalAlpha = 0.35;
+  octx.shadowBlur = 18;
+  octx.strokeStyle = color;
   octx.fillStyle = color;
-  octx.beginPath();
-  octx.arc(0, 0, r * 0.6, 0, Math.PI * 2);
-  octx.fill();
+  octx.lineWidth = 1.5;
+  stageDef.draw(octx);
   octx.shadowBlur = 0;
-  octx.globalAlpha = 1;
 
   _creatureCache.set(key, oc);
   return oc;
@@ -243,59 +238,23 @@ function drawDropShadow(ctx, x, y, r) {
 }
 
 
-function drawBlobCreature(ctx, x, y, stage, damaged, now, phases) {
+function drawCreature(ctx, x, y, stage, damaged, now) {
   const stageDef = STAGES[stage];
   if (!stageDef) return;
-
   const flickerOn = damaged ? Math.floor(now / 120) % 2 === 0 : false;
   const color = (damaged && flickerOn) ? '#ff4444' : '#00ff6a';
-  const r = stageDef.headR;
-  const amplitude = stageDef.blobAmpR * r;
-  const n = phases.length;
 
-  // Drop shadow
-  drawDropShadow(ctx, x, y, r);
-
-  // Ambient glow from cache
   const oc = getCreatureCanvas(stage, color);
-  const cacheSize = (r + CACHE_PAD) * 2;
-  ctx.drawImage(oc, x - cacheSize / 2, y - cacheSize / 2, cacheSize, cacheSize);
-
-  // Animated blob outline — N anchor points connected by quadratic bezier curves
-  const pts = [];
-  for (let i = 0; i < n; i++) {
-    const baseAngle = (i / n) * Math.PI * 2 - Math.PI / 2;
-    const ri = r + amplitude * Math.sin(now * 0.0009 + phases[i]);
-    pts.push({ x: x + Math.cos(baseAngle) * ri, y: y + Math.sin(baseAngle) * ri });
-  }
-  if (n === 0) return;
-
+  const size = (stageDef.headR + CACHE_PAD) * 2;
   ctx.save();
-  ctx.strokeStyle = color;
-  ctx.lineWidth = 1.5;
-  ctx.shadowBlur = 0;
-  ctx.beginPath();
-  const startMid = { x: (pts[n - 1].x + pts[0].x) / 2, y: (pts[n - 1].y + pts[0].y) / 2 };
-  ctx.moveTo(startMid.x, startMid.y);
-  for (let i = 0; i < n; i++) {
-    const curr = pts[i];
-    const next = pts[(i + 1) % n];
-    const mid = { x: (curr.x + next.x) / 2, y: (curr.y + next.y) / 2 };
-    ctx.quadraticCurveTo(curr.x, curr.y, mid.x, mid.y);
-  }
-  ctx.closePath();
-  ctx.stroke();
+  drawDropShadow(ctx, x, y, stageDef.headR);
+  ctx.drawImage(oc, x - size / 2, y - size / 2, size, size);
   ctx.restore();
+}
 
-  // Inner detail strokes on top of blob
-  ctx.save();
-  ctx.translate(x, y);
-  ctx.strokeStyle = color;
-  ctx.fillStyle = color;
-  ctx.lineWidth = 1.2;
-  ctx.shadowBlur = 0;
-  stageDef.draw(ctx);
-  ctx.restore();
+// Temporary stub — replaced in Task 2
+function drawBlobCreature(ctx, x, y, stage, damaged, now, phases) {
+  drawCreature(ctx, x, y, stage, damaged, now);
 }
 
 function drawTrail(ctx, trail, headR, damaged, time, stage) {
