@@ -223,6 +223,19 @@ function getCreatureCanvas(stage, color) {
   return oc;
 }
 
+// ── Drop shadow helper ────────────────────────────────────────────────────────
+
+function drawDropShadow(ctx, x, y, r) {
+  ctx.save();
+  ctx.translate(x + 4, y + 6);
+  ctx.scale(1, 0.3);
+  ctx.beginPath();
+  ctx.arc(0, 0, r * 0.9, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(0,0,0,0.28)';
+  ctx.fill();
+  ctx.restore();
+}
+
 function drawCreature(ctx, x, y, stage, damaged, time, scale = 1, alpha = 1) {
   const stageDef = STAGES[stage];
   if (!stageDef) return;
@@ -547,19 +560,6 @@ function drawObstacle(ctx, o) {
   ctx.translate(o.x, o.y);
   ctx.rotate(o.rotation);
   ctx.drawImage(oc, -logSize / 2, -logSize / 2, logSize, logSize);
-  ctx.restore();
-}
-
-// ── Drop shadow helper ────────────────────────────────────────────────────────
-
-function drawDropShadow(ctx, x, y, r) {
-  ctx.save();
-  ctx.translate(x + 4, y + 6);
-  ctx.scale(1, 0.3);
-  ctx.beginPath();
-  ctx.arc(0, 0, r * 0.9, 0, Math.PI * 2);
-  ctx.fillStyle = 'rgba(0,0,0,0.28)';
-  ctx.fill();
   ctx.restore();
 }
 
