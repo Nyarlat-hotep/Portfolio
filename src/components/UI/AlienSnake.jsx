@@ -434,7 +434,7 @@ function spawnCollectible(W, H) {
   };
 }
 
-function spawnObstacles(W, H) {
+function spawnObstacles(W, H, isTouch = false) {
   const MIN_DIST = 300; // min px between obstacle centers
   const CENTER_CLEAR = 220; // keep away from player spawn (W/2, H/2)
   const placed = [];
@@ -453,7 +453,7 @@ function spawnObstacles(W, H) {
     return {
       ...pos,
       shapeType,
-      r: 26 + Math.random() * 8,
+      r: isTouch ? 14 + Math.random() * 6 : 26 + Math.random() * 8,
       rotation: Math.random() * Math.PI * 2,
       rotSpeed: (0.08 + Math.random() * 0.12) * (Math.random() < 0.5 ? 1 : -1),
     };
@@ -479,7 +479,7 @@ function spawnEnemy(type, W, H) {
   };
 }
 
-function buildInitialState(W, H) {
+function buildInitialState(W, H, isTouch = false) {
   return {
     player: {
       x: W / 2,
@@ -499,7 +499,7 @@ function buildInitialState(W, H) {
     ],
     particles: [],
     effects: [],  // ring pulse absorb animations
-    obstacles: spawnObstacles(W, H),
+    obstacles: spawnObstacles(W, H, isTouch),
     absorbCount: 0,
   };
 }
@@ -540,8 +540,8 @@ export default function AlienSnake({ onClose }) {
     let dy = touch.clientY - cy;
     const dist = Math.hypot(dx, dy);
     if (dist > JOYSTICK_MAX_R) { dx = (dx / dist) * JOYSTICK_MAX_R; dy = (dy / dist) * JOYSTICK_MAX_R; }
-    joystickInputRef.current.dx = dx / JOYSTICK_MAX_R;
-    joystickInputRef.current.dy = dy / JOYSTICK_MAX_R;
+    joystickInputRef.current.dx = Math.max(-1, Math.min(1, dx / (JOYSTICK_MAX_R * 0.5)));
+    joystickInputRef.current.dy = Math.max(-1, Math.min(1, dy / (JOYSTICK_MAX_R * 0.5)));
     if (joystickKnobRef.current) {
       joystickKnobRef.current.style.transform = `translate(${dx}px, ${dy}px)`;
     }
@@ -561,7 +561,7 @@ export default function AlienSnake({ onClose }) {
   const initGame = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    gRef.current = buildInitialState(canvas.clientWidth, canvas.clientHeight);
+    gRef.current = buildInitialState(canvas.clientWidth, canvas.clientHeight, IS_TOUCH);
     gameStateRef.current = 'playing';
     setGameState('playing');
     setScore(0);
@@ -627,7 +627,7 @@ export default function AlienSnake({ onClose }) {
       ctx.scale(dpr, dpr);
       ctxRef.current = ctx;
       if (!gRef.current) {
-        gRef.current = buildInitialState(canvas.clientWidth, canvas.clientHeight);
+        gRef.current = buildInitialState(canvas.clientWidth, canvas.clientHeight, IS_TOUCH);
       }
     };
     resize();
@@ -925,12 +925,17 @@ export default function AlienSnake({ onClose }) {
       )}
 
       {IS_TOUCH && gameState === 'playing' && (
-        <button className="snake-mobile-pause" onClick={() => {
-          gameStateRef.current = 'paused';
-          setGameState('paused');
-        }}>
-          <Pause size={18} />
-        </button>
+        <motion.button
+          className="snake-mobile-pause"
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => {
+            gameStateRef.current = 'paused';
+            setGameState('paused');
+          }}
+        >
+          <Pause size={24} />
+        </motion.button>
       )}
 
       <div className="snake-controls-hint">

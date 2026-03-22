@@ -160,12 +160,11 @@
   position: absolute;
   top: 20px;
   right: 20px;
-  width: 44px;
-  height: 44px;
-  border-radius: 10px;
-  background: rgba(5, 5, 5, 0.7);
-  border: 1px solid rgba(255, 119, 0, 0.3);
-  color: rgba(255, 255, 255, 0.7);
+  padding: 0.75rem;
+  border-radius: 12px;
+  background: rgba(255, 119, 0, 0.12);
+  border: 2px solid rgba(255, 119, 0, 0.4);
+  color: rgba(255, 255, 255, 0.85);
   display: flex;
   align-items: center;
   justify-content: center;
