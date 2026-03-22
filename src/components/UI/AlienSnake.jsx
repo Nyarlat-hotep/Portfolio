@@ -142,13 +142,6 @@ const ABSORB_THRESHOLDS = [0, 3, 6, 10, 15];
 
 // ── Drawing helpers ───────────────────────────────────────────────────────────
 
-function applyGlow(ctx, color, blur = 14) {
-  ctx.shadowColor = color;
-  ctx.shadowBlur = blur;
-  ctx.strokeStyle = color;
-  ctx.fillStyle = color;
-  ctx.lineWidth = 1.5;
-}
 
 // ── Offscreen canvas cache — draw each stage shape once, blit every frame ────
 // All caches are DPR-aware: physical px = logical * _cachedDPR → sharp on retina.
@@ -907,8 +900,9 @@ export default function AlienSnake({ onClose }) {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.3 }}
+      style={{ cursor: gameState === 'playing' ? 'none' : 'default' }}
     >
-      <canvas ref={canvasRef} style={{ width: '100%', height: '100%', cursor: gameState === 'playing' ? 'none' : 'default' }} />
+      <canvas ref={canvasRef} style={{ width: '100%', height: '100%' }} />
 
       {IS_TOUCH && (
         <div
