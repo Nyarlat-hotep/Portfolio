@@ -5,6 +5,11 @@
   background: #030308;
 }
 
+.alien-snake-overlay.snake-playing,
+.alien-snake-overlay.snake-playing * {
+  cursor: none !important;
+}
+
 .alien-snake-overlay canvas {
   display: block;
   width: 100%;
