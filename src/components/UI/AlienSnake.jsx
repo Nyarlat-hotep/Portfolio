@@ -164,13 +164,52 @@ function getCreatureCanvas(stage, color) {
   if (_creatureCache.has(key)) return _creatureCache.get(key);
 
   const stageDef = STAGES[stage];
-  const logSize = (stageDef.headR + CACHE_PAD) * 2;
+  const r = stageDef.headR;
+  const logSize = (r + CACHE_PAD) * 2;
   const oc = document.createElement('canvas');
   oc.width = logSize * _cachedDPR;
   oc.height = logSize * _cachedDPR;
   const octx = oc.getContext('2d');
   octx.scale(_cachedDPR, _cachedDPR);
   octx.translate(logSize / 2, logSize / 2);
+
+  // — Volumetric fill (shadowBlur OFF) —
+  // Subtle tinted body volume
+  octx.globalAlpha = 0.18;
+  octx.fillStyle = color;
+  octx.beginPath();
+  octx.arc(0, 0, r, 0, Math.PI * 2);
+  octx.fill();
+  octx.globalAlpha = 1;
+
+  // Dark edge shading (bottom-right)
+  const shadowGrad = octx.createRadialGradient(r * 0.1, r * 0.15, 0, 0, 0, r);
+  shadowGrad.addColorStop(0, 'rgba(0,0,0,0)');
+  shadowGrad.addColorStop(1, 'rgba(0,0,0,0.55)');
+  octx.fillStyle = shadowGrad;
+  octx.beginPath();
+  octx.arc(0, 0, r, 0, Math.PI * 2);
+  octx.fill();
+
+  // Top-left highlight
+  const hlGrad = octx.createRadialGradient(-r * 0.35, -r * 0.35, 0, 0, 0, r);
+  hlGrad.addColorStop(0, 'rgba(255,255,255,0.22)');
+  hlGrad.addColorStop(0.45, 'rgba(255,255,255,0)');
+  octx.fillStyle = hlGrad;
+  octx.beginPath();
+  octx.arc(0, 0, r, 0, Math.PI * 2);
+  octx.fill();
+
+  // Specular dot (small bright highlight)
+  const specGrad = octx.createRadialGradient(-r * 0.3, -r * 0.32, 0, -r * 0.3, -r * 0.32, r * 0.22);
+  specGrad.addColorStop(0, 'rgba(255,255,255,0.65)');
+  specGrad.addColorStop(1, 'rgba(255,255,255,0)');
+  octx.fillStyle = specGrad;
+  octx.beginPath();
+  octx.arc(-r * 0.3, -r * 0.32, r * 0.22, 0, Math.PI * 2);
+  octx.fill();
+
+  // — Glow strokes (shadowBlur ON) —
   octx.shadowColor = color;
   octx.shadowBlur = 18;
   octx.strokeStyle = color;
