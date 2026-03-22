@@ -493,10 +493,9 @@ function buildInitialState(W, H, isTouch = false) {
       totalAbsorbs: 0,
     },
     collectibles: Array.from({ length: 8 }, () => spawnCollectible(W, H)),
-    enemies: [
-      spawnEnemy('patroller', W, H),
-      spawnEnemy('patroller', W, H),
-    ],
+    enemies: isTouch
+      ? [spawnEnemy('patroller', W, H)]
+      : [spawnEnemy('patroller', W, H), spawnEnemy('patroller', W, H)],
     particles: [],
     effects: [],  // ring pulse absorb animations
     obstacles: spawnObstacles(W, H, isTouch),
@@ -685,7 +684,7 @@ export default function AlienSnake({ onClose }) {
 
     // --- Movement ---
     const stage = player.stage;
-    const SPEED = 290 + stage * 20;
+    const SPEED = (IS_TOUCH ? 180 : 290) + stage * 20;
     let ax = 0, ay = 0;
     if (keys.has('ArrowLeft'))  ax = -1;
     if (keys.has('ArrowRight')) ax =  1;
