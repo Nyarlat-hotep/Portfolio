@@ -44,15 +44,6 @@ function drawStar(ctx, outerR, innerR, points, rotation = 0) {
   ctx.stroke();
 }
 
-function drawRing(ctx, outerR, innerR) {
-  ctx.beginPath();
-  ctx.arc(0, 0, outerR, 0, Math.PI * 2);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.arc(0, 0, innerR, 0, Math.PI * 2);
-  ctx.stroke();
-}
-
 function drawTicks(ctx, r, count, len = 5) {
   for (let i = 0; i < count; i++) {
     const a = (i / count) * Math.PI * 2;
@@ -192,9 +183,6 @@ const STAGES = [
 
 // Absorptions needed per stage to advance
 const ABSORB_THRESHOLDS = [0, 2, 4, 7, 10, 14, 18, 23, 29, 36];
-
-// ── Drawing helpers ───────────────────────────────────────────────────────────
-
 
 // ── Offscreen canvas cache — draw each stage shape once, blit every frame ────
 // All caches are DPR-aware: physical px = logical * _cachedDPR → sharp on retina.
