@@ -654,6 +654,7 @@ function buildInitialState(W, H, isTouch = false) {
       damagedUntil: 0,
       trail: [],
       totalAbsorbs: 0,
+      innerAngle: 0,
     },
     collectibles: Array.from({ length: 8 }, () => spawnCollectible(W, H)),
     enemies: isTouch
@@ -890,6 +891,8 @@ export default function AlienSnake({ onClose }) {
     if (player.y < 0)  player.y += H;
     if (player.y > H)  player.y -= H;
 
+    player.innerAngle += delta * 2.2; // ~2.2 rad/sec counter-rotation
+
     // Trail
     const moved = Math.hypot(player.x - prevX, player.y - prevY);
     if (moved > 1.5) {
@@ -1062,6 +1065,23 @@ export default function AlienSnake({ onClose }) {
     const stageDef = STAGES[player.stage];
     drawTrail(ctx, player.trail, stageDef?.headR ?? 10, damaged, now, player.stage);
     drawCreature(ctx, player.x, player.y, player.stage, damaged, now);
+
+    // Inner layer — independent rotation, no shadowBlur, no cache
+    if (player.stage >= 2) {
+      const flickerOn = damaged ? Math.floor(now / 120) % 2 === 0 : false;
+      const innerColor = (damaged && flickerOn) ? 'rgba(255,68,68,0.5)' : 'rgba(0,255,106,0.5)';
+      const r = stageDef.headR;
+      ctx.save();
+      ctx.translate(player.x, player.y);
+      ctx.rotate(player.innerAngle);
+      ctx.strokeStyle = innerColor;
+      ctx.lineWidth = 0.8;
+      if (player.stage === 2) drawPolygon(ctx, r * 0.45, 5, -Math.PI / 2);
+      else if (player.stage === 3) drawPolygon(ctx, r * 0.4, 3, Math.PI);
+      else if (player.stage === 4) drawPolygon(ctx, r * 0.5, 4, Math.PI / 8);
+      else if (player.stage === 5) drawStar(ctx, r * 0.45, r * 0.2, 6, 0);
+      ctx.restore();
+    }
 
     // Stage label
     ctx.save();
