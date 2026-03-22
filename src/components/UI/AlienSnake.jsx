@@ -67,7 +67,7 @@ function drawTicks(ctx, r, count, len = 5) {
   }
 }
 
-// ── Stage definitions (all radii ~25% larger) ────────────────────────────────
+// ── Stage definitions — Cellular (1–3), Crystalline (4–7), Apex (8–10) ──────
 
 const STAGES = [
   null, // 0-indexed placeholder
