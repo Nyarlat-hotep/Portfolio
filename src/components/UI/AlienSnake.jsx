@@ -242,20 +242,58 @@ function drawDropShadow(ctx, x, y, r) {
   ctx.restore();
 }
 
-function drawCreature(ctx, x, y, stage, damaged, time, scale = 1, alpha = 1) {
+
+function drawBlobCreature(ctx, x, y, stage, damaged, now, phases) {
   const stageDef = STAGES[stage];
   if (!stageDef) return;
 
-  const flickerOn = damaged ? Math.floor(time / 120) % 2 === 0 : false;
+  const flickerOn = damaged ? Math.floor(now / 120) % 2 === 0 : false;
   const color = (damaged && flickerOn) ? '#ff4444' : '#00ff6a';
+  const r = stageDef.headR;
+  const amplitude = stageDef.blobAmpR * r;
+  const n = phases.length;
 
+  // Drop shadow
+  drawDropShadow(ctx, x, y, r);
+
+  // Ambient glow from cache
   const oc = getCreatureCanvas(stage, color);
-  const size = (stageDef.headR + CACHE_PAD) * 2 * scale;
+  const cacheSize = (r + CACHE_PAD) * 2;
+  ctx.drawImage(oc, x - cacheSize / 2, y - cacheSize / 2, cacheSize, cacheSize);
+
+  // Animated blob outline — N anchor points connected by quadratic bezier curves
+  const pts = [];
+  for (let i = 0; i < n; i++) {
+    const baseAngle = (i / n) * Math.PI * 2 - Math.PI / 2;
+    const ri = r + amplitude * Math.sin(now * 0.0009 + phases[i]);
+    pts.push({ x: x + Math.cos(baseAngle) * ri, y: y + Math.sin(baseAngle) * ri });
+  }
 
   ctx.save();
-  ctx.globalAlpha = alpha;
-  drawDropShadow(ctx, x, y, stageDef.headR * scale);
-  ctx.drawImage(oc, x - size / 2, y - size / 2, size, size);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.5;
+  ctx.shadowBlur = 0;
+  ctx.beginPath();
+  const startMid = { x: (pts[n - 1].x + pts[0].x) / 2, y: (pts[n - 1].y + pts[0].y) / 2 };
+  ctx.moveTo(startMid.x, startMid.y);
+  for (let i = 0; i < n; i++) {
+    const curr = pts[i];
+    const next = pts[(i + 1) % n];
+    const mid = { x: (curr.x + next.x) / 2, y: (curr.y + next.y) / 2 };
+    ctx.quadraticCurveTo(curr.x, curr.y, mid.x, mid.y);
+  }
+  ctx.closePath();
+  ctx.stroke();
+  ctx.restore();
+
+  // Inner detail strokes on top of blob
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.strokeStyle = color;
+  ctx.fillStyle = color;
+  ctx.lineWidth = 1.2;
+  ctx.shadowBlur = 0;
+  stageDef.draw(ctx);
   ctx.restore();
 }
 
@@ -563,6 +601,7 @@ function buildInitialState(W, H, isTouch = false) {
       trail: [],
       totalAbsorbs: 0,
       innerAngle: 0,
+      blobPhases: Array.from({ length: STAGES[1].blobAnchors }, () => Math.random() * Math.PI * 2),
     },
     collectibles: Array.from({ length: 8 }, () => spawnCollectible(W, H)),
     enemies: isTouch
@@ -756,6 +795,7 @@ export default function AlienSnake({ onClose }) {
         player.stage--;
         player.hp = 2;
         g.absorbCount = 0;
+        player.blobPhases = Array.from({ length: STAGES[player.stage].blobAnchors }, () => Math.random() * Math.PI * 2);
       }
     }
   }
@@ -828,6 +868,7 @@ export default function AlienSnake({ onClose }) {
           player.stage++;
           g.absorbCount = 0;
           player.hp = 2;
+          player.blobPhases = Array.from({ length: STAGES[player.stage].blobAnchors }, () => Math.random() * Math.PI * 2);
           spawnEnemiesForStage(player.stage, W, H, enemies);
         }
       }
@@ -972,7 +1013,7 @@ export default function AlienSnake({ onClose }) {
     // Player trail + head
     const stageDef = STAGES[player.stage];
     drawTrail(ctx, player.trail, stageDef?.headR ?? 10, damaged, now, player.stage);
-    drawCreature(ctx, player.x, player.y, player.stage, damaged, now);
+    drawBlobCreature(ctx, player.x, player.y, player.stage, damaged, now, player.blobPhases);
 
     // Inner layer — independent rotation, no shadowBlur, no cache
     if (player.stage >= 2) {
