@@ -638,7 +638,7 @@ function spawnEnemy(type, W, H) {
     vx: 0,
     vy: 0,
     breathePhase: Math.random() * Math.PI * 2,
-    breatheSpeed: 0.0015 + Math.random() * 0.001,
+    breatheSpeed: 0.0015 + Math.random() * 0.001, // rad/ms — 0.0015 ≈ 4s cycle
   };
 }
 
