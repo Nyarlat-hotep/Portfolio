@@ -190,76 +190,38 @@ export default function HUDFrame() {
         </defs>
       </svg>
 
-      {/* Secondary center bar — stepped geometric HUD bar */}
-      <svg className="hud-tc2" viewBox="0 0 500 40" xmlns="http://www.w3.org/2000/svg">
+      {/* Secondary center bar — simple ruled line */}
+      <svg className="hud-tc2" viewBox="0 0 500 24" xmlns="http://www.w3.org/2000/svg">
 
-        {/* Full-width thin baseline */}
-        <line x1="0" y1="20" x2="500" y2="20" stroke="rgba(255,119,0,0.28)" strokeWidth="0.75"/>
+        {/* Main horizontal line */}
+        <line x1="0" y1="12" x2="500" y2="12" stroke="rgba(255,119,0,0.28)" strokeWidth="0.75"/>
 
-        {/* ── LEFT SIDE ──────────────────────────────── */}
+        {/* Center tick */}
+        <line x1="250" y1="5" x2="250" y2="19" stroke="rgba(255,119,0,0.75)" strokeWidth="1.25"/>
 
-        {/* Short steep diagonal opening into outer box */}
-        <line x1="96" y1="20" x2="112" y2="13" stroke="rgba(255,119,0,0.55)" strokeWidth="1"/>
-        <line x1="96" y1="20" x2="112" y2="27" stroke="rgba(255,119,0,0.55)" strokeWidth="1"/>
+        {/* Major ticks — every 100 units */}
+        <line x1="100" y1="7" x2="100" y2="17" stroke="rgba(255,119,0,0.50)" strokeWidth="1"/>
+        <line x1="200" y1="7" x2="200" y2="17" stroke="rgba(255,119,0,0.50)" strokeWidth="1"/>
+        <line x1="300" y1="7" x2="300" y2="17" stroke="rgba(255,119,0,0.50)" strokeWidth="1"/>
+        <line x1="400" y1="7" x2="400" y2="17" stroke="rgba(255,119,0,0.50)" strokeWidth="1"/>
 
-        {/* Outer box fill */}
-        <polygon points="96,20 112,13 190,13 190,27 112,27 96,20" fill="rgba(255,119,0,0.08)"/>
+        {/* Minor ticks — every 50 units */}
+        <line x1="50"  y1="9" x2="50"  y2="15" stroke="rgba(255,119,0,0.30)" strokeWidth="0.75"/>
+        <line x1="150" y1="9" x2="150" y2="15" stroke="rgba(255,119,0,0.30)" strokeWidth="0.75"/>
+        <line x1="350" y1="9" x2="350" y2="15" stroke="rgba(255,119,0,0.30)" strokeWidth="0.75"/>
+        <line x1="450" y1="9" x2="450" y2="15" stroke="rgba(255,119,0,0.30)" strokeWidth="0.75"/>
 
-        {/* Outer box top rail — double line for depth */}
-        <line x1="112" y1="13" x2="190" y2="13" stroke="rgba(255,119,0,0.62)" strokeWidth="1"/>
-        <line x1="116" y1="15" x2="186" y2="15" stroke="rgba(255,119,0,0.25)" strokeWidth="0.75"/>
-        {/* Outer box bottom rail — double line */}
-        <line x1="112" y1="27" x2="190" y2="27" stroke="rgba(255,119,0,0.62)" strokeWidth="1"/>
-        <line x1="116" y1="25" x2="186" y2="25" stroke="rgba(255,119,0,0.25)" strokeWidth="0.75"/>
-
-        {/* Step-in diagonal — outer box to inner box */}
-        <line x1="190" y1="13" x2="207" y2="17" stroke="rgba(255,119,0,0.55)" strokeWidth="1"/>
-        <line x1="190" y1="27" x2="207" y2="23" stroke="rgba(255,119,0,0.55)" strokeWidth="1"/>
-        <polygon points="190,13 207,17 207,23 190,27" fill="rgba(255,119,0,0.10)"/>
-
-        {/* Inner box rails + fill */}
-        <line x1="207" y1="17" x2="233" y2="17" stroke="rgba(255,119,0,0.70)" strokeWidth="1"/>
-        <line x1="207" y1="23" x2="233" y2="23" stroke="rgba(255,119,0,0.70)" strokeWidth="1"/>
-        <rect x="207" y="17" width="26" height="6" fill="rgba(255,119,0,0.13)"/>
-
-        {/* Inner box exit diagonal to diamond */}
-        <line x1="233" y1="17" x2="238" y2="19" stroke="rgba(255,119,0,0.62)" strokeWidth="1"/>
-        <line x1="233" y1="23" x2="238" y2="21" stroke="rgba(255,119,0,0.62)" strokeWidth="1"/>
-
-        {/* ── RIGHT SIDE (mirror) ─────────────────────── */}
-
-        <line x1="404" y1="20" x2="388" y2="13" stroke="rgba(255,119,0,0.55)" strokeWidth="1"/>
-        <line x1="404" y1="20" x2="388" y2="27" stroke="rgba(255,119,0,0.55)" strokeWidth="1"/>
-
-        <polygon points="404,20 388,13 310,13 310,27 388,27 404,20" fill="rgba(255,119,0,0.08)"/>
-
-        <line x1="388" y1="13" x2="310" y2="13" stroke="rgba(255,119,0,0.62)" strokeWidth="1"/>
-        <line x1="384" y1="15" x2="314" y2="15" stroke="rgba(255,119,0,0.25)" strokeWidth="0.75"/>
-        <line x1="388" y1="27" x2="310" y2="27" stroke="rgba(255,119,0,0.62)" strokeWidth="1"/>
-        <line x1="384" y1="25" x2="314" y2="25" stroke="rgba(255,119,0,0.25)" strokeWidth="0.75"/>
-
-        <line x1="310" y1="13" x2="293" y2="17" stroke="rgba(255,119,0,0.55)" strokeWidth="1"/>
-        <line x1="310" y1="27" x2="293" y2="23" stroke="rgba(255,119,0,0.55)" strokeWidth="1"/>
-        <polygon points="310,13 293,17 293,23 310,27" fill="rgba(255,119,0,0.10)"/>
-
-        <line x1="293" y1="17" x2="267" y2="17" stroke="rgba(255,119,0,0.70)" strokeWidth="1"/>
-        <line x1="293" y1="23" x2="267" y2="23" stroke="rgba(255,119,0,0.70)" strokeWidth="1"/>
-        <rect x="267" y="17" width="26" height="6" fill="rgba(255,119,0,0.13)"/>
-
-        <line x1="267" y1="17" x2="262" y2="19" stroke="rgba(255,119,0,0.62)" strokeWidth="1"/>
-        <line x1="267" y1="23" x2="262" y2="21" stroke="rgba(255,119,0,0.62)" strokeWidth="1"/>
-
-        {/* ── CENTER DIAMOND ─────────────────────────── */}
-        <polygon points="250,13 264,20 250,27 236,20" fill="rgba(255,119,0,0.14)" stroke="rgba(255,119,0,0.75)" strokeWidth="1"/>
-        <polygon points="250,16 260,20 250,24 240,20" fill="rgba(255,119,0,0.28)" stroke="rgba(255,119,0,0.48)" strokeWidth="0.75"/>
-
-        {/* Tick marks above outer rail */}
-        <line x1="132" y1="13" x2="132" y2="10" stroke="rgba(255,119,0,0.42)" strokeWidth="1"/>
-        <line x1="148" y1="13" x2="148" y2="10" stroke="rgba(255,119,0,0.32)" strokeWidth="1"/>
-        <line x1="164" y1="13" x2="164" y2="10" stroke="rgba(255,119,0,0.32)" strokeWidth="1"/>
-        <line x1="368" y1="13" x2="368" y2="10" stroke="rgba(255,119,0,0.42)" strokeWidth="1"/>
-        <line x1="352" y1="13" x2="352" y2="10" stroke="rgba(255,119,0,0.32)" strokeWidth="1"/>
-        <line x1="336" y1="13" x2="336" y2="10" stroke="rgba(255,119,0,0.32)" strokeWidth="1"/>
+        {/* Small ticks — every 25 units */}
+        <line x1="25"  y1="10" x2="25"  y2="14" stroke="rgba(255,119,0,0.18)" strokeWidth="0.5"/>
+        <line x1="75"  y1="10" x2="75"  y2="14" stroke="rgba(255,119,0,0.18)" strokeWidth="0.5"/>
+        <line x1="125" y1="10" x2="125" y2="14" stroke="rgba(255,119,0,0.18)" strokeWidth="0.5"/>
+        <line x1="175" y1="10" x2="175" y2="14" stroke="rgba(255,119,0,0.18)" strokeWidth="0.5"/>
+        <line x1="225" y1="10" x2="225" y2="14" stroke="rgba(255,119,0,0.18)" strokeWidth="0.5"/>
+        <line x1="275" y1="10" x2="275" y2="14" stroke="rgba(255,119,0,0.18)" strokeWidth="0.5"/>
+        <line x1="325" y1="10" x2="325" y2="14" stroke="rgba(255,119,0,0.18)" strokeWidth="0.5"/>
+        <line x1="375" y1="10" x2="375" y2="14" stroke="rgba(255,119,0,0.18)" strokeWidth="0.5"/>
+        <line x1="425" y1="10" x2="425" y2="14" stroke="rgba(255,119,0,0.18)" strokeWidth="0.5"/>
+        <line x1="475" y1="10" x2="475" y2="14" stroke="rgba(255,119,0,0.18)" strokeWidth="0.5"/>
       </svg>
 
       {/* Side-left — segmented indicator */}
