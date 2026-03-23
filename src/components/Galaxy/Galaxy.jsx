@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { Canvas, useThree, useFrame } from '@react-three/fiber';
 import { TrackballControls, PerspectiveCamera } from '@react-three/drei';
-import { useState, useEffect, Suspense, useMemo, useCallback, useRef } from 'react';
+import { useState, useEffect, Suspense, useMemo, useCallback, useRef, lazy } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, ArrowRight, ArrowUp, ArrowDown, Move, ZoomIn, HelpCircle, X, Volume2, VolumeX } from 'lucide-react';
@@ -21,9 +21,9 @@ import Monolith from './Monolith';
 import BottomNav from '../Navigation/BottomNav';
 import HUDFrame from '../UI/HUDFrame';
 import LightspeedTransition from '../UI/LightspeedTransition';
-import PresentationMode from '../UI/PresentationMode';
 import '../UI/PresentationMode.css';
-import AlienSnake from '../UI/AlienSnake';
+const PresentationMode = lazy(() => import('../UI/PresentationMode'));
+const AlienSnake       = lazy(() => import('../UI/AlienSnake'));
 import { planetsData, getAdjacentPlanet } from '../../data/planets';
 import { isWebGLSupported } from '../../utils/webglDetect';
 import { isTouchDevice } from '../../utils/isTouchDevice';
@@ -859,18 +859,26 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
       )}
 
       {/* Presentation mode slideshow */}
-      <PresentationMode
-        isOpen={presentationOpen}
-        onClose={() => {
-          setPresentationOpen(false);
-          onPlanetClickRef.current?.(planetsData.find(p => p.id === 'home'));
-        }}
-      />
+      {presentationOpen && (
+        <Suspense fallback={null}>
+          <PresentationMode
+            isOpen={presentationOpen}
+            onClose={() => {
+              setPresentationOpen(false);
+              onPlanetClickRef.current?.(planetsData.find(p => p.id === 'home'));
+            }}
+          />
+        </Suspense>
+      )}
 
       {/* Alien Snake game — opened from monolith */}
       {createPortal(
         <AnimatePresence>
-          {showSnake && <AlienSnake onClose={() => setShowSnake(false)} />}
+          {showSnake && (
+            <Suspense fallback={null}>
+              <AlienSnake onClose={() => setShowSnake(false)} />
+            </Suspense>
+          )}
         </AnimatePresence>,
         document.body
       )}

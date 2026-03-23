@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, lazy, Suspense } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
@@ -6,10 +6,10 @@ import Galaxy from './components/Galaxy/Galaxy';
 import PageOverlay from './components/UI/PageOverlay';
 import VoidOverlay from './components/UI/VoidOverlay';
 import ErrorBoundary from './components/UI/ErrorBoundary';
-import PlanetCreator from './components/UI/PlanetCreator';
-import CaseStudy from './components/Pages/CaseStudy';
-import About from './components/Pages/About';
-import Experiments from './components/Pages/Experiments';
+const PlanetCreator = lazy(() => import('./components/UI/PlanetCreator'));
+const CaseStudy     = lazy(() => import('./components/Pages/CaseStudy'));
+const About         = lazy(() => import('./components/Pages/About'));
+const Experiments   = lazy(() => import('./components/Pages/Experiments'));
 import CustomCursor from './components/UI/CustomCursor';
 import { caseStudies, aboutContent } from './data/caseStudies';
 import { playCaseStudyOpen, playCaseStudyClose, playPlanetExplosion, playPlanetCreation, stopBackground, playBackground } from './utils/sounds';
@@ -171,11 +171,15 @@ function App() {
       </ErrorBoundary>
 
       {/* Planet Creator Overlay */}
-      <PlanetCreator
-        isOpen={showPlanetCreator}
-        onClose={handleClosePlanetCreator}
-        onSave={handleSavePlanet}
-      />
+      {showPlanetCreator && (
+        <Suspense fallback={null}>
+          <PlanetCreator
+            isOpen={showPlanetCreator}
+            onClose={handleClosePlanetCreator}
+            onSave={handleSavePlanet}
+          />
+        </Suspense>
+      )}
 
       {/* Void overlay for experiments */}
       {activePlanet?.id === 'experiments' ? (
@@ -184,7 +188,9 @@ function App() {
           onClose={handleCloseOverlay}
           title="ERR_X.0"
         >
-          <Experiments />
+          <Suspense fallback={null}>
+            <Experiments />
+          </Suspense>
         </VoidOverlay>
       ) : (
         <PageOverlay
@@ -194,7 +200,9 @@ function App() {
           planetColor={overlayColor}
           planetId={activePlanet?.id}
         >
-          {getOverlayContent()}
+          <Suspense fallback={null}>
+            {getOverlayContent()}
+          </Suspense>
         </PageOverlay>
       )}
 

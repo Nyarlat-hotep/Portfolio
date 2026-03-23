@@ -40,14 +40,10 @@ function play(src, volume = 1) {
   audio.play().catch(() => {})
 }
 
-// Kick off preloading all sounds immediately (background loaded separately via Web Audio)
-Object.values(SRCS).filter(s => s !== SRCS.background).forEach(getPool)
-
 // ── Background — Web Audio API (bypasses system media session / phone controls) ─
 // Strategy:
-//   1. Fetch raw bytes immediately — no AudioContext or gesture needed
-//   2. playBackground() sets _bgWantsPlay = true
-//   3. On first user gesture, resume AudioContext and decode+start playback
+//   1. playBackground() sets _bgWantsPlay = true; buffer is fetched on first play
+//   2. On first user gesture, resume AudioContext and decode+start playback
 let _audioCtx    = null
 let _gainNode    = null
 let _bgRawBuf    = null   // fetched ArrayBuffer
@@ -57,12 +53,6 @@ let _bgStartedAt = 0
 let _bgOffset    = 0
 let _bgPlaying   = false
 let _bgWantsPlay = false
-
-// Fetch raw bytes now — works before any user gesture
-fetch(SRCS.background)
-  .then(r => r.arrayBuffer())
-  .then(buf => { _bgRawBuf = buf })
-  .catch(() => {})
 
 function getBgCtx() {
   if (!_audioCtx) {
@@ -157,43 +147,42 @@ export function setMuted(v) {
 }
 
 // ── Cosmic void — dedicated instance so it can be stopped on pointer-out ──────
-const _cvAudio = getPool(SRCS.cosmicVoid).instances[0]
-
 export function playCosmicVoid() {
   if (_muted) return
-  _cvAudio.volume = 0.8
-  try { _cvAudio.currentTime = 0 } catch (_) {}
-  _cvAudio.play().catch(() => {})
+  const audio = getPool(SRCS.cosmicVoid).instances[0]
+  audio.volume = 0.8
+  try { audio.currentTime = 0 } catch (_) {}
+  audio.play().catch(() => {})
 }
 
 export function stopCosmicVoid() {
-  _cvAudio.pause()
-  try { _cvAudio.currentTime = 0 } catch (_) {}
+  const audio = getPool(SRCS.cosmicVoid).instances[0]
+  audio.pause()
+  try { audio.currentTime = 0 } catch (_) {}
 }
 
 // ── Black hole — dedicated instance so it can be stopped on well collapse ─────
-const _bhAudio = getPool(SRCS.blackHole).instances[0]
-
 export function playBlackHole() {
   if (_muted) return
-  _bhAudio.volume = 0.25
-  try { _bhAudio.currentTime = 0 } catch (_) {}
-  _bhAudio.play().catch(() => {})
+  const audio = getPool(SRCS.blackHole).instances[0]
+  audio.volume = 0.25
+  try { audio.currentTime = 0 } catch (_) {}
+  audio.play().catch(() => {})
 }
 
 export function stopBlackHole() {
-  _bhAudio.pause()
-  try { _bhAudio.currentTime = 0 } catch (_) {}
+  const audio = getPool(SRCS.blackHole).instances[0]
+  audio.pause()
+  try { audio.currentTime = 0 } catch (_) {}
 }
 
 // ── Menu click — dedicated instance with its own volume control ───────────────
-const _mcAudio = getPool(SRCS.menuClick).instances[0]
-
 export function playMenuClick() {
   if (_muted) return
-  _mcAudio.volume = 0.4  // ← adjust here
-  try { _mcAudio.currentTime = 0 } catch (_) {}
-  _mcAudio.play().catch(() => {})
+  const audio = getPool(SRCS.menuClick).instances[0]
+  audio.volume = 0.4  // ← adjust here
+  try { audio.currentTime = 0 } catch (_) {}
+  audio.play().catch(() => {})
 }
 
 export function playCaseStudyOpen()    { play(SRCS.caseStudyOpen,    0.9) }
