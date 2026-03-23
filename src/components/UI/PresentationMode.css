@@ -61,6 +61,7 @@
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  padding-top: 4rem;
   padding-bottom: 4rem; /* clearance for the absolutely-positioned nav */
 }
 

@@ -294,6 +294,7 @@ export default function PresentationMode({ isOpen, onClose }) {
       <div className="pm-stage" ref={stageRef}>
         <div
           className="pm-slide-scaler"
+          style={{ transform: `scale(${slideScale})` }}
         >
           <AnimatePresence custom={direction} mode="wait">
             <motion.div

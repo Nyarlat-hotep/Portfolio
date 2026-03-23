@@ -43,7 +43,7 @@ export const presentationSlides = [
     study: 1,
     accent: '#f5c842',
     title: 'BANANA PHONE',
-    nugget: "Enterprise ≠ consumer. I brought the lead queue to a persistent surface and surfaced critical client context — address, timezone, loan stage — directly into the communication view. Unified call, text, and chat into one coherent interface.",
+    nugget: "Enterprise ≠ consumer. I brought the lead queue to a persistent surface and exposed critical client context — address, timezone, loan stage — directly into the communication view. This provided a solid foundation for calling and texting but lacked cohesion.",
     image: '/images/case-studies/BananaPhone/current BP.png',
   },
   {
@@ -56,7 +56,7 @@ export const presentationSlides = [
     metrics: [
       { value: '650K+', label: 'Client Calls', sublabel: 'made in 2025' },
       { value: '15M+',  label: 'Texts Sent',   sublabel: 'since Nov 2025' },
-      { value: '85%',   label: 'Easy to Use',  sublabel: 'peak satisfaction' },
+      { value: '85%',   label: 'Easy to Use',  sublabel: 'peak CSAT score' },
     ],
   },
   {
@@ -163,7 +163,7 @@ export const presentationSlides = [
     study: 3,
     accent: '#22d3ee',
     title: 'MYROCKET DASHBOARD',
-    nugget: "An IA that flexes across radically different user states. A locked state pattern — borrowed from gaming — showed unactivated features as aspirational, not absent. I defended it in a financial context. It launched as the core onboarding mechanism.",
+    nugget: "An IA that flexes across radically different user states. A locked state pattern — borrowed from gaming — showed unactivated features as aspirational, not absent. What launched was something in between finances and home readiness.",
     image: '/images/case-studies/myrocket/dash-final.png',
   },
   {
@@ -175,8 +175,8 @@ export const presentationSlides = [
     summary: 'Launched December 2022 with 500K+ monthly active users from day one.',
     metrics: [
       { value: '2×',    label: 'Monthly Visits', sublabel: 'increase at launch' },
-      { value: '500K+', label: 'Active Users',    sublabel: 'at launch' },
-      { value: '61%',   label: 'CSAT Score',      sublabel: 'growing monthly' },
+      { value: '500K+', label: 'Active Users',    sublabel: 'post-launch' },
+      { value: '61%',   label: 'CSAT Score',      sublabel: 'post-launch' },
     ],
   },
 ];
