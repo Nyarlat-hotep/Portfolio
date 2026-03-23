@@ -237,6 +237,32 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
     setVignetteIntensity(intensity);
   }, []);
 
+  // Stable modal / button callbacks — no inline functions in JSX
+  const handleCloseAsteroidModal     = useCallback(() => { playCaseStudyClose(); setAsteroidModalOpen(false); }, []);
+  const handleCloseConstellationModal = useCallback(() => { playCaseStudyClose(); setConstellationModal(null); }, []);
+  const handleCodexChange            = useCallback((e) => { setCodexInput(e.target.value); setCodexError(false); }, []);
+  const handleMuteToggle             = useCallback(() => {
+    const next = !getMuted();
+    setMuted(next);
+    setMutedState(next);
+  }, []);
+  const handleHelpToggle             = useCallback(() => setHelpVisible(v => !v), []);
+
+  // Memoized vignette style — vignetteIntensity updates many times/sec near the void
+  const vignetteStyle = useMemo(() => ({
+    position: 'absolute',
+    top: 0, left: 0, right: 0, bottom: 0,
+    pointerEvents: 'none',
+    background: `radial-gradient(ellipse at center,
+      transparent 0%,
+      transparent ${Math.max(0, 60 - vignetteIntensity * 40)}%,
+      rgba(0, 0, 0, ${vignetteIntensity * 0.2}) ${Math.max(0, 80 - vignetteIntensity * 30)}%,
+      rgba(0, 0, 0, ${vignetteIntensity * 0.3}) 100%
+    )`,
+    transition: 'background 0.5s ease-out',
+    zIndex: 10,
+  }), [vignetteIntensity]);
+
   // Mobile tap detection — TrackballControls intercepts all touch events.
   // We detect taps here and hand off to MobileTapHandler (inside Canvas) which
   // does real Three.js raycasting via useThree, bypassing DOM events entirely.
@@ -541,22 +567,7 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
 
       {/* Vignette overlay - creeping darkness */}
       <div
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          pointerEvents: 'none',
-          background: `radial-gradient(ellipse at center,
-            transparent 0%,
-            transparent ${Math.max(0, 60 - vignetteIntensity * 40)}%,
-            rgba(0, 0, 0, ${vignetteIntensity * 0.2}) ${Math.max(0, 80 - vignetteIntensity * 30)}%,
-            rgba(0, 0, 0, ${vignetteIntensity * 0.3}) 100%
-          )`,
-          transition: 'background 0.5s ease-out',
-          zIndex: 10
-        }}
+        style={vignetteStyle}
       />
 
       {/* Asteroid codex modal — flex wrapper guarantees centering */}
@@ -578,7 +589,7 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
                 </span>
                 <button
                   className="asteroid-message-close"
-                  onClick={() => { playCaseStudyClose(); setAsteroidModalOpen(false); }}
+                  onClick={handleCloseAsteroidModal}
                   aria-label="Close"
                 ><X size={16} /></button>
               </div>
@@ -591,10 +602,7 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
                   className={`asteroid-codex-input${codexError ? ' codex-error' : ''}`}
                   type="text"
                   value={codexInput}
-                  onChange={(e) => {
-                    setCodexInput(e.target.value);
-                    if (codexError) setCodexError(false);
-                  }}
+                  onChange={handleCodexChange}
                   onKeyDown={handleCodexKeyDown}
                   autoFocus
                   autoComplete="off"
@@ -736,13 +744,9 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
           {/* Mute toggle */}
           <button
             className="mute-btn"
-            onClick={() => {
-              const next = !muted;
-              setMuted(next);
-              setMutedState(next);
-            }}
+            onClick={handleMuteToggle}
             aria-label={muted ? 'Unmute' : 'Mute'}
-            onMouseEnter={() => { playMenuClick(); }}
+            onMouseEnter={playMenuClick}
           >
             {muted ? <VolumeX size={14} /> : <Volume2 size={14} />}
             {!isTouch && (
@@ -755,9 +759,9 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
           {/* Help toggle */}
           <button
             className={`mute-btn help-btn${helpVisible ? ' help-btn--active' : ''}`}
-            onClick={() => setHelpVisible(v => !v)}
+            onClick={handleHelpToggle}
             aria-label={helpVisible ? 'Hide controls' : 'Show controls'}
-            onMouseEnter={() => { playMenuClick(); }}
+            onMouseEnter={playMenuClick}
           >
             <HelpCircle size={14} />
             {!isTouch && (
@@ -817,7 +821,7 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
               </div>
               <button
                 className="constellation-modal-close"
-                onClick={() => { playCaseStudyClose(); setConstellationModal(null); }}
+                onClick={handleCloseConstellationModal}
                 aria-label="Close"
               ><X size={16} /></button>
             </div>

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, Suspense, useMemo } from 'react';
+import { useState, useRef, useEffect, Suspense, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { useTexture } from '@react-three/drei';
@@ -259,6 +259,10 @@ export default function PlanetCreator({ isOpen, onClose, onSave }) {
     }
   };
 
+  const handleTintChange = useCallback((e) => {
+    setTintIntensity(parseFloat(e.target.value));
+  }, []);
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -417,7 +421,7 @@ export default function PlanetCreator({ isOpen, onClose, onSave }) {
                         max="1"
                         step="0.05"
                         value={tintIntensity}
-                        onChange={(e) => setTintIntensity(parseFloat(e.target.value))}
+                        onChange={handleTintChange}
                         className="intensity-slider"
                       />
                       <span className="intensity-value">{Math.round(tintIntensity * 100)}%</span>

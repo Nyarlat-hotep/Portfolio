@@ -217,21 +217,25 @@ export default function PresentationMode({ isOpen, onClose }) {
     };
   }, [isOpen]);
 
+  // Keep a ref so goNext/goPrev closures never stale-close over slideIndex
+  const slideIndexRef = useRef(slideIndex);
+  useEffect(() => { slideIndexRef.current = slideIndex; }, [slideIndex]);
+
   const goNext = useCallback(() => {
-    if (slideIndex < total - 1) {
+    if (slideIndexRef.current < total - 1) {
       setDirection(1);
       setSlideIndex((i) => i + 1);
     }
-  }, [slideIndex, total]);
+  }, [total]);
 
   const goPrev = useCallback(() => {
-    if (slideIndex > 0) {
+    if (slideIndexRef.current > 0) {
       setDirection(-1);
       setSlideIndex((i) => i - 1);
     }
-  }, [slideIndex]);
+  }, []);
 
-  // Keyboard navigation
+  // Keyboard navigation — handler is stable; no re-register on every slide change
   useEffect(() => {
     if (!isOpen) return;
     const handler = (e) => {
