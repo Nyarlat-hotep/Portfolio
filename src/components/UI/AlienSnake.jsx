@@ -252,10 +252,6 @@ function drawCreature(ctx, x, y, stage, damaged, now) {
   ctx.restore();
 }
 
-// Temporary stub — replaced in Task 2
-function drawBlobCreature(ctx, x, y, stage, damaged, now, phases) {
-  drawCreature(ctx, x, y, stage, damaged, now);
-}
 
 function drawTrail(ctx, trail, headR, damaged, time, stage) {
   if (trail.length < 2) return;
@@ -561,7 +557,7 @@ function buildInitialState(W, H, isTouch = false) {
       trail: [],
       totalAbsorbs: 0,
       innerAngle: 0,
-      blobPhases: Array.from({ length: STAGES[1].blobAnchors }, () => Math.random() * Math.PI * 2),
+      outerAngle: 0,
     },
     collectibles: Array.from({ length: 8 }, () => spawnCollectible(W, H)),
     enemies: isTouch
@@ -755,7 +751,6 @@ export default function AlienSnake({ onClose }) {
         player.stage--;
         player.hp = 2;
         g.absorbCount = 0;
-        player.blobPhases = Array.from({ length: STAGES[player.stage].blobAnchors }, () => Math.random() * Math.PI * 2);
       }
     }
   }
@@ -799,7 +794,8 @@ export default function AlienSnake({ onClose }) {
     if (player.y < 0)  player.y += H;
     if (player.y > H)  player.y -= H;
 
-    player.innerAngle = (player.innerAngle + delta * 2.2) % (Math.PI * 2); // ~2.2 rad/sec counter-rotation
+    player.innerAngle = (player.innerAngle + delta * 2.2) % (Math.PI * 2);
+    player.outerAngle = (player.outerAngle - delta * 0.4 + Math.PI * 2) % (Math.PI * 2);
 
     // Trail
     const moved = Math.hypot(player.x - prevX, player.y - prevY);
@@ -828,7 +824,6 @@ export default function AlienSnake({ onClose }) {
           player.stage++;
           g.absorbCount = 0;
           player.hp = 2;
-          player.blobPhases = Array.from({ length: STAGES[player.stage].blobAnchors }, () => Math.random() * Math.PI * 2);
           spawnEnemiesForStage(player.stage, W, H, enemies);
         }
       }
@@ -973,26 +968,43 @@ export default function AlienSnake({ onClose }) {
     // Player trail + head
     const stageDef = STAGES[player.stage];
     drawTrail(ctx, player.trail, stageDef?.headR ?? 10, damaged, now, player.stage);
-    drawBlobCreature(ctx, player.x, player.y, player.stage, damaged, now, player.blobPhases);
+    drawCreature(ctx, player.x, player.y, player.stage, damaged, now);
 
-    // Inner layer — independent rotation, no shadowBlur, no cache
+    // Rotating layers — no shadowBlur, no cache
     if (player.stage >= 2) {
       const flickerOn = damaged ? Math.floor(now / 120) % 2 === 0 : false;
-      const innerColor = (damaged && flickerOn) ? 'rgba(255,68,68,0.5)' : 'rgba(0,255,106,0.5)';
+      const layerColor = (damaged && flickerOn) ? 'rgba(255,68,68,0.5)' : 'rgba(0,255,106,0.5)';
       const r = stageDef.headR;
       const s = player.stage;
+
+      // Layer 1 — inner, fast rotation (stages 2–10)
       ctx.save();
       ctx.translate(player.x, player.y);
       ctx.rotate(player.innerAngle);
-      ctx.strokeStyle = innerColor;
+      ctx.strokeStyle = layerColor;
       ctx.lineWidth = 0.8;
-      if (s <= 4) drawPolygon(ctx, r * 0.4, 3, -Math.PI / 2);
-      else if (s === 5) drawPolygon(ctx, r * 0.45, 5, -Math.PI / 2);
-      else if (s === 6) drawPolygon(ctx, r * 0.4, 3, Math.PI / 2);
-      else if (s === 7) drawPolygon(ctx, r * 0.45, 4, Math.PI / 8);
-      else if (s <= 9) drawStar(ctx, r * 0.4, r * 0.18, 6, 0);
-      else drawStar(ctx, r * 0.45, r * 0.2, 6, 0);
+      if (s <= 4) drawPolygon(ctx, r * 0.38, 3, -Math.PI / 2);
+      else if (s === 5) drawPolygon(ctx, r * 0.4, 5, -Math.PI / 2);
+      else if (s === 6) drawPolygon(ctx, r * 0.35, 3, Math.PI / 2);
+      else if (s === 7) drawPolygon(ctx, r * 0.5, 4, Math.PI / 8);
+      else drawStar(ctx, r * 0.38, r * 0.17, 6, 0);
       ctx.restore();
+
+      // Layer 2 — outer, slow counter-rotation (stages 5–10)
+      if (s >= 5) {
+        ctx.save();
+        ctx.translate(player.x, player.y);
+        ctx.rotate(player.outerAngle);
+        ctx.strokeStyle = layerColor;
+        ctx.lineWidth = 0.8;
+        if (s === 5) drawPolygon(ctx, r * 0.88, 5, 0);
+        else if (s === 6) drawPolygon(ctx, r * 0.85, 6, 0);
+        else if (s === 7) drawPolygon(ctx, r * 0.55, 4, Math.PI / 4);
+        else if (s === 8) drawPolygon(ctx, r * 0.9, 6, 0);
+        else if (s === 9) drawPolygon(ctx, r * 0.7, 8, 0);
+        else drawPolygon(ctx, r * 0.72, 8, 0);
+        ctx.restore();
+      }
     }
 
     // Stage label
