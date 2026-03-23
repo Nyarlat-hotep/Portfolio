@@ -27,6 +27,7 @@ export default function Starfield({ count = 5000 }) {
     const positions = new Float32Array(count * 3);
     const colors = new Float32Array(count * 3);
 
+    const _c = new THREE.Color();
     for (let i = 0; i < count; i++) {
       const radius = 30 + Math.random() * 70;
       const theta = Math.random() * Math.PI * 2;
@@ -36,15 +37,10 @@ export default function Starfield({ count = 5000 }) {
       positions[i * 3 + 1] = radius * Math.sin(phi) * Math.sin(theta);
       positions[i * 3 + 2] = radius * Math.cos(phi);
 
-      const color = new THREE.Color();
-      const hue = 0.55 + Math.random() * 0.1;
-      const saturation = Math.random() * 0.3;
-      const lightness = 0.6 + Math.random() * 0.3;
-      color.setHSL(hue, saturation, lightness);
-
-      colors[i * 3] = color.r;
-      colors[i * 3 + 1] = color.g;
-      colors[i * 3 + 2] = color.b;
+      _c.setHSL(0.55 + Math.random() * 0.1, Math.random() * 0.3, 0.6 + Math.random() * 0.3);
+      colors[i * 3] = _c.r;
+      colors[i * 3 + 1] = _c.g;
+      colors[i * 3 + 2] = _c.b;
     }
 
     return { positions, colors };
@@ -56,6 +52,7 @@ export default function Starfield({ count = 5000 }) {
     const positions = new Float32Array(brightCount * 3);
     const colors = new Float32Array(brightCount * 3);
 
+    const _c = new THREE.Color();
     for (let i = 0; i < brightCount; i++) {
       const radius = 30 + Math.random() * 70;
       const theta = Math.random() * Math.PI * 2;
@@ -65,15 +62,10 @@ export default function Starfield({ count = 5000 }) {
       positions[i * 3 + 1] = radius * Math.sin(phi) * Math.sin(theta);
       positions[i * 3 + 2] = radius * Math.cos(phi);
 
-      const color = new THREE.Color();
-      const hue = 0.55 + Math.random() * 0.1;
-      const saturation = Math.random() * 0.08;
-      const lightness = 0.92 + Math.random() * 0.08;
-      color.setHSL(hue, saturation, lightness);
-
-      colors[i * 3] = color.r;
-      colors[i * 3 + 1] = color.g;
-      colors[i * 3 + 2] = color.b;
+      _c.setHSL(0.55 + Math.random() * 0.1, Math.random() * 0.08, 0.92 + Math.random() * 0.08);
+      colors[i * 3] = _c.r;
+      colors[i * 3 + 1] = _c.g;
+      colors[i * 3 + 2] = _c.b;
     }
 
     return { positions, colors };
@@ -85,6 +77,7 @@ export default function Starfield({ count = 5000 }) {
     const positions = new Float32Array(featureCount * 3);
     const colors = new Float32Array(featureCount * 3);
 
+    const _c = new THREE.Color();
     for (let i = 0; i < featureCount; i++) {
       const radius = 35 + Math.random() * 55;
       const theta = Math.random() * Math.PI * 2;
@@ -94,16 +87,12 @@ export default function Starfield({ count = 5000 }) {
       positions[i * 3 + 1] = radius * Math.sin(phi) * Math.sin(theta);
       positions[i * 3 + 2] = radius * Math.cos(phi);
 
-      const color = new THREE.Color();
       // Warm white to cool white variety
       const hue = Math.random() < 0.3 ? 0.08 + Math.random() * 0.05 : 0.55 + Math.random() * 0.1;
-      const saturation = Math.random() * 0.15;
-      const lightness = 0.95 + Math.random() * 0.05;
-      color.setHSL(hue, saturation, lightness);
-
-      colors[i * 3] = color.r;
-      colors[i * 3 + 1] = color.g;
-      colors[i * 3 + 2] = color.b;
+      _c.setHSL(hue, Math.random() * 0.15, 0.95 + Math.random() * 0.05);
+      colors[i * 3] = _c.r;
+      colors[i * 3 + 1] = _c.g;
+      colors[i * 3 + 2] = _c.b;
     }
 
     return { positions, colors };

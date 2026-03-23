@@ -28,7 +28,10 @@ function Planet({
   const ringRef1 = useRef();
   const ringRef2 = useRef();
   const particlesRef = useRef();
-  const _scaleVec = useRef(new THREE.Vector3());
+  const _scaleVec  = useRef(new THREE.Vector3());
+  const _centerVec = useRef(new THREE.Vector3());
+  const _projVec   = useRef(new THREE.Vector3());
+  const _edgeVec   = useRef(new THREE.Vector3());
   const floatStartedRef = useRef(false);
   const [hovered, setHovered] = useState(false);
   const { camera, size } = useThree();
@@ -117,23 +120,23 @@ function Planet({
     setHovered(true);
     playMenuClick();
 
-    // Calculate screen position and screen-space radius of the planet
+    // Calculate screen position and screen-space radius using pre-allocated vectors
     if (meshRef.current) {
-      const center = new THREE.Vector3();
-      meshRef.current.getWorldPosition(center);
+      meshRef.current.getWorldPosition(_centerVec.current);
 
       // Get current visual scale (accounts for hover lerp)
       const currentScale = meshRef.current.scale.x;
 
       // Project center to screen
-      const projCenter = center.clone().project(camera);
-      const cx = (projCenter.x * 0.5 + 0.5) * size.width;
-      const cy = (projCenter.y * -0.5 + 0.5) * size.height;
+      _projVec.current.copy(_centerVec.current).project(camera);
+      const cx = (_projVec.current.x * 0.5 + 0.5) * size.width;
+      const cy = (_projVec.current.y * -0.5 + 0.5) * size.height;
 
       // Project a point on the planet's right edge to get screen-space radius
-      const edge = center.clone().add(new THREE.Vector3(currentScale, 0, 0));
-      const projEdge = edge.project(camera);
-      const ex = (projEdge.x * 0.5 + 0.5) * size.width;
+      _edgeVec.current.copy(_centerVec.current);
+      _edgeVec.current.x += currentScale;
+      _edgeVec.current.project(camera);
+      const ex = (_edgeVec.current.x * 0.5 + 0.5) * size.width;
       const screenRadius = Math.abs(ex - cx);
 
       onHover?.(name, { x: cx, y: cy, radius: screenRadius, color: tooltipColor || color });
