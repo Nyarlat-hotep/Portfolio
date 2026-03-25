@@ -519,9 +519,21 @@ function randomPos(W, H, margin = 80) {
   };
 }
 
+// Joystick clear zone — matches .snake-joystick-base CSS:
+// left:44px bottom:80px size:96px → center (92, H-128). Touch only.
+const JOY_CLEAR_R = 160;
+function isClearOfJoystick(x, y, H) {
+  if (!isTouchDevice()) return true;
+  return Math.hypot(x - 92, y - (H - 128)) >= JOY_CLEAR_R;
+}
+
 function spawnCollectible(W, H) {
+  let pos;
+  let tries = 0;
+  do { pos = randomPos(W, H); tries++; }
+  while (tries < 30 && !isClearOfJoystick(pos.x, pos.y, H));
   return {
-    ...randomPos(W, H),
+    ...pos,
     shapeIdx: Math.floor(Math.random() * COLLECTIBLE_SIDES.length),
     r: 12 + Math.random() * 10,
     rotation: Math.random() * Math.PI * 2,
@@ -542,7 +554,8 @@ function spawnObstacles(W, H, isTouch = false) {
     } while (
       tries < 60 &&
       (placed.some(p => Math.hypot(p.x - pos.x, p.y - pos.y) < MIN_DIST) ||
-       Math.hypot(pos.x - W / 2, pos.y - H / 2) < CENTER_CLEAR)
+       Math.hypot(pos.x - W / 2, pos.y - H / 2) < CENTER_CLEAR ||
+       !isClearOfJoystick(pos.x, pos.y, H))
     );
     placed.push(pos);
     return {
@@ -556,11 +569,20 @@ function spawnObstacles(W, H, isTouch = false) {
 }
 
 function makeWaypoints(W, H) {
-  return Array.from({ length: 4 }, () => randomPos(W, H, 60));
+  return Array.from({ length: 4 }, () => {
+    let pos;
+    let tries = 0;
+    do { pos = randomPos(W, H, 60); tries++; }
+    while (tries < 20 && !isClearOfJoystick(pos.x, pos.y, H));
+    return pos;
+  });
 }
 
 function spawnEnemy(type, W, H) {
-  const pos = randomPos(W, H, 60);
+  let pos;
+  let tries = 0;
+  do { pos = randomPos(W, H, 60); tries++; }
+  while (tries < 30 && !isClearOfJoystick(pos.x, pos.y, H));
   return {
     ...pos,
     type,
