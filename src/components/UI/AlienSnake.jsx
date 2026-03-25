@@ -220,6 +220,10 @@ function applyZoneColors(zoneCfg) {
 let _cachedDPR = 1;
 const MOBILE_SCALE = isTouchDevice() ? 0.65 : 1.0;
 
+// Chaser flank — each chaser gets a unique approach angle (90° apart)
+let _chaserFlankIdx = 0;
+const FLANK_R = 80; // px offset from player that chasers target
+
 function clearShapeCaches() {
   _creatureCache.clear();
   _collectibleCache.clear();
@@ -570,33 +574,49 @@ function spawnObstacles(W, H, isTouch = false) {
   });
 }
 
-function makeWaypoints(W, H) {
+// Sector bounds (proportional): 0=TL 1=TR 2=BL 3=BR
+const SECTOR_BOUNDS = [
+  { x0: 0.05, x1: 0.47, y0: 0.05, y1: 0.47 }, // TL
+  { x0: 0.53, x1: 0.95, y0: 0.05, y1: 0.47 }, // TR
+  { x0: 0.05, x1: 0.47, y0: 0.53, y1: 0.95 }, // BL
+  { x0: 0.53, x1: 0.95, y0: 0.53, y1: 0.95 }, // BR
+];
+
+function makeWaypoints(W, H, sector = -1) {
+  const b = sector >= 0 ? SECTOR_BOUNDS[sector % 4] : { x0: 60/W, x1: 1-60/W, y0: 60/H, y1: 1-60/H };
   return Array.from({ length: 4 }, () => {
     let pos;
     let tries = 0;
-    do { pos = randomPos(W, H, 60); tries++; }
-    while (tries < 20 && !isClearOfJoystick(pos.x, pos.y, H));
+    do {
+      pos = {
+        x: b.x0 * W + Math.random() * (b.x1 - b.x0) * W,
+        y: b.y0 * H + Math.random() * (b.y1 - b.y0) * H,
+      };
+      tries++;
+    } while (tries < 20 && !isClearOfJoystick(pos.x, pos.y, H));
     return pos;
   });
 }
 
-function spawnEnemy(type, W, H) {
+function spawnEnemy(type, W, H, sector = -1) {
   let pos;
   let tries = 0;
   do { pos = randomPos(W, H, 60); tries++; }
   while (tries < 30 && !isClearOfJoystick(pos.x, pos.y, H));
+  const flankAngle = type === 'chaser' ? (_chaserFlankIdx++ % 4) * (Math.PI / 2) : 0;
   return {
     ...pos,
     type,
     rotation: 0,
     lastShot: performance.now() + 800 + Math.random() * 1200,
     speed: type === 'chaser' ? 75 : 90,
-    waypoints: type === 'patroller' ? makeWaypoints(W, H) : [],
+    waypoints: type === 'patroller' ? makeWaypoints(W, H, sector) : [],
     waypointIdx: 0,
     vx: 0,
     vy: 0,
     breathePhase: Math.random() * Math.PI * 2,
-    breatheSpeed: 0.0015 + Math.random() * 0.001, // rad/ms — 0.0015 ≈ 4s cycle
+    breatheSpeed: 0.0015 + Math.random() * 0.001,
+    flankAngle,
   };
 }
 
@@ -618,8 +638,8 @@ function buildInitialState(W, H, isTouch = false) {
     },
     collectibles: Array.from({ length: 8 }, () => spawnCollectible(W, H)),
     enemies: isTouch
-      ? [spawnEnemy('patroller', W, H)]
-      : [spawnEnemy('patroller', W, H), spawnEnemy('patroller', W, H)],
+      ? [spawnEnemy('patroller', W, H, 0)]
+      : [spawnEnemy('patroller', W, H, 0), spawnEnemy('patroller', W, H, 3)],
     particles: [],
     effects: [],  // ring pulse absorb animations
     obstacles: spawnObstacles(W, H, isTouch),
@@ -716,6 +736,7 @@ export default function AlienSnake({ onClose }) {
     if (!canvas) return;
     gRef.current = buildInitialState(canvas.clientWidth, canvas.clientHeight, IS_TOUCH);
     applyZoneColors(ZONE_CONFIG[0]);
+    _chaserFlankIdx = 0;
     gameStateRef.current = 'playing';
     setGameState('playing');
     setScore(0);
@@ -949,7 +970,9 @@ export default function AlienSnake({ onClose }) {
           e.y += (dy / dist) * e.speed * delta;
         }
       } else {
-        const dx = player.x - e.x, dy = player.y - e.y;
+        const targetX = player.x + Math.cos(e.flankAngle) * FLANK_R;
+        const targetY = player.y + Math.sin(e.flankAngle) * FLANK_R;
+        const dx = targetX - e.x, dy = targetY - e.y;
         const dist = Math.hypot(dx, dy);
         if (dist > 1) {
           e.x += (dx / dist) * e.speed * delta;
