@@ -862,7 +862,7 @@ export default function AlienSnake({ onClose }) {
           applyZoneColors(newZoneCfg);
           _collectibleCache.clear();
           g.zoneTransition = { label: newZoneCfg.name, createdAt: now };
-          applyZoneDifficulty(newZoneCfg.id, W, H, g);
+          applyZoneDifficulty(newZoneCfg.id, g);
         }
 
         const threshold = ABSORB_THRESHOLDS[stage] ?? 999;
@@ -904,6 +904,19 @@ export default function AlienSnake({ onClose }) {
         }
       }
       e.rotation += 1.4 * delta;
+
+      // Separation — push away from other enemies within SEP_R
+      const SEP_R = 65;
+      enemies.forEach(other => {
+        if (other === e) return;
+        const sx = e.x - other.x, sy = e.y - other.y;
+        const d = Math.hypot(sx, sy);
+        if (d < SEP_R && d > 0) {
+          const push = ((SEP_R - d) / SEP_R) * SEP_R * delta * 3;
+          e.x += (sx / d) * push;
+          e.y += (sy / d) * push;
+        }
+      });
 
       // Shoot every 1.5s
       if (now - e.lastShot > 1500) {
@@ -951,17 +964,13 @@ export default function AlienSnake({ onClose }) {
     });
   }
 
-  function applyZoneDifficulty(zoneId, W, H, g) {
-    const { enemies } = g;
+  function applyZoneDifficulty(zoneId, g) {
     if (zoneId === 2) {
-      enemies.push(spawnEnemy('chaser', W, H));
-      enemies.forEach(e => { e.speed += 20; });
+      g.enemies.forEach(e => { e.speed += 20; });
     } else if (zoneId === 3) {
-      enemies.push(spawnEnemy('chaser', W, H));
-      enemies.forEach(e => { e.speed += 15; });
+      g.enemies.forEach(e => { e.speed += 15; });
     } else if (zoneId === 4) {
-      enemies.push(spawnEnemy('chaser', W, H));
-      enemies.forEach(e => { e.speed += 15; });
+      g.enemies.forEach(e => { e.speed += 15; });
       g.projectileSpeedMult = (g.projectileSpeedMult ?? 1) * 1.15;
     }
   }
