@@ -1227,7 +1227,7 @@ export default function AlienSnake({ onClose }) {
 
       {!IS_TOUCH && (
         <div className="snake-controls-hint">
-          <ArrowLeft size={13} /><ArrowRight size={13} /><ArrowUp size={13} /><ArrowDown size={13} />&nbsp;&nbsp;MOVE&nbsp;&nbsp;&nbsp;&nbsp;ESC&nbsp;&nbsp;PAUSE
+          <ArrowLeft size={13} /><ArrowRight size={13} /><ArrowUp size={13} /><ArrowDown size={13} />&nbsp;&nbsp;MOVE&nbsp;&nbsp;&nbsp;&nbsp;ESC&nbsp;&nbsp;TO&nbsp;PAUSE
         </div>
       )}
 
