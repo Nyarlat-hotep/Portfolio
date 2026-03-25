@@ -218,6 +218,7 @@ function applyZoneColors(zoneCfg) {
 // Caches are cleared whenever DPR changes (window moves between monitors).
 
 let _cachedDPR = 1;
+const MOBILE_SCALE = isTouchDevice() ? 0.65 : 1.0;
 
 function clearShapeCaches() {
   _creatureCache.clear();
@@ -234,7 +235,7 @@ function getCreatureCanvas(stage, color) {
   if (_creatureCache.has(key)) return _creatureCache.get(key);
 
   const stageDef = STAGES[stage];
-  const r = stageDef.headR;
+  const r = Math.round(stageDef.headR * MOBILE_SCALE);
   const logSize = (r + CACHE_PAD) * 2;
   const oc = document.createElement('canvas');
   oc.width = logSize * _cachedDPR;
@@ -277,9 +278,10 @@ function drawCreature(ctx, x, y, stage, damaged, now) {
   const color = (damaged && flickerOn) ? '#ff4444' : '#00ff6a';
 
   const oc = getCreatureCanvas(stage, color);
-  const size = (stageDef.headR + CACHE_PAD) * 2;
+  const scaledR = Math.round(stageDef.headR * MOBILE_SCALE);
+  const size = (scaledR + CACHE_PAD) * 2;
   ctx.save();
-  drawDropShadow(ctx, x, y, stageDef.headR);
+  drawDropShadow(ctx, x, y, scaledR);
   ctx.drawImage(oc, x - size / 2, y - size / 2, size, size);
   ctx.restore();
 }
@@ -406,7 +408,7 @@ function drawCollectible(ctx, c) {
 
 const _enemyCache = new Map();
 const ENEMY_PAD = 20;
-const ENEMY_R = 15;
+const ENEMY_R = Math.round(15 * MOBILE_SCALE);
 
 function getEnemyCanvas(type) {
   if (_enemyCache.has(type)) return _enemyCache.get(type);
@@ -535,7 +537,7 @@ function spawnCollectible(W, H) {
   return {
     ...pos,
     shapeIdx: Math.floor(Math.random() * COLLECTIBLE_SIDES.length),
-    r: 12 + Math.random() * 10,
+    r: (12 + Math.random() * 10) * MOBILE_SCALE,
     rotation: Math.random() * Math.PI * 2,
     rotSpeed: (0.4 + Math.random() * 0.6) * (Math.random() < 0.5 ? 1 : -1),
   };
@@ -888,12 +890,12 @@ export default function AlienSnake({ onClose }) {
     const moved = Math.hypot(player.x - prevX, player.y - prevY);
     if (moved > 1.5) {
       player.trail.unshift({ x: player.x, y: player.y });
-      const maxTrail = STAGES[stage]?.trailLen ?? 18;
+      const maxTrail = Math.round((STAGES[stage]?.trailLen ?? 18) * MOBILE_SCALE);
       if (player.trail.length > maxTrail) player.trail.length = maxTrail;
     }
 
     // --- Absorb collectibles ---
-    const headR = (STAGES[stage]?.headR ?? 10) + 10;
+    const headR = (STAGES[stage]?.headR ?? 10) * MOBILE_SCALE + 10;
     for (let i = collectibles.length - 1; i >= 0; i--) {
       const c = collectibles[i];
       const dx = player.x - c.x, dy = player.y - c.y;
@@ -991,7 +993,7 @@ export default function AlienSnake({ onClose }) {
 
       if (now >= player.damagedUntil) {
         const pdx = player.x - p.x, pdy = player.y - p.y;
-        const hitR = (STAGES[stage]?.headR ?? 10) * 0.85;
+        const hitR = (STAGES[stage]?.headR ?? 10) * MOBILE_SCALE * 0.85;
         if (pdx * pdx + pdy * pdy < hitR * hitR) {
           particles.splice(i, 1);
           player.damagedUntil = now + 1500;
@@ -1001,7 +1003,7 @@ export default function AlienSnake({ onClose }) {
     }
 
     // --- Rotate obstacles + check collision ---
-    const playerHitR = (STAGES[stage]?.headR ?? 10) * 0.85;
+    const playerHitR = (STAGES[stage]?.headR ?? 10) * MOBILE_SCALE * 0.85;
     obstacles.forEach(o => {
       o.rotation += o.rotSpeed * delta;
       if (now >= player.damagedUntil) {
@@ -1062,8 +1064,9 @@ export default function AlienSnake({ onClose }) {
     ctx.strokeStyle = _zoneGrid;
     ctx.lineWidth = 1;
     ctx.beginPath();
-    for (let x = 0; x < W; x += 64) { ctx.moveTo(x, 0); ctx.lineTo(x, H); }
-    for (let y = 0; y < H; y += 64) { ctx.moveTo(0, y); ctx.lineTo(W, y); }
+    const gridStep = Math.round(64 * MOBILE_SCALE);
+    for (let x = 0; x < W; x += gridStep) { ctx.moveTo(x, 0); ctx.lineTo(x, H); }
+    for (let y = 0; y < H; y += gridStep) { ctx.moveTo(0, y); ctx.lineTo(W, y); }
     ctx.stroke();
     ctx.restore();
 
@@ -1091,14 +1094,14 @@ export default function AlienSnake({ onClose }) {
 
     // Player trail + head
     const stageDef = STAGES[player.stage];
-    drawTrail(ctx, player.trail, stageDef?.headR ?? 10, damaged, now, player.stage);
+    drawTrail(ctx, player.trail, (stageDef?.headR ?? 10) * MOBILE_SCALE, damaged, now, player.stage);
     drawCreature(ctx, player.x, player.y, player.stage, damaged, now);
 
     // Rotating layers — no shadowBlur, no cache
     if (player.stage >= 2) {
       const flickerOn = damaged ? Math.floor(now / 120) % 2 === 0 : false;
       const layerColor = (damaged && flickerOn) ? 'rgba(255,68,68,0.5)' : 'rgba(0,255,106,0.5)';
-      const r = stageDef.headR;
+      const r = stageDef.headR * MOBILE_SCALE;
       const s = player.stage;
 
       // Layer 1 — inner, fast rotation (stages 2–10)
