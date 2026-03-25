@@ -181,6 +181,38 @@ const STAGES = [
 // Absorptions needed per stage to advance
 const ABSORB_THRESHOLDS = [0, 2, 4, 7, 10, 14, 18, 23, 29, 36];
 
+// ── Zone system ───────────────────────────────────────────────────────────────
+
+const ZONE_CONFIG = [
+  { id: 1, name: 'Deep Space',   minAbsorbs:  0, bg: '#030308', grid: 'rgba(0,255,106,0.05)',  collectStroke: 'rgba(0,255,106,0.85)',  collectGlow: '#00ff6a', pulse: '#00ff6a', hudColor: 'rgba(0,255,106,1)'   },
+  { id: 2, name: 'Nebula',       minAbsorbs: 25, bg: '#04030f', grid: 'rgba(80,100,255,0.07)', collectStroke: 'rgba(80,180,255,0.85)', collectGlow: '#4488ff', pulse: '#4488ff', hudColor: 'rgba(80,180,255,1)'  },
+  { id: 3, name: 'Plasma Field', minAbsorbs: 55, bg: '#0d0308', grid: 'rgba(255,60,60,0.06)',  collectStroke: 'rgba(255,140,40,0.85)', collectGlow: '#ff6600', pulse: '#ff4422', hudColor: 'rgba(255,140,40,1)'  },
+  { id: 4, name: 'Singularity',  minAbsorbs: 90, bg: '#080210', grid: 'rgba(200,0,255,0.07)',  collectStroke: 'rgba(255,220,0,0.85)',  collectGlow: '#ffdd00', pulse: '#cc00ff', hudColor: 'rgba(255,220,0,1)'   },
+];
+
+let _zoneBg         = ZONE_CONFIG[0].bg;
+let _zoneGrid       = ZONE_CONFIG[0].grid;
+let _zoneCollStroke = ZONE_CONFIG[0].collectStroke;
+let _zoneCollGlow   = ZONE_CONFIG[0].collectGlow;
+let _zonePulse      = ZONE_CONFIG[0].pulse;
+let _zoneHudColor   = ZONE_CONFIG[0].hudColor;
+
+function getZoneForAbsorbs(totalAbsorbs) {
+  for (let i = ZONE_CONFIG.length - 1; i >= 0; i--) {
+    if (totalAbsorbs >= ZONE_CONFIG[i].minAbsorbs) return ZONE_CONFIG[i];
+  }
+  return ZONE_CONFIG[0];
+}
+
+function applyZoneColors(zoneCfg) {
+  _zoneBg         = zoneCfg.bg;
+  _zoneGrid       = zoneCfg.grid;
+  _zoneCollStroke = zoneCfg.collectStroke;
+  _zoneCollGlow   = zoneCfg.collectGlow;
+  _zonePulse      = zoneCfg.pulse;
+  _zoneHudColor   = zoneCfg.hudColor;
+}
+
 // ── Offscreen canvas cache — draw each stage shape once, blit every frame ────
 // All caches are DPR-aware: physical px = logical * _cachedDPR → sharp on retina.
 // Caches are cleared whenever DPR changes (window moves between monitors).
@@ -315,8 +347,8 @@ function drawRingPulse(ctx, fx, now) {
   const opacity = (1 - t) * 0.9;
   ctx.save();
   ctx.globalAlpha = opacity;
-  ctx.strokeStyle = '#00ff6a';
-  ctx.shadowColor = '#00ff6a';
+  ctx.strokeStyle = _zonePulse;
+  ctx.shadowColor = _zonePulse;
   ctx.shadowBlur = 16;
   ctx.lineWidth = 2;
   ctx.beginPath();
@@ -348,9 +380,9 @@ function getCollectibleCanvas(shapeIdx, r) {
   octx.scale(_cachedDPR, _cachedDPR);
   octx.translate(logSize / 2, logSize / 2);
 
-  octx.shadowColor = '#00ff6a';
+  octx.shadowColor = _zoneCollGlow;
   octx.shadowBlur = 12;
-  octx.strokeStyle = 'rgba(0,255,106,0.85)';
+  octx.strokeStyle = _zoneCollStroke;
   octx.lineWidth = 1.5;
   drawPolygon(octx, rKey, sides, rot);
   octx.shadowBlur = 0;
@@ -567,6 +599,9 @@ function buildInitialState(W, H, isTouch = false) {
     effects: [],  // ring pulse absorb animations
     obstacles: spawnObstacles(W, H, isTouch),
     absorbCount: 0,
+    zone: 1,
+    zoneTransition: null,
+    projectileSpeedMult: 1,
   };
 }
 
@@ -628,6 +663,7 @@ export default function AlienSnake({ onClose }) {
     const canvas = canvasRef.current;
     if (!canvas) return;
     gRef.current = buildInitialState(canvas.clientWidth, canvas.clientHeight, IS_TOUCH);
+    applyZoneColors(ZONE_CONFIG[0]);
     gameStateRef.current = 'playing';
     setGameState('playing');
     setScore(0);
@@ -819,6 +855,16 @@ export default function AlienSnake({ onClose }) {
         g.absorbCount++;
         player.totalAbsorbs++;
 
+        // Zone transition check
+        const newZoneCfg = getZoneForAbsorbs(player.totalAbsorbs);
+        if (newZoneCfg.id !== g.zone) {
+          g.zone = newZoneCfg.id;
+          applyZoneColors(newZoneCfg);
+          _collectibleCache.clear();
+          g.zoneTransition = { label: newZoneCfg.name, createdAt: now };
+          applyZoneDifficulty(newZoneCfg.id, W, H, g);
+        }
+
         const threshold = ABSORB_THRESHOLDS[stage] ?? 999;
         if (stage < 10 && g.absorbCount >= threshold) {
           player.stage++;
@@ -865,8 +911,8 @@ export default function AlienSnake({ onClose }) {
         const angle = Math.atan2(player.y - e.y, player.x - e.x);
         particles.push({
           x: e.x, y: e.y,
-          vx: Math.cos(angle) * 270,
-          vy: Math.sin(angle) * 270,
+          vx: Math.cos(angle) * 270 * (g.projectileSpeedMult ?? 1),
+          vy: Math.sin(angle) * 270 * (g.projectileSpeedMult ?? 1),
           createdAt: now,
         });
       }
@@ -905,6 +951,21 @@ export default function AlienSnake({ onClose }) {
     });
   }
 
+  function applyZoneDifficulty(zoneId, W, H, g) {
+    const { enemies } = g;
+    if (zoneId === 2) {
+      enemies.push(spawnEnemy('chaser', W, H));
+      enemies.forEach(e => { e.speed += 20; });
+    } else if (zoneId === 3) {
+      enemies.push(spawnEnemy('chaser', W, H));
+      enemies.forEach(e => { e.speed += 15; });
+    } else if (zoneId === 4) {
+      enemies.push(spawnEnemy('chaser', W, H));
+      enemies.forEach(e => { e.speed += 15; });
+      g.projectileSpeedMult = (g.projectileSpeedMult ?? 1) * 1.15;
+    }
+  }
+
   function spawnEnemiesForStage(stage, W, H, enemies) {
     if (stage === 3) {
       enemies.push(spawnEnemy('chaser', W, H));
@@ -930,12 +991,12 @@ export default function AlienSnake({ onClose }) {
     const ctx = ctxRef.current;
     if (!ctx) return;
 
-    ctx.fillStyle = '#030308';
+    ctx.fillStyle = _zoneBg;
     ctx.fillRect(0, 0, W, H);
 
     // Grid — single batched path, no per-line stroke call
     ctx.save();
-    ctx.strokeStyle = 'rgba(0,255,106,0.05)';
+    ctx.strokeStyle = _zoneGrid;
     ctx.lineWidth = 1;
     ctx.beginPath();
     for (let x = 0; x < W; x += 64) { ctx.moveTo(x, 0); ctx.lineTo(x, H); }
@@ -1007,13 +1068,33 @@ export default function AlienSnake({ onClose }) {
       }
     }
 
-    // Stage label
+    // Absorption counter — top center
     ctx.save();
-    ctx.font = '10px Orbitron, monospace';
-    ctx.fillStyle = 'rgba(0,255,106,0.25)';
-    ctx.textAlign = 'right';
-    ctx.fillText(`STAGE ${player.stage} — ${player.totalAbsorbs} ABSORBS`, W - 20, 28);
+    ctx.font = '16px Orbitron, monospace';
+    ctx.fillStyle = _zoneHudColor;
+    ctx.textAlign = 'center';
+    ctx.fillText(`${player.totalAbsorbs}   ABSORPTIONS`, W / 2, 32);
     ctx.restore();
+
+    // Zone transition flash
+    if (g.zoneTransition) {
+      const elapsed = now - g.zoneTransition.createdAt;
+      if (elapsed < 1800) {
+        const alpha = Math.pow(1 - elapsed / 1800, 1.5);
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.font = '20px Orbitron, monospace';
+        ctx.fillStyle = _zoneHudColor;
+        ctx.shadowColor = _zoneHudColor;
+        ctx.shadowBlur = 18;
+        ctx.textAlign = 'center';
+        ctx.fillText(g.zoneTransition.label.toUpperCase(), W / 2, H * 0.4);
+        ctx.shadowBlur = 0;
+        ctx.restore();
+      } else {
+        g.zoneTransition = null;
+      }
+    }
   }
 
   // ── JSX ─────────────────────────────────────────────────────────────────────
