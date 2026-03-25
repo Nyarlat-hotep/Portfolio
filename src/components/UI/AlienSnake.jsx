@@ -612,6 +612,7 @@ function buildInitialState(W, H, isTouch = false) {
       totalAbsorbs: 0,
       innerAngle: 0,
       outerAngle: 0,
+      hasReverted: false,
     },
     collectibles: Array.from({ length: 8 }, () => spawnCollectible(W, H)),
     enemies: isTouch
@@ -624,10 +625,37 @@ function buildInitialState(W, H, isTouch = false) {
     zone: 1,
     zoneTransition: null,
     projectileSpeedMult: 1,
+    shootIntervalMs: 1500,
   };
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
+
+// ── Glitch title — same character-corruption pattern as VoidOverlay ──────────
+
+const GLITCH_CHARS = '!@#$%^&*_-=[]{}|;:.<>?/\\~`0123456789';
+
+function GlitchTitle({ children }) {
+  const [text, setText] = useState(children);
+  useEffect(() => {
+    const schedule = () => {
+      const delay = 600 + Math.random() * 1000;
+      return setTimeout(() => {
+        const chars = children.split('');
+        const count = Math.floor(Math.random() * 3) + 1;
+        for (let i = 0; i < count; i++) {
+          const idx = Math.floor(Math.random() * chars.length);
+          if (chars[idx] !== ' ') chars[idx] = GLITCH_CHARS[Math.floor(Math.random() * GLITCH_CHARS.length)];
+        }
+        setText(chars.join(''));
+        setTimeout(() => { setText(children); t = schedule(); }, 60 + Math.random() * 100);
+      }, delay);
+    };
+    let t = schedule();
+    return () => clearTimeout(t);
+  }, [children]);
+  return <>{text}</>;
+}
 
 const JOYSTICK_MAX_R = 44;
 const IS_TOUCH = isTouchDevice();
@@ -801,14 +829,15 @@ export default function AlienSnake({ onClose }) {
   function applyDamage(player, g) {
     player.hp--;
     if (player.hp <= 0) {
-      if (player.stage <= 1) {
+      if (!player.hasReverted && player.stage > 1) {
+        player.stage--;
+        player.hp = 2;
+        player.hasReverted = true;
+        g.absorbCount = 0;
+      } else {
         gameStateRef.current = 'dead';
         setScore(player.totalAbsorbs);
         setGameState('dead');
-      } else {
-        player.stage--;
-        player.hp = 2;
-        g.absorbCount = 0;
       }
     }
   }
@@ -884,7 +913,7 @@ export default function AlienSnake({ onClose }) {
           applyZoneColors(newZoneCfg);
           _collectibleCache.clear();
           g.zoneTransition = { label: newZoneCfg.name, createdAt: now };
-          applyZoneDifficulty(newZoneCfg.id, g);
+          applyZoneDifficulty(newZoneCfg.id, g, W, H);
         }
 
         const threshold = ABSORB_THRESHOLDS[stage] ?? 999;
@@ -941,7 +970,7 @@ export default function AlienSnake({ onClose }) {
       });
 
       // Shoot every 1.5s
-      if (now - e.lastShot > 1500) {
+      if (now - e.lastShot > (g.shootIntervalMs ?? 1500)) {
         e.lastShot = now;
         const angle = Math.atan2(player.y - e.y, player.x - e.x);
         particles.push({
@@ -986,14 +1015,17 @@ export default function AlienSnake({ onClose }) {
     });
   }
 
-  function applyZoneDifficulty(zoneId, g) {
+  function applyZoneDifficulty(zoneId, g, W, H) {
     if (zoneId === 2) {
       g.enemies.forEach(e => { e.speed += 20; });
     } else if (zoneId === 3) {
       g.enemies.forEach(e => { e.speed += 15; });
     } else if (zoneId === 4) {
-      g.enemies.forEach(e => { e.speed += 15; });
-      g.projectileSpeedMult = (g.projectileSpeedMult ?? 1) * 1.15;
+      g.enemies.push(spawnEnemy('chaser', W, H));
+      g.enemies.push(spawnEnemy('chaser', W, H));
+      g.enemies.forEach(e => { e.speed += 30; });
+      g.projectileSpeedMult = (g.projectileSpeedMult ?? 1) * 1.35;
+      g.shootIntervalMs = 900;
     }
   }
 
@@ -1185,7 +1217,7 @@ export default function AlienSnake({ onClose }) {
 
       {gameState === 'dead' && (
         <div className="snake-game-over">
-          <h2>SIGNAL LOST</h2>
+          <h2><GlitchTitle>SIGNAL LOST</GlitchTitle></h2>
           <p>ENTITY DISSOLVED — {score} ABSORPTIONS</p>
           <div className="snake-game-over-btns">
             <button className="snake-btn snake-btn-primary" onClick={initGame}>RETRY</button>
