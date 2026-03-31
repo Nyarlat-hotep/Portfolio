@@ -8,6 +8,7 @@ const SRCS = {
   planetExplosion:  '/sounds/planet-explosion.mp3',
   planetCreation:   '/sounds/planet-creation.mp3',
   warp:             '/sounds/warp.mp3',
+  gameMusic:        '/sounds/game-music.mp3',
 }
 
 // Pool of pre-loaded instances per sound — no fetch delay on playback
@@ -172,6 +173,22 @@ export function playBlackHole() {
 
 export function stopBlackHole() {
   const audio = getPool(SRCS.blackHole).instances[0]
+  audio.pause()
+  try { audio.currentTime = 0 } catch (_) {}
+}
+
+// ── Game music — dedicated looping instance ───────────────────────────────────
+export function playGameMusic() {
+  if (_muted) return
+  const audio = getPool(SRCS.gameMusic).instances[0]
+  audio.volume = 0.5
+  audio.loop = true
+  try { audio.currentTime = 0 } catch (_) {}
+  audio.play().catch(() => {})
+}
+
+export function stopGameMusic() {
+  const audio = getPool(SRCS.gameMusic).instances[0]
   audio.pause()
   try { audio.currentTime = 0 } catch (_) {}
 }
