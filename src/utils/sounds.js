@@ -185,8 +185,8 @@ export function playMenuClick() {
   audio.play().catch(() => {})
 }
 
-export function playCaseStudyOpen()    { play(SRCS.caseStudyOpen,    0.9) }
-export function playCaseStudyClose()   { play(SRCS.caseStudyClose,   0.9) }
+export function playCaseStudyOpen()    { play(SRCS.caseStudyOpen,    0.45) }
+export function playCaseStudyClose()   { play(SRCS.caseStudyClose,   0.45) }
 export function playPlanetExplosion()  { play(SRCS.planetExplosion,  1.0) }
 export function playPlanetCreation()   { play(SRCS.planetCreation,   1.0) }
 export function playWarp()             { play(SRCS.warp,             1.0) }
