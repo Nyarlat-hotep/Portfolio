@@ -1,7 +1,7 @@
 import { useRef, useEffect, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Pause } from 'lucide-react';
-import { stopBackground, playBackground } from '../../utils/sounds';
+import { stopBackground, playBackground, playGameMusic, stopGameMusic } from '../../utils/sounds';
 import { isTouchDevice } from '../../utils/isTouchDevice';
 import './AlienSnake.css';
 
@@ -762,7 +762,11 @@ export default function AlienSnake({ onClose }) {
 
   useEffect(() => {
     stopBackground();
-    return () => { playBackground(); };
+    playGameMusic();
+    return () => {
+      stopGameMusic();
+      playBackground();
+    };
   }, []);
 
   // ── Keyboard ────────────────────────────────────────────────────────────────
