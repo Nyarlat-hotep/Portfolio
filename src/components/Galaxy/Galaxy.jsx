@@ -27,7 +27,8 @@ const AlienSnake       = lazy(() => import('../UI/AlienSnake'));
 const NebulaCloud      = lazy(() => import('./NebulaCloud'))
 const AsteroidBelt     = lazy(() => import('./AsteroidBelt'));
 const Derelict         = lazy(() => import('./Derelict'));
-const CosmicFilament   = lazy(() => import('./CosmicFilament'));
+const OuterBody        = lazy(() => import('./OuterBody'));
+const OortCloud        = lazy(() => import('./OortCloud'));
 const GalaxyCluster    = lazy(() => import('./GalaxyCluster'));
 import { planetsData, getAdjacentPlanet } from '../../data/planets';
 import { isWebGLSupported } from '../../utils/webglDetect';
@@ -603,12 +604,17 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
           <NebulaCloud position={[-30, 40, 160]} color="#22ffaa" secondaryColor="#2288ff" radius={22} particleCount={250} cameraFadeStart={120} cameraFadeEnd={180} />
           <AsteroidBelt innerRadius={90} outerRadius={130} count={600} cameraFadeStart={90} cameraFadeEnd={140} />
           <Derelict position={[-140, 8, -85]} onClick={handleDerelictClick} />
+          {/* Floating outer bodies — small rocky/icy moons drifting in deep space */}
+          <OuterBody position={[-65, 22, -135]} textureType="icy" bodyRadius={1.4} orbitSpeed={0.005} cameraFadeStart={100} cameraFadeEnd={160} />
+          <OuterBody position={[100, -8, 72]} textureType="rocky" bodyRadius={0.9} orbitSpeed={0.008} cameraFadeStart={110} cameraFadeEnd={170} />
+          <OuterBody position={[35, 35, 175]} textureType="alien" bodyRadius={1.6} orbitSpeed={0.004} cameraFadeStart={120} cameraFadeEnd={180} />
+          <OuterBody position={[-155, -12, 55]} textureType="rocky" bodyRadius={0.7} orbitSpeed={0.007} cameraFadeStart={105} cameraFadeEnd={165} />
+          <OuterBody position={[80, 45, -160]} textureType="icy" bodyRadius={1.1} orbitSpeed={0.006} cameraFadeStart={115} cameraFadeEnd={175} />
         </Suspense>
 
-        {/* Layer 3 — deep space, fade in 280–380u */}
+        {/* Layer 3 — Oort Cloud shell surrounding everything, fade in 280–400u */}
         <Suspense fallback={null}>
-          <CosmicFilament position={[250, -30, 200]} color="#ffaa44" length={80} cameraFadeStart={280} cameraFadeEnd={360} />
-          <CosmicFilament position={[-220, 60, -280]} color="#88aaff" length={100} cameraFadeStart={300} cameraFadeEnd={380} />
+          <OortCloud cameraFadeStart={280} cameraFadeEnd={400} />
           <GalaxyCluster position={[350, -80, -150]} cameraFadeStart={320} cameraFadeEnd={420} />
         </Suspense>
       </Canvas>

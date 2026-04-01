@@ -8,11 +8,30 @@ function fadeIn(dist, edgeStart, edgeEnd) {
   return t * t * (3 - 2 * t)
 }
 
+let _nebCloudTex = null
+function getNebCloudTex() {
+  if (_nebCloudTex) return _nebCloudTex
+  const size = 256, c = size / 2
+  const canvas = document.createElement('canvas')
+  canvas.width = canvas.height = size
+  const ctx = canvas.getContext('2d')
+  const g = ctx.createRadialGradient(c, c, 0, c, c, c)
+  g.addColorStop(0,    'rgba(255,255,255,0.9)')
+  g.addColorStop(0.20, 'rgba(255,255,255,0.65)')
+  g.addColorStop(0.50, 'rgba(255,255,255,0.20)')
+  g.addColorStop(0.80, 'rgba(255,255,255,0.04)')
+  g.addColorStop(1.0,  'rgba(255,255,255,0)')
+  ctx.fillStyle = g
+  ctx.fillRect(0, 0, size, size)
+  return (_nebCloudTex = new THREE.CanvasTexture(canvas))
+}
+
 export default function NebulaCloud({ position, color, secondaryColor, radius, particleCount, cameraFadeStart, cameraFadeEnd }) {
   const groupRef = useRef()
   const mat1Ref = useRef()
   const mat2Ref = useRef()
   const mat3Ref = useRef()
+  const spriteMatRefs = useRef([])
 
   const [geo1, geo2, geo3, circTex, splatTex] = useMemo(() => {
     // geo1: fine particles in sphere of radius
@@ -64,6 +83,25 @@ export default function NebulaCloud({ position, color, secondaryColor, radius, p
     return [g1, g2, g3, circTex, splatTex]
   }, [radius, particleCount])
 
+  // Sprite blob knots — 7 gas pocket blobs scattered within the nebula
+  const knots = useMemo(() => {
+    const result = []
+    for (let i = 0; i < 7; i++) {
+      const theta = Math.random() * Math.PI * 2
+      const phi = Math.acos(2 * Math.random() - 1)
+      const r = (0.25 + Math.random() * 0.55) * radius
+      result.push({
+        x: r * Math.sin(phi) * Math.cos(theta),
+        y: r * Math.sin(phi) * Math.sin(theta) * 0.6,
+        z: r * Math.cos(phi),
+        s: radius * (0.3 + Math.random() * 0.5),
+      })
+    }
+    return result
+  }, [radius])
+
+  const cloudTex = useMemo(() => getNebCloudTex(), [])
+
   useEffect(() => {
     return () => { geo1.dispose(); geo2.dispose(); geo3.dispose() }
   }, [geo1, geo2, geo3])
@@ -77,6 +115,9 @@ export default function NebulaCloud({ position, color, secondaryColor, radius, p
     if (mat1Ref.current) mat1Ref.current.opacity = intensity * 0.5
     if (mat2Ref.current) mat2Ref.current.opacity = intensity * 0.25
     if (mat3Ref.current) mat3Ref.current.opacity = intensity * 0.12
+    spriteMatRefs.current.forEach(mat => {
+      if (mat) mat.opacity = intensity * 0.13
+    })
     groupRef.current.rotation.y += delta * 0.002
   })
 
@@ -108,6 +149,21 @@ export default function NebulaCloud({ position, color, secondaryColor, radius, p
           blending={THREE.AdditiveBlending} opacity={0}
           sizeAttenuation alphaTest={0.005} />
       </points>
+
+      {/* Gas pocket sprite blobs — dense atmospheric knots */}
+      {knots.map((k, i) => (
+        <sprite key={i} position={[k.x, k.y, k.z]} scale={[k.s, k.s, 1]}>
+          <spriteMaterial
+            ref={el => { spriteMatRefs.current[i] = el }}
+            map={cloudTex}
+            color={color}
+            transparent
+            opacity={0}
+            blending={THREE.AdditiveBlending}
+            depthWrite={false}
+          />
+        </sprite>
+      ))}
     </group>
   )
 }
