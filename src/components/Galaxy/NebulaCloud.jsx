@@ -14,7 +14,7 @@ export default function NebulaCloud({ position, color, secondaryColor, radius, p
   const mat2Ref = useRef()
   const mat3Ref = useRef()
 
-  const [geo1, geo2, geo3] = useMemo(() => {
+  const [geo1, geo2, geo3, circTex, splatTex] = useMemo(() => {
     // geo1: fine particles in sphere of radius
     const count1 = particleCount
     const pos1 = new Float32Array(count1 * 3)
@@ -59,7 +59,9 @@ export default function NebulaCloud({ position, color, secondaryColor, radius, p
     const g3 = new THREE.BufferGeometry()
     g3.setAttribute('position', new THREE.BufferAttribute(pos3, 3))
 
-    return [g1, g2, g3]
+    const circTex = createCircularParticleTexture()
+    const splatTex = createNebulaSplatTexture()
+    return [g1, g2, g3, circTex, splatTex]
   }, [radius, particleCount])
 
   useEffect(() => {
@@ -83,7 +85,7 @@ export default function NebulaCloud({ position, color, secondaryColor, radius, p
       {/* Fine detail layer */}
       <points geometry={geo1}>
         <pointsMaterial ref={mat1Ref}
-          map={createCircularParticleTexture()}
+          map={circTex}
           color={color} size={0.5} transparent depthWrite={false}
           blending={THREE.AdditiveBlending} opacity={0}
           sizeAttenuation alphaTest={0.01} />
@@ -92,7 +94,7 @@ export default function NebulaCloud({ position, color, secondaryColor, radius, p
       {/* Mid haze layer */}
       <points geometry={geo2}>
         <pointsMaterial ref={mat2Ref}
-          map={createCircularParticleTexture()}
+          map={circTex}
           color={secondaryColor} size={3.0} transparent depthWrite={false}
           blending={THREE.AdditiveBlending} opacity={0}
           sizeAttenuation alphaTest={0.01} />
@@ -101,7 +103,7 @@ export default function NebulaCloud({ position, color, secondaryColor, radius, p
       {/* Soft outer layer */}
       <points geometry={geo3}>
         <pointsMaterial ref={mat3Ref}
-          map={createNebulaSplatTexture()}
+          map={splatTex}
           color={secondaryColor} size={8.0} transparent depthWrite={false}
           blending={THREE.AdditiveBlending} opacity={0}
           sizeAttenuation alphaTest={0.005} />
