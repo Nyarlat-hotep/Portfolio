@@ -148,7 +148,6 @@ function KeyboardCameraController({ controlsRef }) {
     if (!keys.ArrowLeft && !keys.ArrowRight && !keys.ArrowUp && !keys.ArrowDown) return;
 
     const ORBIT_SPEED = 1.4; // rad/sec
-    const ZOOM_SPEED  = 18;  // units/sec
 
     const cam    = controls.object;
     const target = controls.target;
@@ -160,10 +159,11 @@ function KeyboardCameraController({ controlsRef }) {
     }
 
     if (keys.ArrowUp || keys.ArrowDown) {
-      const dist    = eye.length();
-      const newDist = Math.max(
+      const dist      = eye.length();
+      const zoomSpeed = dist > 120 ? 60 : 18; // faster beyond 120 units
+      const newDist   = Math.max(
         controls.minDistance || 10,
-        Math.min(controls.maxDistance || 120, dist + (keys.ArrowUp ? -1 : 1) * ZOOM_SPEED * delta)
+        Math.min(controls.maxDistance || 500, dist + (keys.ArrowUp ? -1 : 1) * zoomSpeed * delta)
       );
       eye.normalize().multiplyScalar(newDist);
     }
@@ -493,7 +493,7 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
           zoomSpeed={1.2}
           panSpeed={0.8}
           minDistance={10}
-          maxDistance={120}
+          maxDistance={500}
           noPan={false}
           noZoom={false}
           noRotate={false}
