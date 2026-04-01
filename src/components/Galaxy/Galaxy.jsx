@@ -28,6 +28,7 @@ const NebulaCloud      = lazy(() => import('./NebulaCloud'))
 const AsteroidBelt     = lazy(() => import('./AsteroidBelt'));
 const Derelict         = lazy(() => import('./Derelict'));
 const CosmicFilament   = lazy(() => import('./CosmicFilament'));
+const GalaxyCluster    = lazy(() => import('./GalaxyCluster'));
 import { planetsData, getAdjacentPlanet } from '../../data/planets';
 import { isWebGLSupported } from '../../utils/webglDetect';
 import { isTouchDevice } from '../../utils/isTouchDevice';
@@ -608,6 +609,7 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
         <Suspense fallback={null}>
           <CosmicFilament position={[250, -30, 200]} color="#ffaa44" length={80} cameraFadeStart={280} cameraFadeEnd={360} />
           <CosmicFilament position={[-220, 60, -280]} color="#88aaff" length={100} cameraFadeStart={300} cameraFadeEnd={380} />
+          <GalaxyCluster position={[350, -80, -150]} cameraFadeStart={320} cameraFadeEnd={420} />
         </Suspense>
       </Canvas>
 
