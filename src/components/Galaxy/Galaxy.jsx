@@ -27,6 +27,7 @@ const AlienSnake       = lazy(() => import('../UI/AlienSnake'));
 const NebulaCloud      = lazy(() => import('./NebulaCloud'))
 const AsteroidBelt     = lazy(() => import('./AsteroidBelt'));
 const Derelict         = lazy(() => import('./Derelict'));
+const CosmicFilament   = lazy(() => import('./CosmicFilament'));
 import { planetsData, getAdjacentPlanet } from '../../data/planets';
 import { isWebGLSupported } from '../../utils/webglDetect';
 import { isTouchDevice } from '../../utils/isTouchDevice';
@@ -601,6 +602,12 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
           <NebulaCloud position={[-30, 40, 160]} color="#22ffaa" secondaryColor="#2288ff" radius={22} particleCount={250} cameraFadeStart={120} cameraFadeEnd={180} />
           <AsteroidBelt innerRadius={90} outerRadius={130} count={600} cameraFadeStart={90} cameraFadeEnd={140} />
           <Derelict position={[-140, 8, -85]} onClick={handleDerelictClick} />
+        </Suspense>
+
+        {/* Layer 3 — deep space, fade in 280–380u */}
+        <Suspense fallback={null}>
+          <CosmicFilament position={[250, -30, 200]} color="#ffaa44" length={80} cameraFadeStart={280} cameraFadeEnd={360} />
+          <CosmicFilament position={[-220, 60, -280]} color="#88aaff" length={100} cameraFadeStart={300} cameraFadeEnd={380} />
         </Suspense>
       </Canvas>
 
