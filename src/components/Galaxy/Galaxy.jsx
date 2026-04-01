@@ -661,11 +661,11 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
           {/* Small rocky moon — no rings */}
           <OuterBody position={[100, -8, 72]}   textureType="rocky" bodyRadius={0.9} orbitRadius={5} orbitSpeed={0.009} orbitInclination={0.42} />
           {/* Alien — no rings (replaced green ring body) */}
-          <OuterBody position={[35, 35, 175]}   textureType="alien" bodyRadius={1.8} orbitRadius={8} orbitSpeed={0.005} orbitInclination={0.22} />
+          <OuterBody position={[35, 35, 175]}   textureType="alien" bodyRadius={1.8} orbitRadius={8} orbitSpeed={0.005} orbitInclination={0.22} hazeColor="#88ffcc" moons={[{ radius: 3.2, speed: 0.06, tilt: 0.15, size: 0.22 }, { radius: 5.0, speed: 0.035, tilt: 0.4, size: 0.14 }]} />
           {/* Tiny rocky — no rings */}
           <OuterBody position={[-155, -12, 55]} textureType="rocky" bodyRadius={0.55} orbitRadius={3} orbitSpeed={0.012} orbitInclination={0.65} />
-          {/* Haze (Venus) — golden-amber rings, narrow steep tilt */}
-          <OuterBody position={[80, 45, -160]}  textureUrl="/textures/venus.jpg"  bodyRadius={1.3} orbitRadius={6} orbitSpeed={0.006} orbitInclination={0.55} hasRings ringColor="#ffcc55" ringTilt={0.52} ringBand1={[1.8, 2.3]} ringBand2={[2.6, 3.1]} />
+          {/* Haze (Venus) — golden-amber rings, narrow steep tilt, 1 moon */}
+          <OuterBody position={[80, 45, -160]}  textureUrl="/textures/venus.jpg"  bodyRadius={1.3} orbitRadius={6} orbitSpeed={0.006} orbitInclination={0.55} hasRings ringColor="#ffcc55" ringTilt={0.52} ringBand1={[1.8, 2.3]} ringBand2={[2.6, 3.1]} hazeColor="#ffdd88" moons={[{ radius: 3.5, speed: 0.04, tilt: 0.3, size: 0.18 }]} />
         </Suspense>
 
         {/* Layer 3 — Oort Cloud shell surrounding everything, fade in 280–400u */}
