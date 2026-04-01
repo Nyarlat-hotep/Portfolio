@@ -22,10 +22,19 @@ export default function VoidVignette({ onDistanceChange, voidPosition = [0, 0, -
 
     // Start vignette when zoomed out past threshold
     // Intensity increases as user zooms out more
-    let intensity = 0;
+    let intensity = 0
     if (distanceFromOrigin > threshold) {
-      // Gradually increase from 0 to 1 as distance goes from threshold to threshold + 60
-      intensity = Math.min((distanceFromOrigin - threshold) / 60, 1);
+      if (distanceFromOrigin <= 120) {
+        // Phase 1: threshold → 120u  maps to  0.0 → 0.35
+        const t = (distanceFromOrigin - threshold) / (120 - threshold)
+        const s = t * t * (3 - 2 * t)
+        intensity = s * 0.35
+      } else {
+        // Phase 2: 120u → 400u  maps to  0.35 → 1.0
+        const t = Math.min(1, (distanceFromOrigin - 120) / 280)
+        const s = t * t * (3 - 2 * t)
+        intensity = 0.35 + s * 0.65
+      }
     }
 
     // Only update if intensity changed significantly
