@@ -1,4 +1,4 @@
-import { useEffect, useRef, Children, cloneElement, isValidElement } from 'react';
+import { useEffect, useRef, Children, cloneElement, isValidElement, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 import DataStream from './DataStream';
@@ -166,11 +166,13 @@ export default function PageOverlay({ isOpen, onClose, children, title, planetCo
                 zIndex: 1
               }}
             >
-              {Children.map(children, child =>
-                isValidElement(child)
-                  ? cloneElement(child, { scrollContainerRef: contentRef })
-                  : child
-              )}
+              <Suspense fallback={null}>
+                {Children.map(children, child =>
+                  isValidElement(child)
+                    ? cloneElement(child, { scrollContainerRef: contentRef })
+                    : child
+                )}
+              </Suspense>
             </motion.div>
 
             

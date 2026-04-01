@@ -200,9 +200,7 @@ function App() {
           planetColor={overlayColor}
           planetId={activePlanet?.id}
         >
-          <Suspense fallback={null}>
-            {getOverlayContent()}
-          </Suspense>
+          {getOverlayContent()}
         </PageOverlay>
       )}
 

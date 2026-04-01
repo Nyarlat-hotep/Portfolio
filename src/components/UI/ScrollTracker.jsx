@@ -2,7 +2,7 @@ import { useEffect, useRef, useCallback } from 'react';
 import './ScrollTracker.css';
 
 const INSET = 100;       // px inset from each end of the line
-const ABSORB_DIST = 18;  // px center-to-center → triggers absorption
+const ABSORB_DIST = 12;  // px center-to-center → triggers absorption
 
 export default function ScrollTracker({ sections = [], scrollContainerRef, planetColor = '#cc2200' }) {
   const containerRef = useRef(null);
