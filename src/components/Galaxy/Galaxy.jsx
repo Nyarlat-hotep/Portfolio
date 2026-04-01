@@ -604,12 +604,12 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
           <NebulaCloud position={[-30, 40, 160]} color="#22ffaa" secondaryColor="#2288ff" radius={22} particleCount={250} cameraFadeStart={120} cameraFadeEnd={180} />
           <AsteroidBelt innerRadius={90} outerRadius={130} count={600} cameraFadeStart={90} cameraFadeEnd={140} />
           <Derelict position={[-140, 8, -85]} onClick={handleDerelictClick} />
-          {/* Floating outer bodies — small rocky/icy moons drifting in deep space */}
-          <OuterBody position={[-65, 22, -135]} textureType="icy" bodyRadius={1.4} orbitSpeed={0.005} cameraFadeStart={100} cameraFadeEnd={160} />
-          <OuterBody position={[100, -8, 72]} textureType="rocky" bodyRadius={0.9} orbitSpeed={0.008} cameraFadeStart={110} cameraFadeEnd={170} />
-          <OuterBody position={[35, 35, 175]} textureType="alien" bodyRadius={1.6} orbitSpeed={0.004} cameraFadeStart={120} cameraFadeEnd={180} />
-          <OuterBody position={[-155, -12, 55]} textureType="rocky" bodyRadius={0.7} orbitSpeed={0.007} cameraFadeStart={105} cameraFadeEnd={165} />
-          <OuterBody position={[80, 45, -160]} textureType="icy" bodyRadius={1.1} orbitSpeed={0.006} cameraFadeStart={115} cameraFadeEnd={175} />
+          {/* Floating outer bodies — moons and ringed bodies drifting in deep space */}
+          <OuterBody position={[-65, 22, -135]} textureType="icy"   bodyRadius={2.2} orbitRadius={9} orbitSpeed={0.004} orbitInclination={0.10} hasRings ringColor="#aaddff" cameraFadeStart={100} cameraFadeEnd={160} />
+          <OuterBody position={[100, -8, 72]}   textureType="rocky" bodyRadius={0.9} orbitRadius={5} orbitSpeed={0.009} orbitInclination={0.42} cameraFadeStart={110} cameraFadeEnd={170} />
+          <OuterBody position={[35, 35, 175]}   textureType="alien" bodyRadius={1.8} orbitRadius={8} orbitSpeed={0.005} orbitInclination={0.22} hasRings ringColor="#55ffcc" ringTilt={0.28} cameraFadeStart={120} cameraFadeEnd={180} />
+          <OuterBody position={[-155, -12, 55]} textureType="rocky" bodyRadius={0.55} orbitRadius={3} orbitSpeed={0.012} orbitInclination={0.65} cameraFadeStart={105} cameraFadeEnd={165} />
+          <OuterBody position={[80, 45, -160]}  textureType="icy"   bodyRadius={1.3} orbitRadius={6} orbitSpeed={0.006} orbitInclination={0.14} hasRings ringColor="#ddbbff" ringTilt={0.48} cameraFadeStart={115} cameraFadeEnd={175} />
         </Suspense>
 
         {/* Layer 3 — Oort Cloud shell surrounding everything, fade in 280–400u */}
