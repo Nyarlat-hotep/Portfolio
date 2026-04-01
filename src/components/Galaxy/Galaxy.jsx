@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { Canvas, useThree, useFrame } from '@react-three/fiber';
-import { TrackballControls, PerspectiveCamera } from '@react-three/drei';
+import { TrackballControls, PerspectiveCamera, useGLTF } from '@react-three/drei';
 import { useState, useEffect, Suspense, useMemo, useCallback, useRef, lazy } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -31,6 +31,9 @@ const OuterBody        = lazy(() => import('./OuterBody'));
 const OortCloud        = lazy(() => import('./OortCloud'));
 const GalaxyCluster    = lazy(() => import('./GalaxyCluster'));
 const SpaceStation     = lazy(() => import('./SpaceStation'));
+
+// Preload GLB on module init so it's ready before user zooms out
+useGLTF.preload('/models/sci-fi_space_station_2-v2.glb')
 import { planetsData, getAdjacentPlanet } from '../../data/planets';
 import { isWebGLSupported } from '../../utils/webglDetect';
 import { isTouchDevice } from '../../utils/isTouchDevice';
