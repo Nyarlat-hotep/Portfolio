@@ -3,11 +3,6 @@ import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { createRockyTexture, createIcyTexture, createAlienTexture } from '../../utils/planetTextures'
 
-function fadeIn(dist, edgeStart, edgeEnd) {
-  const t = Math.max(0, Math.min(1, (dist - edgeStart) / (edgeEnd - edgeStart)))
-  return t * t * (3 - 2 * t)
-}
-
 const noRaycast = () => null
 
 export default function OuterBody({
@@ -21,10 +16,8 @@ export default function OuterBody({
   hasRings = false,
   ringColor = '#ccddff',
   ringTilt = 0.38,
-  ringBand1 = [1.7, 2.55],  // [innerEdge, outerEdge] as multiples of bodyRadius
+  ringBand1 = [1.7, 2.55],
   ringBand2 = [2.8, 3.6],
-  cameraFadeStart,
-  cameraFadeEnd,
 }) {
   const groupRef      = useRef()
   const meshRef       = useRef()
@@ -52,11 +45,6 @@ export default function OuterBody({
 
   useFrame((state, delta) => {
     if (!groupRef.current) return
-    const camDist = state.camera.position.length()
-    const intensity = fadeIn(camDist, cameraFadeStart, cameraFadeEnd)
-    groupRef.current.visible = intensity > 0.01
-    if (!groupRef.current.visible) return
-
     const t  = state.clock.elapsedTime * orbitSpeed
     const tx = Math.cos(t) * orbitRadius
     const ty = Math.sin(t) * orbitRadius * Math.sin(orbitInclination)
