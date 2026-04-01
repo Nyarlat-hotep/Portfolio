@@ -1,6 +1,7 @@
 import { useRef, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
+import { createCircularParticleTexture } from '../../utils/threeUtils'
 
 function fadeIn(dist, edgeStart, edgeEnd) {
   const t = Math.max(0, Math.min(1, (dist - edgeStart) / (edgeEnd - edgeStart)))
@@ -45,18 +46,22 @@ export default function AsteroidBelt({ innerRadius, outerRadius, count, cameraFa
     groupRef.current.rotation.y -= delta * 0.001
   })
 
+  const circTex = useMemo(() => createCircularParticleTexture(), [])
+
   return (
     <group ref={groupRef}>
       <points geometry={geo}>
         <pointsMaterial
           ref={matRef}
+          map={circTex}
           vertexColors
-          size={0.25}
+          size={0.35}
           sizeAttenuation
           transparent
           depthWrite={false}
           blending={THREE.AdditiveBlending}
           opacity={0}
+          alphaTest={0.01}
         />
       </points>
     </group>

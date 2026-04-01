@@ -4,7 +4,7 @@ import { TrackballControls, PerspectiveCamera } from '@react-three/drei';
 import { useState, useEffect, Suspense, useMemo, useCallback, useRef, lazy } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, ArrowRight, ArrowUp, ArrowDown, Move, ZoomIn, HelpCircle, X, Volume2, VolumeX } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ArrowUp, ArrowDown, Move, ZoomIn, HelpCircle, X, Volume2, VolumeX, Crosshair } from 'lucide-react';
 import './Galaxy.css';
 import Planet from './Planet';
 import CustomPlanet from './CustomPlanet';
@@ -205,6 +205,37 @@ function KeyboardCameraController({ controlsRef }) {
   return null;
 }
 
+const _reorientPos    = new THREE.Vector3(0, 8, 55)
+const _reorientTarget = new THREE.Vector3(0, 0, 0)
+
+function ReorientController({ controlsRef, isActive, onComplete }) {
+  const { camera } = useThree()
+  const startPos    = useRef(null)
+  const startTarget = useRef(null)
+  const progress    = useRef(0)
+
+  useEffect(() => {
+    if (isActive) {
+      startPos.current    = camera.position.clone()
+      startTarget.current = controlsRef.current?.target.clone() ?? new THREE.Vector3()
+      progress.current    = 0
+    }
+  }, [isActive, camera, controlsRef])
+
+  useFrame((_, delta) => {
+    if (!isActive) return
+    progress.current = Math.min(1, progress.current + delta / 2.2)
+    const t = 1 - Math.pow(1 - progress.current, 3) // easeOutCubic
+    camera.position.lerpVectors(startPos.current, _reorientPos, t)
+    if (controlsRef.current) {
+      controlsRef.current.target.lerpVectors(startTarget.current, _reorientTarget, t)
+    }
+    if (progress.current >= 1) onComplete?.()
+  })
+
+  return null
+}
+
 export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, onCreatePlanet, onDeletePlanet, isCustomPlanetDeleting }) {
   const [hoveredPlanet, setHoveredPlanet] = useState(null);
   const [hoveredPlanetPosition, setHoveredPlanetPosition] = useState(null);
@@ -223,6 +254,7 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
   const containerRef = useRef(null);
   const pendingTapRef = useRef(null);
   const [muted, setMutedState] = useState(() => getMuted());
+  const [isReorienting, setIsReorienting] = useState(false);
   const [helpVisible, setHelpVisible] = useState(false);
   const [asteroidModalOpen,  setAsteroidModalOpen]  = useState(false);
   const [codexInput,         setCodexInput]         = useState('');
@@ -510,6 +542,9 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
         {/* Arrow key camera: L/R orbits, U/D zooms */}
         <KeyboardCameraController controlsRef={controlsRef} />
 
+        {/* Re-orient animation — smoothly returns camera to home plane */}
+        <ReorientController controlsRef={controlsRef} isActive={isReorienting} onComplete={() => setIsReorienting(false)} />
+
         {/* Camera setup - starts zoomed out for intro */}
         <PerspectiveCamera makeDefault position={[0, 8, 55]} fov={60} />
 
@@ -606,17 +641,22 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
           <AsteroidBelt innerRadius={90} outerRadius={130} count={600} cameraFadeStart={90} cameraFadeEnd={140} />
           <Derelict position={[-140, 8, -85]} onClick={handleDerelictClick} />
           {/* Floating outer bodies — moons and ringed bodies drifting in deep space */}
-          <OuterBody position={[-65, 22, -135]} textureType="icy"   bodyRadius={2.2} orbitRadius={9} orbitSpeed={0.004} orbitInclination={0.10} hasRings ringColor="#aaddff" cameraFadeStart={100} cameraFadeEnd={160} />
+          {/* Frost (Uranus) — ice-blue rings, wide flat bands */}
+          <OuterBody position={[-65, 22, -135]} textureUrl="/textures/uranus.jpg" bodyRadius={2.2} orbitRadius={9} orbitSpeed={0.004} orbitInclination={0.10} hasRings ringColor="#99ddff" ringTilt={0.12} ringBand1={[1.6, 2.8]} ringBand2={[3.1, 4.2]} cameraFadeStart={100} cameraFadeEnd={160} />
+          {/* Small rocky moon — no rings */}
           <OuterBody position={[100, -8, 72]}   textureType="rocky" bodyRadius={0.9} orbitRadius={5} orbitSpeed={0.009} orbitInclination={0.42} cameraFadeStart={110} cameraFadeEnd={170} />
-          <OuterBody position={[35, 35, 175]}   textureType="alien" bodyRadius={1.8} orbitRadius={8} orbitSpeed={0.005} orbitInclination={0.22} hasRings ringColor="#55ffcc" ringTilt={0.28} cameraFadeStart={120} cameraFadeEnd={180} />
+          {/* Alien — no rings (replaced green ring body) */}
+          <OuterBody position={[35, 35, 175]}   textureType="alien" bodyRadius={1.8} orbitRadius={8} orbitSpeed={0.005} orbitInclination={0.22} cameraFadeStart={120} cameraFadeEnd={180} />
+          {/* Tiny rocky — no rings */}
           <OuterBody position={[-155, -12, 55]} textureType="rocky" bodyRadius={0.55} orbitRadius={3} orbitSpeed={0.012} orbitInclination={0.65} cameraFadeStart={105} cameraFadeEnd={165} />
-          <OuterBody position={[80, 45, -160]}  textureType="icy"   bodyRadius={1.3} orbitRadius={6} orbitSpeed={0.006} orbitInclination={0.14} hasRings ringColor="#ddbbff" ringTilt={0.48} cameraFadeStart={115} cameraFadeEnd={175} />
+          {/* Haze (Venus) — golden-amber rings, narrow steep tilt */}
+          <OuterBody position={[80, 45, -160]}  textureUrl="/textures/venus.jpg"  bodyRadius={1.3} orbitRadius={6} orbitSpeed={0.006} orbitInclination={0.55} hasRings ringColor="#ffcc55" ringTilt={0.52} ringBand1={[1.8, 2.3]} ringBand2={[2.6, 3.1]} cameraFadeStart={115} cameraFadeEnd={175} />
         </Suspense>
 
         {/* Layer 3 — Oort Cloud shell surrounding everything, fade in 280–400u */}
         <Suspense fallback={null}>
           <OortCloud cameraFadeStart={280} cameraFadeEnd={400} />
-          <SpaceStation position={[120, 30, -220]} cameraFadeStart={280} cameraFadeEnd={380} />
+          <SpaceStation cameraFadeStart={280} cameraFadeEnd={380} />
           <GalaxyCluster position={[350, -80, -150]} cameraFadeStart={320} cameraFadeEnd={420} />
         </Suspense>
       </Canvas>
@@ -815,6 +855,21 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
       {/* Mute + Help buttons, collapsible hints — top-right on mobile, bottom-right on desktop */}
       {sceneReady && (
         <div className={`scene-hud${isTouch ? ' scene-hud--touch' : ''}`}>
+          {/* Re-orient — return camera to home plane */}
+          <button
+            className="mute-btn"
+            onClick={() => { playMenuClick(); setIsReorienting(true); }}
+            aria-label="Re-orient view"
+            onMouseEnter={playMenuClick}
+          >
+            <Crosshair size={14} />
+            {!isTouch && (
+              <span className="nav-tooltip hud-tooltip">
+                <span className="tooltip-key">Re-orient</span>
+              </span>
+            )}
+          </button>
+
           {/* Mute toggle */}
           <button
             className="mute-btn"

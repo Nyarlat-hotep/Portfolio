@@ -13,6 +13,7 @@ const noRaycast = () => null
 export default function OuterBody({
   position,
   textureType = 'rocky',
+  textureUrl = null,
   bodyRadius = 1.0,
   orbitRadius = 5,
   orbitSpeed = 0.006,
@@ -20,30 +21,34 @@ export default function OuterBody({
   hasRings = false,
   ringColor = '#ccddff',
   ringTilt = 0.38,
+  ringBand1 = [1.7, 2.55],  // [innerEdge, outerEdge] as multiples of bodyRadius
+  ringBand2 = [2.8, 3.6],
   cameraFadeStart,
   cameraFadeEnd,
 }) {
-  const groupRef = useRef()
-  const meshRef  = useRef()
-  const ringInnerRef = useRef()
-  const ringOuterRef = useRef()
+  const groupRef      = useRef()
+  const meshRef       = useRef()
+  const ringInnerRef  = useRef()
+  const ringOuterRef  = useRef()
 
   const texture = useMemo(() => {
+    if (textureUrl) {
+      return new THREE.TextureLoader().load(textureUrl)
+    }
     if (textureType === 'icy')   return createIcyTexture(128)
     if (textureType === 'alien') return createAlienTexture(128, { r: 195, g: 175, b: 215 })
     return createRockyTexture(128)
-  }, [textureType])
+  }, [textureUrl, textureType])
 
   const sphereGeo = useMemo(() => new THREE.SphereGeometry(bodyRadius, 16, 16), [bodyRadius])
 
-  // Two ring bands: denser inner + wispy outer (only built when hasRings=true)
   const { ringInnerGeo, ringOuterGeo } = useMemo(() => {
     if (!hasRings) return {}
     return {
-      ringInnerGeo: new THREE.RingGeometry(bodyRadius * 1.7, bodyRadius * 2.55, 64),
-      ringOuterGeo: new THREE.RingGeometry(bodyRadius * 2.8,  bodyRadius * 3.6,  64),
+      ringInnerGeo: new THREE.RingGeometry(bodyRadius * ringBand1[0], bodyRadius * ringBand1[1], 64),
+      ringOuterGeo: new THREE.RingGeometry(bodyRadius * ringBand2[0], bodyRadius * ringBand2[1], 64),
     }
-  }, [hasRings, bodyRadius])
+  }, [hasRings, bodyRadius, ringBand1, ringBand2])
 
   useFrame((state, delta) => {
     if (!groupRef.current) return
@@ -52,7 +57,6 @@ export default function OuterBody({
     groupRef.current.visible = intensity > 0.01
     if (!groupRef.current.visible) return
 
-    // Clean circular orbit in a tilted plane
     const t  = state.clock.elapsedTime * orbitSpeed
     const tx = Math.cos(t) * orbitRadius
     const ty = Math.sin(t) * orbitRadius * Math.sin(orbitInclination)
@@ -66,7 +70,6 @@ export default function OuterBody({
     if (ringOuterRef.current) ringOuterRef.current.position.set(tx, ty, tz)
   })
 
-  // Ring rotation: lay flat (PI/2 on X) then apply tilt
   const ringRotation = [Math.PI / 2 + ringTilt, 0.2, 0]
 
   return (
@@ -76,24 +79,22 @@ export default function OuterBody({
           map={texture}
           roughness={0.9}
           metalness={0.05}
-          emissive={textureType === 'icy' ? '#88bbff' : textureType === 'alien' ? '#c4b0d4' : '#665544'}
+          emissive={textureUrl ? '#223344' : (textureType === 'icy' ? '#88bbff' : textureType === 'alien' ? '#c4b0d4' : '#665544')}
           emissiveIntensity={0.15}
         />
       </mesh>
 
       {hasRings && ringInnerGeo && (
         <>
-          {/* Inner ring band — denser */}
           <mesh ref={ringInnerRef} geometry={ringInnerGeo} rotation={ringRotation} raycast={noRaycast}>
             <meshBasicMaterial
               color={ringColor}
               transparent
-              opacity={0.58}
+              opacity={0.62}
               side={THREE.DoubleSide}
               depthWrite={false}
             />
           </mesh>
-          {/* Outer ring band — wispy */}
           <mesh ref={ringOuterRef} geometry={ringOuterGeo} rotation={ringRotation} raycast={noRaycast}>
             <meshBasicMaterial
               color={ringColor}
