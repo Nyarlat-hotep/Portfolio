@@ -199,11 +199,14 @@ export function playDerelict() {
   if (_muted) return
   const audio = getPool(SRCS.derelict).instances[0]
   audio.loop = true
+  if (!audio.paused) return
   try { audio.currentTime = 0 } catch (_) {}
+  audio.volume = 0
   audio.play().catch(() => {})
 }
 
 export function setDerelictVolume(vol) {
+  if (_muted) return
   getPool(SRCS.derelict).instances[0].volume = Math.max(0, Math.min(1, vol))
 }
 
