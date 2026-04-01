@@ -30,6 +30,7 @@ const Derelict         = lazy(() => import('./Derelict'));
 const OuterBody        = lazy(() => import('./OuterBody'));
 const OortCloud        = lazy(() => import('./OortCloud'));
 const GalaxyCluster    = lazy(() => import('./GalaxyCluster'));
+const SpaceStation     = lazy(() => import('./SpaceStation'));
 import { planetsData, getAdjacentPlanet } from '../../data/planets';
 import { isWebGLSupported } from '../../utils/webglDetect';
 import { isTouchDevice } from '../../utils/isTouchDevice';
@@ -615,6 +616,7 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
         {/* Layer 3 — Oort Cloud shell surrounding everything, fade in 280–400u */}
         <Suspense fallback={null}>
           <OortCloud cameraFadeStart={280} cameraFadeEnd={400} />
+          <SpaceStation position={[120, 30, -220]} cameraFadeStart={280} cameraFadeEnd={380} />
           <GalaxyCluster position={[350, -80, -150]} cameraFadeStart={320} cameraFadeEnd={420} />
         </Suspense>
       </Canvas>
