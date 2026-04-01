@@ -220,12 +220,9 @@ function ReorientController({ controlsRef, isActive, onComplete }) {
       startPos.current    = camera.position.clone()
       startTarget.current = controlsRef.current?.target.clone() ?? new THREE.Vector3()
       progress.current    = 0
-      // Keep current distance, flatten Y to 0, preserve horizontal direction
+      // Keep current distance, move to Z axis at Y=0 so planets spread along screen X
       const dist = camera.position.length()
-      const flat = new THREE.Vector3(camera.position.x, 0, camera.position.z)
-      if (flat.lengthSq() < 0.001) flat.set(0, 0, dist) // edge case: directly above
-      flat.normalize().multiplyScalar(dist)
-      endPos.current = flat.clone()
+      endPos.current = new THREE.Vector3(0, 0, dist)
     }
   }, [isActive, camera, controlsRef])
 
