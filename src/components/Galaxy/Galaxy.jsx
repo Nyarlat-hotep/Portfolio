@@ -205,13 +205,14 @@ function KeyboardCameraController({ controlsRef }) {
   return null;
 }
 
-const _reorientPos    = new THREE.Vector3(0, 8, 55)
 const _reorientTarget = new THREE.Vector3(0, 0, 0)
+const _flatEnd        = new THREE.Vector3()
 
 function ReorientController({ controlsRef, isActive, onComplete }) {
   const { camera } = useThree()
   const startPos    = useRef(null)
   const startTarget = useRef(null)
+  const endPos      = useRef(null)
   const progress    = useRef(0)
 
   useEffect(() => {
@@ -219,6 +220,12 @@ function ReorientController({ controlsRef, isActive, onComplete }) {
       startPos.current    = camera.position.clone()
       startTarget.current = controlsRef.current?.target.clone() ?? new THREE.Vector3()
       progress.current    = 0
+      // Keep current distance, flatten Y to 0, preserve horizontal direction
+      const dist = camera.position.length()
+      const flat = new THREE.Vector3(camera.position.x, 0, camera.position.z)
+      if (flat.lengthSq() < 0.001) flat.set(0, 0, dist) // edge case: directly above
+      flat.normalize().multiplyScalar(dist)
+      endPos.current = flat.clone()
     }
   }, [isActive, camera, controlsRef])
 
@@ -226,7 +233,7 @@ function ReorientController({ controlsRef, isActive, onComplete }) {
     if (!isActive) return
     progress.current = Math.min(1, progress.current + delta / 2.2)
     const t = 1 - Math.pow(1 - progress.current, 3) // easeOutCubic
-    camera.position.lerpVectors(startPos.current, _reorientPos, t)
+    camera.position.lerpVectors(startPos.current, endPos.current, t)
     if (controlsRef.current) {
       controlsRef.current.target.lerpVectors(startTarget.current, _reorientTarget, t)
     }
