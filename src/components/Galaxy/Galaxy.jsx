@@ -26,6 +26,7 @@ const PresentationMode = lazy(() => import('../UI/PresentationMode'));
 const AlienSnake       = lazy(() => import('../UI/AlienSnake'));
 const NebulaCloud      = lazy(() => import('./NebulaCloud'))
 const AsteroidBelt     = lazy(() => import('./AsteroidBelt'));
+const Derelict         = lazy(() => import('./Derelict'));
 import { planetsData, getAdjacentPlanet } from '../../data/planets';
 import { isWebGLSupported } from '../../utils/webglDetect';
 import { isTouchDevice } from '../../utils/isTouchDevice';
@@ -33,6 +34,29 @@ import { playBackground, stopBackground, getMuted, setMuted, playMenuClick, play
 
 // Check WebGL support once on module load
 const webGLSupported = isWebGLSupported();
+
+const DERELICT_LOG = `VESSEL: ICARUS-VII  //  REGISTRY: EC-7741
+DATE: [CORRUPTED]   //  CREW: 4 of 9 [REMAINING]
+
+DAY ??? — ENGINES COLD. LIFE SUPPORT AT 12%.
+MAGNETIC LOCK HAS FAILED. WE ARE DRIFTING.
+
+CARTER SAYS SHE SAW SOMETHING OUTSIDE.
+SOMETHING MOVING BETWEEN THE DEBRIS.
+I TOLD HER SHE WAS DREAMING.
+
+I TOLD HER.
+
+IF ANYONE FINDS THIS — DO NOT COME HERE.
+WHATEVER PULLED US OFF COURSE,
+IT IS STILL.
+
+STILL.
+
+STILL WAITING.
+
+— CDR. YUSUF ADEOLA
+[TRANSMISSION ENDS]`;
 
 // Check touch once on module load for UI hints
 const isTouch = isTouchDevice();
@@ -202,6 +226,7 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
   const [warpActive,         setWarpActive]          = useState(false);
   const [presentationOpen,   setPresentationOpen]   = useState(false);
   const [showSnake,          setShowSnake]           = useState(false);
+  const [derelictOpen,       setDerelictOpen]        = useState(false);
   const snakeActiveRef = useRef(false);
   // Ref-stable wrapper — prevents handler useMemo/useCallback deps from invalidating
   // when parent passes a new onPlanetClick function reference on each render
@@ -240,6 +265,8 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
   }, []);
 
   // Stable modal / button callbacks — no inline functions in JSX
+  const handleDerelictClick          = useCallback(() => { setDerelictOpen(true); }, []);
+  const handleCloseDerelict          = useCallback(() => { setDerelictOpen(false); }, []);
   const handleCloseAsteroidModal     = useCallback(() => { playCaseStudyClose(); setAsteroidModalOpen(false); }, []);
   const handleCloseConstellationModal = useCallback(() => { playCaseStudyClose(); setConstellationModal(null); }, []);
   const handleCodexChange            = useCallback((e) => { setCodexInput(e.target.value); setCodexError(false); }, []);
@@ -428,6 +455,7 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
       if (presentationOpen) return;
       if (snakeActiveRef.current) return;
       if (e.key === 'Escape') {
+        if (derelictOpen) { handleCloseDerelict(); return; }
         if (asteroidModalOpen) {
           playCaseStudyClose();
           setAsteroidModalOpen(false);
@@ -439,7 +467,7 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [presentationOpen, asteroidModalOpen]);
+  }, [presentationOpen, asteroidModalOpen, derelictOpen, handleCloseDerelict]);
 
   // Shift+P — skip codex, go straight to warp
   useEffect(() => {
@@ -572,6 +600,7 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
           <NebulaCloud position={[120, -20, 80]} color="#ff6622" secondaryColor="#ffaa22" radius={28} particleCount={300} cameraFadeStart={110} cameraFadeEnd={170} />
           <NebulaCloud position={[-30, 40, 160]} color="#22ffaa" secondaryColor="#2288ff" radius={22} particleCount={250} cameraFadeStart={120} cameraFadeEnd={180} />
           <AsteroidBelt innerRadius={90} outerRadius={130} count={600} cameraFadeStart={90} cameraFadeEnd={140} />
+          <Derelict position={[-140, 8, -85]} onClick={handleDerelictClick} />
         </Suspense>
       </Canvas>
 
@@ -624,6 +653,24 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
             </div>
           )}
         </AnimatePresence>,
+        document.body
+      )}
+
+      {/* Derelict lore modal */}
+      {createPortal(
+        derelictOpen && (
+          <div className="asteroid-message-overlay" onClick={handleCloseDerelict}>
+            <div className="derelict-modal" onClick={e => e.stopPropagation()}>
+              <div className="asteroid-message-header">
+                <span className="asteroid-message-label">// FINAL TRANSMISSION //</span>
+                <button className="asteroid-message-close" onClick={handleCloseDerelict}>✕</button>
+              </div>
+              <div className="asteroid-message-body">
+                <pre className="derelict-log">{DERELICT_LOG}</pre>
+              </div>
+            </div>
+          </div>
+        ),
         document.body
       )}
 
