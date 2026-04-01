@@ -24,6 +24,7 @@ import LightspeedTransition from '../UI/LightspeedTransition';
 import '../UI/PresentationMode.css';
 const PresentationMode = lazy(() => import('../UI/PresentationMode'));
 const AlienSnake       = lazy(() => import('../UI/AlienSnake'));
+const NebulaCloud      = lazy(() => import('./NebulaCloud'));
 import { planetsData, getAdjacentPlanet } from '../../data/planets';
 import { isWebGLSupported } from '../../utils/webglDetect';
 import { isTouchDevice } from '../../utils/isTouchDevice';
@@ -562,6 +563,13 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
           )}
           {/* Signal when planets are loaded */}
           <SceneReadySignal onReady={() => setSceneReady(true)} />
+        </Suspense>
+
+        {/* Nebula clouds — fade in as camera zooms beyond 100u */}
+        <Suspense fallback={null}>
+          <NebulaCloud position={[-80, 15, -120]} color="#4466ff" secondaryColor="#aa44ff" radius={35} particleCount={400} cameraFadeStart={100} cameraFadeEnd={160} />
+          <NebulaCloud position={[120, -20, 80]} color="#ff6622" secondaryColor="#ffaa22" radius={28} particleCount={300} cameraFadeStart={110} cameraFadeEnd={170} />
+          <NebulaCloud position={[-30, 40, 160]} color="#22ffaa" secondaryColor="#2288ff" radius={22} particleCount={250} cameraFadeStart={120} cameraFadeEnd={180} />
         </Suspense>
       </Canvas>
 
