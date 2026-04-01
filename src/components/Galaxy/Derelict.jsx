@@ -58,6 +58,9 @@ function FallbackShip({ matRef }) {
   );
 }
 
+// Reusable dummy Object3D for matrix operations (avoids per-effect allocation)
+const _dummyObj = new THREE.Object3D();
+
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function Derelict({ position = [-140, 8, -85], onClick }) {
@@ -71,7 +74,6 @@ export default function Derelict({ position = [-140, 8, -85], onClick }) {
   // ── Debris field data — 30 chunks ─────────────────────────────────────────
 
   const debrisData = useMemo(() => {
-    const dummy = new THREE.Object3D();
     const items = [];
 
     for (let i = 0; i < 30; i++) {
@@ -95,12 +97,12 @@ export default function Derelict({ position = [-140, 8, -85], onClick }) {
       ).normalize();
       const speed  = (0.3 + Math.random() * 0.7) * (Math.random() > 0.5 ? 1 : -1);
 
-      dummy.position.set(x, y, z);
-      dummy.rotation.set(rotX, rotY, rotZ);
-      dummy.scale.setScalar(scale);
-      dummy.updateMatrix();
+      _dummyObj.position.set(x, y, z);
+      _dummyObj.rotation.set(rotX, rotY, rotZ);
+      _dummyObj.scale.setScalar(scale);
+      _dummyObj.updateMatrix();
 
-      items.push({ matrix: dummy.matrix.clone(), pos: [x, y, z], scale, axis, speed });
+      items.push({ matrix: _dummyObj.matrix.clone(), pos: [x, y, z], scale, axis, speed });
     }
     return items;
   }, []);
@@ -109,6 +111,7 @@ export default function Derelict({ position = [-140, 8, -85], onClick }) {
 
   const debrisRef    = useRef();
   const glowRef      = useRef();
+  const glowMatRef   = useRef();
 
   // Pre-build rotation quaternions and current rotation state per instance
   const rotStates = useMemo(() => debrisData.map(() => ({
@@ -118,19 +121,18 @@ export default function Derelict({ position = [-140, 8, -85], onClick }) {
 
   // Apply initial matrices
   useEffect(() => {
-    const dummy = new THREE.Object3D();
     debrisData.forEach((d, i) => {
-      dummy.matrix.copy(d.matrix);
-      dummy.matrix.decompose(dummy.position, dummy.quaternion, dummy.scale);
-      rotStates[i].quat.copy(dummy.quaternion);
+      _dummyObj.matrix.copy(d.matrix);
+      _dummyObj.matrix.decompose(_dummyObj.position, _dummyObj.quaternion, _dummyObj.scale);
+      rotStates[i].quat.copy(_dummyObj.quaternion);
 
       if (debrisRef.current) {
         debrisRef.current.setMatrixAt(i, d.matrix);
       }
       if (glowRef.current && i < 8) {
-        dummy.scale.setScalar(d.scale * 1.3);
-        dummy.updateMatrix();
-        glowRef.current.setMatrixAt(i, dummy.matrix);
+        _dummyObj.scale.setScalar(d.scale * 1.3);
+        _dummyObj.updateMatrix();
+        glowRef.current.setMatrixAt(i, _dummyObj.matrix);
       }
     });
     if (debrisRef.current) debrisRef.current.instanceMatrix.needsUpdate = true;
@@ -156,7 +158,6 @@ export default function Derelict({ position = [-140, 8, -85], onClick }) {
 
   const _tmpMatrix = useMemo(() => new THREE.Matrix4(), []);
   const _tmpPos    = useMemo(() => new THREE.Vector3(), []);
-  const _tmpQuat   = useMemo(() => new THREE.Quaternion(), []);
   const _tmpScale  = useMemo(() => new THREE.Vector3(), []);
   const _axisAngleQ = useMemo(() => new THREE.Quaternion(), []);
 
@@ -179,6 +180,11 @@ export default function Derelict({ position = [-140, 8, -85], onClick }) {
     // Apply fade to debris material
     if (debrisMatRef.current) {
       debrisMatRef.current.opacity = intensity;
+    }
+
+    // Apply fade to glow material (caps at 0.6 when fully visible)
+    if (glowMatRef.current) {
+      glowMatRef.current.opacity = Math.min(0.6, intensity * 0.6);
     }
 
     // ── Slow rotation of entire group ──────────────────────────────────────
@@ -254,6 +260,7 @@ export default function Derelict({ position = [-140, 8, -85], onClick }) {
       <instancedMesh ref={glowRef} args={[null, null, 8]}>
         <boxGeometry args={[1, 1, 1]} />
         <meshBasicMaterial
+          ref={glowMatRef}
           color="#ff2200"
           transparent
           depthWrite={false}
