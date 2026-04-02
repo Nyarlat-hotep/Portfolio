@@ -42,27 +42,43 @@ import { playBackground, stopBackground, getMuted, setMuted, playMenuClick, play
 const webGLSupported = isWebGLSupported();
 
 const DERELICT_LOG = `VESSEL: ICARUS-VII  //  REGISTRY: EC-7741
-DATE: [CORRUPTED]   //  CREW: 4 of 9 [REMAINING]
+DATE: [CORRUPTED]   //  CREW: 4 OF 9 [REMAINING]
 
-DAY ??? — ENGINES COLD. LIFE SUPPORT AT 12%.
+DAY 12 — ENGINES COLD. LIFE SUPPORT AT 12%.
 MAGNETIC LOCK HAS FAILED. WE ARE DRIFTING.
 
-CARTER SAYS SHE SAW SOMETHING OUTSIDE.
+CARTER SAW SOMETHING OUTSIDE.
 SOMETHING MOVING BETWEEN THE DEBRIS.
 I TOLD HER SHE WAS DREAMING.
 
-I TOLD HER.
+DAY ??? — WE STOPPED COUNTING.
+REYES WENT TO FIX THE ANTENNA.
+HE DID NOT COME BACK.
+WE HEARD HIM FOR THREE MORE HOURS.
 
-IF ANYONE FINDS THIS — DO NOT COME HERE.
-WHATEVER PULLED US OFF COURSE,
-IT IS STILL.
+HE SOUNDED HAPPY.
 
-STILL.
+DAY ??? — I UNDERSTAND NOW.
+IT DOES NOT WANT TO HURT US.
+IT WANTS TO SHOW US.
+CARTER ALREADY KNOWS. SHE STOPPED
+BLINKING TWO DAYS AGO BUT SHE SMILES
+SHE SMILES SHE SMILES SHE SMILES
 
-STILL WAITING.
+I CAN HEAR IT BREATHING THROUGH THE HULL.
+IT HAS ALWAYS BEEN HERE.
+IT WAS HERE BEFORE THE STARS.
+IT IS PATIENT BECAUSE IT IS EVERYTHING.
+
+DO NOT COME HERE.
+DO NOT LOOK FOR US.
+
+WE ARE FINE.
+WE ARE SO FINE.
+WE ARE
 
 — CDR. YUSUF ADEOLA
-[TRANSMISSION ENDS]`;
+[SIGNAL LOST]`;
 
 // Check touch once on module load for UI hints
 const isTouch = isTouchDevice();
@@ -764,22 +780,21 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
               transition={{ duration: 0.25 }}
               onClick={handleCloseDerelict}
             >
-              <motion.div
-                className="derelict-modal"
-                initial={{ clipPath: 'inset(50% 0 50% 0)', opacity: 0.6 }}
-                animate={{ clipPath: 'inset(0% 0 0% 0)', opacity: 1 }}
-                exit={{ clipPath: 'inset(50% 0 50% 0)', opacity: 0 }}
-                transition={{ duration: 0.38, ease: [0.25, 0.1, 0.25, 1] }}
-                onClick={e => e.stopPropagation()}
-              >
-                <div className="asteroid-message-header">
-                  <span className="asteroid-message-label">// FINAL TRANSMISSION //</span>
-                  <button className="asteroid-message-close" onClick={handleCloseDerelict}><X size={16} /></button>
+              <div className="derelict-modal" onClick={e => e.stopPropagation()}>
+                <div className="derelict-header">
+                  <span className="derelict-label">// FINAL TRANSMISSION //</span>
+                  <button className="derelict-close" onClick={handleCloseDerelict} aria-label="Close"><X size={16} /></button>
                 </div>
-                <div className="asteroid-message-body">
+                <motion.div
+                  className="derelict-body"
+                  initial={{ clipPath: 'inset(50% 0 50% 0)', opacity: 0.6 }}
+                  animate={{ clipPath: 'inset(0% 0 0% 0)', opacity: 1 }}
+                  exit={{ clipPath: 'inset(50% 0 50% 0)', opacity: 0 }}
+                  transition={{ duration: 0.42, ease: [0.25, 0.1, 0.25, 1] }}
+                >
                   <TypedLog text={DERELICT_LOG} isActive={derelictOpen} />
-                </div>
-              </motion.div>
+                </motion.div>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>,

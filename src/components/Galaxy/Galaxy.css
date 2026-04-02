@@ -417,11 +417,54 @@
   background: rgba(4, 2, 2, 0.97);
   border: 1px solid rgba(180, 30, 20, 0.7);
   border-radius: 8px;
-  padding: 2rem 2.5rem;
   max-width: 720px;
   width: 92%;
   position: relative;
   box-shadow: 0 0 40px rgba(200, 30, 10, 0.15);
+  overflow: hidden;
+}
+
+.derelict-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1.25rem;
+  border-bottom: 1px solid rgba(180, 30, 20, 0.4);
+  background: rgba(160, 20, 10, 0.12);
+}
+
+.derelict-label {
+  font-family: monospace;
+  font-size: 0.55rem;
+  letter-spacing: 3px;
+  color: rgba(220, 60, 40, 0.85);
+  text-transform: uppercase;
+  animation: loadingBlink 1.4s ease-in-out infinite;
+}
+
+.derelict-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem;
+  background: rgba(180, 20, 10, 0.12);
+  border: 1px solid rgba(200, 50, 30, 0.6);
+  border-radius: 6px;
+  color: rgba(220, 60, 40, 0.85);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.derelict-close:hover {
+  background: rgba(200, 30, 10, 0.25);
+  border-color: rgba(220, 60, 40, 0.9);
+  color: rgba(255, 80, 50, 1);
+  box-shadow: 0 0 10px rgba(200, 30, 10, 0.35);
+}
+
+.derelict-body {
+  padding: 1.5rem 2rem 2rem;
 }
 
 .derelict-log {
