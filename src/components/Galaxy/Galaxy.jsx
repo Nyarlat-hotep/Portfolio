@@ -26,7 +26,6 @@ const PresentationMode = lazy(() => import('../UI/PresentationMode'));
 const AlienSnake       = lazy(() => import('../UI/AlienSnake'));
 const NebulaCloud      = lazy(() => import('./NebulaCloud'))
 const AsteroidBelt     = lazy(() => import('./AsteroidBelt'));
-const Derelict         = lazy(() => import('./Derelict'));
 const OuterBody        = lazy(() => import('./OuterBody'));
 const OortCloud        = lazy(() => import('./OortCloud'));
 const GalaxyCluster    = lazy(() => import('./GalaxyCluster'));
@@ -654,7 +653,6 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
           <NebulaCloud position={[120, -20, 80]} color="#ff6622" secondaryColor="#ffaa22" radius={28} particleCount={300} cameraFadeStart={110} cameraFadeEnd={170} />
           <NebulaCloud position={[-30, 40, 160]} color="#22ffaa" secondaryColor="#2288ff" radius={22} particleCount={250} cameraFadeStart={120} cameraFadeEnd={180} />
           <AsteroidBelt innerRadius={90} outerRadius={130} count={600} cameraFadeStart={90} cameraFadeEnd={140} />
-          <Derelict position={[-140, 8, -85]} onClick={handleDerelictClick} />
           {/* Floating outer bodies — moons and ringed bodies drifting in deep space */}
           {/* Frost (Uranus) — ice-blue rings, wide flat bands */}
           <OuterBody position={[-65, 22, -135]} textureUrl="/textures/uranus.jpg" bodyRadius={2.2} orbitRadius={9} orbitSpeed={0.004} orbitInclination={0.10} hasRings ringColor="#99ddff" ringTilt={0.12} ringBand1={[1.6, 2.8]} ringBand2={[3.1, 4.2]} />
@@ -671,7 +669,7 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
         {/* Layer 3 — Oort Cloud shell surrounding everything, fade in 280–400u */}
         <Suspense fallback={null}>
           <OortCloud cameraFadeStart={280} cameraFadeEnd={400} />
-          <SpaceStation />
+          <SpaceStation onClick={handleDerelictClick} />
           <GalaxyCluster position={[350, -80, -150]} cameraFadeStart={320} cameraFadeEnd={420} />
         </Suspense>
       </Canvas>
