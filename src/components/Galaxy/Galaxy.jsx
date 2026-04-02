@@ -207,6 +207,32 @@ function KeyboardCameraController({ controlsRef }) {
   return null;
 }
 
+// ── Typed log — types text character by character after isActive turns true ───
+function TypedLog({ text, isActive }) {
+  const [displayed, setDisplayed] = useState('')
+  const timerRef = useRef(null)
+
+  useEffect(() => {
+    if (!isActive) { setDisplayed(''); return }
+    let idx = 0
+    const startDelay = setTimeout(() => {
+      timerRef.current = setInterval(() => {
+        idx++
+        setDisplayed(text.slice(0, idx))
+        if (idx >= text.length) clearInterval(timerRef.current)
+      }, 14)
+    }, 380)
+    return () => { clearTimeout(startDelay); clearInterval(timerRef.current) }
+  }, [isActive, text])
+
+  return (
+    <pre className="derelict-log">
+      {displayed}
+      {displayed.length < text.length && <span className="derelict-cursor">▋</span>}
+    </pre>
+  )
+}
+
 const _reorientTarget = new THREE.Vector3(0, 0, 0)
 const _flatEnd        = new THREE.Vector3()
 
@@ -740,11 +766,10 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
             >
               <motion.div
                 className="derelict-modal"
-                initial={{ opacity: 0, scaleY: 0.4, y: 24 }}
-                animate={{ opacity: 1, scaleY: 1, y: 0 }}
-                exit={{ opacity: 0, scaleY: 0.4, y: 24 }}
-                transition={{ duration: 0.55, ease: [0.34, 1.56, 0.64, 1] }}
-                style={{ transformOrigin: 'bottom center' }}
+                initial={{ clipPath: 'inset(50% 0 50% 0)', opacity: 0.6 }}
+                animate={{ clipPath: 'inset(0% 0 0% 0)', opacity: 1 }}
+                exit={{ clipPath: 'inset(50% 0 50% 0)', opacity: 0 }}
+                transition={{ duration: 0.38, ease: [0.25, 0.1, 0.25, 1] }}
                 onClick={e => e.stopPropagation()}
               >
                 <div className="asteroid-message-header">
@@ -752,7 +777,7 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
                   <button className="asteroid-message-close" onClick={handleCloseDerelict}><X size={16} /></button>
                 </div>
                 <div className="asteroid-message-body">
-                  <pre className="derelict-log">{DERELICT_LOG}</pre>
+                  <TypedLog text={DERELICT_LOG} isActive={derelictOpen} />
                 </div>
               </motion.div>
             </motion.div>

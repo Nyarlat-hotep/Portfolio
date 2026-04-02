@@ -432,3 +432,14 @@
   white-space: pre-wrap;
   margin: 0;
 }
+
+.derelict-cursor {
+  display: inline-block;
+  color: rgba(220, 60, 40, 0.9);
+  animation: derelict-blink 0.7s step-end infinite;
+}
+
+@keyframes derelict-blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
