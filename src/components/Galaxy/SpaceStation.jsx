@@ -3,7 +3,6 @@ import { useFrame } from '@react-three/fiber'
 import { useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
 import { createCircularParticleTexture } from '../../utils/threeUtils'
-import { playDerelict, setDerelictVolume, stopDerelict } from '../../utils/sounds'
 
 const ORBIT_R     = 182
 const ORBIT_SPEED = 0.0025
@@ -35,7 +34,6 @@ export default function SpaceStation({ onClick }) {
   const glowRef    = useRef()
   const glowMatRef = useRef()
   const cloudRef   = useRef()
-  const playingRef = useRef(false)
 
   const { scene } = useGLTF('/models/sci-fi_space_station_2-v2.glb')
   const clonedScene = useMemo(() => scene.clone(true), [scene])
@@ -79,11 +77,7 @@ export default function SpaceStation({ onClick }) {
       _dummyObj.matrix.decompose(_dummyObj.position, _dummyObj.quaternion, _dummyObj.scale)
       rotStates[i].quat.copy(_dummyObj.quaternion)
       if (debrisRef.current) debrisRef.current.setMatrixAt(i, d.matrix)
-      if (glowRef.current && i < 8) {
-        _dummyObj.scale.setScalar(d.scale * 1.3)
-        _dummyObj.updateMatrix()
-        glowRef.current.setMatrixAt(i, _dummyObj.matrix)
-      }
+      if (glowRef.current)   glowRef.current.setMatrixAt(i, d.matrix)
     })
     if (debrisRef.current) debrisRef.current.instanceMatrix.needsUpdate = true
     if (glowRef.current)   glowRef.current.instanceMatrix.needsUpdate   = true
@@ -127,7 +121,6 @@ export default function SpaceStation({ onClick }) {
   const circleTex = useMemo(() => createCircularParticleTexture(), [])
   const hazeTex   = useMemo(() => getHazeTex(), [])
 
-  useEffect(() => () => stopDerelict(), [])
 
   useFrame((state, delta) => {
     if (!groupRef.current) return
@@ -154,22 +147,12 @@ export default function SpaceStation({ onClick }) {
         _tmpScale.setScalar(d.scale)
         _tmpMatrix.compose(_tmpPos, rs.quat, _tmpScale)
         debrisRef.current.setMatrixAt(i, _tmpMatrix)
-        if (glowRef.current && i < 8) {
-          _tmpScale.setScalar(d.scale * 1.3)
-          _tmpMatrix.compose(_tmpPos, rs.quat, _tmpScale)
-          glowRef.current.setMatrixAt(i, _tmpMatrix)
-        }
+        if (glowRef.current) glowRef.current.setMatrixAt(i, _tmpMatrix)
       })
       debrisRef.current.instanceMatrix.needsUpdate = true
       if (glowRef.current) glowRef.current.instanceMatrix.needsUpdate = true
     }
 
-    // Proximity sound
-    const dist = state.camera.position.distanceTo(groupRef.current.position)
-    const vol  = Math.max(0, 1 - dist / 60) * 0.3
-    setDerelictVolume(vol)
-    if (vol > 0 && !playingRef.current) { playDerelict(); playingRef.current = true }
-    else if (vol <= 0 && playingRef.current) { stopDerelict(); playingRef.current = false }
   })
 
   return (
@@ -187,22 +170,22 @@ export default function SpaceStation({ onClick }) {
       {/* GLB station model */}
       <primitive object={clonedScene} />
 
-      {/* Tumbling debris chunks */}
+      {/* Tumbling debris — black fill polyhedra */}
       <instancedMesh ref={debrisRef} args={[null, null, 30]}>
-        <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial roughness={0.9} metalness={0.3} color="#1e1e24" />
+        <icosahedronGeometry args={[1, 0]} />
+        <meshBasicMaterial color="#000000" />
       </instancedMesh>
 
-      {/* Red-hot glow on 8 chunks */}
-      <instancedMesh ref={glowRef} args={[null, null, 8]}>
-        <boxGeometry args={[1, 1, 1]} />
+      {/* Red wireframe outline — same instanced positions */}
+      <instancedMesh ref={glowRef} args={[null, null, 30]}>
+        <icosahedronGeometry args={[1.05, 0]} />
         <meshBasicMaterial
           ref={glowMatRef}
           color="#ff2200"
           transparent
+          wireframe
           depthWrite={false}
-          blending={THREE.AdditiveBlending}
-          opacity={0.6}
+          opacity={0.9}
         />
       </instancedMesh>
 

@@ -728,19 +728,36 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
 
       {/* Derelict lore modal */}
       {createPortal(
-        derelictOpen && (
-          <div className="asteroid-message-overlay" onClick={handleCloseDerelict}>
-            <div className="derelict-modal" onClick={e => e.stopPropagation()}>
-              <div className="asteroid-message-header">
-                <span className="asteroid-message-label">// FINAL TRANSMISSION //</span>
-                <button className="asteroid-message-close" onClick={handleCloseDerelict}>✕</button>
-              </div>
-              <div className="asteroid-message-body">
-                <pre className="derelict-log">{DERELICT_LOG}</pre>
-              </div>
-            </div>
-          </div>
-        ),
+        <AnimatePresence>
+          {derelictOpen && (
+            <motion.div
+              className="asteroid-message-overlay"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.25 }}
+              onClick={handleCloseDerelict}
+            >
+              <motion.div
+                className="derelict-modal"
+                initial={{ opacity: 0, scaleY: 0.4, y: 24 }}
+                animate={{ opacity: 1, scaleY: 1, y: 0 }}
+                exit={{ opacity: 0, scaleY: 0.4, y: 24 }}
+                transition={{ duration: 0.55, ease: [0.34, 1.56, 0.64, 1] }}
+                style={{ transformOrigin: 'bottom center' }}
+                onClick={e => e.stopPropagation()}
+              >
+                <div className="asteroid-message-header">
+                  <span className="asteroid-message-label">// FINAL TRANSMISSION //</span>
+                  <button className="asteroid-message-close" onClick={handleCloseDerelict}><X size={16} /></button>
+                </div>
+                <div className="asteroid-message-body">
+                  <pre className="derelict-log">{DERELICT_LOG}</pre>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>,
         document.body
       )}
 

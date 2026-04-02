@@ -417,10 +417,11 @@
   background: rgba(4, 2, 2, 0.97);
   border: 1px solid rgba(180, 30, 20, 0.7);
   border-radius: 8px;
-  padding: 2rem;
-  max-width: 480px;
-  width: 90%;
+  padding: 2rem 2.5rem;
+  max-width: 720px;
+  width: 92%;
   position: relative;
+  box-shadow: 0 0 40px rgba(200, 30, 10, 0.15);
 }
 
 .derelict-log {
