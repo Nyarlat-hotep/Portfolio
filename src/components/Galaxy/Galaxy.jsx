@@ -44,38 +44,62 @@ const webGLSupported = isWebGLSupported();
 const DERELICT_LOG = `VESSEL: ICARUS-VII  //  REGISTRY: EC-7741
 DATE: [CORRUPTED]   //  CREW: 4 OF 9 [REMAINING]
 
-DAY 12 — ENGINES COLD. LIFE SUPPORT AT 12%.
-MAGNETIC LOCK HAS FAILED. WE ARE DRIFTING.
+Day 08 - We are in proximity to the signal source. 
+Likely origin of the distress call that brought us here. 
+We are orbiting a small planet, but the signal is coming from deep space, 
+beyond the planet's orbit.
 
-CARTER SAW SOMETHING OUTSIDE.
-SOMETHING MOVING BETWEEN THE DEBRIS.
-I TOLD HER SHE WAS DREAMING.
+Day 09 - 16:00 - Massive hull damage caused by unidentified meteor debris.
+We are venting atmosphere to avoid explosion.
 
-DAY ??? — WE STOPPED COUNTING.
-REYES WENT TO FIX THE ANTENNA.
-HE DID NOT COME BACK.
-WE HEARD HIM FOR THREE MORE HOURS.
+Day 10 - [CORRUPTED]
 
-HE SOUNDED HAPPY.
+Day 11 - Fenster and Nguyen are dead, both having killed each other.
+Breach unrepaired, losing atmosphere at an accelerating rate.
 
-DAY ??? — I UNDERSTAND NOW.
-IT DOES NOT WANT TO HURT US.
-IT WANTS TO SHOW US.
-CARTER ALREADY KNOWS. SHE STOPPED
-BLINKING TWO DAYS AGO BUT SHE SMILES
-SHE SMILES SHE SMILES SHE SMILES
+DAY 12 — Engines cold. life support at 12%.
+magnetic lock has failed. we are drifting.
 
-I CAN HEAR IT BREATHING THROUGH THE HULL.
-IT HAS ALWAYS BEEN HERE.
-IT WAS HERE BEFORE THE STARS.
-IT IS PATIENT BECAUSE IT IS EVERYTHING.
+Carter saw something outside.
+something moving between the debris.
+I told her she was dreaming.
+I am also dreaming. Strange dreams.
 
-DO NOT COME HERE.
-DO NOT LOOK FOR US.
+DAY ??? — We stopped counting.
+Reyes went to fix the antenna.
+he has not come back.
 
-WE ARE FINE.
-WE ARE SO FINE.
-WE ARE
+DAY ??? — I understand now.
+it does not want to hurt us.
+it wants to SHOW us.
+Carter already knows. She has taken to isolating herself in the observation deck, staring out into space for hours, whispering.
+
+I can hear it calling to me from outside the hull.
+it has always been here.
+it was here before the stars.
+it is patient because it is EVERYTHING.
+
+DAY ??? — I have not slept. I cannot.
+when I close my eyes i hear a voice that has
+no mouth. it speaks in geometries. in ANGLES
+that should not exist. it tells me its name.
+
+NYARLATHOTEP. The crawling chaos.
+The thousand-faced god.
+The soul and messenger of the OUTER GODS.
+
+It has been speaking to me through my dreams
+since day one. I know that now. The signal
+that brought us here was never a distress call.
+it was an guiding voice to salvation.
+
+Reyes understood. Carter understands.
+soon I will understand completely.
+
+Do not come here.
+Do not look for us.
+
+I must purge us of our flesh. As the crawling chaos commands.
 
 — CDR. YUSUF ADEOLA
 [SIGNAL LOST]`;
@@ -357,8 +381,8 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
   }, []);
 
   // Stable modal / button callbacks — no inline functions in JSX
-  const handleDerelictClick          = useCallback(() => { setDerelictOpen(true); }, []);
-  const handleCloseDerelict          = useCallback(() => { setDerelictOpen(false); }, []);
+  const handleDerelictClick          = useCallback(() => { playCaseStudyOpen(); setDerelictOpen(true); }, []);
+  const handleCloseDerelict          = useCallback(() => { playCaseStudyClose(); setDerelictOpen(false); }, []);
   const handleCloseAsteroidModal     = useCallback(() => { playCaseStudyClose(); setAsteroidModalOpen(false); }, []);
   const handleCloseConstellationModal = useCallback(() => { playCaseStudyClose(); setConstellationModal(null); }, []);
   const handleCodexChange            = useCallback((e) => { setCodexInput(e.target.value); setCodexError(false); }, []);
@@ -780,7 +804,7 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
               transition={{ duration: 0.25 }}
               onClick={handleCloseDerelict}
             >
-              <div className="derelict-modal" onClick={e => e.stopPropagation()}>
+              <div className="derelict-modal" onClick={e => e.stopPropagation()} onWheel={e => e.stopPropagation()}>
                 <div className="derelict-header">
                   <span className="derelict-label">// FINAL TRANSMISSION //</span>
                   <button className="derelict-close" onClick={handleCloseDerelict} aria-label="Close"><X size={16} /></button>

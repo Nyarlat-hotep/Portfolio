@@ -8,6 +8,9 @@ const ORBIT_R     = 182
 const ORBIT_SPEED = 0.0025
 const ORBIT_INCL  = 0.18
 
+// 0=tetrahedron(4f), 1=octahedron(8f), 2=dodecahedron(12f), 3=icosahedron(20f)
+const POLY_COUNT = 4
+
 // Haze sprite texture
 let _hazeTex = null
 function getHazeTex() {
@@ -30,57 +33,83 @@ const _dummyObj = new THREE.Object3D()
 
 export default function SpaceStation({ onClick }) {
   const groupRef   = useRef()
-  const debrisRef  = useRef()
-  const glowRef    = useRef()
-  const glowMatRef = useRef()
+  const debrisRefs = useRef([])
+  const glowRefs   = useRef([])
   const cloudRef   = useRef()
 
   const { scene } = useGLTF('/models/sci-fi_space_station_2-v2.glb')
   const clonedScene = useMemo(() => scene.clone(true), [scene])
 
-  // ── Red-hot tumbling debris — 30 chunks ──────────────────────────────────
+  // ── Polyhedron geometries — fill and slightly-larger outline ─────────────
+  const polyGeos = useMemo(() => [
+    new THREE.TetrahedronGeometry(1, 0),
+    new THREE.OctahedronGeometry(1, 0),
+    new THREE.DodecahedronGeometry(1, 0),
+    new THREE.IcosahedronGeometry(1, 0),
+  ], [])
+
+  const polyOutlineGeos = useMemo(() => [
+    new THREE.TetrahedronGeometry(1.10, 0),
+    new THREE.OctahedronGeometry(1.08, 0),
+    new THREE.DodecahedronGeometry(1.06, 0),
+    new THREE.IcosahedronGeometry(1.05, 0),
+  ], [])
+
+  // ── Debris data — 30 chunks, each assigned a random polyhedron type ───────
   const debrisData = useMemo(() => {
     const items = []
+    const typeCounters = new Array(POLY_COUNT).fill(0)
     for (let i = 0; i < 30; i++) {
       const theta = Math.random() * Math.PI * 2
       const phi   = Math.acos(2 * Math.random() - 1)
-      const r     = 6 + Math.random() * 9   // tighter around station
+      const r     = 6 + Math.random() * 9
       const x     = r * Math.sin(phi) * Math.cos(theta)
       const y     = r * Math.sin(phi) * Math.sin(theta)
       const z     = r * Math.cos(phi)
-      const scale = 0.06 + Math.random() * 0.28  // smaller to match station scale
+      const scale = 0.06 + Math.random() * 0.28
       const axis  = new THREE.Vector3(Math.random()-0.5, Math.random()-0.5, Math.random()-0.5).normalize()
       const speed = (0.3 + Math.random() * 0.7) * (Math.random() > 0.5 ? 1 : -1)
+      const typeIdx  = Math.floor(Math.random() * POLY_COUNT)
+      const localIdx = typeCounters[typeIdx]++
       _dummyObj.position.set(x, y, z)
       _dummyObj.rotation.set(Math.random()*Math.PI*2, Math.random()*Math.PI*2, Math.random()*Math.PI*2)
       _dummyObj.scale.setScalar(scale)
       _dummyObj.updateMatrix()
-      items.push({ matrix: _dummyObj.matrix.clone(), pos: [x, y, z], scale, axis, speed })
+      items.push({ matrix: _dummyObj.matrix.clone(), pos: [x, y, z], scale, axis, speed, typeIdx, localIdx })
     }
     return items
   }, [])
+
+  // Count per polyhedron type for InstancedMesh sizing
+  const typeCounts = useMemo(() => {
+    const counts = new Array(POLY_COUNT).fill(0)
+    debrisData.forEach(d => counts[d.typeIdx]++)
+    return counts
+  }, [debrisData])
 
   const rotStates = useMemo(() => debrisData.map(() => ({
     quat: new THREE.Quaternion(),
     deltaQ: new THREE.Quaternion(),
   })), [debrisData])
 
-  const _tmpMatrix   = useMemo(() => new THREE.Matrix4(), [])
-  const _tmpPos      = useMemo(() => new THREE.Vector3(), [])
-  const _tmpScale    = useMemo(() => new THREE.Vector3(), [])
-  const _axisAngleQ  = useMemo(() => new THREE.Quaternion(), [])
+  const _tmpMatrix  = useMemo(() => new THREE.Matrix4(), [])
+  const _tmpPos     = useMemo(() => new THREE.Vector3(), [])
+  const _tmpScale   = useMemo(() => new THREE.Vector3(), [])
+  const _axisAngleQ = useMemo(() => new THREE.Quaternion(), [])
 
-  // Apply initial matrices
+  // Apply initial matrices to each type group
   useEffect(() => {
     debrisData.forEach((d, i) => {
       _dummyObj.matrix.copy(d.matrix)
       _dummyObj.matrix.decompose(_dummyObj.position, _dummyObj.quaternion, _dummyObj.scale)
       rotStates[i].quat.copy(_dummyObj.quaternion)
-      if (debrisRef.current) debrisRef.current.setMatrixAt(i, d.matrix)
-      if (glowRef.current)   glowRef.current.setMatrixAt(i, d.matrix)
+      debrisRefs.current[d.typeIdx]?.setMatrixAt(d.localIdx, d.matrix)
+      glowRefs.current[d.typeIdx]?.setMatrixAt(d.localIdx, d.matrix)
     })
-    if (debrisRef.current) debrisRef.current.instanceMatrix.needsUpdate = true
-    if (glowRef.current)   glowRef.current.instanceMatrix.needsUpdate   = true
+    for (let t = 0; t < POLY_COUNT; t++) {
+      if (debrisRefs.current[t]) debrisRefs.current[t].instanceMatrix.needsUpdate = true
+      if (glowRefs.current[t])   glowRefs.current[t].instanceMatrix.needsUpdate   = true
+    }
   }, [debrisData, rotStates])
 
   // Ambient haze blobs
@@ -121,7 +150,6 @@ export default function SpaceStation({ onClick }) {
   const circleTex = useMemo(() => createCircularParticleTexture(), [])
   const hazeTex   = useMemo(() => getHazeTex(), [])
 
-
   useFrame((state, delta) => {
     if (!groupRef.current) return
 
@@ -137,22 +165,21 @@ export default function SpaceStation({ onClick }) {
 
     if (cloudRef.current) cloudRef.current.rotation.y -= delta * 0.005
 
-    // Tumble debris
-    if (debrisRef.current) {
-      debrisData.forEach((d, i) => {
-        const rs = rotStates[i]
-        _axisAngleQ.setFromAxisAngle(d.axis, d.speed * delta)
-        rs.quat.premultiply(_axisAngleQ)
-        _tmpPos.set(d.pos[0], d.pos[1], d.pos[2])
-        _tmpScale.setScalar(d.scale)
-        _tmpMatrix.compose(_tmpPos, rs.quat, _tmpScale)
-        debrisRef.current.setMatrixAt(i, _tmpMatrix)
-        if (glowRef.current) glowRef.current.setMatrixAt(i, _tmpMatrix)
-      })
-      debrisRef.current.instanceMatrix.needsUpdate = true
-      if (glowRef.current) glowRef.current.instanceMatrix.needsUpdate = true
+    // Tumble debris — update each piece in its type bucket
+    debrisData.forEach((d, i) => {
+      const rs = rotStates[i]
+      _axisAngleQ.setFromAxisAngle(d.axis, d.speed * delta)
+      rs.quat.premultiply(_axisAngleQ)
+      _tmpPos.set(d.pos[0], d.pos[1], d.pos[2])
+      _tmpScale.setScalar(d.scale)
+      _tmpMatrix.compose(_tmpPos, rs.quat, _tmpScale)
+      debrisRefs.current[d.typeIdx]?.setMatrixAt(d.localIdx, _tmpMatrix)
+      glowRefs.current[d.typeIdx]?.setMatrixAt(d.localIdx, _tmpMatrix)
+    })
+    for (let t = 0; t < POLY_COUNT; t++) {
+      if (debrisRefs.current[t]) debrisRefs.current[t].instanceMatrix.needsUpdate = true
+      if (glowRefs.current[t])   glowRefs.current[t].instanceMatrix.needsUpdate   = true
     }
-
   })
 
   return (
@@ -170,24 +197,25 @@ export default function SpaceStation({ onClick }) {
       {/* GLB station model */}
       <primitive object={clonedScene} />
 
-      {/* Tumbling debris — black fill polyhedra */}
-      <instancedMesh ref={debrisRef} args={[null, null, 30]}>
-        <icosahedronGeometry args={[1, 0]} />
-        <meshBasicMaterial color="#000000" />
-      </instancedMesh>
-
-      {/* Red wireframe outline — same instanced positions */}
-      <instancedMesh ref={glowRef} args={[null, null, 30]}>
-        <icosahedronGeometry args={[1.05, 0]} />
-        <meshBasicMaterial
-          ref={glowMatRef}
-          color="#ff2200"
-          transparent
-          wireframe
-          depthWrite={false}
-          opacity={0.9}
-        />
-      </instancedMesh>
+      {/* Per-type instanced debris — black fill + red wireframe outline */}
+      {polyGeos.map((geo, t) => typeCounts[t] > 0 && (
+        <group key={t}>
+          <instancedMesh ref={el => { debrisRefs.current[t] = el }} args={[null, null, typeCounts[t]]}>
+            <primitive object={geo} attach="geometry" />
+            <meshBasicMaterial color="#000000" />
+          </instancedMesh>
+          <instancedMesh ref={el => { glowRefs.current[t] = el }} args={[null, null, typeCounts[t]]}>
+            <primitive object={polyOutlineGeos[t]} attach="geometry" />
+            <meshBasicMaterial
+              color="#ff2200"
+              transparent
+              wireframe
+              depthWrite={false}
+              opacity={0.9}
+            />
+          </instancedMesh>
+        </group>
+      ))}
 
       {/* Atmospheric haze */}
       {hazeKnots.map((k, i) => (
