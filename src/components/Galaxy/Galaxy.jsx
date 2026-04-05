@@ -24,7 +24,7 @@ import LightspeedTransition from '../UI/LightspeedTransition';
 import '../UI/PresentationMode.css';
 const PresentationMode = lazy(() => import('../UI/PresentationMode'));
 const AlienSnake       = lazy(() => import('../UI/AlienSnake'));
-const NebulaCloud      = lazy(() => import('./NebulaCloud'))
+const NebulaBelt       = lazy(() => import('./NebulaBelt'))
 const AsteroidBelt     = lazy(() => import('./AsteroidBelt'));
 const OuterBody        = lazy(() => import('./OuterBody'));
 const OortCloud        = lazy(() => import('./OortCloud'));
@@ -713,11 +713,9 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
           <SceneReadySignal onReady={() => setSceneReady(true)} />
         </Suspense>
 
-        {/* Nebula clouds — fade in as camera zooms beyond 100u */}
+        {/* Nebula belt — gray/blue-gray ring encircling the scene at ~160u */}
         <Suspense fallback={null}>
-          <NebulaCloud position={[-80, 15, -120]} color="#4466ff" secondaryColor="#aa44ff" radius={35} particleCount={400} cameraFadeStart={100} cameraFadeEnd={160} />
-          <NebulaCloud position={[120, -20, 80]} color="#ff6622" secondaryColor="#ffaa22" radius={28} particleCount={300} cameraFadeStart={110} cameraFadeEnd={170} />
-          <NebulaCloud position={[-30, 40, 160]} color="#22ffaa" secondaryColor="#2288ff" radius={22} particleCount={250} cameraFadeStart={120} cameraFadeEnd={180} />
+          <NebulaBelt cameraFadeStart={100} cameraFadeEnd={175} />
           <AsteroidBelt innerRadius={90} outerRadius={130} count={600} cameraFadeStart={90} cameraFadeEnd={140} />
           {/* Floating outer bodies — moons and ringed bodies drifting in deep space */}
           {/* Frost (Uranus) — ice-blue rings, wide flat bands */}
