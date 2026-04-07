@@ -8,8 +8,8 @@ export default function Starfield({ count = 5000 }) {
   const brightRef = useRef();
   const featureRef = useRef();
 
-  // Use shared circular particle texture (cached globally)
-  const starTexture = useMemo(() => createCircularParticleTexture(), []);
+  // Use shared circular particle texture (cached globally at module level)
+  const starTexture = createCircularParticleTexture();
 
   // Cleanup geometry and materials on unmount
   // Note: starTexture is a shared module-level cache — do NOT dispose it here

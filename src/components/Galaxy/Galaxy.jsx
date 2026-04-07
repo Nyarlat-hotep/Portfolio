@@ -31,8 +31,6 @@ const OortCloud        = lazy(() => import('./OortCloud'));
 const GalaxyCluster    = lazy(() => import('./GalaxyCluster'));
 const SpaceStation     = lazy(() => import('./SpaceStation'));
 
-// Preload GLB on module init so it's ready before user zooms out
-useGLTF.preload('/models/sci-fi_space_station_2-v2.glb')
 import { planetsData, getAdjacentPlanet } from '../../data/planets';
 import { isWebGLSupported } from '../../utils/webglDetect';
 import { isTouchDevice } from '../../utils/isTouchDevice';
@@ -546,31 +544,38 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
   // Void position - behind the user's starting camera angle (camera faces -Z, void is at +Z)
   const voidPosition = [0, 0, 80];
 
-  // Shift+M → mute, Shift+H → toggle help hints
-  useEffect(() => {
-    const handler = (e) => {
-      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-      if (e.shiftKey && e.key === 'M') {
-        const next = !getMuted();
-        setMuted(next);
-        setMutedState(next);
-      } else if (e.shiftKey && e.key === 'H') {
-        setHelpVisible(v => !v);
-      }
-    };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  }, []);
-
   // Keep snakeActiveRef in sync for ESC guard
   useEffect(() => { snakeActiveRef.current = showSnake; }, [showSnake]);
 
-  // ESC closes asteroid modal first; if none open, returns to home view
+  // All global keyboard shortcuts — single listener to avoid repeated handler firing
   useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (presentationOpen) return;
-      if (snakeActiveRef.current) return;
+    const handler = (e) => {
+      const isInput = e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA';
+
+      // Shift+M → mute toggle
+      if (!isInput && e.shiftKey && e.key === 'M') {
+        const next = !getMuted();
+        setMuted(next);
+        setMutedState(next);
+        return;
+      }
+      // Shift+H → help hints toggle
+      if (!isInput && e.shiftKey && e.key === 'H') {
+        setHelpVisible(v => !v);
+        return;
+      }
+      // Shift+P → skip codex, go straight to warp
+      if (e.shiftKey && e.key === 'P') {
+        setAsteroidModalOpen(false);
+        stopBackground();
+        playWarp();
+        setWarpActive(true);
+        return;
+      }
+      // ESC — close modals or return home
       if (e.key === 'Escape') {
+        if (presentationOpen) return;
+        if (snakeActiveRef.current) return;
         if (derelictOpen) { handleCloseDerelict(); return; }
         if (asteroidModalOpen) {
           playCaseStudyClose();
@@ -581,23 +586,9 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
         onPlanetClickRef.current?.(homePlanet);
       }
     };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [presentationOpen, asteroidModalOpen, derelictOpen, handleCloseDerelict]);
-
-  // Shift+P — skip codex, go straight to warp
-  useEffect(() => {
-    const handler = (e) => {
-      if (e.shiftKey && e.key === 'P') {
-        setAsteroidModalOpen(false);
-        stopBackground();
-        playWarp();
-        setWarpActive(true);
-      }
-    };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, []);
+  }, [presentationOpen, asteroidModalOpen, derelictOpen, handleCloseDerelict]);
 
   return (
     <div

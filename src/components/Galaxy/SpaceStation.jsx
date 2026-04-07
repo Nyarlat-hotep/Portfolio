@@ -4,6 +4,9 @@ import { useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
 import { createCircularParticleTexture } from '../../utils/threeUtils'
 
+// Preload GLB so it's ready before user zooms out to the station
+useGLTF.preload('/models/sci-fi_space_station_2-v2.glb')
+
 const ORBIT_R     = 182
 const ORBIT_SPEED = 0.0025
 const ORBIT_INCL  = 0.18
