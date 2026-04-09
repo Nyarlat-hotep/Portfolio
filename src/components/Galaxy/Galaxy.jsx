@@ -629,9 +629,9 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
         {/* Controls - full 360° trackball rotation in all axes */}
         <TrackballControls
           ref={controlsRef}
-          rotateSpeed={2.0}
-          zoomSpeed={1.2}
-          panSpeed={0.8}
+          rotateSpeed={isTouch ? 0.7 : 2.0}
+          zoomSpeed={isTouch ? 0.5 : 1.2}
+          panSpeed={isTouch ? 0.3 : 0.8}
           minDistance={10}
           maxDistance={500}
           noPan={false}
