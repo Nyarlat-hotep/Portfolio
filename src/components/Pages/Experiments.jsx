@@ -20,7 +20,7 @@ function iso(gx, gy, gz, ox, oy, sc) {
 }
 
 // ── Grid ─────────────────────────────────────────────────────────────────
-const NODE_POS = [[-3, -3], [3, -3], [-3, 3], [3, 3]];
+const NODE_POS = [[-3, -3], [3, -3], [-3, 3], [3, 3], [0, -6]];
 
 function drawGrid(ctx, ox, oy, sc, gz = 0, lineAlpha = 0.10, nearAlpha = 0.22, withDetails = true) {
   const N = 7;
@@ -127,7 +127,7 @@ function drawDecorations(ctx, ox, oy, sc, t) {
   ctx.fillStyle = `rgba(255,119,0,${scanAlpha})`;
   ctx.fillText('SCANNING...', scanPos.sx, scanPos.sy);
   ctx.fillStyle = `rgba(255,119,0,${scanAlpha * 0.80})`;
-  ctx.fillText('// 4 ANOMALIES DETECTED', scanPos.sx, scanPos.sy + ss * 1.6);
+  ctx.fillText('// 5 ANOMALIES DETECTED', scanPos.sx, scanPos.sy + ss * 1.6);
 
   // Text: coordinate label near back-right corner
   const coordPos = iso(7.5, -7.5, 0.05, ox, oy, sc);
@@ -286,6 +286,81 @@ function drawSphere(ctx, gx, gy, ox, oy, sc, bob, hov) {
   ctx.restore();
 }
 
+// ── Kaleidoscope — SCI_FI_KALEIDOSCOPE ───────────────────────────────────
+function drawKaleidoscope(ctx, gx, gy, ox, oy, sc, bob, hov) {
+  const c = hov ? '0,255,106' : '150,200,30';
+  ctx.save();
+
+  // Outer spinning hex ring
+  const cx = iso(gx, gy, 1.0, ox, oy, sc);
+  const r1 = 1.1 * (TW / 2) * sc;
+  const r1y = 1.1 * (TH / 2) * sc;
+  const segments = 6;
+  for (let si = 0; si < segments; si++) {
+    const a0 = (si / segments) * Math.PI * 2;
+    const a1 = ((si + 1) / segments) * Math.PI * 2;
+    ctx.strokeStyle = `rgba(${c},${hov ? 0.75 : 0.50})`;
+    ctx.lineWidth = hov ? 1.2 : 0.9;
+    ctx.beginPath();
+    ctx.moveTo(cx.sx + Math.cos(a0) * r1, cx.sy - bob + Math.sin(a0) * r1y);
+    ctx.lineTo(cx.sx + Math.cos(a1) * r1, cx.sy - bob + Math.sin(a1) * r1y);
+    ctx.stroke();
+    // Spoke from center to each vertex
+    ctx.strokeStyle = `rgba(${c},${hov ? 0.35 : 0.20})`;
+    ctx.lineWidth = 0.6;
+    const mid = iso(gx, gy, 0.0, ox, oy, sc);
+    ctx.beginPath();
+    ctx.moveTo(mid.sx, mid.sy - bob);
+    ctx.lineTo(cx.sx + Math.cos(a0) * r1, cx.sy - bob + Math.sin(a0) * r1y);
+    ctx.stroke();
+  }
+
+  // Inner mirror diamond at base
+  const inner = 0.55;
+  const pts = [
+    iso(gx, gy - inner, 0.0, ox, oy, sc),
+    iso(gx + inner, gy, 0.0, ox, oy, sc),
+    iso(gx, gy + inner, 0.0, ox, oy, sc),
+    iso(gx - inner, gy, 0.0, ox, oy, sc),
+  ].map(p => ({ sx: p.sx, sy: p.sy - bob }));
+  ctx.strokeStyle = `rgba(${c},${hov ? 0.90 : 0.65})`;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(pts[0].sx, pts[0].sy);
+  pts.forEach(p => ctx.lineTo(p.sx, p.sy));
+  ctx.closePath();
+  ctx.stroke();
+
+  // Dashed inner-to-outer connecting lines
+  ctx.setLineDash([2, 4]);
+  ctx.strokeStyle = `rgba(${c},${hov ? 0.45 : 0.25})`;
+  ctx.lineWidth = 0.7;
+  for (let si = 0; si < segments; si++) {
+    const a = (si / segments) * Math.PI * 2;
+    const nearest = pts.reduce((best, p) => {
+      const dx = (cx.sx + Math.cos(a) * r1) - p.sx;
+      const dy = (cx.sy - bob + Math.sin(a) * r1y) - p.sy;
+      const db = (cx.sx + Math.cos(a) * r1) - best.sx;
+      const db2 = (cx.sy - bob + Math.sin(a) * r1y) - best.sy;
+      return dx*dx+dy*dy < db2*db2+db*db ? p : best;
+    }, pts[0]);
+    ctx.beginPath();
+    ctx.moveTo(nearest.sx, nearest.sy);
+    ctx.lineTo(cx.sx + Math.cos(a) * r1, cx.sy - bob + Math.sin(a) * r1y);
+    ctx.stroke();
+  }
+  ctx.setLineDash([]);
+
+  // Center dot
+  const mid = iso(gx, gy, 0.0, ox, oy, sc);
+  ctx.fillStyle = `rgba(${c},${hov ? 0.95 : 0.70})`;
+  ctx.beginPath();
+  ctx.arc(mid.sx, mid.sy - bob, 2.5 * sc, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.restore();
+}
+
 // ── Dome — DRAG_INTERACTION ───────────────────────────────────────────────
 function drawDome(ctx, gx, gy, ox, oy, sc, bob, hov) {
   const c = hov ? '0,255,106' : '150,200,30';
@@ -350,13 +425,14 @@ function drawParticles(ctx, t, cssW, cssH) {
 
 // ── Config ────────────────────────────────────────────────────────────────
 const EXPERIMENT_CONFIGS = [
-  { id:'VISUAL_ARCHIVE',    gridPos:[-3,-3], structureType:'crystal', bobPhase:0.0  },
-  { id:'CONDITION_BUILDER', gridPos:[ 3,-3], structureType:'cube',    bobPhase:1.57 },
-  { id:'DICE_ROLLER',       gridPos:[-3, 3], structureType:'sphere',  bobPhase:3.14 },
-  { id:'DRAG_INTERACTION',  gridPos:[ 3, 3], structureType:'dome',    bobPhase:4.71 },
+  { id:'VISUAL_ARCHIVE',         gridPos:[-3,-3], structureType:'crystal',       bobPhase:0.0  },
+  { id:'CONDITION_BUILDER',      gridPos:[ 3,-3], structureType:'cube',          bobPhase:1.57 },
+  { id:'DICE_ROLLER',            gridPos:[-3, 3], structureType:'sphere',        bobPhase:3.14 },
+  { id:'DRAG_INTERACTION',       gridPos:[ 3, 3], structureType:'dome',          bobPhase:4.71 },
+  { id:'SCI_FI_KALEIDOSCOPE',    gridPos:[ 0,-6], structureType:'kaleidoscope',  bobPhase:2.36 },
 ];
-const STRUCT_FNS = { crystal:drawCrystal, cube:drawCube, sphere:drawSphere, dome:drawDome };
-const STRUCT_H   = { crystal:1.25, cube:1.65, sphere:1.9, dome:1.28 };
+const STRUCT_FNS = { crystal:drawCrystal, cube:drawCube, sphere:drawSphere, dome:drawDome, kaleidoscope:drawKaleidoscope };
+const STRUCT_H   = { crystal:1.25, cube:1.65, sphere:1.9, dome:1.28, kaleidoscope:1.0 };
 
 const EXPERIMENT_META = [
   { id:'VISUAL_ARCHIVE',    title:'VISUAL_ARCHIVE',
@@ -371,6 +447,9 @@ const EXPERIMENT_META = [
   { id:'DRAG_INTERACTION',  title:'DRAG_INTERACTION',
     description:'How much time do you really spend? Drag to paint weekly screen time. Physics-driven dots pile up as the hours grow.',
     tags:['Interaction','Physics','Data Viz'], link:'https://nyarlat-hotep.github.io/drag-interaction/', isGallery:false },
+  { id:'SCI_FI_KALEIDOSCOPE', title:'SCI_FI_KALEIDOSCOPE',
+    description:'GLSL kaleidoscope with 12 generative patterns, meditative breathing modes, and full color control. Runs entirely on the GPU.',
+    tags:['GLSL','WebGL','Generative'], link:'https://nyarlat-hotep.github.io/sci-fi-kaleidoscope/', isGallery:false },
 ];
 
 // ── Main drawFrame ────────────────────────────────────────────────────────
