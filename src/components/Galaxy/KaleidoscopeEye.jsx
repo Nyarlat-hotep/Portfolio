@@ -1,133 +1,125 @@
 import { useRef, useMemo, useEffect } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
+import { createCircularParticleTexture, createNebulaSplatTexture } from '../../utils/threeUtils'
 
 const KALEIDOSCOPE_URL = 'https://nyarlat-hotep.github.io/sci-fi-kaleidoscope/'
 
-// ── Eye vertex shader (shared with edge overlay so facets warp together) ──
+// ── Soft cloud texture — same approach as NebulaBelt gas pockets ──────────
+let _eyeCloudTex = null
+function getEyeCloudTex() {
+  if (_eyeCloudTex) return _eyeCloudTex
+  const size = 256, c = size / 2
+  const canvas = document.createElement('canvas')
+  canvas.width = canvas.height = size
+  const ctx = canvas.getContext('2d')
+  const g = ctx.createRadialGradient(c, c, 0, c, c, c)
+  g.addColorStop(0,    'rgba(255,255,255,0.80)')
+  g.addColorStop(0.18, 'rgba(255,255,255,0.48)')
+  g.addColorStop(0.42, 'rgba(255,255,255,0.16)')
+  g.addColorStop(0.68, 'rgba(255,255,255,0.04)')
+  g.addColorStop(0.88, 'rgba(255,255,255,0.01)')
+  g.addColorStop(1.0,  'rgba(255,255,255,0.00)')
+  ctx.fillStyle = g
+  ctx.fillRect(0, 0, size, size)
+  return (_eyeCloudTex = new THREE.CanvasTexture(canvas))
+}
+
+// ── Eye: uses eye-space normal so pupil is always a perfect circle ─────────
 const eyeVertShader = `
   varying vec3 vNormal;
-  varying vec3 vBasePos;
-  uniform float uTime;
-  uniform float uMorphAmp;
   void main() {
-    float n = sin(position.x * 2.3 + uTime * 0.71) * cos(position.y * 1.8 - uTime * 0.53)
-            + cos(position.y * 3.1 + uTime * 0.40) * sin(position.z * 2.7 - uTime * 0.63)
-            + sin(position.z * 1.9 - uTime * 0.31) * cos(position.x * 3.5 + uTime * 0.41);
-    vec3 displaced = position + normal * n * uMorphAmp;
-    vNormal  = normalMatrix * normal;
-    vBasePos = position;
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(displaced, 1.0);
-  }
-`
-
-// ── Eye surface: pupil void + solar corona + warm kaleidoscope iris ────────
-const eyeFragShader = `
-  varying vec3 vNormal;
-  varying vec3 vBasePos;
-  uniform float uTime;
-  uniform float uGlow;
-
-  void main() {
-    vec2  p = vBasePos.xy;
-    float r = length(p);
-    float a = atan(p.y, p.x);
-
-    // ── Pupil — deep black void ─────────────────────────────────────────
-    float pupil = smoothstep(0.21, 0.16, r);
-
-    // ── Solar corona ring with jagged flare spikes ──────────────────────
-    float coronaR  = 0.24;
-    float ring     = smoothstep(0.055, 0.0, abs(r - coronaR));
-    // Two overlapping spike frequencies for irregular flare tips
-    float spikes   = pow(sin(a * 7.0  + uTime * 0.44) * 0.5 + 0.5, 2.2)
-                   * pow(sin(a * 11.0 - uTime * 0.31) * 0.5 + 0.5, 1.6);
-    float spikes2  = pow(sin(a * 4.0  + uTime * 0.22) * 0.5 + 0.5, 1.5) * 0.5;
-    float flareR   = coronaR + (spikes + spikes2 * 0.4) * 0.14;
-    float flare    = smoothstep(0.11, 0.0, abs(r - flareR)) * spikes;
-    float corona   = clamp(ring * 1.4 + flare * 0.85, 0.0, 1.0);
-
-    // ── Iris: kaleidoscope warp + swirl, orange/red/amber palette ───────
-    float warpA = a + sin(r * 5.2 + uTime * 0.37) * 0.48
-                    + cos(r * 3.1 - uTime * 0.21) * 0.18;
-    float rings = sin(r * 14.0  - uTime * 0.58 + warpA * 0.75) * 0.5 + 0.5;
-    float swirl = sin(warpA * 7.0 + r * 3.8 - uTime * 0.24)    * 0.5 + 0.5;
-    float ripple= sin(r * 28.0  - uTime * 1.1  + warpA * 0.3)  * 0.18;
-    float irisP = clamp(mix(rings, swirl, 0.45) + ripple, 0.0, 1.0);
-
-    vec3 deepRed  = vec3(0.32, 0.01, 0.00);
-    vec3 orange   = vec3(0.88, 0.30, 0.00);
-    vec3 amber    = vec3(1.00, 0.70, 0.08);
-    vec3 yellow   = vec3(1.00, 0.92, 0.38);
-    float ct      = sin(uTime * 0.11 + r * 1.9) * 0.5 + 0.5;
-    vec3 irisCol  = mix(mix(deepRed, orange, irisP), mix(amber, yellow, ct * irisP), ct * 0.45);
-
-    // ── Corona: bright amber-to-yellow-white ────────────────────────────
-    vec3 coronaCol = mix(vec3(0.96, 0.44, 0.0), vec3(1.0, 0.94, 0.55), corona);
-
-    // ── Compose ─────────────────────────────────────────────────────────
-    vec3 color = irisCol;
-    color = mix(color, coronaCol * 2.0, corona);    // overlay corona
-    color = mix(color, vec3(0.0), pupil);            // black out pupil
-
-    float edgeFade = smoothstep(0.62, 0.44, r);
-    color *= edgeFade;
-
-    // Warm fresnel rim
-    float fresnel = pow(1.0 - abs(normalize(vNormal).z), 2.2);
-    color += fresnel * vec3(0.92, 0.30, 0.0) * uGlow * 0.55;
-
-    gl_FragColor = vec4(color, clamp(edgeFade * 0.93 + fresnel * 0.07, 0.0, 1.0));
-  }
-`
-
-// ── Edge overlay: dim orange tint ─────────────────────────────────────────
-const edgeFragShader = `
-  void main() { gl_FragColor = vec4(0.80, 0.22, 0.0, 0.22); }
-`
-
-// ── Nebula lid: domain-warped organic cloud ────────────────────────────────
-const lidVertShader = `
-  varying vec2 vUv;
-  void main() {
-    vUv = uv;
+    vNormal = normalMatrix * normal;
     gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
   }
 `
 
-const lidFragShader = `
-  varying vec2 vUv;
+const eyeFragShader = `
+  varying vec3 vNormal;
   uniform float uTime;
-  uniform float uAlpha;
+  uniform float uGlow;
 
   void main() {
-    vec2 q = vUv - 0.5;
+    vec3  N     = normalize(vNormal);
+    float rView = length(N.xy);     // 0 = front pole, 1 = silhouette
+    float a     = atan(N.y, N.x);   // eye-space angle
 
-    // Domain warp — two octaves of sin noise
-    float wx = sin(q.x * 4.5 + q.y * 2.2 + uTime * 0.04) * 0.22
-             + sin(q.y * 7.0 - q.x * 3.0 - uTime * 0.06) * 0.11;
-    float wy = cos(q.y * 3.8 - q.x * 5.0 + uTime * 0.05) * 0.18
-             + cos(q.x * 6.0 + q.y * 4.5 - uTime * 0.04) * 0.10;
-    vec2 wq = q + vec2(wx, wy) * 0.18;
+    // ── Sclera: very dark, near-black with subtle warm brown-red hint ──
+    float st    = sin(rView * 6.0 + a * 2.0 + uTime * 0.07) * 0.5 + 0.5;
+    vec3 sclera = mix(vec3(0.025, 0.005, 0.001), vec3(0.065, 0.014, 0.002), st * 0.5);
 
-    float c1 = sin(wq.x * 6.0 + wq.y * 3.2 + uTime * 0.03) * 0.5 + 0.5;
-    float c2 = sin(wq.x * 9.5 - wq.y * 4.8 - uTime * 0.05) * 0.5 + 0.5;
-    float c3 = sin(wq.x * 3.2 - wq.y * 6.5 + uTime * 0.04) * 0.5 + 0.5;
-    float cloud = c1 * c2 * 0.7 + c3 * 0.3;
+    // ── Pupil: hard black void ─────────────────────────────────────────
+    float pupilR = 0.285;
+    float pupil  = smoothstep(pupilR + 0.018, pupilR, rView);
 
-    // Elliptical shape mask — wide, not tall; fades all edges
-    float ellipse = length(q * vec2(1.0, 2.2));
-    float mask    = smoothstep(0.52, 0.10, ellipse)
-                  * smoothstep(0.50, 0.22, abs(q.x));
+    // ── Corona ring with irregular plasma spike/flares ─────────────────
+    // Multiple sin/cos frequencies produce organic, non-repeating flare tips
+    float cR  = 0.35;
+    float spk1 = pow(max(0.0, sin(a * 7.0  + uTime * 0.38)), 1.9) * 0.16;
+    float spk2 = pow(max(0.0, sin(a * 13.0 - uTime * 0.26)), 2.6) * 0.10;
+    float spk3 = pow(max(0.0, cos(a * 5.0  + uTime * 0.20)), 1.7) * 0.13;
+    float spk4 = pow(max(0.0, sin(a * 9.0  - uTime * 0.31)), 2.2) * 0.08;
+    float spk5 = pow(max(0.0, cos(a * 17.0 + uTime * 0.17)), 3.3) * 0.05;
+    float flareR  = cR + spk1 + spk2 + spk3 + spk4 + spk5;
+    float flare   = smoothstep(0.075, 0.0, abs(rView - flareR));
+    float baseRng = smoothstep(0.032, 0.0, abs(rView - cR));
 
-    vec3 nebCol = mix(vec3(0.12, 0.02, 0.0), vec3(0.52, 0.14, 0.01), cloud * 0.85);
-    // Slight orange rim glow
-    nebCol += smoothstep(0.35, 0.10, ellipse) * vec3(0.30, 0.08, 0.0) * cloud;
+    // Warm glow bloom filling space between pupil and corona
+    float bloom = smoothstep(cR + 0.16, cR - 0.01, rView)
+                * smoothstep(pupilR - 0.005, pupilR + 0.04, rView) * 0.26;
 
-    float alpha = cloud * mask * uAlpha;
-    gl_FragColor = vec4(nebCol, clamp(alpha, 0.0, 1.0));
+    float corona = clamp(flare * 1.5 + baseRng * 1.9 + bloom, 0.0, 1.0)
+                 * (1.0 - pupil);
+
+    // Corona color: bright white-yellow tips → orange base
+    vec3 cCol = mix(vec3(0.90, 0.48, 0.04), vec3(1.0, 0.82, 0.38), corona);
+    cCol = mix(cCol, vec3(1.0, 0.98, 0.85), flare * 0.65);  // white-hot tips
+
+    // ── Compose ──────────────────────────────────────────────────────────
+    vec3 color = sclera;
+    color = mix(color, cCol * (2.2 + uGlow * 0.5), corona);
+    color = mix(color, vec3(0.0), pupil);
+
+    float fresnel = pow(max(0.0, 1.0 - N.z), 3.5);
+    color += fresnel * vec3(0.16, 0.04, 0.0) * 0.20;
+
+    gl_FragColor = vec4(color, 1.0);
   }
 `
+
+// ── Lid particle + sprite generators ─────────────────────────────────────
+
+// sign +1 = upper, -1 = lower
+// xSpread: half-width, yBase: min distance from sphere center,
+// yArch: extra height at x=0 (parabola), yScatter: random vertical spread
+function makeLidGeo(count, sign, xSpread, yBase, yArch, yScatter, zSpread) {
+  const pos = new Float32Array(count * 3)
+  for (let i = 0; i < count; i++) {
+    const t    = (Math.random() - 0.5) * 2
+    const x    = t * xSpread + (Math.random() - 0.5) * xSpread * 0.18
+    const arch = (1.0 - Math.min(1, t * t * 0.65)) * yArch
+    const y    = sign * (yBase + arch + Math.random() * yScatter)
+    const z    = (Math.random() - 0.5) * zSpread
+    pos[i * 3] = x;  pos[i * 3 + 1] = y;  pos[i * 3 + 2] = z
+  }
+  const g = new THREE.BufferGeometry()
+  g.setAttribute('position', new THREE.BufferAttribute(pos, 3))
+  return g
+}
+
+// Large cloud sprites — like NebulaBelt knots but shaped as eyelid arc
+function makeLidSprites(count, sign, xSpread, yBase, yArch, yScatter, zSpread, sMin, sMax) {
+  return Array.from({ length: count }, () => {
+    const t    = (Math.random() - 0.5) * 2
+    const x    = t * xSpread + (Math.random() - 0.5) * xSpread * 0.2
+    const arch = (1.0 - Math.min(1, t * t * 0.65)) * yArch
+    const y    = sign * (yBase + arch + Math.random() * yScatter)
+    const z    = (Math.random() - 0.5) * zSpread
+    const s    = sMin + Math.random() * (sMax - sMin)
+    const op   = 0.09 + Math.random() * 0.30   // 0.09–0.39
+    return { pos: [x, y, z], s, op }
+  })
+}
 
 export default function KaleidoscopeEye({ onHover }) {
   const meshRef   = useRef()
@@ -137,28 +129,36 @@ export default function KaleidoscopeEye({ onHover }) {
   const _worldPos = useRef(new THREE.Vector3())
   const _projPos  = useRef(new THREE.Vector3())
 
-  const geo          = useMemo(() => new THREE.IcosahedronGeometry(1.0, 2), [])
-  const edgesGeo     = useMemo(() => new THREE.EdgesGeometry(geo), [geo])
-  const upperLidGeo  = useMemo(() => new THREE.PlaneGeometry(4.0, 2.2, 1, 1), [])
-  const lowerLidGeo  = useMemo(() => new THREE.PlaneGeometry(3.5, 1.8, 1, 1), [])
+  const sphereGeo = useMemo(() => new THREE.SphereGeometry(1.0, 64, 64), [])
+  const circTex   = useMemo(() => createCircularParticleTexture(), [])
+  const splatTex  = useMemo(() => createNebulaSplatTexture(), [])
+  const cloudTex  = useMemo(() => getEyeCloudTex(), [])
+
+  // ── Upper lid (more massive, like the reference) ──────────────────────
+  // xSpread, yBase, yArch, yScatter, zSpread
+  const uFine    = useMemo(() => makeLidGeo(240, +1, 2.8, 1.10, 0.85, 1.00, 1.10), [])
+  const uMed     = useMemo(() => makeLidGeo( 80, +1, 2.6, 1.05, 0.90, 0.90, 1.00), [])
+  const uBlob    = useMemo(() => makeLidGeo( 30, +1, 2.4, 1.00, 0.95, 0.80, 0.90), [])
+  // Large gas pocket sprites — sizes 2.5–8.0 world units (like NebulaBelt 18–46 at 5x distance)
+  const uSprites = useMemo(
+    () => makeLidSprites(24, +1, 2.5, 1.20, 0.80, 0.95, 1.00, 2.5, 8.0), []
+  )
+
+  // ── Lower lid (slightly smaller) ──────────────────────────────────────
+  const lFine    = useMemo(() => makeLidGeo(170, -1, 2.3, 1.00, 0.60, 0.75, 0.90), [])
+  const lMed     = useMemo(() => makeLidGeo( 55, -1, 2.1, 0.95, 0.65, 0.65, 0.80), [])
+  const lBlob    = useMemo(() => makeLidGeo( 20, -1, 1.9, 0.90, 0.65, 0.55, 0.75), [])
+  const lSprites = useMemo(
+    () => makeLidSprites(17, -1, 2.1, 1.10, 0.65, 0.75, 0.85, 2.0, 6.5), []
+  )
+
+  const eyeUniforms = useRef({ uTime: { value: 0 }, uGlow: { value: 0.5 } })
 
   useEffect(() => () => {
-    geo.dispose(); edgesGeo.dispose()
-    upperLidGeo.dispose(); lowerLidGeo.dispose()
-  }, [geo, edgesGeo, upperLidGeo, lowerLidGeo])
-
-  // Eye + edge share uniforms — one useFrame write updates both materials
-  const eyeUniforms = useRef({
-    uTime:     { value: 0 },
-    uMorphAmp: { value: 0.22 },
-    uGlow:     { value: 0.5 },
-  })
-
-  // Lid uniforms — shared time so lids animate together
-  const lidUniforms = useRef({
-    uTime:  { value: 0 },
-    uAlpha: { value: 0.80 },
-  })
+    sphereGeo.dispose()
+    uFine.dispose(); uMed.dispose(); uBlob.dispose()
+    lFine.dispose(); lMed.dispose(); lBlob.dispose()
+  }, [sphereGeo, uFine, uMed, uBlob, lFine, lMed, lBlob])
 
   const handlePointerEnter = () => {
     hoverRef.current = true
@@ -179,26 +179,20 @@ export default function KaleidoscopeEye({ onHover }) {
 
   useFrame((_, delta) => {
     if (!meshRef.current) return
-    meshRef.current.rotation.y += 0.035 * delta
-
+    meshRef.current.rotation.y += 0.025 * delta
     const targetGlow = hoverRef.current ? 1.0 : 0.5
     glowRef.current += (targetGlow - glowRef.current) * Math.min(1, delta * 3)
-
-    const e = eyeUniforms.current
-    e.uTime.value     += delta
-    e.uGlow.value      = glowRef.current
-    e.uMorphAmp.value  = 0.18 + glowRef.current * 0.09
-
-    lidUniforms.current.uTime.value += delta
+    eyeUniforms.current.uTime.value += delta
+    eyeUniforms.current.uGlow.value  = glowRef.current
   })
 
   return (
-    <group position={[25, 10, -18]} scale={[2.0, 1.3, 1.0]}>
+    <group position={[25, 10, -18]}>
 
-      {/* Crystal eye surface — iris, corona, pupil */}
+      {/* ── Eye sphere: dark sclera, black pupil, solar corona ──────── */}
       <mesh
         ref={meshRef}
-        geometry={geo}
+        geometry={sphereGeo}
         onClick={() => window.open(KALEIDOSCOPE_URL, '_blank')}
         onPointerEnter={handlePointerEnter}
         onPointerLeave={handlePointerLeave}
@@ -207,45 +201,80 @@ export default function KaleidoscopeEye({ onHover }) {
           vertexShader={eyeVertShader}
           fragmentShader={eyeFragShader}
           uniforms={eyeUniforms.current}
-          transparent
-          side={THREE.DoubleSide}
-          depthWrite={false}
+          side={THREE.FrontSide}
+          depthWrite={true}
         />
       </mesh>
 
-      {/* Crystal facet edges — morph with eye, orange tint */}
-      <lineSegments geometry={edgesGeo}>
-        <shaderMaterial
-          vertexShader={eyeVertShader}
-          fragmentShader={edgeFragShader}
-          uniforms={eyeUniforms.current}
-          transparent
-        />
-      </lineSegments>
+      {/* ════════════════════════════════════════════════════════════════
+          UPPER LID — four layers, large sprites dominate the look
+          ════════════════════════════════════════════════════════════════ */}
 
-      {/* Upper nebula lid — dark wisps above, suggest eyelid from front */}
-      <mesh geometry={upperLidGeo} position={[0, 1.55, 0.15]}>
-        <shaderMaterial
-          vertexShader={lidVertShader}
-          fragmentShader={lidFragShader}
-          uniforms={lidUniforms.current}
-          transparent
-          depthWrite={false}
-          side={THREE.DoubleSide}
-        />
-      </mesh>
+      {/* Fine sparkle base */}
+      <points geometry={uFine}>
+        <pointsMaterial map={circTex} color="#8b3000"
+          size={0.08} sizeAttenuation
+          transparent depthWrite={false}
+          blending={THREE.AdditiveBlending} opacity={0.55} alphaTest={0.01} />
+      </points>
 
-      {/* Lower nebula lid — smaller wisps below */}
-      <mesh geometry={lowerLidGeo} position={[0, -1.35, 0.15]}>
-        <shaderMaterial
-          vertexShader={lidVertShader}
-          fragmentShader={lidFragShader}
-          uniforms={lidUniforms.current}
-          transparent
-          depthWrite={false}
-          side={THREE.DoubleSide}
-        />
-      </mesh>
+      {/* Medium haze */}
+      <points geometry={uMed}>
+        <pointsMaterial map={circTex} color="#7a2600"
+          size={0.45} sizeAttenuation
+          transparent depthWrite={false}
+          blending={THREE.AdditiveBlending} opacity={0.28} alphaTest={0.01} />
+      </points>
+
+      {/* Soft volumetric blobs */}
+      <points geometry={uBlob}>
+        <pointsMaterial map={splatTex} color="#5a1600"
+          size={1.80} sizeAttenuation
+          transparent depthWrite={false}
+          blending={THREE.AdditiveBlending} opacity={0.20} alphaTest={0.005} />
+      </points>
+
+      {/* Large gas cloud sprites — these are the dominant visual, like NebulaBelt knots */}
+      {uSprites.map((s, i) => (
+        <sprite key={`u${i}`} position={s.pos} scale={[s.s, s.s, 1]}>
+          <spriteMaterial map={cloudTex} color="#5c1800"
+            transparent opacity={s.op}
+            blending={THREE.AdditiveBlending} depthWrite={false} />
+        </sprite>
+      ))}
+
+      {/* ════════════════════════════════════════════════════════════════
+          LOWER LID
+          ════════════════════════════════════════════════════════════════ */}
+
+      <points geometry={lFine}>
+        <pointsMaterial map={circTex} color="#7a2600"
+          size={0.07} sizeAttenuation
+          transparent depthWrite={false}
+          blending={THREE.AdditiveBlending} opacity={0.48} alphaTest={0.01} />
+      </points>
+
+      <points geometry={lMed}>
+        <pointsMaterial map={circTex} color="#6b2000"
+          size={0.40} sizeAttenuation
+          transparent depthWrite={false}
+          blending={THREE.AdditiveBlending} opacity={0.24} alphaTest={0.01} />
+      </points>
+
+      <points geometry={lBlob}>
+        <pointsMaterial map={splatTex} color="#4a1200"
+          size={1.50} sizeAttenuation
+          transparent depthWrite={false}
+          blending={THREE.AdditiveBlending} opacity={0.17} alphaTest={0.005} />
+      </points>
+
+      {lSprites.map((s, i) => (
+        <sprite key={`l${i}`} position={s.pos} scale={[s.s, s.s, 1]}>
+          <spriteMaterial map={cloudTex} color="#4c1400"
+            transparent opacity={s.op}
+            blending={THREE.AdditiveBlending} depthWrite={false} />
+        </sprite>
+      ))}
 
     </group>
   )
