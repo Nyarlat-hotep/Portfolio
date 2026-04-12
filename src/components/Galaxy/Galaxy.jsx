@@ -18,6 +18,7 @@ import DistantGalaxy from './DistantGalaxy';
 import GravityField from './GravityField';
 import Asteroid from './Asteroid';
 import Monolith from './Monolith';
+import KaleidoscopeEye from './KaleidoscopeEye'
 import BottomNav from '../Navigation/BottomNav';
 import HUDFrame from '../UI/HUDFrame';
 import LightspeedTransition from '../UI/LightspeedTransition';
@@ -664,6 +665,9 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
 
         {/* Alien monolith — floating above planet cluster */}
         <Monolith position={[2, 35, -3]} onOpen={() => setShowSnake(true)} />
+
+        {/* Prismatic Sigil — morphing crystal eye, links to kaleidoscope */}
+        <KaleidoscopeEye onHover={handleHover} />
 
         {/* Daily constellation — opposite side of planet cluster from Cosmic Void */}
         <Constellation position={[-28, 18, -55]} onSelect={handleConstellationSelect} onHover={handleHover} />
