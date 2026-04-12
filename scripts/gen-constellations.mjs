@@ -123,11 +123,33 @@ async function main() {
     }
 
     // ── Handle RA wrap-around (constellations crossing 0h/360° boundary) ──────
-    const ras    = rawStars.map(s => s[0]);
-    const raSpan = Math.max(...ras) - Math.min(...ras);
-    const stars  = raSpan > 180
-      ? rawStars.map(([ra, dec]) => [ra < 180 ? ra + 360 : ra, dec])
-      : rawStars;
+    // Use circular mean (sin/cos decomposition) for a wrap-safe initial centre,
+    // then iteratively refine until stable.  The old raSpan>180 heuristic failed
+    // for constellations where wrapped outliers pulled the arithmetic mean off-centre.
+    function circularMeanRA(pts) {
+      const sinSum = pts.reduce((s, p) => s + Math.sin(p[0] * Math.PI / 180), 0);
+      const cosSum = pts.reduce((s, p) => s + Math.cos(p[0] * Math.PI / 180), 0);
+      let m = Math.atan2(sinSum, cosSum) * 180 / Math.PI;
+      if (m < 0) m += 360;
+      return m;
+    }
+    function unwrapToCenter(pts, center) {
+      return pts.map(([ra, dec]) => {
+        let r = ra;
+        while (r - center >  180) r -= 360;
+        while (r - center < -180) r += 360;
+        return [r, dec];
+      });
+    }
+    let unwrapped = rawStars;
+    for (let iter = 0; iter < 8; iter++) {
+      const center = circularMeanRA(unwrapped);
+      const next   = unwrapToCenter(unwrapped, center);
+      const moved  = next.some((p, i) => Math.abs(p[0] - unwrapped[i][0]) > 0.001);
+      unwrapped = next;
+      if (!moved) break;
+    }
+    const stars = unwrapped;
 
     // ── Centroid ───────────────────────────────────────────────────────────────
     const raCenter  = stars.reduce((s, p) => s + p[0], 0) / stars.length;
