@@ -48,36 +48,49 @@ const eyeFragShader = `
     float st    = sin(rView * 6.0 + a * 2.0 + uTime * 0.07) * 0.5 + 0.5;
     vec3 sclera = mix(vec3(0.025, 0.005, 0.001), vec3(0.065, 0.014, 0.002), st * 0.5);
 
-    // ── Pupil: hard black void ─────────────────────────────────────────
-    float pupilR = 0.285;
-    float pupil  = smoothstep(pupilR + 0.018, pupilR, rView);
+    // ── Three distinct rings with clear dark sclera gaps between them ─────
+    // pupil (black) | gap | inner ring | gap | corona
+    // rView:  0     0.20  0.20–0.28    0.28–0.38  0.38  0.38–0.52  0.52+
 
-    // ── Corona ring with irregular plasma spike/flares ─────────────────
-    // Multiple sin/cos frequencies produce organic, non-repeating flare tips
-    float cR  = 0.35;
-    float spk1 = pow(max(0.0, sin(a * 7.0  + uTime * 0.38)), 1.9) * 0.16;
-    float spk2 = pow(max(0.0, sin(a * 13.0 - uTime * 0.26)), 2.6) * 0.10;
-    float spk3 = pow(max(0.0, cos(a * 5.0  + uTime * 0.20)), 1.7) * 0.13;
-    float spk4 = pow(max(0.0, sin(a * 9.0  - uTime * 0.31)), 2.2) * 0.08;
-    float spk5 = pow(max(0.0, cos(a * 17.0 + uTime * 0.17)), 3.3) * 0.05;
+    float pupilR = 0.20;
+    float pupil  = smoothstep(pupilR + 0.012, pupilR, rView);
+
+    // Inner ring — tight, clean, sits in the dark gap
+    float innerR   = 0.30;
+    float innerRing = smoothstep(0.018, 0.0, abs(rView - innerR))
+                    * (1.0 - pupil);
+
+    // Outer corona with flare spikes — well separated from inner ring
+    float cR  = 0.50;
+    float spk1 = pow(max(0.0, sin(a * 7.0  + uTime * 0.38)), 1.9) * 0.14;
+    float spk2 = pow(max(0.0, sin(a * 13.0 - uTime * 0.26)), 2.6) * 0.09;
+    float spk3 = pow(max(0.0, cos(a * 5.0  + uTime * 0.20)), 1.7) * 0.11;
+    float spk4 = pow(max(0.0, sin(a * 9.0  - uTime * 0.31)), 2.2) * 0.07;
+    float spk5 = pow(max(0.0, cos(a * 17.0 + uTime * 0.17)), 3.3) * 0.04;
     float flareR  = cR + spk1 + spk2 + spk3 + spk4 + spk5;
-    float flare   = smoothstep(0.075, 0.0, abs(rView - flareR));
-    float baseRng = smoothstep(0.032, 0.0, abs(rView - cR));
+    float flare   = smoothstep(0.065, 0.0, abs(rView - flareR));
+    float baseRng = smoothstep(0.028, 0.0, abs(rView - cR));
+    float corona  = clamp(flare * 1.5 + baseRng * 1.8, 0.0, 1.0)
+                  * (1.0 - pupil);
 
-    // Warm glow bloom filling space between pupil and corona
-    float bloom = smoothstep(cR + 0.16, cR - 0.01, rView)
-                * smoothstep(pupilR - 0.005, pupilR + 0.04, rView) * 0.26;
-
-    float corona = clamp(flare * 1.5 + baseRng * 1.9 + bloom, 0.0, 1.0)
-                 * (1.0 - pupil);
-
-    // Corona color: deep orange base → amber tips (no white)
+    // Corona color: deep orange base → amber tips
     vec3 cCol = mix(vec3(0.55, 0.14, 0.01), vec3(0.92, 0.42, 0.03), corona);
-    cCol = mix(cCol, vec3(1.0, 0.68, 0.12), flare * 0.55);  // amber tips, not white
+    cCol = mix(cCol, vec3(1.0, 0.68, 0.12), flare * 0.55);
+
+    // ── Hazy mid ring — wide soft glow between inner ring and corona ──────
+    // Wide smoothstep = soft edge, not a hard stroke. Animated pulse.
+    float midR    = 0.40;
+    float midPulse = 1.0 + sin(uTime * 0.55) * 0.04;  // subtle breathe
+    float midHaze = smoothstep(0.10, 0.0, abs(rView - midR * midPulse))
+                  * (1.0 - pupil)
+                  * smoothstep(innerR + 0.02, innerR + 0.06, rView)  // fade in after inner ring
+                  * smoothstep(cR - 0.02, cR - 0.07, rView);         // fade out before corona
 
     // ── Compose ──────────────────────────────────────────────────────────
     vec3 color = sclera;
     color = mix(color, cCol * (1.5 + uGlow * 0.4), corona);
+    color += innerRing * vec3(0.92, 0.38, 0.02) * 1.8;
+    color += midHaze   * vec3(0.75, 0.22, 0.01) * 0.55;  // dim, hazy, orange
     color = mix(color, vec3(0.0), pupil);
 
     float fresnel = pow(max(0.0, 1.0 - N.z), 3.5);
@@ -136,19 +149,20 @@ export default function KaleidoscopeEye({ onHover }) {
 
   // ── Upper lid (more massive, like the reference) ──────────────────────
   // xSpread, yBase, yArch, yScatter, zSpread
-  const uFine    = useMemo(() => makeLidGeo(280, +1, 3.8, 1.10, 0.85, 1.00, 1.10), [])
-  const uMed     = useMemo(() => makeLidGeo( 95, +1, 3.6, 1.05, 0.90, 0.90, 1.00), [])
-  const uBlob    = useMemo(() => makeLidGeo( 36, +1, 3.3, 1.00, 0.95, 0.80, 0.90), [])
+  // yArch bumped from ~0.85-0.95 → 1.40-1.55 for more pronounced curve
+  const uFine    = useMemo(() => makeLidGeo(280, +1, 3.8, 1.10, 2.20, 1.00, 1.10), [])
+  const uMed     = useMemo(() => makeLidGeo( 95, +1, 3.6, 1.05, 2.25, 0.90, 1.00), [])
+  const uBlob    = useMemo(() => makeLidGeo( 36, +1, 3.3, 1.00, 2.30, 0.80, 0.90), [])
   const uSprites = useMemo(
-    () => makeLidSprites(28, +1, 3.5, 1.20, 0.80, 0.95, 1.00, 2.5, 8.0), []
+    () => makeLidSprites(28, +1, 3.5, 1.20, 2.15, 0.95, 1.00, 2.5, 8.0), []
   )
 
   // ── Lower lid (slightly smaller) ──────────────────────────────────────
-  const lFine    = useMemo(() => makeLidGeo(200, -1, 3.2, 1.00, 0.60, 0.75, 0.90), [])
-  const lMed     = useMemo(() => makeLidGeo( 65, -1, 3.0, 0.95, 0.65, 0.65, 0.80), [])
-  const lBlob    = useMemo(() => makeLidGeo( 24, -1, 2.8, 0.90, 0.65, 0.55, 0.75), [])
+  const lFine    = useMemo(() => makeLidGeo(200, -1, 3.2, 1.00, 1.65, 0.75, 0.90), [])
+  const lMed     = useMemo(() => makeLidGeo( 65, -1, 3.0, 0.95, 1.70, 0.65, 0.80), [])
+  const lBlob    = useMemo(() => makeLidGeo( 24, -1, 2.8, 0.90, 1.75, 0.55, 0.75), [])
   const lSprites = useMemo(
-    () => makeLidSprites(20, -1, 3.0, 1.10, 0.65, 0.75, 0.85, 2.0, 6.5), []
+    () => makeLidSprites(20, -1, 3.0, 1.10, 1.60, 0.75, 0.85, 2.0, 6.5), []
   )
 
   const eyeUniforms = useRef({ uTime: { value: 0 }, uGlow: { value: 0.5 } })
@@ -214,7 +228,15 @@ export default function KaleidoscopeEye({ onHover }) {
         <pointsMaterial map={circTex} color="#8b3000"
           size={0.08} sizeAttenuation
           transparent depthWrite={false}
-          blending={THREE.AdditiveBlending} opacity={0.55} alphaTest={0.01} />
+          blending={THREE.AdditiveBlending} opacity={0.22} alphaTest={0.01} />
+      </points>
+
+      {/* Orange glowing particles scattered through upper haze */}
+      <points geometry={uFine}>
+        <pointsMaterial map={circTex} color="#ff5500"
+          size={0.18} sizeAttenuation
+          transparent depthWrite={false}
+          blending={THREE.AdditiveBlending} opacity={0.20} alphaTest={0.01} />
       </points>
 
       {/* Medium haze */}
@@ -222,7 +244,15 @@ export default function KaleidoscopeEye({ onHover }) {
         <pointsMaterial map={circTex} color="#7a2600"
           size={0.45} sizeAttenuation
           transparent depthWrite={false}
-          blending={THREE.AdditiveBlending} opacity={0.28} alphaTest={0.01} />
+          blending={THREE.AdditiveBlending} opacity={0.12} alphaTest={0.01} />
+      </points>
+
+      {/* Orange medium haze */}
+      <points geometry={uMed}>
+        <pointsMaterial map={circTex} color="#cc4400"
+          size={0.65} sizeAttenuation
+          transparent depthWrite={false}
+          blending={THREE.AdditiveBlending} opacity={0.14} alphaTest={0.01} />
       </points>
 
       {/* Soft volumetric blobs */}
@@ -230,14 +260,23 @@ export default function KaleidoscopeEye({ onHover }) {
         <pointsMaterial map={splatTex} color="#5a1600"
           size={1.80} sizeAttenuation
           transparent depthWrite={false}
-          blending={THREE.AdditiveBlending} opacity={0.20} alphaTest={0.005} />
+          blending={THREE.AdditiveBlending} opacity={0.10} alphaTest={0.005} />
       </points>
 
-      {/* Large gas cloud sprites — these are the dominant visual, like NebulaBelt knots */}
+      {/* Large gas cloud sprites */}
       {uSprites.map((s, i) => (
         <sprite key={`u${i}`} position={s.pos} scale={[s.s, s.s, 1]}>
           <spriteMaterial map={cloudTex} color="#5c1800"
-            transparent opacity={s.op}
+            transparent opacity={s.op * 0.55}
+            blending={THREE.AdditiveBlending} depthWrite={false} />
+        </sprite>
+      ))}
+
+      {/* Orange sprite accents in upper lid */}
+      {uSprites.filter((_, i) => i % 3 === 0).map((s, i) => (
+        <sprite key={`uo${i}`} position={s.pos} scale={[s.s * 0.45, s.s * 0.45, 1]}>
+          <spriteMaterial map={cloudTex} color="#ff4400"
+            transparent opacity={s.op * 0.30}
             blending={THREE.AdditiveBlending} depthWrite={false} />
         </sprite>
       ))}
@@ -250,27 +289,52 @@ export default function KaleidoscopeEye({ onHover }) {
         <pointsMaterial map={circTex} color="#7a2600"
           size={0.07} sizeAttenuation
           transparent depthWrite={false}
-          blending={THREE.AdditiveBlending} opacity={0.48} alphaTest={0.01} />
+          blending={THREE.AdditiveBlending} opacity={0.19} alphaTest={0.01} />
+      </points>
+
+      {/* Orange glowing particles in lower haze */}
+      <points geometry={lFine}>
+        <pointsMaterial map={circTex} color="#ff5500"
+          size={0.16} sizeAttenuation
+          transparent depthWrite={false}
+          blending={THREE.AdditiveBlending} opacity={0.18} alphaTest={0.01} />
       </points>
 
       <points geometry={lMed}>
         <pointsMaterial map={circTex} color="#6b2000"
           size={0.40} sizeAttenuation
           transparent depthWrite={false}
-          blending={THREE.AdditiveBlending} opacity={0.24} alphaTest={0.01} />
+          blending={THREE.AdditiveBlending} opacity={0.10} alphaTest={0.01} />
+      </points>
+
+      {/* Orange medium haze lower */}
+      <points geometry={lMed}>
+        <pointsMaterial map={circTex} color="#cc4400"
+          size={0.58} sizeAttenuation
+          transparent depthWrite={false}
+          blending={THREE.AdditiveBlending} opacity={0.12} alphaTest={0.01} />
       </points>
 
       <points geometry={lBlob}>
         <pointsMaterial map={splatTex} color="#4a1200"
           size={1.50} sizeAttenuation
           transparent depthWrite={false}
-          blending={THREE.AdditiveBlending} opacity={0.17} alphaTest={0.005} />
+          blending={THREE.AdditiveBlending} opacity={0.08} alphaTest={0.005} />
       </points>
 
       {lSprites.map((s, i) => (
         <sprite key={`l${i}`} position={s.pos} scale={[s.s, s.s, 1]}>
           <spriteMaterial map={cloudTex} color="#4c1400"
-            transparent opacity={s.op}
+            transparent opacity={s.op * 0.55}
+            blending={THREE.AdditiveBlending} depthWrite={false} />
+        </sprite>
+      ))}
+
+      {/* Orange sprite accents in lower lid */}
+      {lSprites.filter((_, i) => i % 3 === 0).map((s, i) => (
+        <sprite key={`lo${i}`} position={s.pos} scale={[s.s * 0.40, s.s * 0.40, 1]}>
+          <spriteMaterial map={cloudTex} color="#ff4400"
+            transparent opacity={s.op * 0.28}
             blending={THREE.AdditiveBlending} depthWrite={false} />
         </sprite>
       ))}
