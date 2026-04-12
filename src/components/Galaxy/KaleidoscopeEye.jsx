@@ -71,13 +71,13 @@ const eyeFragShader = `
     float corona = clamp(flare * 1.5 + baseRng * 1.9 + bloom, 0.0, 1.0)
                  * (1.0 - pupil);
 
-    // Corona color: bright white-yellow tips → orange base
-    vec3 cCol = mix(vec3(0.90, 0.48, 0.04), vec3(1.0, 0.82, 0.38), corona);
-    cCol = mix(cCol, vec3(1.0, 0.98, 0.85), flare * 0.65);  // white-hot tips
+    // Corona color: deep orange base → amber tips (no white)
+    vec3 cCol = mix(vec3(0.55, 0.14, 0.01), vec3(0.92, 0.42, 0.03), corona);
+    cCol = mix(cCol, vec3(1.0, 0.68, 0.12), flare * 0.55);  // amber tips, not white
 
     // ── Compose ──────────────────────────────────────────────────────────
     vec3 color = sclera;
-    color = mix(color, cCol * (2.2 + uGlow * 0.5), corona);
+    color = mix(color, cCol * (1.5 + uGlow * 0.4), corona);
     color = mix(color, vec3(0.0), pupil);
 
     float fresnel = pow(max(0.0, 1.0 - N.z), 3.5);
@@ -136,20 +136,19 @@ export default function KaleidoscopeEye({ onHover }) {
 
   // ── Upper lid (more massive, like the reference) ──────────────────────
   // xSpread, yBase, yArch, yScatter, zSpread
-  const uFine    = useMemo(() => makeLidGeo(240, +1, 2.8, 1.10, 0.85, 1.00, 1.10), [])
-  const uMed     = useMemo(() => makeLidGeo( 80, +1, 2.6, 1.05, 0.90, 0.90, 1.00), [])
-  const uBlob    = useMemo(() => makeLidGeo( 30, +1, 2.4, 1.00, 0.95, 0.80, 0.90), [])
-  // Large gas pocket sprites — sizes 2.5–8.0 world units (like NebulaBelt 18–46 at 5x distance)
+  const uFine    = useMemo(() => makeLidGeo(280, +1, 3.8, 1.10, 0.85, 1.00, 1.10), [])
+  const uMed     = useMemo(() => makeLidGeo( 95, +1, 3.6, 1.05, 0.90, 0.90, 1.00), [])
+  const uBlob    = useMemo(() => makeLidGeo( 36, +1, 3.3, 1.00, 0.95, 0.80, 0.90), [])
   const uSprites = useMemo(
-    () => makeLidSprites(24, +1, 2.5, 1.20, 0.80, 0.95, 1.00, 2.5, 8.0), []
+    () => makeLidSprites(28, +1, 3.5, 1.20, 0.80, 0.95, 1.00, 2.5, 8.0), []
   )
 
   // ── Lower lid (slightly smaller) ──────────────────────────────────────
-  const lFine    = useMemo(() => makeLidGeo(170, -1, 2.3, 1.00, 0.60, 0.75, 0.90), [])
-  const lMed     = useMemo(() => makeLidGeo( 55, -1, 2.1, 0.95, 0.65, 0.65, 0.80), [])
-  const lBlob    = useMemo(() => makeLidGeo( 20, -1, 1.9, 0.90, 0.65, 0.55, 0.75), [])
+  const lFine    = useMemo(() => makeLidGeo(200, -1, 3.2, 1.00, 0.60, 0.75, 0.90), [])
+  const lMed     = useMemo(() => makeLidGeo( 65, -1, 3.0, 0.95, 0.65, 0.65, 0.80), [])
+  const lBlob    = useMemo(() => makeLidGeo( 24, -1, 2.8, 0.90, 0.65, 0.55, 0.75), [])
   const lSprites = useMemo(
-    () => makeLidSprites(17, -1, 2.1, 1.10, 0.65, 0.75, 0.85, 2.0, 6.5), []
+    () => makeLidSprites(20, -1, 3.0, 1.10, 0.65, 0.75, 0.85, 2.0, 6.5), []
   )
 
   const eyeUniforms = useRef({ uTime: { value: 0 }, uGlow: { value: 0.5 } })
