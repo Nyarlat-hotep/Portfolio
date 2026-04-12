@@ -1,5 +1,5 @@
 // src/components/Galaxy/KaleidoscopeEye.jsx
-import { useRef, useMemo } from 'react'
+import { useRef, useMemo, useEffect } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 
@@ -62,6 +62,12 @@ export default function KaleidoscopeEye({ onHover }) {
   const glowRef  = useRef(0.5)
 
   const geo = useMemo(() => new THREE.IcosahedronGeometry(1.0, 2), [])
+  const edgesGeo = useMemo(() => new THREE.EdgesGeometry(geo), [geo])
+
+  useEffect(() => () => {
+    geo.dispose()
+    edgesGeo.dispose()
+  }, [geo, edgesGeo])
 
   const uniforms = useMemo(() => ({
     uTime:     { value: 0 },
@@ -106,7 +112,7 @@ export default function KaleidoscopeEye({ onHover }) {
       </mesh>
 
       {/* Crystal facet edge overlay — static EdgesGeometry on base icosahedron */}
-      <lineSegments geometry={new THREE.EdgesGeometry(geo)}>
+      <lineSegments geometry={edgesGeo}>
         <lineBasicMaterial color="#88eeff" transparent opacity={0.35} />
       </lineSegments>
     </group>
