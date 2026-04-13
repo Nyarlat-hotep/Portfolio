@@ -14,10 +14,10 @@
 /* Centering wrapper */
 .creator-wrapper {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  top: env(safe-area-inset-top, 0px);
+  left: env(safe-area-inset-left, 0px);
+  right: env(safe-area-inset-right, 0px);
+  bottom: env(safe-area-inset-bottom, 0px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -559,9 +559,9 @@
 @media (max-width: 768px) {
   .creator-container {
     width: 95vw;
-    /* dvh accounts for mobile browser chrome (address bar height) */
-    max-height: calc(100dvh - 24px);
-    max-height: calc(100vh - 24px); /* fallback for browsers without dvh */
+    /* Subtract safe area insets so modal clears both Chrome top bar and Android bottom nav */
+    max-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 24px);
+    max-height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 24px);
   }
 
   .creator-content {
