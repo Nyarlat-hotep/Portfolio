@@ -11,13 +11,14 @@
   z-index: 3000;
 }
 
-/* Centering wrapper */
+/* Centering wrapper — uses visual viewport vars set in main.jsx so the modal
+   is always positioned within the real visible area on Android/iOS */
 .creator-wrapper {
   position: fixed;
-  top: env(safe-area-inset-top, 0px);
-  left: env(safe-area-inset-left, 0px);
-  right: env(safe-area-inset-right, 0px);
-  bottom: env(safe-area-inset-bottom, 0px);
+  top: var(--vvt, 0px);
+  left: 0;
+  right: 0;
+  height: var(--vvh, 100vh);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -559,9 +560,7 @@
 @media (max-width: 768px) {
   .creator-container {
     width: 95vw;
-    /* Subtract safe area insets so modal clears both Chrome top bar and Android bottom nav */
-    max-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 24px);
-    max-height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 24px);
+    max-height: calc(var(--vvh, 100vh) - 24px);
   }
 
   .creator-content {
