@@ -559,33 +559,50 @@
 @media (max-width: 768px) {
   .creator-container {
     width: 95vw;
-    max-height: 95vh;
+    /* dvh accounts for mobile browser chrome (address bar height) */
+    max-height: calc(100dvh - 24px);
+    max-height: calc(100vh - 24px); /* fallback for browsers without dvh */
   }
 
   .creator-content {
     flex-direction: column;
-    padding: 1.5rem;
+    padding: 1rem;
+    gap: 1rem;
+    /* content must scroll, not the whole modal */
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
+  /* Remove sticky so preview doesn't float over scrolled content */
   .creator-preview {
     flex: none;
+    position: static;
+    align-self: center;
   }
 
   .preview-canvas {
-    width: 200px;
-    height: 200px;
+    width: 160px;
+    height: 160px;
   }
 
   .creator-header {
-    padding: 1rem 1.5rem;
+    padding: 0.75rem 1rem;
+    flex-shrink: 0;
   }
 
   .creator-title {
-    font-size: 1.25rem;
+    font-size: 1.1rem;
   }
 
   .creator-footer {
-    padding: 1rem 1.5rem;
+    padding: 0.75rem 1rem;
+    flex-shrink: 0;
+  }
+
+  .cancel-button,
+  .save-button {
+    padding: 0.75rem 1.25rem;
+    font-size: 0.8rem;
   }
 
   .texture-selector {
