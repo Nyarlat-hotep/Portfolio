@@ -20,7 +20,7 @@ function iso(gx, gy, gz, ox, oy, sc) {
 }
 
 // ── Grid ─────────────────────────────────────────────────────────────────
-const NODE_POS = [[-3, -3], [3, -3], [-3, 3], [3, 3], [0, -6]];
+const NODE_POS = [[-3, -3], [3, -3], [-3, 3], [3, 3], [0, -6], [0, 6]];
 
 function drawGrid(ctx, ox, oy, sc, gz = 0, lineAlpha = 0.10, nearAlpha = 0.22, withDetails = true) {
   const N = 7;
@@ -127,7 +127,7 @@ function drawDecorations(ctx, ox, oy, sc, t) {
   ctx.fillStyle = `rgba(255,119,0,${scanAlpha})`;
   ctx.fillText('SCANNING...', scanPos.sx, scanPos.sy);
   ctx.fillStyle = `rgba(255,119,0,${scanAlpha * 0.80})`;
-  ctx.fillText('// 5 ANOMALIES DETECTED', scanPos.sx, scanPos.sy + ss * 1.6);
+  ctx.fillText('// 6 ANOMALIES DETECTED', scanPos.sx, scanPos.sy + ss * 1.6);
 
   // Text: coordinate label near back-right corner
   const coordPos = iso(7.5, -7.5, 0.05, ox, oy, sc);
@@ -393,6 +393,50 @@ function drawDome(ctx, gx, gy, ox, oy, sc, bob, hov) {
   ctx.restore();
 }
 
+// ── Monolith — US_CODE_BROWSER ───────────────────────────────────────────
+function drawMonolith(ctx, gx, gy, ox, oy, sc, bob, hov) {
+  const c = hov ? '0,255,106' : '150,200,30';
+  const w = 0.65, d = 0.35, h = 2.0;
+  const lines = 6;
+
+  const front = [
+    iso(gx-w, gy-d, 0, ox, oy, sc), iso(gx+w, gy-d, 0, ox, oy, sc),
+    iso(gx+w, gy-d, h, ox, oy, sc), iso(gx-w, gy-d, h, ox, oy, sc),
+  ].map(p => ({ sx: p.sx, sy: p.sy - bob }));
+  const back = [
+    iso(gx-w, gy+d, 0, ox, oy, sc), iso(gx+w, gy+d, 0, ox, oy, sc),
+    iso(gx+w, gy+d, h, ox, oy, sc), iso(gx-w, gy+d, h, ox, oy, sc),
+  ].map(p => ({ sx: p.sx, sy: p.sy - bob }));
+
+  const face = (pts, fill, stroke, lw = 1) => {
+    ctx.fillStyle = `rgba(${c},${fill})`; ctx.strokeStyle = `rgba(${c},${stroke})`; ctx.lineWidth = lw;
+    ctx.beginPath(); pts.forEach((p, k) => k ? ctx.lineTo(p.sx, p.sy) : ctx.moveTo(p.sx, p.sy));
+    ctx.closePath(); ctx.fill(); ctx.stroke();
+  };
+
+  ctx.save();
+  // Side faces
+  face([front[0], front[3], back[3], back[0]], 0.03, hov ? 0.50 : 0.35);
+  face([front[1], front[2], back[2], back[1]], 0.03, hov ? 0.50 : 0.35);
+  // Top
+  face([front[2], front[3], back[3], back[2]], hov ? 0.18 : 0.07, hov ? 0.90 : 0.65);
+  // Front face
+  face(front, hov ? 0.10 : 0.04, hov ? 0.88 : 0.68, 1.2);
+
+  // Text scan lines on front face
+  ctx.setLineDash([4, 2]);
+  ctx.lineWidth = 0.65;
+  for (let i = 1; i <= lines; i++) {
+    const gz = h * (i / (lines + 1));
+    const l = iso(gx - w * 0.75, gy - d, gz, ox, oy, sc);
+    const r = iso(gx + w * (i % 2 === 0 ? 0.5 : 0.75), gy - d, gz, ox, oy, sc);
+    ctx.strokeStyle = `rgba(${c},${hov ? 0.55 : 0.28})`;
+    ctx.beginPath(); ctx.moveTo(l.sx, l.sy - bob); ctx.lineTo(r.sx, r.sy - bob); ctx.stroke();
+  }
+  ctx.setLineDash([]);
+  ctx.restore();
+}
+
 // ── Label ─────────────────────────────────────────────────────────────────
 function drawLabel(ctx, sx, sy, title, hov, sc) {
   ctx.save();
@@ -430,9 +474,10 @@ const EXPERIMENT_CONFIGS = [
   { id:'DICE_ROLLER',            gridPos:[-3, 3], structureType:'sphere',        bobPhase:3.14 },
   { id:'DRAG_INTERACTION',       gridPos:[ 3, 3], structureType:'dome',          bobPhase:4.71 },
   { id:'SCI_FI_KALEIDOSCOPE',    gridPos:[ 0,-6], structureType:'kaleidoscope',  bobPhase:2.36 },
+  { id:'US_CODE_BROWSER',        gridPos:[ 0, 6], structureType:'monolith',      bobPhase:0.78 },
 ];
-const STRUCT_FNS = { crystal:drawCrystal, cube:drawCube, sphere:drawSphere, dome:drawDome, kaleidoscope:drawKaleidoscope };
-const STRUCT_H   = { crystal:1.25, cube:1.65, sphere:1.9, dome:1.28, kaleidoscope:1.0 };
+const STRUCT_FNS = { crystal:drawCrystal, cube:drawCube, sphere:drawSphere, dome:drawDome, kaleidoscope:drawKaleidoscope, monolith:drawMonolith };
+const STRUCT_H   = { crystal:1.25, cube:1.65, sphere:1.9, dome:1.28, kaleidoscope:1.0, monolith:2.0 };
 
 const EXPERIMENT_META = [
   { id:'VISUAL_ARCHIVE',    title:'VISUAL_ARCHIVE',
@@ -450,6 +495,9 @@ const EXPERIMENT_META = [
   { id:'SCI_FI_KALEIDOSCOPE', title:'SCI_FI_KALEIDOSCOPE',
     description:'GLSL kaleidoscope with 12 generative patterns, meditative breathing modes, and full color control. Runs entirely on the GPU.',
     tags:['GLSL','WebGL','Generative'], link:'https://nyarlat-hotep.github.io/sci-fi-kaleidoscope/', isGallery:false },
+  { id:'US_CODE_BROWSER', title:'US_CODE_BROWSER',
+    description:'All 54 titles of the US Code. Browse chapters, read sections, and view word-level redlines of every amendment since 2013.',
+    tags:['Legal','Tool','Data'], link:'https://nyarlat-hotep.github.io/us-code-browser/', isGallery:false },
 ];
 
 // ── Main drawFrame ────────────────────────────────────────────────────────
