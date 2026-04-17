@@ -20,7 +20,7 @@ function iso(gx, gy, gz, ox, oy, sc) {
 }
 
 // ── Grid ─────────────────────────────────────────────────────────────────
-const NODE_POS = [[-3, -3], [3, -3], [-3, 3], [3, 3], [0, -6], [0, 6]];
+const NODE_POS = [[-3, -3], [3, -3], [-3, 3], [3, 3], [0, -6], [0, 6], [-6, 0]];
 
 function drawGrid(ctx, ox, oy, sc, gz = 0, lineAlpha = 0.10, nearAlpha = 0.22, withDetails = true) {
   const N = 7;
@@ -127,7 +127,7 @@ function drawDecorations(ctx, ox, oy, sc, t) {
   ctx.fillStyle = `rgba(255,119,0,${scanAlpha})`;
   ctx.fillText('SCANNING...', scanPos.sx, scanPos.sy);
   ctx.fillStyle = `rgba(255,119,0,${scanAlpha * 0.80})`;
-  ctx.fillText('// 6 ANOMALIES DETECTED', scanPos.sx, scanPos.sy + ss * 1.6);
+  ctx.fillText('// 7 ANOMALIES DETECTED', scanPos.sx, scanPos.sy + ss * 1.6);
 
   // Text: coordinate label near back-right corner
   const coordPos = iso(7.5, -7.5, 0.05, ox, oy, sc);
@@ -393,6 +393,62 @@ function drawDome(ctx, gx, gy, ox, oy, sc, bob, hov) {
   ctx.restore();
 }
 
+// ── Tome — CTHULHU_MANUSCRIPT ─────────────────────────────────────────────
+function drawTome(ctx, gx, gy, ox, oy, sc, bob, hov) {
+  const c = hov ? '0,255,106' : '150,200,30'
+  // Open book: two angled rectangular pages meeting at a spine
+  const pageW = 1.1, pageD = 0.5, h = 0.12, spineH = 1.5
+
+  // Left page (angled back-left)
+  const leftPts = [
+    iso(gx - pageW, gy - pageD, 0,       ox, oy, sc),
+    iso(gx,         gy,         0,       ox, oy, sc),
+    iso(gx,         gy,         spineH,  ox, oy, sc),
+    iso(gx - pageW, gy - pageD, spineH,  ox, oy, sc),
+  ].map(p => ({ sx: p.sx, sy: p.sy - bob }))
+
+  // Right page (angled back-right)
+  const rightPts = [
+    iso(gx,         gy,         0,       ox, oy, sc),
+    iso(gx + pageW, gy - pageD, 0,       ox, oy, sc),
+    iso(gx + pageW, gy - pageD, spineH,  ox, oy, sc),
+    iso(gx,         gy,         spineH,  ox, oy, sc),
+  ].map(p => ({ sx: p.sx, sy: p.sy - bob }))
+
+  ctx.save()
+  const face = (pts, fill, stroke, lw = 1) => {
+    ctx.fillStyle = `rgba(${c},${fill})`; ctx.strokeStyle = `rgba(${c},${stroke})`; ctx.lineWidth = lw
+    ctx.beginPath(); pts.forEach((p, k) => k ? ctx.lineTo(p.sx, p.sy) : ctx.moveTo(p.sx, p.sy))
+    ctx.closePath(); ctx.fill(); ctx.stroke()
+  }
+  face(leftPts,  hov ? 0.12 : 0.05, hov ? 0.85 : 0.60, 1.1)
+  face(rightPts, hov ? 0.08 : 0.03, hov ? 0.78 : 0.52, 1.1)
+
+  // Text lines on left page
+  ctx.setLineDash([3, 3])
+  ctx.lineWidth = 0.6
+  ctx.strokeStyle = `rgba(${c},${hov ? 0.45 : 0.22})`
+  for (let li = 1; li <= 4; li++) {
+    const gz = spineH * (li / 5.5)
+    const l = iso(gx - pageW * 0.85, gy - pageD * 0.85, gz, ox, oy, sc)
+    const r = iso(gx - pageW * 0.15, gy - pageD * 0.15, gz, ox, oy, sc)
+    ctx.beginPath(); ctx.moveTo(l.sx, l.sy - bob); ctx.lineTo(r.sx, r.sy - bob); ctx.stroke()
+  }
+  ctx.setLineDash([])
+
+  // Spine highlight
+  ctx.strokeStyle = `rgba(${c},${hov ? 0.95 : 0.72})`
+  ctx.lineWidth = 1.4
+  const spineBot = iso(gx, gy, 0,      ox, oy, sc)
+  const spineTop = iso(gx, gy, spineH, ox, oy, sc)
+  ctx.beginPath()
+  ctx.moveTo(spineBot.sx, spineBot.sy - bob)
+  ctx.lineTo(spineTop.sx, spineTop.sy - bob)
+  ctx.stroke()
+
+  ctx.restore()
+}
+
 // ── Monolith — US_CODE_BROWSER ───────────────────────────────────────────
 function drawMonolith(ctx, gx, gy, ox, oy, sc, bob, hov) {
   const c = hov ? '0,255,106' : '150,200,30';
@@ -475,9 +531,10 @@ const EXPERIMENT_CONFIGS = [
   { id:'DRAG_INTERACTION',       gridPos:[ 3, 3], structureType:'dome',          bobPhase:4.71 },
   { id:'SCI_FI_KALEIDOSCOPE',    gridPos:[ 0,-6], structureType:'kaleidoscope',  bobPhase:2.36 },
   { id:'US_CODE_BROWSER',        gridPos:[ 0, 6], structureType:'monolith',      bobPhase:0.78 },
+  { id:'CTHULHU_MANUSCRIPT',     gridPos:[-6, 0], structureType:'tome',          bobPhase:1.95 },
 ];
-const STRUCT_FNS = { crystal:drawCrystal, cube:drawCube, sphere:drawSphere, dome:drawDome, kaleidoscope:drawKaleidoscope, monolith:drawMonolith };
-const STRUCT_H   = { crystal:1.25, cube:1.65, sphere:1.9, dome:1.28, kaleidoscope:1.0, monolith:2.0 };
+const STRUCT_FNS = { crystal:drawCrystal, cube:drawCube, sphere:drawSphere, dome:drawDome, kaleidoscope:drawKaleidoscope, monolith:drawMonolith, tome:drawTome };
+const STRUCT_H   = { crystal:1.25, cube:1.65, sphere:1.9, dome:1.28, kaleidoscope:1.0, monolith:2.0, tome:1.5 };
 
 const EXPERIMENT_META = [
   { id:'VISUAL_ARCHIVE',    title:'VISUAL_ARCHIVE',
@@ -498,6 +555,9 @@ const EXPERIMENT_META = [
   { id:'US_CODE_BROWSER', title:'US_CODE_BROWSER',
     description:'All 54 titles of the US Code. Browse chapters, read sections, and view word-level redlines of every amendment since 2013.',
     tags:['Legal','Tool','Data'], link:'https://nyarlat-hotep.github.io/us-code-browser/', isGallery:false },
+  { id:'CTHULHU_MANUSCRIPT', title:'CTHULHU_MANUSCRIPT',
+    description:"H.P. Lovecraft's Call of Cthulhu rendered as a cursed manuscript. Readability degrades as you descend. The text knows you're reading it.",
+    tags:['Canvas','Generative','Horror'], link:'https://nyarlat-hotep.github.io/cthulhu-manuscript/', isGallery:false },
 ];
 
 // ── Main drawFrame ────────────────────────────────────────────────────────
