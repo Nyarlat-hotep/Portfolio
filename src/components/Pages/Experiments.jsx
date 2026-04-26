@@ -393,60 +393,85 @@ function drawDome(ctx, gx, gy, ox, oy, sc, bob, hov) {
   ctx.restore();
 }
 
-// ── Tome — CTHULHU_MANUSCRIPT ─────────────────────────────────────────────
-function drawTome(ctx, gx, gy, ox, oy, sc, bob, hov) {
-  const c = hov ? '0,255,106' : '150,200,30'
-  // Open book: two angled rectangular pages meeting at a spine
-  const pageW = 1.1, pageD = 0.5, h = 0.12, spineH = 1.5
+// ── Specimen — SPECIMEN (isometric observatory) ──────────────────────────
+function drawSpecimen(ctx, gx, gy, ox, oy, sc, bob, hov) {
+  const c = hov ? '0,255,106' : '150,200,30';
+  const r = 0.6;        // jar radius
+  const h = 1.55;       // jar height
+  const sides = 6;      // hexagonal silhouette
 
-  // Left page (angled back-left)
-  const leftPts = [
-    iso(gx - pageW, gy - pageD, 0,       ox, oy, sc),
-    iso(gx,         gy,         0,       ox, oy, sc),
-    iso(gx,         gy,         spineH,  ox, oy, sc),
-    iso(gx - pageW, gy - pageD, spineH,  ox, oy, sc),
-  ].map(p => ({ sx: p.sx, sy: p.sy - bob }))
+  // Build hex-ring vertices for top + bottom
+  const ring = (gz) => {
+    const pts = [];
+    for (let i = 0; i < sides; i++) {
+      const a = (i / sides) * Math.PI * 2 + Math.PI / sides;
+      pts.push(iso(gx + Math.cos(a) * r, gy + Math.sin(a) * r, gz, ox, oy, sc));
+    }
+    return pts.map(p => ({ sx: p.sx, sy: p.sy - bob }));
+  };
+  const bot = ring(0);
+  const top = ring(h);
 
-  // Right page (angled back-right)
-  const rightPts = [
-    iso(gx,         gy,         0,       ox, oy, sc),
-    iso(gx + pageW, gy - pageD, 0,       ox, oy, sc),
-    iso(gx + pageW, gy - pageD, spineH,  ox, oy, sc),
-    iso(gx,         gy,         spineH,  ox, oy, sc),
-  ].map(p => ({ sx: p.sx, sy: p.sy - bob }))
+  ctx.save();
 
-  ctx.save()
-  const face = (pts, fill, stroke, lw = 1) => {
-    ctx.fillStyle = `rgba(${c},${fill})`; ctx.strokeStyle = `rgba(${c},${stroke})`; ctx.lineWidth = lw
-    ctx.beginPath(); pts.forEach((p, k) => k ? ctx.lineTo(p.sx, p.sy) : ctx.moveTo(p.sx, p.sy))
-    ctx.closePath(); ctx.fill(); ctx.stroke()
+  // Vertical jar edges
+  ctx.strokeStyle = `rgba(${c},${hov ? 0.85 : 0.60})`;
+  ctx.lineWidth = 1.1;
+  for (let i = 0; i < sides; i++) {
+    ctx.beginPath();
+    ctx.moveTo(bot[i].sx, bot[i].sy);
+    ctx.lineTo(top[i].sx, top[i].sy);
+    ctx.stroke();
   }
-  face(leftPts,  hov ? 0.12 : 0.05, hov ? 0.85 : 0.60, 1.1)
-  face(rightPts, hov ? 0.08 : 0.03, hov ? 0.78 : 0.52, 1.1)
+  // Bottom + top hex outlines
+  const drawRing = (pts, alpha) => {
+    ctx.strokeStyle = `rgba(${c},${alpha})`;
+    ctx.beginPath();
+    pts.forEach((p, k) => k ? ctx.lineTo(p.sx, p.sy) : ctx.moveTo(p.sx, p.sy));
+    ctx.closePath();
+    ctx.stroke();
+  };
+  drawRing(bot, hov ? 0.78 : 0.55);
+  drawRing(top, hov ? 0.92 : 0.70);
 
-  // Text lines on left page
-  ctx.setLineDash([3, 3])
-  ctx.lineWidth = 0.6
-  ctx.strokeStyle = `rgba(${c},${hov ? 0.45 : 0.22})`
-  for (let li = 1; li <= 4; li++) {
-    const gz = spineH * (li / 5.5)
-    const l = iso(gx - pageW * 0.85, gy - pageD * 0.85, gz, ox, oy, sc)
-    const r = iso(gx - pageW * 0.15, gy - pageD * 0.15, gz, ox, oy, sc)
-    ctx.beginPath(); ctx.moveTo(l.sx, l.sy - bob); ctx.lineTo(r.sx, r.sy - bob); ctx.stroke()
+  // Cap rim — slight inset hex on top for jar lid
+  const topInset = ring(h);
+  ctx.strokeStyle = `rgba(${c},${hov ? 0.95 : 0.72})`;
+  ctx.lineWidth = 0.9;
+  ctx.beginPath();
+  topInset.forEach((p, k) => k ? ctx.lineTo(p.sx, p.sy) : ctx.moveTo(p.sx, p.sy));
+  ctx.closePath();
+  ctx.stroke();
+
+  // Faint creature silhouette inside — drifting blob
+  const cx0 = iso(gx, gy, h * 0.5, ox, oy, sc);
+  ctx.fillStyle = hov ? 'rgba(255,90,90,0.55)' : 'rgba(255,80,80,0.32)';
+  ctx.beginPath();
+  // 3-lobed organic shape
+  for (let a = 0; a <= Math.PI * 2 + 0.01; a += 0.1) {
+    const lobe = 0.18 + 0.05 * Math.sin(a * 3);
+    const px = cx0.sx + Math.cos(a) * lobe * (TW / 2) * sc;
+    const py = cx0.sy - bob + Math.sin(a) * lobe * (TH / 2) * sc;
+    if (a === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
   }
-  ctx.setLineDash([])
+  ctx.closePath();
+  ctx.fill();
 
-  // Spine highlight
-  ctx.strokeStyle = `rgba(${c},${hov ? 0.95 : 0.72})`
-  ctx.lineWidth = 1.4
-  const spineBot = iso(gx, gy, 0,      ox, oy, sc)
-  const spineTop = iso(gx, gy, spineH, ox, oy, sc)
-  ctx.beginPath()
-  ctx.moveTo(spineBot.sx, spineBot.sy - bob)
-  ctx.lineTo(spineTop.sx, spineTop.sy - bob)
-  ctx.stroke()
+  // Cyan grid floor lines inside (suggests the SPECIMEN scene's grid)
+  ctx.strokeStyle = `rgba(0,200,220,${hov ? 0.35 : 0.18})`;
+  ctx.lineWidth = 0.5;
+  for (let i = 1; i < 4; i++) {
+    const t = i / 4;
+    const a = bot[0], b = bot[3 % sides];
+    const lp = iso(gx - r + 2 * r * t, gy, 0.02, ox, oy, sc);
+    const lp2 = iso(gx, gy - r + 2 * r * t, 0.02, ox, oy, sc);
+    ctx.beginPath();
+    ctx.moveTo(bot[0].sx + (bot[1].sx - bot[0].sx) * t, bot[0].sy + (bot[1].sy - bot[0].sy) * t);
+    ctx.lineTo(bot[3].sx + (bot[4].sx - bot[3].sx) * t, bot[3].sy + (bot[4].sy - bot[3].sy) * t);
+    ctx.stroke();
+  }
 
-  ctx.restore()
+  ctx.restore();
 }
 
 // ── Monolith — US_CODE_BROWSER ───────────────────────────────────────────
@@ -531,10 +556,10 @@ const EXPERIMENT_CONFIGS = [
   { id:'DRAG_INTERACTION',       gridPos:[ 3, 3], structureType:'dome',          bobPhase:4.71 },
   { id:'SCI_FI_KALEIDOSCOPE',    gridPos:[ 0,-6], structureType:'kaleidoscope',  bobPhase:2.36 },
   { id:'US_CODE_BROWSER',        gridPos:[ 0, 6], structureType:'monolith',      bobPhase:0.78 },
-  { id:'CTHULHU_MANUSCRIPT',     gridPos:[-6, 0], structureType:'tome',          bobPhase:1.95 },
+  { id:'SPECIMEN',               gridPos:[ 6, 0], structureType:'specimen',      bobPhase:3.55 },
 ];
-const STRUCT_FNS = { crystal:drawCrystal, cube:drawCube, sphere:drawSphere, dome:drawDome, kaleidoscope:drawKaleidoscope, monolith:drawMonolith, tome:drawTome };
-const STRUCT_H   = { crystal:1.25, cube:1.65, sphere:1.9, dome:1.28, kaleidoscope:1.0, monolith:2.0, tome:1.5 };
+const STRUCT_FNS = { crystal:drawCrystal, cube:drawCube, sphere:drawSphere, dome:drawDome, kaleidoscope:drawKaleidoscope, monolith:drawMonolith, specimen:drawSpecimen };
+const STRUCT_H   = { crystal:1.25, cube:1.65, sphere:1.9, dome:1.28, kaleidoscope:1.0, monolith:2.0, specimen:1.55 };
 
 const EXPERIMENT_META = [
   { id:'VISUAL_ARCHIVE',    title:'VISUAL_ARCHIVE',
@@ -555,9 +580,9 @@ const EXPERIMENT_META = [
   { id:'US_CODE_BROWSER', title:'US_CODE_BROWSER',
     description:'All 54 titles of the US Code. Browse chapters, read sections, and view word-level redlines of every amendment since 2013.',
     tags:['Legal','Tool','Data'], link:'https://nyarlat-hotep.github.io/us-code-browser/', isGallery:false },
-  { id:'CTHULHU_MANUSCRIPT', title:'CTHULHU_MANUSCRIPT',
-    description:"H.P. Lovecraft's Call of Cthulhu rendered as a cursed manuscript. Readability degrades as you descend. The text knows you're reading it.",
-    tags:['Canvas','Generative','Horror'], link:'https://nyarlat-hotep.github.io/cthulhu-manuscript/', isGallery:false },
+  { id:'SPECIMEN', title:'SPECIMEN',
+    description:'Isometric sci-fi observatory. Five glowing zones over a cyan grid floor. Scan the anomaly terrain through five depth layers — something is in there.',
+    tags:['R3F','Three.js','Isometric','GLSL'], link:'https://nyarlat-hotep.github.io/specimen/', isGallery:false },
 ];
 
 // ── Main drawFrame ────────────────────────────────────────────────────────
