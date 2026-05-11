@@ -23,7 +23,7 @@ import BottomNav from '../Navigation/BottomNav';
 import HUDFrame from '../UI/HUDFrame';
 import LightspeedTransition from '../UI/LightspeedTransition';
 import '../UI/PresentationMode.css';
-const PresentationMode = lazy(() => import('../UI/PresentationMode'));
+import PresentationMode from '../UI/PresentationMode';
 const AlienSnake       = lazy(() => import('../UI/AlienSnake'));
 const NebulaBelt       = lazy(() => import('./NebulaBelt'))
 const AsteroidBelt     = lazy(() => import('./AsteroidBelt'));
@@ -192,11 +192,17 @@ function WebGLFallback() {
 // Glitchy text effect - randomly corrupts characters
 // Keyboard camera: arrow L/R orbits, arrow U/D zooms — lives inside Canvas for useFrame access
 const _yAxis = new THREE.Vector3(0, 1, 0);
-function KeyboardCameraController({ controlsRef }) {
+function KeyboardCameraController({ controlsRef, disabled }) {
   const keysRef = useRef({});
+  const disabledRef = useRef(disabled);
+  useEffect(() => {
+    disabledRef.current = disabled;
+    if (disabled) keysRef.current = {};
+  }, [disabled]);
 
   useEffect(() => {
     const onDown = (e) => {
+      if (disabledRef.current) return;
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
       if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
         e.preventDefault();
@@ -213,6 +219,7 @@ function KeyboardCameraController({ controlsRef }) {
   }, []);
 
   useFrame((_, delta) => {
+    if (disabledRef.current) return;
     const keys = keysRef.current;
     const controls = controlsRef.current;
     if (!controls) return;
@@ -612,7 +619,7 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
         <MobileTapHandler pendingTapRef={pendingTapRef} />
 
         {/* Arrow key camera: L/R orbits, U/D zooms */}
-        <KeyboardCameraController controlsRef={controlsRef} />
+        <KeyboardCameraController controlsRef={controlsRef} disabled={presentationOpen} />
 
         {/* Re-orient animation — smoothly returns camera to home plane */}
         <ReorientController controlsRef={controlsRef} isActive={isReorienting} onComplete={() => setIsReorienting(false)} />
@@ -630,6 +637,7 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
         {/* Controls - full 360° trackball rotation in all axes */}
         <TrackballControls
           ref={controlsRef}
+          enabled={!presentationOpen}
           rotateSpeed={isTouch ? 0.35 : 2.0}
           zoomSpeed={isTouch ? 0.25 : 1.2}
           panSpeed={isTouch ? 0.15 : 0.8}
@@ -1080,15 +1088,13 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
 
       {/* Presentation mode slideshow */}
       {presentationOpen && (
-        <Suspense fallback={null}>
-          <PresentationMode
-            isOpen={presentationOpen}
-            onClose={() => {
-              setPresentationOpen(false);
-              onPlanetClickRef.current?.(planetsData.find(p => p.id === 'home'));
-            }}
-          />
-        </Suspense>
+        <PresentationMode
+          isOpen={presentationOpen}
+          onClose={() => {
+            setPresentationOpen(false);
+            onPlanetClickRef.current?.(planetsData.find(p => p.id === 'home'));
+          }}
+        />
       )}
 
       {/* Alien Snake game — opened from monolith */}
