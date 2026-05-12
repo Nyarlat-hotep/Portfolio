@@ -61,12 +61,18 @@ function SlideProblem({ slide }) {
 function SlideSolution({ slide }) {
   return (
     <div className="pm-slide pm-slide--solution">
-      <div className="pm-slide-label" style={{ color: slide.accent }}>The Solution</div>
+      <div className="pm-slide-label" style={{ color: slide.accent }}>{slide.label || 'The Solution'}</div>
       <div className="pm-divider" style={{ background: slide.accent }} />
       <div className="pm-solution-body">
         {slide.video ? (
           <div className="pm-solution-image">
             <video src={slide.video} autoPlay loop muted playsInline />
+          </div>
+        ) : slide.images?.length ? (
+          <div className="pm-solution-image pm-solution-image--scroll">
+            {slide.images.map((src, i) => (
+              <img key={i} src={src} alt={`${slide.title} ${i + 1}`} />
+            ))}
           </div>
         ) : slide.image ? (
           <div className="pm-solution-image">
@@ -163,7 +169,6 @@ export default function PresentationMode({ isOpen, onClose }) {
   const [direction,  setDirection]  = useState(1);
   const [navVisible, setNavVisible]  = useState(false);
   const [slideScale,  setSlideScale]  = useState(1);
-  const closeButtonRef = useRef(null);
   const stageRef       = useRef(null);
   const total = presentationSlides.length;
   const slide = presentationSlides[slideIndex];
@@ -198,14 +203,7 @@ export default function PresentationMode({ isOpen, onClose }) {
     return () => window.removeEventListener('resize', update);
   }, [isOpen]);
 
-  // Focus close button when overlay opens (rAF ensures portal DOM is painted)
-  useEffect(() => {
-    if (!isOpen) return;
-    const id = requestAnimationFrame(() => closeButtonRef.current?.focus());
-    return () => cancelAnimationFrame(id);
-  }, [isOpen]);
-
-  // Prevent body scroll when overlay is open
+// Prevent body scroll when overlay is open
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
@@ -289,7 +287,7 @@ export default function PresentationMode({ isOpen, onClose }) {
             ))}
           </div>
         </div>
-        <button ref={closeButtonRef} className="close-button pm-close" onClick={onClose} aria-label="Close presentation">
+        <button className="close-button pm-close" onClick={onClose} aria-label="Close presentation">
           <X size={20} />
         </button>
       </div>

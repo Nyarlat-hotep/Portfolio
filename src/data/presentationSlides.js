@@ -2,7 +2,7 @@
 
 export const TOTAL_STUDIES = 3;
 // Slide count per study — index 0 = study 1, etc.
-export const STUDY_SLIDE_COUNTS = [6, 5, 5];
+export const STUDY_SLIDE_COUNTS = [6, 5, 6];
 
 export const presentationSlides = [
   // ── BANANA PHONE ─────────────────────────────────
@@ -158,12 +158,25 @@ export const presentationSlides = [
     ],
   },
   {
+    id: 'mr-vision',
+    type: 'solution',
+    label: 'The Vision',
+    study: 3,
+    accent: '#22d3ee',
+    title: 'MYROCKET DASHBOARD',
+    nugget: "The original vision was a financial wellness hub — credit, goals, money, offers — all on one personalised surface. Business pressure pulled scope back to mortgage-first. The IA and activation patterns survived. The wider product surface didn't.",
+    images: [
+      '/images/case-studies/myrocket/dashboard-hero.png',
+      '/images/case-studies/myrocket/dashboard-final.png',
+    ],
+  },
+  {
     id: 'mr-solution',
     type: 'solution',
     study: 3,
     accent: '#22d3ee',
     title: 'MYROCKET DASHBOARD',
-    nugget: "An IA that flexes across radically different user states. A locked state pattern — borrowed from gaming — showed unactivated features as aspirational, not absent. What launched was something in between finances and home readiness.",
+    nugget: "An IA that flexes across radically different user states. Users could activate widgets they found useful to truly customize their experience. What launched was something in between finances and home readiness.",
     image: '/images/case-studies/myrocket/dash-final.png',
   },
   {

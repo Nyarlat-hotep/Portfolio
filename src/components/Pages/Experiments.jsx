@@ -611,7 +611,10 @@ function drawFrame(ctx, cssW, cssH, t, hoveredId, nodesRef, rot, tilt) {
     STRUCT_FNS[cfg.structureType]?.(ctx, gx, gy, ox, oy, sc, bob, hov);
     const labelSy = base.sy - STRUCT_H[cfg.structureType] * CH * sc - bob - 28;
     drawLabel(ctx, base.sx, labelSy, cfg.id, hov, sc);
-    nodesRef.current.push({ id:cfg.id, sx:base.sx, sy:base.sy, hitW:55*sc, hitH:28*sc });
+    const halfBody = (STRUCT_H[cfg.structureType] * CH * sc) / 2;
+    const hitSy = base.sy - bob - halfBody;
+    const hitH = Math.max(28*sc, halfBody + 12*sc);
+    nodesRef.current.push({ id:cfg.id, sx:base.sx, sy:hitSy, hitW:55*sc, hitH });
   }
 
   drawParticles(ctx, t, cssW, cssH);
