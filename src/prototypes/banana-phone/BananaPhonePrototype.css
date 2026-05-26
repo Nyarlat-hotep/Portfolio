@@ -80,6 +80,36 @@
 }
 .bp-app *::-webkit-scrollbar-thumb:hover { background: rgba(0, 0, 0, 0.2); }
 
-/* Reset for buttons / inputs to inherit our font */
-.bp-app button, .bp-app input, .bp-app textarea { font-family: inherit; }
-.bp-app button { color: inherit; }
+/* ── Reset host-app global styles that bleed into the prototype ── */
+/* The portfolio's index.css applies border / padding / background / colour to
+   every <button> globally. That breaks every icon-button inside this prototype
+   (tons of padding, glass borders, wrong colours). Neutralise it for the BP
+   scope only and let component CSS provide the real chrome. */
+.bp-app button {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  padding: 0;
+  border-radius: 0;
+  transition: none;
+  cursor: pointer;
+}
+.bp-app button:hover,
+.bp-app button:focus,
+.bp-app button:focus-visible {
+  outline: none;
+  background-color: inherit;
+  border-color: transparent;
+  box-shadow: none;
+}
+.bp-app input, .bp-app textarea { font-family: inherit; }
+
+/* Icons must always render at the size the React component asked for —
+   never let a parent flex/grid context squeeze them. */
+.bp-app svg {
+  flex-shrink: 0;
+  display: inline-block;
+  vertical-align: middle;
+}
