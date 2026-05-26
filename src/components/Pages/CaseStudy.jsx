@@ -278,7 +278,7 @@ export default function CaseStudy({ caseStudy, planetColor = '#cc2200', scrollCo
           {hasPrototype && (
             <motion.div className="prototype-cta" variants={contentVariants}>
               <div className="prototype-cta-copy">
-                <div className="prototype-cta-title">See how it works</div>
+                <div className="prototype-cta-title">See how it works (this is a WIP feature)</div>
               </div>
               <motion.button
                 className="prototype-cta-btn"
@@ -287,7 +287,7 @@ export default function CaseStudy({ caseStudy, planetColor = '#cc2200', scrollCo
                 whileTap={{ scale: 0.98 }}
               >
                 <Play size={16} fill="currentColor" />
-                Launch prototype
+                Launch prototype (WIP)
               </motion.button>
             </motion.div>
           )}
