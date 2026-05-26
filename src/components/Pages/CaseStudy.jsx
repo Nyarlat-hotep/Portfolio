@@ -278,11 +278,7 @@ export default function CaseStudy({ caseStudy, planetColor = '#cc2200', scrollCo
           {hasPrototype && (
             <motion.div className="prototype-cta" variants={contentVariants}>
               <div className="prototype-cta-copy">
-                <div className="prototype-cta-label">Interactive Prototype</div>
                 <div className="prototype-cta-title">See how it works</div>
-                <div className="prototype-cta-sub">
-                  A scripted walkthrough of the persistent lead queue, surfaced client context, and unified call · text · chat surface.
-                </div>
               </div>
               <motion.button
                 className="prototype-cta-btn"

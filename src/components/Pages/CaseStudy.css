@@ -444,7 +444,7 @@
 /* ── Prototype CTA ─────────────────────────────────────────── */
 .prototype-cta {
   margin-top: 2.5rem;
-  padding: 1.75rem 2rem;
+  padding: 1.25rem;
   display: flex;
   align-items: center;
   gap: 1.5rem;
@@ -456,16 +456,6 @@
   border-radius: 14px;
   position: relative;
   overflow: hidden;
-}
-
-.prototype-cta::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  width: 3px;
-  background: var(--accent-color, var(--planet-color));
 }
 
 .prototype-cta-copy {
@@ -518,6 +508,7 @@
 
 .prototype-cta-btn:hover {
   box-shadow: 0 10px 30px rgba(var(--planet-color-rgb), 0.45);
+  background: var(--accent-color, var(--planet-color));
 }
 
 @media (max-width: 720px) {
