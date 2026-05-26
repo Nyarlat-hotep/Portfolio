@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import {
   Search, X, SlidersHorizontal, MessageSquare, PhoneCall, PhoneMissed, Voicemail, ArrowRight,
+  ChevronDown, Diamond, MoreVertical,
 } from 'lucide-react';
 import './PipelinePanel.css';
 
@@ -59,8 +60,16 @@ function LeadCard({ lead, selected, callActive, onClick }) {
       </div>
 
       <div className="bp-lead-card__action">
-        <span className="bp-lead-card__action-diamond">◆</span>
+        <Diamond size={10} className="bp-lead-card__action-diamond" fill="currentColor" />
         <span className="bp-lead-card__action-text">{lead.nextAction}</span>
+        <button
+          type="button"
+          className="bp-lead-card__more"
+          aria-label="More options"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <MoreVertical size={16} />
+        </button>
       </div>
 
       <div className="bp-lead-card__footer">
@@ -183,6 +192,7 @@ export default function PipelinePanel({
                   {section.leads.length}
                 </span>
                 <span className="bp-pl-section__label">{section.label}</span>
+                <ChevronDown size={16} className="bp-pl-section__chevron" />
               </summary>
               <div className="bp-lead-list">
                 {section.leads.map(lead => (
