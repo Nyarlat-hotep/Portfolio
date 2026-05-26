@@ -1,12 +1,14 @@
 // src/components/UI/PresentationMode.jsx
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createPortal } from 'react-dom';
-import { X, ArrowLeft, ArrowRight } from 'lucide-react';
+import { X, ArrowLeft, ArrowRight, RotateCcw } from 'lucide-react';
 import { presentationSlides, STUDY_SLIDE_COUNTS } from '../../data/presentationSlides';
 import FragmentedOrbits   from './FragmentedOrbits';
 import ThroughputCollapse from './ThroughputCollapse';
 import InterferenceWaves  from './InterferenceWaves';
+import { PROTOTYPES } from '../../prototypes';
+import { useScriptedFlow } from '../../prototypes/shared/useScriptedFlow';
 import './PresentationMode.css';
 
 // Map study number → problem visualisation component
@@ -143,12 +145,98 @@ function SlideExplore({ slide }) {
   );
 }
 
+// Prototype slide — embeds an interactive prototype directly inside a slide.
+// Supports scripted (steps + narration HUD + arrow-key advance via prototypeRef)
+// and free-click (no steps, user drives with the mouse) prototypes.
+const SlidePrototype = function SlidePrototype({ slide, prototypeRef }) {
+  const proto = PROTOTYPES[slide.prototypeId];
+  const isScripted = (proto?.steps?.length || 0) > 0;
+  const flow = useScriptedFlow(proto?.steps || []);
+
+  useEffect(() => {
+    if (!isScripted) {
+      prototypeRef.current = null;
+      return;
+    }
+    prototypeRef.current = {
+      next: flow.next,
+      prev: flow.prev,
+      isFirst: flow.isFirst,
+      isLast: flow.isLast,
+      restart: flow.restart,
+    };
+    return () => { prototypeRef.current = null; };
+  }, [flow, prototypeRef, isScripted]);
+
+  if (!proto) return null;
+  const ProtoComponent = proto.component;
+
+  return (
+    <div className="pm-slide pm-slide--prototype" style={{ '--demo-accent': slide.accent }}>
+      <div className="pm-slide-label" style={{ color: slide.accent }}>
+        {slide.label || 'Interactive Prototype'}
+      </div>
+      <div className="pm-divider" style={{ background: slide.accent }} />
+
+      <div className="pm-prototype-stage">
+        <Suspense fallback={<div className="pm-prototype-loading">Loading prototype…</div>}>
+          {isScripted
+            ? <ProtoComponent step={flow.step} stepIndex={flow.index} />
+            : <ProtoComponent />}
+        </Suspense>
+      </div>
+
+      {isScripted ? (
+        <div className="pm-prototype-hud">
+          <AnimatePresence mode="wait">
+            <motion.p
+              key={flow.index}
+              className="pm-prototype-narration"
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -4 }}
+              transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+            >
+              {flow.step?.narration}
+            </motion.p>
+          </AnimatePresence>
+
+          <div className="pm-prototype-progress">
+            {Array.from({ length: flow.total }, (_, i) => (
+              <span
+                key={i}
+                className="pm-prototype-dot"
+                style={{ background: i === flow.index ? slide.accent : undefined }}
+              />
+            ))}
+            {flow.isLast && (
+              <button
+                className="pm-prototype-restart"
+                onClick={flow.restart}
+                aria-label="Restart prototype"
+                style={{ borderColor: slide.accent, color: slide.accent }}
+              >
+                <RotateCcw size={12} />
+              </button>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className="pm-prototype-hint">
+          Click around to explore. Press <kbd>→</kbd> to continue the presentation.
+        </div>
+      )}
+    </div>
+  );
+};
+
 const SLIDE_COMPONENTS = {
-  title:    SlideTitle,
-  problem:  SlideProblem,
-  explore:  SlideExplore,
-  solution: SlideSolution,
-  impact:   SlideImpact,
+  title:     SlideTitle,
+  problem:   SlideProblem,
+  explore:   SlideExplore,
+  solution:  SlideSolution,
+  impact:    SlideImpact,
+  prototype: SlidePrototype,
 };
 
 // Reference width the slides are designed at — used for proportional scaling
@@ -170,8 +258,10 @@ export default function PresentationMode({ isOpen, onClose }) {
   const [navVisible, setNavVisible]  = useState(false);
   const [slideScale,  setSlideScale]  = useState(1);
   const stageRef       = useRef(null);
+  const prototypeRef   = useRef(null);
   const total = presentationSlides.length;
   const slide = presentationSlides[slideIndex];
+  const isPrototypeSlide = slide?.type === 'prototype';
 
   const handleMouseMove = useCallback((e) => {
     if (e.clientY >= window.innerHeight * 0.80) {
@@ -219,19 +309,34 @@ export default function PresentationMode({ isOpen, onClose }) {
   const slideIndexRef = useRef(slideIndex);
   useEffect(() => { slideIndexRef.current = slideIndex; }, [slideIndex]);
 
-  const goNext = useCallback(() => {
+  const advanceSlide = useCallback(() => {
     if (slideIndexRef.current < total - 1) {
       setDirection(1);
       setSlideIndex((i) => i + 1);
     }
   }, [total]);
 
-  const goPrev = useCallback(() => {
+  const reverseSlide = useCallback(() => {
     if (slideIndexRef.current > 0) {
       setDirection(-1);
       setSlideIndex((i) => i - 1);
     }
   }, []);
+
+  // Public nav: if the active slide hosts a prototype with unfinished steps,
+  // arrows drive the prototype first; only when it's at its end do we move
+  // between presentation slides.
+  const goNext = useCallback(() => {
+    const proto = prototypeRef.current;
+    if (proto && !proto.isLast) { proto.next(); return; }
+    advanceSlide();
+  }, [advanceSlide]);
+
+  const goPrev = useCallback(() => {
+    const proto = prototypeRef.current;
+    if (proto && !proto.isFirst) { proto.prev(); return; }
+    reverseSlide();
+  }, [reverseSlide]);
 
   // Keyboard navigation — handler is stable; no re-register on every slide change
   useEffect(() => {
@@ -293,11 +398,8 @@ export default function PresentationMode({ isOpen, onClose }) {
       </div>
 
       {/* ── Content stage: fills remaining space, scales content proportionally ── */}
-      <div className="pm-stage" ref={stageRef}>
-        <div
-          className="pm-slide-scaler"
-          style={{ transform: `scale(${slideScale})` }}
-        >
+      <div className={`pm-stage${isPrototypeSlide ? ' pm-stage--full' : ''}`} ref={stageRef}>
+        {isPrototypeSlide ? (
           <AnimatePresence custom={direction} mode="wait">
             <motion.div
               key={slideIndex}
@@ -307,12 +409,32 @@ export default function PresentationMode({ isOpen, onClose }) {
               animate="center"
               exit="exit"
               transition={{ duration: 0.32, ease: [0.4, 0, 0.2, 1] }}
-              className="pm-slide-wrapper"
+              className="pm-slide-wrapper pm-slide-wrapper--full"
             >
-              <SlideComponent slide={slide} />
+              <SlideComponent slide={slide} prototypeRef={prototypeRef} />
             </motion.div>
           </AnimatePresence>
-        </div>
+        ) : (
+          <div
+            className="pm-slide-scaler"
+            style={{ transform: `scale(${slideScale})` }}
+          >
+            <AnimatePresence custom={direction} mode="wait">
+              <motion.div
+                key={slideIndex}
+                custom={direction}
+                variants={slideVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={{ duration: 0.32, ease: [0.4, 0, 0.2, 1] }}
+                className="pm-slide-wrapper"
+              >
+                <SlideComponent slide={slide} />
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        )}
       </div>
 
       {/* ── Arrow navigation — revealed on hover near bottom ── */}

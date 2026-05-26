@@ -1,12 +1,14 @@
-import { useRef } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Play } from 'lucide-react';
 import ImageCompare from '../UI/ImageCompare';
 import FragmentedOrbits from '../UI/FragmentedOrbits';
 import InterferenceWaves from '../UI/InterferenceWaves';
 import ThroughputCollapse from '../UI/ThroughputCollapse';
 import ScrollTracker from '../UI/ScrollTracker';
 import HorizontalScrollStrip from '../UI/HorizontalScrollStrip';
+import DemoShell from '../../prototypes/shared/DemoShell';
+import { PROTOTYPES, preloadPrototype } from '../../prototypes';
 import './CaseStudy.css';
 
 // --- Variant definitions ---
@@ -129,6 +131,15 @@ export default function CaseStudy({ caseStudy, planetColor = '#cc2200', scrollCo
   const overviewRef = useRef(null);
   const solutionRef = useRef(null);
   const impactRef = useRef(null);
+
+  const [demoOpen, setDemoOpen] = useState(false);
+  const prototypeId = caseStudy?.prototypeId;
+  const hasPrototype = prototypeId && PROTOTYPES[prototypeId];
+
+  // Warm the prototype chunk so launching the demo feels instant
+  useEffect(() => {
+    if (prototypeId) preloadPrototype(prototypeId);
+  }, [prototypeId]);
 
   if (!caseStudy) return null;
 
@@ -264,6 +275,26 @@ export default function CaseStudy({ caseStudy, planetColor = '#cc2200', scrollCo
               <img src={src} alt={`${caseStudy.title} solution ${i + 1}`} />
             </motion.div>
           ))}
+          {hasPrototype && (
+            <motion.div className="prototype-cta" variants={contentVariants}>
+              <div className="prototype-cta-copy">
+                <div className="prototype-cta-label">Interactive Prototype</div>
+                <div className="prototype-cta-title">See how it works</div>
+                <div className="prototype-cta-sub">
+                  A scripted walkthrough of the persistent lead queue, surfaced client context, and unified call · text · chat surface.
+                </div>
+              </div>
+              <motion.button
+                className="prototype-cta-btn"
+                onClick={() => setDemoOpen(true)}
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <Play size={16} fill="currentColor" />
+                Launch prototype
+              </motion.button>
+            </motion.div>
+          )}
         </AnimatedSection>
       </div>
 
@@ -428,6 +459,14 @@ export default function CaseStudy({ caseStudy, planetColor = '#cc2200', scrollCo
         </motion.section>
       )}
       </div>
+
+      {hasPrototype && (
+        <DemoShell
+          prototypeId={prototypeId}
+          isOpen={demoOpen}
+          onClose={() => setDemoOpen(false)}
+        />
+      )}
     </div>
   );
 }

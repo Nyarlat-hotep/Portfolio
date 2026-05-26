@@ -7,6 +7,7 @@ export const caseStudies = {
     company: 'Rocket Mortgage',
     role: 'Lead Product Designer',
     duration: '3–4 months to launch',
+    prototypeId: 'banana-phone',
 
     overview: 'Banana Phone is Rocket Mortgage\'s enterprise communication platform — the tool thousands of mortgage bankers rely on to call, text, and chat with clients throughout the loan process. I joined the project as lead product designer three months before a hard launch deadline, stepping into a product that had been through too many design iterations to count without a coherent strategy to show for it. My job was to stabilize the design direction, make the critical calls needed to ship, and lay the groundwork for what the product could become.',
 

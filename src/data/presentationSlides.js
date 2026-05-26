@@ -2,7 +2,7 @@
 
 export const TOTAL_STUDIES = 3;
 // Slide count per study — index 0 = study 1, etc.
-export const STUDY_SLIDE_COUNTS = [6, 5, 6];
+export const STUDY_SLIDE_COUNTS = [7, 5, 6];
 
 export const presentationSlides = [
   // ── BANANA PHONE ─────────────────────────────────
@@ -45,6 +45,15 @@ export const presentationSlides = [
     title: 'BANANA PHONE',
     nugget: "Enterprise ≠ consumer. I brought the lead queue to a persistent surface and exposed critical client context — address, timezone, loan stage — directly into the communication view. This provided a solid foundation for calling and texting but lacked cohesion.",
     image: '/images/case-studies/BananaPhone/current BP.png',
+  },
+  {
+    id: 'bp-prototype',
+    type: 'prototype',
+    study: 1,
+    accent: '#f5c842',
+    title: 'BANANA PHONE',
+    label: 'Interactive Prototype',
+    prototypeId: 'banana-phone',
   },
   {
     id: 'bp-impact',
