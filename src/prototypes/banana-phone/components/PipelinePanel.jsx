@@ -5,25 +5,37 @@ import {
 } from 'lucide-react';
 import './PipelinePanel.css';
 
-// Lead grouping — mirrors source repo's buildSections (without quiet-hours/timezone logic)
+// Lead grouping — mirrors source repo's buildSections.
+// "Action required" mirrors source's inbox: clients whose last contact was a
+// missed call, voicemail, or unanswered text (the cases a banker needs to
+// follow up on). Remaining clients fall through propensity buckets.
 function buildSections(clients) {
+  const ACTION_CHANNELS = new Set(['missed-call', 'voicemail', 'text']);
+  const actionReq = [];
+  const remaining = [];
+  for (const c of clients) {
+    if (c.lastContact && ACTION_CHANNELS.has(c.lastContact.channel)) {
+      actionReq.push(c);
+    } else {
+      remaining.push(c);
+    }
+  }
+
   const top = [];
   const hot = [];
   const follow = [];
-  for (const c of clients) {
+  for (const c of remaining) {
     if (c.propensity === 'high') top.push(c);
     else if (c.propensity === 'medium') hot.push(c);
     else follow.push(c);
   }
+
   return [
+    { id: 'action-required', label: 'Action required', leads: actionReq },
     { id: 'top-ops', label: 'Top opportunities', leads: top },
     { id: 'hotlist', label: 'Hotlist', leads: hot },
     { id: 'follow-ups', label: 'Follow ups', leads: follow },
   ].filter(s => s.leads.length > 0);
-}
-
-function tagSlug(tag) {
-  return tag.toLowerCase().replace(/\s+/g, '-');
 }
 
 function channelIcon(channel) {
@@ -80,7 +92,7 @@ function LeadCard({ lead, selected, callActive, onClick }) {
         <div className="bp-lead-card__footer-divider" />
         <div className="bp-lead-card__footer-col">
           <span className="bp-lead-card__footer-label">Loan status</span>
-          <span className={`bp-lead-card__tag bp-lead-card__tag--${tagSlug(lead.tag)}`}>{lead.tag}</span>
+          <span className="bp-lead-card__footer-value">{lead.tag}</span>
         </div>
         <div className="bp-lead-card__footer-divider" />
         <div className="bp-lead-card__footer-col">
@@ -174,7 +186,7 @@ export default function PipelinePanel({
         </button>
       </div>
 
-      <div className="bp-pipeline-panel__leads">
+      <div className="bp-pipeline-panel__leads bp-pipeline-panel__leads--with-footer">
         {activeTab !== 'clients' ? (
           <div className="bp-empty-tab">
             <span>{activeTab === 'calendar' ? 'Calendar' : 'Contacted'} view</span>
@@ -208,6 +220,12 @@ export default function PipelinePanel({
             </details>
           ))
         )}
+      </div>
+
+      <div className="bp-pipeline-panel__footer">
+        <button type="button" className="bp-pipeline-footer-btn">
+          AI mass outreach
+        </button>
       </div>
     </aside>
   );

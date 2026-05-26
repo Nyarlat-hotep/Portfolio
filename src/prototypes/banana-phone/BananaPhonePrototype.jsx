@@ -1,6 +1,7 @@
 import { useState, useMemo, useCallback } from 'react';
 import SideNav from './components/SideNav.jsx';
 import PipelinePanel from './components/PipelinePanel.jsx';
+import OpportunityControls from './components/OpportunityControls.jsx';
 import ComsHeader from './components/ComsHeader.jsx';
 import MessageThread from './components/MessageThread.jsx';
 import ClientDetails from './components/ClientDetails.jsx';
@@ -14,7 +15,6 @@ const DEFAULT_CLIENT = MOCK_CLIENTS.find(c => c.id === 10) || MOCK_CLIENTS[0];
 
 export default function BananaPhonePrototype() {
   const [selectedId, setSelectedId] = useState(DEFAULT_CLIENT.id);
-  const [activeChannel, setActiveChannel] = useState('text'); // 'text' | 'chat'
   const [callActive, setCallActive] = useState(false);
   const [pipelineTab, setPipelineTab] = useState('clients');
   const [sentMessages, setSentMessages] = useState({}); // { [clientId]: Message[] }
@@ -26,7 +26,6 @@ export default function BananaPhonePrototype() {
 
   const handleSelect = useCallback((client) => {
     setSelectedId(client.id);
-    setActiveChannel('text');
     setCallActive(false);
   }, []);
 
@@ -73,15 +72,16 @@ export default function BananaPhonePrototype() {
         />
 
         <div className="bp-shell__main">
+          <OpportunityControls
+            client={selectedClient}
+            callActive={callActive}
+            onStartCall={() => setCallActive(true)}
+            onEndCall={() => setCallActive(false)}
+          />
+
           <div className="bp-shell__body">
             <div className="bp-shell__comms">
-              <ComsHeader
-                client={selectedClient}
-                activeChannel={activeChannel}
-                onChannelChange={setActiveChannel}
-                onStartCall={() => setCallActive(true)}
-                callActive={callActive}
-              />
+              <ComsHeader client={selectedClient} />
               {callActive ? (
                 <ActiveCall
                   client={selectedClient}
@@ -91,7 +91,6 @@ export default function BananaPhonePrototype() {
                 <MessageThread
                   client={selectedClient}
                   threads={threads}
-                  channel={activeChannel}
                   onSend={handleSendMessage}
                 />
               )}

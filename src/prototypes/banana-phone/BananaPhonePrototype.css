@@ -82,10 +82,11 @@
 
 /* ── Reset host-app global styles that bleed into the prototype ── */
 /* The portfolio's index.css applies border / padding / background / colour to
-   every <button> globally. That breaks every icon-button inside this prototype
-   (tons of padding, glass borders, wrong colours). Neutralise it for the BP
-   scope only and let component CSS provide the real chrome. */
-.bp-app button {
+   every <button> globally. Wrap our reset in :where() so it has ZERO
+   specificity contribution — component classes (.bp-channel-toggle__btn--active
+   etc.) can then override individual properties without needing to be
+   namespaced to a more specific selector. */
+:where(.bp-app) button {
   font-family: inherit;
   font-size: inherit;
   color: inherit;
@@ -96,11 +97,11 @@
   transition: none;
   cursor: pointer;
 }
-.bp-app button:hover,
-.bp-app button:focus,
-.bp-app button:focus-visible {
+:where(.bp-app) button:hover,
+:where(.bp-app) button:focus,
+:where(.bp-app) button:focus-visible {
   outline: none;
-  background-color: inherit;
+  background-color: transparent;
   border-color: transparent;
   box-shadow: none;
 }

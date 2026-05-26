@@ -31,7 +31,7 @@ function Message({ msg }) {
   );
 }
 
-export default function MessageThread({ client, threads, channel, onSend }) {
+export default function MessageThread({ client, threads, onSend }) {
   const [draft, setDraft] = useState('');
   const inputRef = useRef(null);
   const messagesRef = useRef(null);
@@ -68,7 +68,6 @@ export default function MessageThread({ client, threads, channel, onSend }) {
     el.style.height = Math.min(el.scrollHeight, 160) + 'px';
   };
 
-  const channelLabel = channel === 'chat' ? 'Send' : 'Text';
 
   return (
     <div className="bp-message-thread">
@@ -100,7 +99,7 @@ export default function MessageThread({ client, threads, channel, onSend }) {
           <textarea
             ref={inputRef}
             className="bp-message-input__textarea"
-            placeholder={`${channelLabel} ${client.name} a message`}
+            placeholder={`Text ${client.name} a message`}
             value={draft}
             onChange={handleInput}
             onKeyDown={handleKeyDown}

@@ -192,9 +192,10 @@
   flex-shrink: 0;
 }
 
-.bp-pl-section__chip--top-ops     { background: #e8edff; color: #2c3ebd; }
-.bp-pl-section__chip--hotlist     { background: #f0e8ff; color: #6b35c9; }
-.bp-pl-section__chip--follow-ups  { background: #ffe8d5; color: #b84a0c; }
+.bp-pl-section__chip--action-required { background: #fce8e8; color: #9c1b1b; }
+.bp-pl-section__chip--top-ops         { background: #e8edff; color: #2c3ebd; }
+.bp-pl-section__chip--hotlist         { background: #f0e8ff; color: #6b35c9; }
+.bp-pl-section__chip--follow-ups      { background: #ffe8d5; color: #b84a0c; }
 
 .bp-pl-section__label {
   flex: 1;
@@ -356,25 +357,8 @@
   align-self: stretch;
 }
 
-/* Loan status tag inside footer */
-.bp-lead-card__tag {
-  font-size: 12px;
-  font-weight: 500;
-  padding: 1px 8px;
-  border-radius: 6px;
-  background: #f2f2f2;
-  color: #545454;
-  align-self: flex-start;
-}
-
-.bp-lead-card__tag--initial-contact { background: #f2f2f2; color: #545454; }
-.bp-lead-card__tag--allocated       { background: #dff0ff; color: #0050b3; }
-.bp-lead-card__tag--credit-pulled   { background: #fff3cd; color: #7a5000; }
-.bp-lead-card__tag--application     { background: #e6f4ea; color: #0b5e36; }
-.bp-lead-card__tag--folder-received { background: #fce8e8; color: #9c1b1b; }
-.bp-lead-card__tag--approved        { background: #e6f4ea; color: #0b5e36; }
-.bp-lead-card__tag--clear-to-close  { background: #e6f4ea; color: #0b5e36; }
-.bp-lead-card__tag--closed          { background: #111;    color: white; }
+/* Loan status renders as plain text (matches current design — colored pills
+   were used in earlier iterations of the source repo). */
 
 /* "Move to contacted" footer (visible when card is selected) */
 .bp-lead-card__move {
@@ -410,6 +394,32 @@
   flex-shrink: 0;
   transition: background 0.15s;
 }
+
+.bp-pipeline-panel__leads--with-footer {
+  padding-bottom: 0;
+}
+
+/* Footer with AI mass outreach button */
+.bp-pipeline-panel__footer {
+  flex-shrink: 0;
+  padding: 12px 16px 16px;
+  background: var(--bp-surface);
+  border-top: 1px solid var(--bp-border);
+}
+
+.bp-pipeline-footer-btn {
+  width: 100%;
+  height: 52px;
+  background: #111;
+  border: 1.5px solid #111;
+  border-radius: 100px;
+  font-size: 15px;
+  font-weight: 500;
+  color: white;
+  cursor: pointer;
+}
+
+.bp-pipeline-footer-btn:hover { background: #333; }
 
 /* Empty / placeholder tab */
 .bp-empty-tab {

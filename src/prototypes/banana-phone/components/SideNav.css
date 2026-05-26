@@ -27,6 +27,7 @@
 }
 
 .bp-top-nav__notifications {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -44,6 +45,35 @@
 
 .bp-top-nav__notifications:hover { background: #efefef; }
 
+.bp-top-nav__notif-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 7px;
+  border-radius: 100px;
+  background: #c43030;
+  color: white;
+  font-size: 11px;
+  font-weight: 600;
+  margin-left: 2px;
+}
+
+.bp-top-nav__settings {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--bp-text);
+  cursor: pointer;
+}
+
+.bp-top-nav__settings:hover { background: #f2f2f2; }
+
 .bp-top-nav__user-status {
   display: inline-flex;
   align-items: center;
@@ -60,6 +90,8 @@
 }
 
 .bp-top-nav__user-status--ready { background: #e6f4ea; border-color: rgba(11, 94, 54, 0.18); color: #0b5e36; }
+.bp-top-nav__user-status--paused { background: #f5e8c8; border-color: rgba(122, 80, 0, 0.2); color: #5a3a00; }
+.bp-top-nav__user-status--paused .bp-top-nav__avatar { background: #5a3a00; }
 
 .bp-top-nav__avatar {
   display: flex;
