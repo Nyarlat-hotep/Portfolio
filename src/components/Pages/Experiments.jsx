@@ -20,7 +20,7 @@ function iso(gx, gy, gz, ox, oy, sc) {
 }
 
 // ── Grid ─────────────────────────────────────────────────────────────────
-const NODE_POS = [[-3, -3], [3, -3], [-3, 3], [3, 3], [0, -6], [0, 6], [-6, 0]];
+const NODE_POS = [[-3, -3], [3, -3], [-3, 3], [3, 3], [0, -6], [0, 6], [6, 0], [-6, 0]];
 
 function drawGrid(ctx, ox, oy, sc, gz = 0, lineAlpha = 0.10, nearAlpha = 0.22, withDetails = true) {
   const N = 7;
@@ -127,7 +127,7 @@ function drawDecorations(ctx, ox, oy, sc, t) {
   ctx.fillStyle = `rgba(255,119,0,${scanAlpha})`;
   ctx.fillText('SCANNING...', scanPos.sx, scanPos.sy);
   ctx.fillStyle = `rgba(255,119,0,${scanAlpha * 0.80})`;
-  ctx.fillText('// 7 ANOMALIES DETECTED', scanPos.sx, scanPos.sy + ss * 1.6);
+  ctx.fillText('// 8 ANOMALIES DETECTED', scanPos.sx, scanPos.sy + ss * 1.6);
 
   // Text: coordinate label near back-right corner
   const coordPos = iso(7.5, -7.5, 0.05, ox, oy, sc);
@@ -474,6 +474,99 @@ function drawSpecimen(ctx, gx, gy, ox, oy, sc, bob, hov) {
   ctx.restore();
 }
 
+// ── Paw — PETPRINT ───────────────────────────────────────────────────────
+function drawPaw(ctx, gx, gy, ox, oy, sc, bob, hov) {
+  const c = hov ? '0,255,106' : '150,200,30';
+
+  // Main pad at z=0, four toe beans above at z~0.75 in an arc
+  const padR = 0.85, padRy = 0.55;       // main pad ellipse radii (grid units)
+  const toes = [
+    { dx:-0.70, dy:-0.45, r:0.32 },
+    { dx:-0.24, dy:-0.85, r:0.30 },
+    { dx: 0.24, dy:-0.85, r:0.30 },
+    { dx: 0.70, dy:-0.45, r:0.32 },
+  ];
+  const padZ = 0.05;
+  const toeZ = 0.75;
+
+  ctx.save();
+
+  // Main pad — concentric rings (top + base)
+  const padTop = iso(gx, gy, padZ + 0.5, ox, oy, sc);
+  const padBase = iso(gx, gy, padZ, ox, oy, sc);
+  // Vertical wall hints — 6 short risers around pad edge
+  ctx.strokeStyle = `rgba(${c},${hov ? 0.55 : 0.35})`;
+  ctx.lineWidth = 0.7;
+  for (let i = 0; i < 8; i++) {
+    const a = (i / 8) * Math.PI * 2;
+    const x1 = gx + Math.cos(a) * padR;
+    const y1 = gy + Math.sin(a) * padR * (padRy / padR);
+    const lo = iso(x1, y1, padZ, ox, oy, sc);
+    const hi = iso(x1, y1, padZ + 0.5, ox, oy, sc);
+    ctx.beginPath();
+    ctx.moveTo(lo.sx, lo.sy - bob);
+    ctx.lineTo(hi.sx, hi.sy - bob);
+    ctx.stroke();
+  }
+  // Base ellipse (faint)
+  ctx.strokeStyle = `rgba(${c},${hov ? 0.55 : 0.38})`;
+  ctx.lineWidth = 0.9;
+  ctx.beginPath();
+  ctx.ellipse(padBase.sx, padBase.sy - bob, padR * (TW/2) * sc, padRy * (TH/2) * sc, 0, 0, Math.PI*2);
+  ctx.stroke();
+  // Top ellipse (bright — the pad surface)
+  ctx.fillStyle = `rgba(${c},${hov ? 0.14 : 0.06})`;
+  ctx.strokeStyle = `rgba(${c},${hov ? 0.95 : 0.72})`;
+  ctx.lineWidth = 1.1;
+  ctx.beginPath();
+  ctx.ellipse(padTop.sx, padTop.sy - bob, padR * (TW/2) * sc, padRy * (TH/2) * sc, 0, 0, Math.PI*2);
+  ctx.fill(); ctx.stroke();
+
+  // Toe beans — each a small dome (base ellipse + top ellipse)
+  for (const { dx, dy, r } of toes) {
+    const tx = gx + dx, ty = gy + dy;
+    const ry = r * 0.75;  // slightly squashed
+    const tBase = iso(tx, ty, toeZ, ox, oy, sc);
+    const tTop  = iso(tx, ty, toeZ + 0.35, ox, oy, sc);
+    // Riser line at center connecting base to top
+    ctx.strokeStyle = `rgba(${c},${hov ? 0.45 : 0.28})`;
+    ctx.lineWidth = 0.6;
+    ctx.beginPath();
+    ctx.moveTo(tBase.sx, tBase.sy - bob);
+    ctx.lineTo(tTop.sx, tTop.sy - bob);
+    ctx.stroke();
+    // Base ring
+    ctx.strokeStyle = `rgba(${c},${hov ? 0.65 : 0.42})`;
+    ctx.lineWidth = 0.8;
+    ctx.beginPath();
+    ctx.ellipse(tBase.sx, tBase.sy - bob, r * (TW/2) * sc, ry * (TH/2) * sc, 0, 0, Math.PI*2);
+    ctx.stroke();
+    // Top ring (bright)
+    ctx.fillStyle = `rgba(${c},${hov ? 0.20 : 0.10})`;
+    ctx.strokeStyle = `rgba(${c},${hov ? 0.95 : 0.78})`;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.ellipse(tTop.sx, tTop.sy - bob, r * (TW/2) * sc, ry * (TH/2) * sc, 0, 0, Math.PI*2);
+    ctx.fill(); ctx.stroke();
+  }
+
+  // Dashed connectors from pad center to each toe (paw skeleton hint)
+  ctx.setLineDash([2, 4]);
+  ctx.strokeStyle = `rgba(${c},${hov ? 0.40 : 0.22})`;
+  ctx.lineWidth = 0.6;
+  const padCenter = iso(gx, gy, padZ + 0.5, ox, oy, sc);
+  for (const { dx, dy } of toes) {
+    const t = iso(gx + dx, gy + dy, toeZ, ox, oy, sc);
+    ctx.beginPath();
+    ctx.moveTo(padCenter.sx, padCenter.sy - bob);
+    ctx.lineTo(t.sx, t.sy - bob);
+    ctx.stroke();
+  }
+  ctx.setLineDash([]);
+
+  ctx.restore();
+}
+
 // ── Monolith — US_CODE_BROWSER ───────────────────────────────────────────
 function drawMonolith(ctx, gx, gy, ox, oy, sc, bob, hov) {
   const c = hov ? '0,255,106' : '150,200,30';
@@ -557,9 +650,10 @@ const EXPERIMENT_CONFIGS = [
   { id:'SCI_FI_KALEIDOSCOPE',    gridPos:[ 0,-6], structureType:'kaleidoscope',  bobPhase:2.36 },
   { id:'US_CODE_BROWSER',        gridPos:[ 0, 6], structureType:'monolith',      bobPhase:0.78 },
   { id:'SPECIMEN',               gridPos:[ 6, 0], structureType:'specimen',      bobPhase:3.55 },
+  { id:'PETPRINT',               gridPos:[-6, 0], structureType:'paw',           bobPhase:5.30 },
 ];
-const STRUCT_FNS = { crystal:drawCrystal, cube:drawCube, sphere:drawSphere, dome:drawDome, kaleidoscope:drawKaleidoscope, monolith:drawMonolith, specimen:drawSpecimen };
-const STRUCT_H   = { crystal:1.25, cube:1.65, sphere:1.9, dome:1.28, kaleidoscope:1.0, monolith:2.0, specimen:1.55 };
+const STRUCT_FNS = { crystal:drawCrystal, cube:drawCube, sphere:drawSphere, dome:drawDome, kaleidoscope:drawKaleidoscope, monolith:drawMonolith, specimen:drawSpecimen, paw:drawPaw };
+const STRUCT_H   = { crystal:1.25, cube:1.65, sphere:1.9, dome:1.28, kaleidoscope:1.0, monolith:2.0, specimen:1.55, paw:1.1 };
 
 const EXPERIMENT_META = [
   { id:'VISUAL_ARCHIVE',    title:'VISUAL_ARCHIVE',
@@ -583,6 +677,9 @@ const EXPERIMENT_META = [
   { id:'SPECIMEN', title:'SPECIMEN',
     description:'Isometric sci-fi observatory. Five glowing zones over a cyan grid floor. Scan the anomaly terrain through five depth layers — something is in there.',
     tags:['R3F','Three.js','Isometric','GLSL'], link:'https://nyarlat-hotep.github.io/specimen/', isGallery:false },
+  { id:'PETPRINT', title:'PETPRINT',
+    description:'Pet portrait studio. Upload a photo, cut the subject out with AI, give them nicknames, and dress them up in custom typographic posters.',
+    tags:['AI','Image','Typography','Tool'], link:'https://nyarlat-hotep.github.io/petprint/', isGallery:false },
 ];
 
 // ── Main drawFrame ────────────────────────────────────────────────────────
