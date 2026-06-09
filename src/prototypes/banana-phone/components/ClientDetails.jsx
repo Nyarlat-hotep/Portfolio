@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useLayoutEffect } from 'react';
 import {
   User, Rocket, Home, Calendar, DollarSign, MapPin, Check, ChevronDown,
 } from 'lucide-react';
@@ -65,21 +65,43 @@ function Accordion({ title, defaultOpen = true, children }) {
 
 export default function ClientDetails({ client }) {
   const [tab, setTab] = useState('Details');
+  const tabRefs = useRef({});
+  const [indicator, setIndicator] = useState({ left: 0, width: 0 });
+
+  // Position the sliding pill under the active tab. useLayoutEffect runs before
+  // paint, so the indicator is in place on first render with no flash. Re-runs
+  // on tab change and on resize (widths can shift with font load / panel size).
+  useLayoutEffect(() => {
+    const place = () => {
+      const el = tabRefs.current[tab];
+      if (el) setIndicator({ left: el.offsetLeft, width: el.offsetWidth });
+    };
+    place();
+    window.addEventListener('resize', place);
+    return () => window.removeEventListener('resize', place);
+  }, [tab]);
 
   return (
     <aside className="bp-client-details">
       <div className="bp-client-details__controls">
-        <div className="bp-segmented-control">
-          {TABS.map(t => (
-            <button
-              key={t}
-              type="button"
-              className={`bp-segment${tab === t ? ' bp-segment--active' : ''}`}
-              onClick={() => setTab(t)}
-            >
-              {t}
-            </button>
-          ))}
+        <div className="bp-segmented-scroll">
+          <div className="bp-segmented-control">
+            <span
+              className="bp-segment-indicator"
+              style={{ transform: `translateX(${indicator.left}px)`, width: indicator.width }}
+            />
+            {TABS.map(t => (
+              <button
+                key={t}
+                ref={el => { tabRefs.current[t] = el; }}
+                type="button"
+                className={`bp-segment${tab === t ? ' bp-segment--active' : ''}`}
+                onClick={() => setTab(t)}
+              >
+                {t}
+              </button>
+            ))}
+          </div>
         </div>
         <button type="button" className="bp-actions-btn">
           Actions

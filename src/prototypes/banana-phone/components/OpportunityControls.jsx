@@ -25,8 +25,8 @@ export default function OpportunityControls({ client, callActive, onStartCall, o
     <div className={`bp-opportunity-controls${callActive ? ' bp-opportunity-controls--active' : ''}`}>
       <div className="bp-call-controls">
         <button type="button" className="bp-contact-pill" aria-label="Select contact">
-          <span className="bp-contact-pill__avatar"><User size={14} /></span>
-          <ChevronDown size={14} />
+          <span className="bp-contact-pill__avatar"><User size={16} /></span>
+          <ChevronDown size={16} />
         </button>
         <div className="bp-call-controls__name">{client.name}</div>
         <span className="bp-call-controls__sep">·</span>

@@ -16,7 +16,11 @@
   padding: 24px;
   gap: 16px;
   min-height: 0;
+  scrollbar-width: none;        /* Firefox */
+  -ms-overflow-style: none;     /* IE/Edge */
 }
+
+.bp-message-thread__messages::-webkit-scrollbar { display: none; }  /* Chrome/Safari */
 
 .bp-thread-group {
   display: flex;

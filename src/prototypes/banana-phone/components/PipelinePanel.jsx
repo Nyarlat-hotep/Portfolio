@@ -1,7 +1,7 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useRef, useLayoutEffect } from 'react';
 import {
   Search, X, SlidersHorizontal, MessageSquare, PhoneCall, PhoneMissed, Voicemail, ArrowRight,
-  ChevronDown, Diamond, MoreVertical,
+  ChevronDown, Diamond,
 } from 'lucide-react';
 import './PipelinePanel.css';
 
@@ -74,14 +74,6 @@ function LeadCard({ lead, selected, callActive, onClick }) {
       <div className="bp-lead-card__action">
         <Diamond size={10} className="bp-lead-card__action-diamond" fill="currentColor" />
         <span className="bp-lead-card__action-text">{lead.nextAction}</span>
-        <button
-          type="button"
-          className="bp-lead-card__more"
-          aria-label="More options"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <MoreVertical size={16} />
-        </button>
       </div>
 
       <div className="bp-lead-card__footer">
@@ -122,6 +114,19 @@ export default function PipelinePanel({
   clients, selectedId, onSelect, activeTab, onTabChange, callActiveClientId,
 }) {
   const [search, setSearch] = useState('');
+  const tabRefs = useRef({});
+  const [indicator, setIndicator] = useState({ left: 0, width: 0 });
+
+  // Slide the active-tab pill via transform (see ClientDetails segmented control).
+  useLayoutEffect(() => {
+    const place = () => {
+      const el = tabRefs.current[activeTab];
+      if (el) setIndicator({ left: el.offsetLeft, width: el.offsetWidth });
+    };
+    place();
+    window.addEventListener('resize', place);
+    return () => window.removeEventListener('resize', place);
+  }, [activeTab]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -166,19 +171,26 @@ export default function PipelinePanel({
       </div>
 
       <div className="bp-pipeline-tabs">
+        <span
+          className="bp-pipeline-tab-indicator"
+          style={{ transform: `translateX(${indicator.left}px)`, width: indicator.width }}
+        />
         <button
+          ref={el => { tabRefs.current.clients = el; }}
           className={`bp-pipeline-tab${activeTab === 'clients' ? ' bp-pipeline-tab--active' : ''}`}
           onClick={() => onTabChange('clients')}
         >
           Clients <span className="bp-pipeline-tab__count">{clients.length}</span>
         </button>
         <button
+          ref={el => { tabRefs.current.calendar = el; }}
           className={`bp-pipeline-tab${activeTab === 'calendar' ? ' bp-pipeline-tab--active' : ''}`}
           onClick={() => onTabChange('calendar')}
         >
           Calendar <span className="bp-pipeline-tab__count">5</span>
         </button>
         <button
+          ref={el => { tabRefs.current.contacted = el; }}
           className={`bp-pipeline-tab${activeTab === 'contacted' ? ' bp-pipeline-tab--active' : ''}`}
           onClick={() => onTabChange('contacted')}
         >

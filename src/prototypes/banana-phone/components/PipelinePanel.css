@@ -78,8 +78,10 @@
 
 .bp-icon-btn:hover { background: #efefef; }
 
-/* Tab bar */
+/* Tab bar. Active state is a single sliding pill indicator (transform-based),
+   matching the segmented control in ClientDetails — see notes there. */
 .bp-pipeline-tabs {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 4px;
@@ -91,7 +93,22 @@
   flex-shrink: 0;
 }
 
+.bp-pipeline-tab-indicator {
+  position: absolute;
+  top: 4px;
+  left: 0;
+  height: 32px;
+  background: #ffffff;
+  border-radius: 48px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+  transition: transform 0.2s ease, width 0.2s ease;
+  pointer-events: none;
+  z-index: 0;
+}
+
 .bp-pipeline-tab {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -106,13 +123,11 @@
   font-weight: 500;
   color: #545454;
   cursor: pointer;
-  transition: background 0.15s, color 0.15s, box-shadow 0.15s;
+  transition: color 0.15s;
 }
 
 .bp-pipeline-tab--active {
-  background: #ffffff;
   color: #111;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
 }
 
 .bp-pipeline-tab__count {
@@ -138,7 +153,11 @@
   flex: 1 0 0;
   overflow-y: auto;
   min-height: 0;
+  scrollbar-width: none;        /* Firefox */
+  -ms-overflow-style: none;     /* IE/Edge */
 }
+
+.bp-pipeline-panel__leads::-webkit-scrollbar { display: none; }  /* Chrome/Safari */
 
 /* Section accordion */
 .bp-pl-section {
@@ -185,7 +204,7 @@
   justify-content: center;
   min-width: 24px;
   height: 24px;
-  padding: 0 7px;
+  padding: 0 12px;
   border-radius: 100px;
   font-size: 12px;
   font-weight: 600;
@@ -262,11 +281,8 @@
   color: #545454;
 }
 
-.bp-contact-chip--text         { background: #dff0ff; color: #0050b3; }
-.bp-contact-chip--call-outbound,
-.bp-contact-chip--call-inbound,
+/* All tags use the light-gray default; only voicemail keeps a distinct color. */
 .bp-contact-chip--active-call  { background: #e6f4ea; color: #0b5e36; }
-.bp-contact-chip--missed-call  { background: #fce8e8; color: #9c1b1b; }
 .bp-contact-chip--voicemail    { background: #fff3cd; color: #7a5000; }
 
 .bp-lead-card__action {
@@ -279,26 +295,6 @@
 .bp-lead-card__action-diamond {
   color: #111;
   flex-shrink: 0;
-}
-
-.bp-lead-card__more {
-  margin-left: auto;
-  width: 28px;
-  height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: transparent;
-  border: none;
-  border-radius: 50%;
-  color: #545454;
-  cursor: pointer;
-  flex-shrink: 0;
-}
-
-.bp-lead-card__more:hover {
-  background: rgba(0, 0, 0, 0.05);
-  color: #111;
 }
 
 .bp-lead-card__action-text {
@@ -316,7 +312,7 @@
   align-items: stretch;
   background: #ffffff;
   border-top: 1px solid var(--bp-border);
-  padding: 8px 16px;
+  padding: 12px 16px;
   gap: 8px;
 }
 
@@ -410,12 +406,12 @@
 .bp-pipeline-footer-btn {
   width: 100%;
   height: 52px;
-  background: #111;
+  background: #fff;
   border: 1.5px solid #111;
   border-radius: 100px;
   font-size: 15px;
   font-weight: 500;
-  color: white;
+  color: #111;
   cursor: pointer;
 }
 

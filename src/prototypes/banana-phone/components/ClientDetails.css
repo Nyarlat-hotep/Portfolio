@@ -20,8 +20,27 @@
   flex-shrink: 0;
 }
 
-/* Segmented control */
+/* Horizontal scroll wrapper — scrolls the segmented control with no scrollbar.
+   Vertical padding + matching negative margin give the indicator's shadow room
+   to render without being clipped, while keeping layout alignment unchanged. */
+.bp-segmented-scroll {
+  flex: 1 1 0;
+  min-width: 0;
+  overflow-x: auto;
+  padding-block: 6px;
+  margin-block: -6px;
+  scrollbar-width: none;        /* Firefox */
+  -ms-overflow-style: none;     /* IE/Edge */
+}
+
+.bp-segmented-scroll::-webkit-scrollbar { display: none; }  /* Chrome/Safari */
+
+/* Segmented control. The active "pill" is a single absolutely-positioned
+   indicator that slides via transform — not a per-tab background. Transforms
+   repaint reliably inside scroll containers, avoiding the Chromium bug where a
+   child's background/shadow change isn't repainted until a reflow. */
 .bp-segmented-control {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 2px;
@@ -30,7 +49,22 @@
   border-radius: 48px;
 }
 
+.bp-segment-indicator {
+  position: absolute;
+  top: 3px;
+  left: 0;
+  height: 28px;
+  background: #fff;
+  border-radius: 48px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+  transition: transform 0.2s ease, width 0.2s ease;
+  pointer-events: none;
+  z-index: 0;
+}
+
 .bp-segment {
+  position: relative;
+  z-index: 1;
   height: 28px;
   padding: 0 12px;
   background: transparent;
@@ -41,16 +75,13 @@
   color: #545454;
   cursor: pointer;
   white-space: nowrap;
-  transition: background 0.15s, color 0.15s;
+  flex-shrink: 0;
+  transition: color 0.15s;
 }
 
-.bp-segment:hover:not(.bp-segment--active) { background: #e5e5e5; color: #111; }
+.bp-segment:hover:not(.bp-segment--active) { color: #111; }
 
-.bp-segment--active {
-  background: white;
-  color: #111;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
-}
+.bp-segment--active { color: #111; }
 
 .bp-actions-btn {
   display: inline-flex;
