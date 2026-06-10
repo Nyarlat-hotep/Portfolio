@@ -73,6 +73,7 @@ export default function BananaPhonePrototype() {
 
         <div className="bp-shell__main">
           <OpportunityControls
+            key={selectedClient.id}
             client={selectedClient}
             callActive={callActive}
             onStartCall={() => setCallActive(true)}
