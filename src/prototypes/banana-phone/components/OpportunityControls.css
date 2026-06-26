@@ -65,6 +65,11 @@
   flex-shrink: 0;
 }
 
+.bp-contact-pill:hover {
+  background: #f7f7f7;
+  border-color: var(--bp-border-soft);
+}
+
 .bp-contact-pill__avatar {
   display: flex;
   align-items: center;
@@ -85,9 +90,9 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #f7c5dd 0%, #d64f95 100%);
+  background: #d64f95;
   color: #fff;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
   letter-spacing: 0.5px;
   flex-shrink: 0;
@@ -95,7 +100,7 @@
 
 .bp-call-avatar__status {
   position: absolute;
-  left: 0;
+  right: 0;
   bottom: 0;
   width: 12px;
   height: 12px;
@@ -236,8 +241,8 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  height: 44px;
-  padding: 0 18px;
+  /* height: 44px; */
+  padding: 16px 18px;
   background: #fff;
   color: var(--bp-text);
   border: 1px solid var(--bp-border);

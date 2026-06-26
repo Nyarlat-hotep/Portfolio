@@ -2,6 +2,17 @@
 // 12 clients covering all loan statuses + propensities so each pipeline
 // section (Top opps / Hotlist / Follow ups) has populated cards.
 
+// System-level fields that read the same for every opportunity in this
+// prototype (shared rather than duplicated across all 12 client records).
+export const SHARED_LOAN_DETAILS = {
+  rate: 'Client provided interest',
+  leadSource: 'Rocket Loan',
+  leadTypeCode: 'RLHAP',
+  loanChannel: 'Forward',
+  leadCategory: 'Rocket Loan',
+  opportunityGroup: 'Retention digital purchase pitstop',
+};
+
 export const PIPELINE_STAGES = [
   'Initial contact', 'Allocated', 'Credit Pulled', 'Application',
   'Folder Received', 'Suspended', 'Approved', 'Clear to close', 'Closed',
@@ -15,6 +26,7 @@ export const MOCK_CLIENTS = [
     lastContact: { channel: 'call-outbound', elapsed: '2h' },
     hotlist: true, propensity: 'high',
     opportunityNumber: '4829487334', loanPurpose: 'Refinance', loanProduct: 'ARM 5/1',
+    timeframeToBuy: 'Closing in 30 days', opportunityStartDate: '2/18/2025',
     maxApprovalAmount: '$1,100,000', baseLoanAmount: '$1,050,000', estimatedMarketValue: '$1,200,000',
     loanToValue: '87.50', interestRate: '5.50%', creditScore: '810',
     occupancyType: 'Primary residence', propertyAddress: '555 Brickell Ave, Miami, FL 33131',
@@ -35,6 +47,7 @@ export const MOCK_CLIENTS = [
     lastContact: { channel: 'text', elapsed: '5m' },
     hotlist: true, propensity: 'high',
     opportunityNumber: '4829487325', loanPurpose: 'Purchase', loanProduct: 'Rj30 - Jumbo Smart 30 Year Fixed',
+    timeframeToBuy: 'Next 3 months', opportunityStartDate: '3/26/2025',
     maxApprovalAmount: '$800,000', baseLoanAmount: '$750,000', estimatedMarketValue: '$762,000',
     loanToValue: '80.00', interestRate: '6.50%', creditScore: '780',
     occupancyType: 'Primary residence', propertyAddress: '583945 Main St, Detroit, MI 48067',
@@ -53,6 +66,7 @@ export const MOCK_CLIENTS = [
     lastContact: { channel: 'voicemail', elapsed: '1d' },
     hotlist: true, propensity: 'high',
     opportunityNumber: '4829487332', loanPurpose: 'Refinance', loanProduct: 'Conv 15yr Fixed',
+    timeframeToBuy: 'Closing in 45 days', opportunityStartDate: '1/30/2025',
     maxApprovalAmount: '$920,000', baseLoanAmount: '$880,000', estimatedMarketValue: '$960,000',
     loanToValue: '91.67', interestRate: '5.75%', creditScore: '795',
     occupancyType: 'Primary residence', propertyAddress: '201 Ocean Ave, Santa Monica, CA 90402',
@@ -70,6 +84,7 @@ export const MOCK_CLIENTS = [
     lastContact: { channel: 'call-outbound', elapsed: '45m' },
     hotlist: true, propensity: 'high',
     opportunityNumber: '4829487340', loanPurpose: 'Purchase', loanProduct: 'Rj30 - Jumbo Smart 30 Year Fixed',
+    timeframeToBuy: 'Under contract', opportunityStartDate: '2/5/2025',
     maxApprovalAmount: '$1,350,000', baseLoanAmount: '$1,280,000', estimatedMarketValue: '$1,400,000',
     loanToValue: '91.43', interestRate: '6.50%', creditScore: '820',
     occupancyType: 'Primary residence', propertyAddress: '2200 Pacific Ave, San Francisco, CA 94115',
@@ -87,6 +102,7 @@ export const MOCK_CLIENTS = [
     lastContact: { channel: 'call-outbound', elapsed: '1h' },
     hotlist: false, propensity: 'medium',
     opportunityNumber: '4829487326', loanPurpose: 'Refinance', loanProduct: 'Conv 15yr Fixed',
+    timeframeToBuy: 'Closing in 60 days', opportunityStartDate: '3/2/2025',
     maxApprovalAmount: '$450,000', baseLoanAmount: '$420,000', estimatedMarketValue: '$480,000',
     loanToValue: '87.50', interestRate: '5.875%', creditScore: '745',
     occupancyType: 'Primary residence', propertyAddress: '214 Lakeshore Dr, Chicago, IL 60601',
@@ -104,6 +120,7 @@ export const MOCK_CLIENTS = [
     lastContact: { channel: 'call-outbound', elapsed: '30m' },
     hotlist: false, propensity: 'medium',
     opportunityNumber: '4829487328', loanPurpose: 'Purchase', loanProduct: 'VA 30yr Fixed',
+    timeframeToBuy: 'Next 2 months', opportunityStartDate: '3/12/2025',
     maxApprovalAmount: '$390,000', baseLoanAmount: '$375,000', estimatedMarketValue: '$395,000',
     loanToValue: '94.94', interestRate: '6.25%', creditScore: '720',
     occupancyType: 'Primary residence', propertyAddress: '8821 Camelback Rd, Phoenix, AZ 85014',
@@ -120,6 +137,7 @@ export const MOCK_CLIENTS = [
     lastContact: { channel: 'text', elapsed: '10m' },
     hotlist: true, propensity: 'medium',
     opportunityNumber: '4829487329', loanPurpose: 'Refinance', loanProduct: 'Conv 30yr Fixed',
+    timeframeToBuy: 'Closing in 30 days', opportunityStartDate: '2/22/2025',
     maxApprovalAmount: '$710,000', baseLoanAmount: '$680,000', estimatedMarketValue: '$750,000',
     loanToValue: '90.67', interestRate: '6.125%', creditScore: '758',
     occupancyType: 'Primary residence', propertyAddress: '4400 Stone Way N, Seattle, WA 98103',
@@ -136,6 +154,7 @@ export const MOCK_CLIENTS = [
     lastContact: { channel: 'text', elapsed: '4h' },
     hotlist: true, propensity: 'medium',
     opportunityNumber: '4829487337', loanPurpose: 'Purchase', loanProduct: 'VA 30yr Fixed',
+    timeframeToBuy: 'Next 1 month', opportunityStartDate: '2/14/2025',
     maxApprovalAmount: '$480,000', baseLoanAmount: '$460,000', estimatedMarketValue: '$495,000',
     loanToValue: '92.93', interestRate: '6.125%', creditScore: '735',
     occupancyType: 'Primary residence', propertyAddress: '764 Wilshire Blvd, San Diego, CA 92101',
@@ -152,6 +171,7 @@ export const MOCK_CLIENTS = [
     lastContact: { channel: 'call-outbound', elapsed: '15m' },
     hotlist: false, propensity: 'medium',
     opportunityNumber: '4829487330', loanPurpose: 'Purchase', loanProduct: 'Conv 30yr Fixed',
+    timeframeToBuy: 'Ready to close', opportunityStartDate: '1/20/2025',
     maxApprovalAmount: '$530,000', baseLoanAmount: '$510,000', estimatedMarketValue: '$545,000',
     loanToValue: '93.58', interestRate: '6.375%', creditScore: '740',
     occupancyType: 'Primary residence', propertyAddress: '990 Peachtree St NE, Atlanta, GA 30309',
@@ -167,6 +187,7 @@ export const MOCK_CLIENTS = [
     channelPreference: 'Text message', time: '2:00pm',
     hotlist: false, propensity: 'low',
     opportunityNumber: '4829487331', loanPurpose: 'Purchase', loanProduct: 'Conv 30yr Fixed',
+    timeframeToBuy: 'Next 6 months', opportunityStartDate: '4/2/2025',
     maxApprovalAmount: '$475,000', baseLoanAmount: '$450,000', estimatedMarketValue: '$480,000',
     loanToValue: '93.75', interestRate: '6.50%', creditScore: '728',
     occupancyType: 'Primary residence', propertyAddress: 'TBD, Denver, CO',
@@ -183,6 +204,7 @@ export const MOCK_CLIENTS = [
     lastContact: { channel: 'call-inbound', elapsed: '3d' },
     hotlist: false, propensity: 'low',
     opportunityNumber: '4829487341', loanPurpose: 'Refinance', loanProduct: 'FHA Streamline Refi',
+    timeframeToBuy: 'Exploring options', opportunityStartDate: '3/18/2025',
     maxApprovalAmount: '$295,000', baseLoanAmount: '$285,000', estimatedMarketValue: '$310,000',
     loanToValue: '91.94', interestRate: '6.50%', creditScore: '682',
     occupancyType: 'Primary residence', propertyAddress: '88 Oak St, Louisville, KY 40202',
@@ -198,6 +220,7 @@ export const MOCK_CLIENTS = [
     channelPreference: 'Text message', time: '4:00pm',
     hotlist: false, propensity: 'low',
     opportunityNumber: '4829487344', loanPurpose: 'Purchase', loanProduct: 'VA 30yr Fixed',
+    timeframeToBuy: 'Next 6 months', opportunityStartDate: '4/10/2025',
     maxApprovalAmount: '$510,000', baseLoanAmount: '$490,000', estimatedMarketValue: '$525,000',
     loanToValue: '93.33', interestRate: '6.125%', creditScore: '705',
     occupancyType: 'Primary residence', propertyAddress: 'TBD, San Antonio, TX',

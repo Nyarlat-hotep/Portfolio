@@ -15,6 +15,11 @@
   --bp-radius-pill: 48px;
   --bp-shadow-card: 0 1px 4px rgba(0, 0, 0, 0.04);
 
+  /* Neutralize the global orange (--electric-blue) hover border that index.css
+     paints on every <button>. Buttons that set their own :hover border-color
+     still override this. */
+  --electric-blue: var(--bp-border);
+
   width: 100%;
   max-width: 1500px;
   height: 100%;
@@ -97,13 +102,14 @@
   transition: none;
   cursor: pointer;
 }
-:where(.bp-app) button:hover,
-:where(.bp-app) button:focus,
-:where(.bp-app) button:focus-visible {
+.bp-app button:focus,
+.bp-app button:focus-visible {
   outline: none;
+}
+/* Kill the global orange hover background. Zero-specificity scope so any
+   component's own :hover background (.bp-icon-btn:hover etc.) still wins. */
+:where(.bp-app) button:hover {
   background-color: transparent;
-  border-color: transparent;
-  box-shadow: none;
 }
 .bp-app input, .bp-app textarea { font-family: inherit; }
 

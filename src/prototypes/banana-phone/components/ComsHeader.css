@@ -42,6 +42,11 @@
   flex-shrink: 0;
 }
 
+.bp-contact-btn:hover {
+  background: #f7f7f7;
+  border-color: var(--bp-border-soft);
+}
+
 .bp-contact-btn__avatar {
   display: flex;
   align-items: center;

@@ -5,7 +5,6 @@ import OpportunityControls from './components/OpportunityControls.jsx';
 import ComsHeader from './components/ComsHeader.jsx';
 import MessageThread from './components/MessageThread.jsx';
 import ClientDetails from './components/ClientDetails.jsx';
-import ActiveCall from './components/ActiveCall.jsx';
 import { MOCK_CLIENTS } from './data/clients.js';
 import { getThreadsForClient } from './data/messages.js';
 import './BananaPhonePrototype.css';
@@ -83,18 +82,11 @@ export default function BananaPhonePrototype() {
           <div className="bp-shell__body">
             <div className="bp-shell__comms">
               <ComsHeader client={selectedClient} />
-              {callActive ? (
-                <ActiveCall
-                  client={selectedClient}
-                  onEnd={() => setCallActive(false)}
-                />
-              ) : (
-                <MessageThread
-                  client={selectedClient}
-                  threads={threads}
-                  onSend={handleSendMessage}
-                />
-              )}
+              <MessageThread
+                client={selectedClient}
+                threads={threads}
+                onSend={handleSendMessage}
+              />
             </div>
 
             <ClientDetails client={selectedClient} />
