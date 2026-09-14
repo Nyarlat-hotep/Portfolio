@@ -3,6 +3,7 @@ import {
   BCRIT_RS,
   DISK_IN_RS,
   DISK_OUT_RS,
+  DISK_FADE_RS,
   INFLUENCE_RS,
 } from '../components/Galaxy/blackHoleConstants';
 
@@ -82,6 +83,7 @@ export function buildBlackHoleFragment({ steps = 0, crossings = 1, stars = 0 } =
     #define BCRIT    ${BCRIT_RS.toFixed(6)}
     #define DISK_IN  ${DISK_IN_RS.toFixed(6)}
     #define DISK_OUT ${DISK_OUT_RS.toFixed(6)}
+    #define DISK_FADE ${DISK_FADE_RS.toFixed(6)}
     #define RMAX     ${INFLUENCE_RS.toFixed(6)}
     #define RMAX2    ${(INFLUENCE_RS * INFLUENCE_RS).toFixed(6)}
     #define TNORM    ${TNORM.toFixed(6)}
@@ -136,9 +138,18 @@ export function buildBlackHoleFragment({ steps = 0, crossings = 1, stars = 0 } =
       // Vertical profile — gaussian falloff from the disk plane.
       float vert = exp(-pow(p.y / max(uHalfThick, 1e-3), 2.0));
 
-      // Radial profile — fade in off the ISCO, out toward the rim.
+      // Radial profile. The inner edge steps up off the ISCO; the outer edge
+      // must NOT be a cutoff of any kind.
+      //
+      // The Novikov-Thorne temperature is still at ~72% of peak out at
+      // DISK_OUT, so any smoothstep or clamp there chops the disk while it is
+      // still bright and leaves a hard rim — which is exactly what read as a
+      // straight edge on the effect. An exponential tail has no knee: the disk
+      // simply thins out and is already negligible well inside the billboard,
+      // so the geometry never becomes the thing that ends it.
+      float tOut   = max(0.0, (r - DISK_IN) / (DISK_OUT - DISK_IN));
       float radial = smoothstep(DISK_IN, DISK_IN * 1.45, r)
-                   * (1.0 - smoothstep(DISK_OUT * 0.55, DISK_OUT, r));
+                   * exp(-pow(tOut * 2.0, 1.8));
 
       // Contrast the noise so it reads as filaments rather than haze.
       float fil = pow(clamp(n, 0.0, 1.0), 2.2);
@@ -211,7 +222,7 @@ export function buildBlackHoleFragment({ steps = 0, crossings = 1, stars = 0 } =
         // Refine the step near the disk slab, otherwise the volume is
         // undersampled and the gas strobes as the camera moves.
         float rxz = length(pos.xz);
-        if (abs(pos.y) < uHalfThick * 6.0 && rxz < DISK_OUT * 1.25) {
+        if (abs(pos.y) < uHalfThick * 6.0 && rxz < DISK_FADE) {
           dt = min(dt, uHalfThick * 1.1);
         }
         if (!jittered) { dt *= (0.5 + jitter); jittered = true; }
@@ -227,7 +238,7 @@ export function buildBlackHoleFragment({ steps = 0, crossings = 1, stars = 0 } =
         // ── Volumetric disk sample at the segment midpoint ────────────────
         vec3  mid = 0.5 * (prev + pos);
         float mr  = length(mid.xz);
-        if (mr > DISK_IN * 0.92 && mr < DISK_OUT && abs(mid.y) < uHalfThick * 6.0) {
+        if (mr > DISK_IN * 0.92 && mr < DISK_FADE && abs(mid.y) < uHalfThick * 6.0) {
           float dens = diskDensity(mid, mr);
           if (dens > 0.001) {
             float inten;
@@ -250,11 +261,12 @@ export function buildBlackHoleFragment({ steps = 0, crossings = 1, stars = 0 } =
         if (t > 0.0) {
           vec3  hit = ro + rd * t;
           float hr  = length(hit.xz);
-          if (hr > DISK_IN && hr < DISK_OUT) {
+          if (hr > DISK_IN && hr < DISK_FADE) {
             float inten;
             vec3  chroma = diskEmission(hit, hr, rd, inten);
+            float tOut   = max(0.0, (hr - DISK_IN) / (DISK_OUT - DISK_IN));
             float shape  = smoothstep(DISK_IN, DISK_IN * 1.35, hr)
-                         * (1.0 - smoothstep(DISK_OUT * 0.62, DISK_OUT, hr));
+                         * exp(-pow(tOut * 2.0, 1.8));
             float pathLen = 1.0 / max(0.06, abs(rd.y));
             float da = (1.0 - exp(-shape * pathLen * uDiskOpacity)) * ((t > tca && b < BCRIT) ? 0.0 : 1.0);
             col   += chroma * inten * da * uEmission;
@@ -302,11 +314,11 @@ export function buildBlackHoleFragment({ steps = 0, crossings = 1, stars = 0 } =
       // invisible against an ordinary value but obvious once that value is HDR
       // and bloom amplifies it.
       //
-      // And it must not begin before the disk ends. Starting the fade at 0.55
-      // put the whole outer disk inside the falloff, dimming its rim by 70%
-      // and tapering it into a spike. The caller guarantees uWindowR covers
-      // the disk, so the fade belongs entirely outside it.
-      float window = 1.0 - smoothstep(uWindowR * 0.86, uWindowR * 0.99, b);
+      // And it must not begin before the disk ends. This is now insurance
+      // rather than the mechanism: the disk's exponential tail has already
+      // decayed to nothing long before here, so this should never have
+      // anything visible to act on.
+      float window = 1.0 - smoothstep(uWindowR * 0.96, uWindowR * 0.998, b);
       col   *= window;
       alpha *= window;
 

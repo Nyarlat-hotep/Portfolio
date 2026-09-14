@@ -28,12 +28,17 @@ export const SHADOW_R_WORLD = BCRIT_RS * R_S_WORLD;   // 1.299
 // Outer edge of 9 puts the disk at 9 world units across, close to the 7x7 plane
 // this replaced. 14 was twice that and read as overwhelming the nebula.
 export const DISK_IN_RS  = ISCO_RS;   // 3
+// Characteristic radius, not a hard boundary. The density tail decays
+// exponentially past this rather than being cut off — a cutoff anywhere leaves
+// a visible edge, because the Novikov-Thorne profile is still at 72% of peak
+// out here and would be chopped mid-brightness.
 export const DISK_OUT_RS = 9;
+// Where the tail has decayed to nothing and sampling can stop.
+export const DISK_FADE_RS = 12.5;
 
-// How far the lens billboard reaches beyond the disk. Only the halo lives out
-// here, and the shader now fades to the quad's actual edge, so this only needs
-// enough margin for the glow to fall off naturally.
-export const INFLUENCE_RS = 11;
+// Billboard reach. Must clear DISK_FADE so the disk's own falloff is what ends
+// it, never the geometry.
+export const INFLUENCE_RS = 13;
 
 // ── Interaction / simulation ─────────────────────────────────────────────────
 export const WELL_RAMP        = 1.5;  // seconds for gravity to reach full strength

@@ -7,7 +7,7 @@ import { useQualityTier } from '../../utils/qualityTier';
 import {
   R_S_WORLD,
   INFLUENCE_RS,
-  DISK_OUT_RS,
+  DISK_FADE_RS,
   GRAVITY_DURATION,
   SPAWN_EASE,
   TIER_CONFIG,
@@ -152,31 +152,41 @@ export default function BlackHoleLens({ wellsRef, worldOffset }) {
     const R = INFLUENCE_RS * rs;
     let s   = R * d / Math.sqrt(Math.max(d * d - R * R, 1e-3));
 
-    // Screen-coverage clamp. TrackballControls allows flying in to minDistance
-    // 10, which would otherwise let the quad fill the viewport and multiply the
-    // fragment cost. Cropping only removes the outer halo, where the lensing
-    // window is already ~0.005.
-    const halfH = d * Math.tan(THREE.MathUtils.degToRad(state.camera.fov * 0.5));
-    s = Math.min(s, halfH * cfg.maxScreenFrac * Math.max(1, state.camera.aspect));
+    // Screen-coverage clamp — a fill-rate guard against filling the viewport.
+    const halfH  = d * Math.tan(THREE.MathUtils.degToRad(state.camera.fov * 0.5));
+    const halfW  = halfH * Math.max(1, state.camera.aspect);
+    s = Math.min(s, halfW * cfg.maxScreenFrac);
 
-    // Floor: the quad must always contain the accretion disk with margin.
-    // The screen-coverage clamp above is a fill-rate guard, but when the camera
-    // gets close it was shrinking the quad below the disk's own extent and
-    // slicing straight through it. Cropping the halo is invisible; cropping the
-    // disk is the artifact. Visual correctness wins here — the raymarch cost is
-    // bounded by STEPS regardless of how many fragments it covers.
-    const kDisk = DISK_OUT_RS * 1.18 * rs;
-    if (d > kDisk) {
+    // Floor: the quad must reach past where the disk's density tail has decayed
+    // to nothing. If the clamp above shrinks it inside the disk it slices
+    // through it, and any slice is a visible edge. The disk has to be what ends
+    // the disk, never the geometry. Raymarch cost is bounded by STEPS, not by
+    // fragment count, so paying fill rate here is the right trade.
+    const kDisk = DISK_FADE_RS * rs;
+    if (d > kDisk * 1.02) {
       s = Math.max(s, kDisk * d / Math.sqrt(d * d - kDisk * kDisk));
+    } else {
+      // Camera is inside the disk's own radius. No billboard can contain the
+      // disk from in here, so cover the whole frustum instead and let the
+      // shader's own falloff be the only thing that ends anything. 1.45 clears
+      // the screen corners.
+      s = Math.max(s, halfW * 1.45);
     }
 
     mesh.scale.setScalar(s);
 
-    // Impact parameter of the ray through the quad's edge, in r_s. For a camera
-    // at distance d and an edge offset s, the ray's closest approach to the hole
-    // is d*s/sqrt(s^2+d^2). The shader fades the effect to zero over the outer
-    // sliver of this, entirely beyond the disk.
-    uniforms.uWindowR.value = (d * s / Math.sqrt(s * s + d * d)) / rs;
+    // Impact parameter of the ray through the quad's edge, in r_s: for a camera
+    // at distance d and edge offset s, the ray's closest approach to the hole is
+    // d*s/sqrt(s^2+d^2). The shader fades to zero over the outer sliver of this.
+    //
+    // If the quad already covers the whole viewport its edge is off-screen, and
+    // applying the window would cut the disk to hide a boundary nobody can see.
+    // Make it inert in that case — the window exists only to hide a visible
+    // quad edge, so with no visible edge there is nothing for it to do.
+    const coversScreen = s >= halfW * 1.4;
+    uniforms.uWindowR.value = coversScreen
+      ? 1e6
+      : (d * s / Math.sqrt(s * s + d * d)) / rs;
   });
 
   return (
