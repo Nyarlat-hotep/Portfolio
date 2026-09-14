@@ -25,12 +25,15 @@ export default function SceneBloom() {
 
   return (
     <EffectComposer disableNormalPass multisampling={0}>
+      {/* Threshold is high and intensity modest on purpose. A low threshold
+          with a wide radius fogged the whole effect white and bled into the
+          shadow, which should stay black. */}
       <Bloom
         mipmapBlur
-        intensity={high ? 0.95 : 0.7}
-        luminanceThreshold={0.62}
-        luminanceSmoothing={0.28}
-        radius={high ? 0.72 : 0.6}
+        intensity={high ? 0.55 : 0.42}
+        luminanceThreshold={0.82}
+        luminanceSmoothing={0.12}
+        radius={high ? 0.55 : 0.45}
       />
     </EffectComposer>
   );

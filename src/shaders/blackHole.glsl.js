@@ -268,16 +268,20 @@ export function buildBlackHoleFragment({ steps = 0, crossings = 1, stars = 0 } =
       // Rays near b_crit orbit before escaping. The raymarch produces most of
       // this naturally through repeated disk crossings; this adds the thin
       // coherent rim that a finite step count under-resolves.
-      float ringW = 0.05 * BCRIT;
-      float ring  = exp(-pow((b - BCRIT * 1.02) / ringW, 2.0));
-      col   += blackbody(uTempScale * 0.9) * ring * uEmission * 0.9 * mix(1.0, 0.4, uDormant);
-      alpha += ring * 0.30;
+      // Thin and bright rather than broad — it should read as a hard bright
+      // rim tracing the shadow, which is what separates the silhouette from
+      // the disk behind it.
+      float ringW = 0.028 * BCRIT;
+      float ring  = exp(-pow((b - BCRIT * 1.015) / ringW, 2.0));
+      col   += blackbody(uTempScale * 1.25) * ring * uEmission * 1.5 * mix(1.0, 0.4, uDormant);
+      alpha += ring * 0.45;
 
       // ── Halo ───────────────────────────────────────────────────────────────
       // Pure emission at alpha 0 — with premultiplied output this is a true
-      // additive glow, no separate pass needed.
-      float halo = exp(-pow(b / (BCRIT * 3.2 * (1.0 + uFlash * 1.5)), 1.4));
-      col += blackbody(uTempScale * 0.55) * halo * uGlow * mix(1.0, 0.5, uDormant);
+      // additive glow. Kept tight: a wide halo fogs the shadow to grey and
+      // buries the photon ring, which is most of what went wrong before.
+      float halo = exp(-pow(b / (BCRIT * 1.9 * (1.0 + uFlash * 1.5)), 2.0));
+      col += blackbody(uTempScale * 0.75) * halo * uGlow * mix(1.0, 0.5, uDormant);
 
       // ── Shadow ─────────────────────────────────────────────────────────────
       // The black disc subtends b_crit = 3*sqrt(3)*M = 2.598 r_s, not 1 r_s.
@@ -289,10 +293,14 @@ export function buildBlackHoleFragment({ steps = 0, crossings = 1, stars = 0 } =
       col   *= (1.0 - shadow);
       alpha  = max(alpha, shadow);
 
-      // Soft outer window, scaled to the quad's real extent so the falloff
-      // always completes before the geometry runs out. 0.42 puts the edge at
-      // exp(-5.7) ~ 0.003, well below anything visible.
-      float window = exp(-pow(b / max(uWindowR * 0.42, 1e-3), 2.0));
+      // Soft outer window, scaled to the quad's real extent.
+      //
+      // This MUST reach exactly zero inside the quad, not merely approach it.
+      // An exponential only asymptotes: it left ~0.003 at the boundary, which
+      // is invisible against an ordinary value but very visible once that
+      // value is HDR and bloom amplifies it — which is what produced the hard
+      // vertical cut down the side of the effect.
+      float window = 1.0 - smoothstep(uWindowR * 0.55, uWindowR * 0.97, b);
       col   *= window;
       alpha *= window;
 

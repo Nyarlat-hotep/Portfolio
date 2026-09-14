@@ -42,15 +42,21 @@ export default function BlackHoleLens({ wellsRef, worldOffset }) {
     uAmount:       { value: 0 },
     uDormant:      { value: 0 },
     uFlash:        { value: 0 },
-    // 6800K peak puts the inner disk at hot cream and the rim in deep amber —
-    // the Gargantua gradient. 9200K read blue-white and clinical.
-    uTempScale:    { value: 6800 },
-    uDiskOpacity:  { value: 1.1 },
-    uEmission:     { value: 3.2 },   // HDR — values above 1 are what bloom keys on
+    // 5200K puts the inner edge at warm cream and the rim in deep orange.
+    // 6800K still read too pale next to the Interstellar reference.
+    uTempScale:    { value: 5200 },
+    uDiskOpacity:  { value: 0.9 },
+    // The Doppler term already contributes g^3 (~2.6x at the inner edge), so
+    // this multiplier stays near 1. At 3.2 the peak hit 8.4 linear and clipped
+    // to flat white, taking all the filament structure with it.
+    uEmission:     { value: 1.0 },
     uDoppler:      { value: 1 },
     uSpinSign:     { value: 1 },
-    uGlow:         { value: 0.55 },
-    uHalfThick:    { value: 0.42 },  // disk half-thickness in r_s
+    // Deliberately small. The reference's glow comes from bloom on a bright
+    // thin disk, not from a wide additive halo — a strong halo just fogs the
+    // shadow grey and swallows the photon ring.
+    uGlow:         { value: 0.14 },
+    uHalfThick:    { value: 0.2 },   // thin disk, r_s — Gargantua's is a narrow band
     uNoiseSpeed:   { value: 2.6 },
     uWindowR:      { value: INFLUENCE_RS },  // recomputed per frame from the clamped quad
     uBB:           { value: getBlackbodyLUT() },
@@ -116,8 +122,8 @@ export default function BlackHoleLens({ wellsRef, worldOffset }) {
 
     // Hotter reads as whiter *through the blackbody LUT* — a far better flash
     // than lerping toward a fixed colour, and physically motivated.
-    uniforms.uTempScale.value = 6800 * (1 + flashT * 1.6) * (1 - dormantT * 0.35);
-    uniforms.uGlow.value      = 0.55 * (1 + flashT * 2.5);
+    uniforms.uTempScale.value = 5200 * (1 + flashT * 1.6) * (1 - dormantT * 0.35);
+    uniforms.uGlow.value      = 0.14 * (1 + flashT * 2.5);
 
     // Wrapped so float precision in the shader's time term stays bounded.
     uniforms.uTime.value = (state.clock.elapsedTime % 1000);
