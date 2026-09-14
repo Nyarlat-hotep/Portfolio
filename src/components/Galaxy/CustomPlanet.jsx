@@ -20,7 +20,15 @@ export default function CustomPlanet({
   const particlesRef = useRef();
   const deletionParticlesRef = useRef();
   const [hovered, setHovered] = useState(false);
-  const [deletionProgress, setDeletionProgress] = useState(0);
+  // Deletion progress is frame-local animation state, not render state — a ref
+  // keeps it off the React render path (it previously re-rendered every frame
+  // for the ~0.8s of the animation) and lets the same frame read the value it
+  // just wrote, instead of the stale one from the last commit.
+  const deletionProgressRef = useRef(0);
+  const deletionMatRef      = useRef();
+
+  // Pre-allocated scratch — never create inside useFrame (see Planet.jsx:31)
+  const _scaleVec = useRef(new THREE.Vector3());
   const { camera, size } = useThree();
 
   // Load the planet texture
@@ -84,13 +92,17 @@ export default function CustomPlanet({
   useFrame((state, delta) => {
     // Handle deletion animation
     if (isDeleting) {
-      setDeletionProgress(prev => Math.min(prev + delta * 1.5, 1));
+      const p = Math.min(deletionProgressRef.current + delta * 1.5, 1);
+      deletionProgressRef.current = p;
+
+      // Fade the explosion particles by writing the material directly
+      if (deletionMatRef.current) deletionMatRef.current.opacity = Math.max(0, 1 - p);
 
       // Shrink the planet rapidly
       if (meshRef.current) {
-        const shrinkScale = scale * Math.max(0, 1 - deletionProgress * 1.5);
+        const shrinkScale = scale * Math.max(0, 1 - p * 1.5);
         meshRef.current.scale.setScalar(shrinkScale);
-        meshRef.current.rotation.y += delta * (rotationSpeed + deletionProgress * 10);
+        meshRef.current.rotation.y += delta * (rotationSpeed + p * 10);
       }
 
       // Animate explosion particles outward
@@ -107,6 +119,9 @@ export default function CustomPlanet({
       return;
     }
 
+    // Not deleting — keep the ref armed for a fresh run if deletion restarts
+    if (deletionProgressRef.current !== 0) deletionProgressRef.current = 0;
+
     // Gentle floating animation
     if (floatingRef.current) {
       floatingRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * 0.5) * 0.1;
@@ -118,7 +133,7 @@ export default function CustomPlanet({
       // Scale up on hover
       const targetScale = hovered ? scale * 1.15 : scale;
       meshRef.current.scale.lerp(
-        new THREE.Vector3(targetScale, targetScale, targetScale),
+        _scaleVec.current.set(targetScale, targetScale, targetScale),
         0.05
       );
     }
@@ -228,11 +243,12 @@ export default function CustomPlanet({
               />
             </bufferGeometry>
             <pointsMaterial
+              ref={deletionMatRef}
               map={particleTexture}
               size={0.15}
               color={color}
               transparent
-              opacity={Math.max(0, 1 - deletionProgress)}
+              opacity={1}
               sizeAttenuation
               depthWrite={false}
               blending={THREE.AdditiveBlending}

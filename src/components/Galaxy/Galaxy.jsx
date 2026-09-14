@@ -40,6 +40,15 @@ import { playBackground, stopBackground, getMuted, setMuted, playMenuClick, play
 // Check WebGL support once on module load
 const webGLSupported = isWebGLSupported();
 
+// Creeping-darkness vignette. Shared by the initial style and the per-frame
+// imperative update so both always produce the same gradient.
+const vignetteGradient = (i) => `radial-gradient(ellipse at center,
+      transparent 0%,
+      transparent ${Math.max(0, 60 - i * 40)}%,
+      rgba(0, 0, 0, ${i * 0.2}) ${Math.max(0, 80 - i * 30)}%,
+      rgba(0, 0, 0, ${i * 0.3}) 100%
+    )`;
+
 const DERELICT_LOG = `VESSEL: ICARUS-VII  //  REGISTRY: EC-7741
 DATE: [CORRUPTED]   //  CREW: 4 OF 9 [REMAINING]
 
@@ -326,7 +335,7 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
   const [hoveredPlanet, setHoveredPlanet] = useState(null);
   const [hoveredPlanetPosition, setHoveredPlanetPosition] = useState(null);
   const [currentPlanetIndex, setCurrentPlanetIndex] = useState(0);
-  const [vignetteIntensity, setVignetteIntensity] = useState(0);
+  const vignetteRef = useRef(null);
   const [constellationModal, setConstellationModal] = useState(null); // { name, wikiKey, text, loading }
   const wikiCacheRef = useRef({});
 
@@ -381,9 +390,12 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
     return c.replace('#', '').match(/.{2}/g).map(x => parseInt(x, 16)).join(', ');
   }, [hoveredPlanetPosition?.color]);
 
-  // Memoized vignette handler
+  // Vignette is written straight to the DOM node. It used to drive React state,
+  // which re-rendered this whole component (and its ~25 3D children) on every
+  // camera move. Nothing else reads the intensity, so it never needed to be state.
   const handleVignetteChange = useCallback((intensity) => {
-    setVignetteIntensity(intensity);
+    const el = vignetteRef.current;
+    if (el) el.style.background = vignetteGradient(intensity);
   }, []);
 
   // Stable modal / button callbacks — no inline functions in JSX
@@ -399,20 +411,15 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
   }, []);
   const handleHelpToggle             = useCallback(() => setHelpVisible(v => !v), []);
 
-  // Memoized vignette style — vignetteIntensity updates many times/sec near the void
+  // Static style — the background is mutated imperatively by handleVignetteChange
   const vignetteStyle = useMemo(() => ({
     position: 'absolute',
     top: 0, left: 0, right: 0, bottom: 0,
     pointerEvents: 'none',
-    background: `radial-gradient(ellipse at center,
-      transparent 0%,
-      transparent ${Math.max(0, 60 - vignetteIntensity * 40)}%,
-      rgba(0, 0, 0, ${vignetteIntensity * 0.2}) ${Math.max(0, 80 - vignetteIntensity * 30)}%,
-      rgba(0, 0, 0, ${vignetteIntensity * 0.3}) 100%
-    )`,
+    background: vignetteGradient(0),
     transition: 'background 0.5s ease-out',
     zIndex: 10,
-  }), [vignetteIntensity]);
+  }), []);
 
   // Mobile tap detection — TrackballControls intercepts all touch events.
   // We detect taps here and hand off to MobileTapHandler (inside Canvas) which
@@ -743,6 +750,7 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
 
       {/* Vignette overlay - creeping darkness */}
       <div
+        ref={vignetteRef}
         style={vignetteStyle}
       />
 

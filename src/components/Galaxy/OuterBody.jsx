@@ -1,10 +1,20 @@
-import { useRef, useMemo } from 'react'
+import { useRef, useMemo, useEffect } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { createRockyTexture, createIcyTexture, createAlienTexture } from '../../utils/planetTextures'
 import { createCircularParticleTexture } from '../../utils/threeUtils'
 
 const noRaycast = () => null
+
+// ── Loaded texture cache ──────────────────────────────────────────────────────
+// Keyed by URL so the five OuterBody instances share one Texture and one GPU
+// upload per image. Module-scoped singletons, deliberately never disposed —
+// same convention as _ringTexCache below and the shared textures in threeUtils.
+const _urlTexCache = {}
+function getUrlTexture(url) {
+  if (!_urlTexCache[url]) _urlTexCache[url] = new THREE.TextureLoader().load(url)
+  return _urlTexCache[url]
+}
 
 // ── Ring texture — canvas radial bands with gap and grain ─────────────────────
 const _ringTexCache = {}
@@ -95,7 +105,7 @@ export default function OuterBody({
   const moonRefs     = useRef([])
 
   const texture = useMemo(() => {
-    if (textureUrl) return new THREE.TextureLoader().load(textureUrl)
+    if (textureUrl) return getUrlTexture(textureUrl)
     if (textureType === 'icy')   return createIcyTexture(128)
     if (textureType === 'alien') return createAlienTexture(128, { r: 195, g: 175, b: 215 })
     return createRockyTexture(128)
@@ -153,6 +163,21 @@ export default function OuterBody({
 
   const circleTex = useMemo(() => createCircularParticleTexture(), [])
   const hazeTex   = useMemo(() => getBodyHazeTex(), [])
+
+  // Dispose per-instance GPU resources on unmount. Only what this instance
+  // owns: circleTex, hazeTex, ringTex and URL-loaded textures are module-level
+  // singletons shared with other components, so disposing them would blank
+  // textures elsewhere. Procedural textures (createRockyTexture et al) are
+  // freshly allocated per instance and must be released here.
+  useEffect(() => () => {
+    sphereGeo?.dispose()
+    ringInnerGeo?.dispose()
+    ringOuterGeo?.dispose()
+    debrisGeo?.dispose()
+    moonGeos.forEach(g => g.dispose())
+    moonTextures.forEach(t => t.dispose())
+    if (!textureUrl) texture?.dispose()
+  }, [sphereGeo, ringInnerGeo, ringOuterGeo, debrisGeo, moonGeos, moonTextures, texture, textureUrl])
 
   useFrame((state, delta) => {
     if (!groupRef.current || !bodyGroupRef.current) return
