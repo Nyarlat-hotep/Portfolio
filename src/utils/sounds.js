@@ -9,7 +9,6 @@ const SRCS = {
   planetCreation:   '/sounds/planet-creation.mp3',
   warp:             '/sounds/warp.mp3',
   gameMusic:        '/sounds/game-music.mp3',
-  derelict:         '/sounds/space-battle.mp3',
 }
 
 // Pool of pre-loaded instances per sound — no fetch delay on playback
@@ -190,28 +189,6 @@ export function playGameMusic() {
 
 export function stopGameMusic() {
   const audio = getPool(SRCS.gameMusic).instances[0]
-  audio.pause()
-  try { audio.currentTime = 0 } catch (_) {}
-}
-
-// ── Derelict — proximity-based ambient, volume set per-frame by Derelict.jsx ──
-export function playDerelict() {
-  if (_muted) return
-  const audio = getPool(SRCS.derelict).instances[0]
-  audio.loop = true
-  if (!audio.paused) return
-  try { audio.currentTime = 0 } catch (_) {}
-  audio.volume = 0
-  audio.play().catch(() => {})
-}
-
-export function setDerelictVolume(vol) {
-  if (_muted) return
-  getPool(SRCS.derelict).instances[0].volume = Math.max(0, Math.min(1, vol))
-}
-
-export function stopDerelict() {
-  const audio = getPool(SRCS.derelict).instances[0]
   audio.pause()
   try { audio.currentTime = 0 } catch (_) {}
 }
