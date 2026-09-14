@@ -5,6 +5,8 @@ import { createNebulaSplatTexture } from '../../utils/threeUtils';
 import PlanetField from './PlanetField';
 import { playBlackHole, stopBlackHole } from '../../utils/sounds';
 import { WELL_RAMP, GRAVITY_DURATION } from './blackHoleConstants';
+import BlackHoleLens from './BlackHoleLens';
+import { disposeBlackbodyLUT } from '../../utils/blackbodyLUT';
 
 const WORLD_X = -60, WORLD_Y = 0, WORLD_Z = 20;
 const N = 6000;
@@ -15,12 +17,6 @@ const TANGENT_F        = 25;   // tangential force constant (orbital spiraling)
 const FADE_SPEED       = 0.35; // color fade-in rate (1/s) — ~2.8s to fully reappear
 
 let _wellId = 0;
-
-// Disk color transitions
-const DISK_COLOR_ACTIVE  = new THREE.Color(1, 1, 1);
-const DISK_COLOR_DORMANT = new THREE.Color(0.48, 0.50, 0.58);
-const GLOW_COLOR_DORMANT = new THREE.Color(0.42, 0.44, 0.52);
-const FLASH_COLOR        = new THREE.Color(1, 0.97, 0.90); // hot near-white surge
 
 const PAL = [
   new THREE.Color('#26cdd4'), // cyan
@@ -127,47 +123,7 @@ function buildHaze() {
   return geo;
 }
 
-let _glowTex = null;
-function getGlowTex() {
-  if (_glowTex) return _glowTex;
-  const size = 128, c = size / 2;
-  const canvas = document.createElement('canvas');
-  canvas.width = canvas.height = size;
-  const ctx = canvas.getContext('2d');
-  const g = ctx.createRadialGradient(c, c, 0, c, c, c);
-  g.addColorStop(0,    'rgba(255,240,200,0.9)');
-  g.addColorStop(0.25, 'rgba(255,160,40,0.55)');
-  g.addColorStop(0.55, 'rgba(180,60,5,0.2)');
-  g.addColorStop(1.0,  'rgba(0,0,0,0)');
-  ctx.fillStyle = g;
-  ctx.fillRect(0, 0, size, size);
-  return (_glowTex = new THREE.CanvasTexture(canvas));
-}
 
-let _diskTex = null;
-function getDiskTex() {
-  if (_diskTex) return _diskTex;
-  const size = 256, c = size / 2;
-  const canvas = document.createElement('canvas');
-  canvas.width = canvas.height = size;
-  const ctx = canvas.getContext('2d');
-  const innerR = c * 0.36;
-  const g = ctx.createRadialGradient(c, c, innerR, c, c, c);
-  g.addColorStop(0,    'rgba(255,255,245,1.0)');
-  g.addColorStop(0.05, 'rgba(255,210,80,0.92)');
-  g.addColorStop(0.18, 'rgba(255,130,20,0.65)');
-  g.addColorStop(0.40, 'rgba(200,60,5,0.28)');
-  g.addColorStop(0.65, 'rgba(150,30,0,0.09)');
-  g.addColorStop(1.0,  'rgba(0,0,0,0)');
-  ctx.fillStyle = g;
-  ctx.fillRect(0, 0, size, size);
-  ctx.globalCompositeOperation = 'destination-out';
-  ctx.beginPath();
-  ctx.arc(c, c, innerR, 0, Math.PI * 2);
-  ctx.fillStyle = 'rgba(0,0,0,1)';
-  ctx.fill();
-  return (_diskTex = new THREE.CanvasTexture(canvas));
-}
 
 let _cloudTex = null;
 function getCloudTex() {
@@ -244,86 +200,6 @@ function getDotTex() {
   return (_tex = new THREE.CanvasTexture(canvas));
 }
 
-// Purely visual — no event handlers (hit plane owns all interaction)
-function WellMesh({ well }) {
-  const groupRef      = useRef();
-  const diskMatRef    = useRef();
-  const glowMatRef    = useRef();
-  const glowSpriteRef = useRef();
-
-  useFrame(() => {
-    const t        = Math.min(1, well.age / 0.7);
-    const e        = t * t * (3 - 2 * t); // smoothstep fade-in
-    const active   = well.age < GRAVITY_DURATION;
-    const dormantT = Math.min(1, Math.max(0, (well.age - GRAVITY_DURATION) / 1.5));
-
-    // Slower decay (~1s) for a more visible surge
-    const flashAge = well.age - GRAVITY_DURATION;
-    const flashT   = flashAge >= 0 ? Math.exp(-flashAge * 4) : 0;
-
-    // Black hole size unchanged — only the glow blooms outward
-    if (groupRef.current) groupRef.current.scale.setScalar(e);
-
-    // Glow sprite expands dramatically during flash, snaps back to normal size
-    if (glowSpriteRef.current) {
-      const glowScale = 8 + flashT * 18;
-      glowSpriteRef.current.scale.set(glowScale, glowScale, 1);
-    }
-
-    if (diskMatRef.current) {
-      diskMatRef.current.color.lerpColors(DISK_COLOR_ACTIVE, DISK_COLOR_DORMANT, dormantT);
-      if (flashT > 0.01) diskMatRef.current.color.lerp(FLASH_COLOR, flashT);
-      if (active) {
-        const pulse = 0.07 * Math.sin(well.age * Math.PI * 3);
-        diskMatRef.current.opacity = (0.78 + pulse) * e;
-      } else {
-        diskMatRef.current.opacity = (0.5 + flashT * 1.8) * e;
-      }
-    }
-
-    if (glowMatRef.current) {
-      glowMatRef.current.color.lerpColors(DISK_COLOR_ACTIVE, GLOW_COLOR_DORMANT, dormantT);
-      if (flashT > 0.01) glowMatRef.current.color.lerp(FLASH_COLOR, flashT);
-      if (active) {
-        const pulse = 0.04 * Math.sin(well.age * Math.PI * 3);
-        glowMatRef.current.opacity = (0.36 + pulse) * e;
-      } else {
-        glowMatRef.current.opacity = (0.2 + flashT * 1.2) * e;
-      }
-    }
-  });
-
-  return (
-    <group ref={groupRef} position={[well.x, well.y, well.z]}>
-      <sprite ref={glowSpriteRef} scale={[8, 8, 1]}>
-        <spriteMaterial
-          ref={glowMatRef}
-          map={getGlowTex()}
-          transparent
-          opacity={0}
-          blending={THREE.AdditiveBlending}
-          depthWrite={false}
-        />
-      </sprite>
-      <mesh rotation={[-Math.PI / 2, 0, 0]}>
-        <planeGeometry args={[7, 7]} />
-        <meshBasicMaterial
-          ref={diskMatRef}
-          map={getDiskTex()}
-          transparent
-          opacity={0}
-          blending={THREE.AdditiveBlending}
-          depthWrite={false}
-          side={THREE.DoubleSide}
-        />
-      </mesh>
-      <mesh>
-        <sphereGeometry args={[1.2, 20, 20]} />
-        <meshStandardMaterial color="#000000" />
-      </mesh>
-    </group>
-  );
-}
 
 export default function GravityField() {
   const { geo, vel, home, homeCol, capturedBy, fadeProg } = useMemo(() => buildField(), []);
@@ -380,9 +256,10 @@ export default function GravityField() {
     hazeGeo.dispose();
     blinkGeo.dispose();
     if (_tex)       { _tex.dispose();       _tex       = null; }
-    if (_glowTex)   { _glowTex.dispose();   _glowTex   = null; }
-    if (_diskTex)   { _diskTex.dispose();   _diskTex   = null; }
     if (_cloudTex)  { _cloudTex.dispose();  _cloudTex  = null; }
+    // threeUtils' disposeMaterial never walks uniforms.*.value, so the lens
+    // shader's blackbody LUT has to be released explicitly.
+    disposeBlackbodyLUT();
   }, [geo, hazeGeo, blinkGeo]);
 
   useFrame((_, delta) => {
@@ -552,7 +429,9 @@ export default function GravityField() {
         />
       </points>
 
-      {wellSnapshot.map(w => <WellMesh key={w.id} well={w} />)}
+      {/* Stays mounted for the life of the scene and toggles visibility — see
+          BlackHoleLens for why (shader compile stall must not land on click). */}
+      <BlackHoleLens wellsRef={wellsRef} worldOffset={[WORLD_X, WORLD_Y, WORLD_Z]} />
 
       {/* Particle field */}
       <points geometry={geo}>
