@@ -4,12 +4,11 @@ import * as THREE from 'three';
 import { createNebulaSplatTexture } from '../../utils/threeUtils';
 import PlanetField from './PlanetField';
 import { playBlackHole, stopBlackHole } from '../../utils/sounds';
+import { WELL_RAMP, GRAVITY_DURATION } from './blackHoleConstants';
 
 const WORLD_X = -60, WORLD_Y = 0, WORLD_Z = 20;
 const N = 6000;
 
-const WELL_RAMP        = 1.5;
-const GRAVITY_DURATION = 10;  // seconds gravity is active after planting
 const CAPTURE_R        = 1.5;
 const PULL_MAX         = 80;
 const TANGENT_F        = 25;   // tangential force constant (orbital spiraling)

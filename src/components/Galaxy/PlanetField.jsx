@@ -2,12 +2,16 @@ import { useRef, useMemo } from 'react';
 import { useFrame, useLoader } from '@react-three/fiber';
 import * as THREE from 'three';
 
+import { GRAVITY_DURATION as GRAVITY_DUR } from './blackHoleConstants';
+
 const PLANET_PULL  = 160;   // gravity strength
 const PLANET_DAMP  = 0.996; // low friction while gravity active — lets velocity keep building
 const PLANET_MAX_V = 55;    // higher top speed so planets reach capture radius
+// These get aligned to SPIRAL_ENTER_R / HORIZON_R once the lens lands, so
+// planets spaghettify over the same radius stars spiral in and vanish behind
+// the shadow. Left at their current values for now to keep this change visual-free.
 const SPAG_START   = 8;    // distance at which spaghettification begins
 const PLANET_CAP_R = 2.0;  // capture radius (disappear inside this)
-const GRAVITY_DUR  = 10;   // must match GravityField's GRAVITY_DURATION
 
 // All positions are in GravityField's local space (same coords as particles)
 const CONFIGS = [
