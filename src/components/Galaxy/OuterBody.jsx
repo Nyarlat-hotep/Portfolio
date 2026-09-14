@@ -6,6 +6,11 @@ import { createCircularParticleTexture } from '../../utils/threeUtils'
 
 const noRaycast = () => null
 
+// Camera distance past which a body stops animating. Generous — these have
+// orbit radii up to 9u and moons out to 5u, so motion stays live well past
+// the point where it is legible.
+const BODY_ACTIVE_DIST = 150
+
 // ── Loaded texture cache ──────────────────────────────────────────────────────
 // Keyed by URL so the five OuterBody instances share one Texture and one GPU
 // upload per image. Module-scoped singletons, deliberately never disposed —
@@ -181,6 +186,13 @@ export default function OuterBody({
 
   useFrame((state, delta) => {
     if (!groupRef.current || !bodyGroupRef.current) return
+
+    // These bodies sit 100-175u out and are invisible at default zoom, but all
+    // five ran their orbit, spin, debris and moon loops every frame regardless.
+    const dx = state.camera.position.x - position[0]
+    const dy = state.camera.position.y - position[1]
+    const dz = state.camera.position.z - position[2]
+    if (dx * dx + dy * dy + dz * dz > BODY_ACTIVE_DIST * BODY_ACTIVE_DIST) return
 
     // Move entire body system along its orbit
     const t  = state.clock.elapsedTime * orbitSpeed

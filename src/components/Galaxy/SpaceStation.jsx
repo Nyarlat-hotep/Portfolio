@@ -9,6 +9,8 @@ useGLTF.preload('/models/sci-fi_space_station_2-v2.glb')
 
 const ORBIT_R     = 182
 const ORBIT_SPEED = 0.0025
+// Camera distance past which the debris tumble stops updating
+const DEBRIS_ACTIVE_DIST = 120
 const ORBIT_INCL  = 0.18
 
 // 0=tetrahedron(4f), 1=octahedron(8f), 2=dodecahedron(12f), 3=icosahedron(20f)
@@ -167,6 +169,11 @@ export default function SpaceStation({ onClick }) {
     groupRef.current.rotation.x += delta * 0.01
 
     if (cloudRef.current) cloudRef.current.rotation.y -= delta * 0.005
+
+    // The orbit above is cheap and keeps the station where it belongs, but the
+    // debris tumble below recomposes 60 matrices and pushes 8 instanceMatrix
+    // uploads every frame. At distance the 30 pieces are sub-pixel, so skip it.
+    if (state.camera.position.distanceToSquared(groupRef.current.position) > DEBRIS_ACTIVE_DIST * DEBRIS_ACTIVE_DIST) return
 
     // Tumble debris — update each piece in its type bucket
     debrisData.forEach((d, i) => {

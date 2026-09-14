@@ -343,6 +343,10 @@ function findFreeImpactSlot(explosionStates) {
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
+// Matches the <group position> in the render below — keep the two in sync.
+const DG_WORLD_POS  = new THREE.Vector3(60, -6, 18);
+const DG_ACTIVE_DIST = 220;
+
 export default function DistantGalaxy() {
   const groupRef  = useRef();
   const nebulaRef = useRef();
@@ -375,6 +379,11 @@ export default function DistantGalaxy() {
   }, [geometry, nebulaGeo, eventsGeo, laserGeo, fireballGeo, sparkGeo, texture]);
 
   useFrame((state, delta) => {
+    // The event / laser / explosion simulation below pushes 8 attribute uploads
+    // per frame. Its *content* already gates on proximity, but the work itself
+    // ran at full cost from any distance. Skip the whole body when far away.
+    if (state.camera.position.distanceToSquared(DG_WORLD_POS) > DG_ACTIVE_DIST * DG_ACTIVE_DIST) return;
+
     if (groupRef.current) groupRef.current.rotation.y += delta * 0.008;
     if (nebulaRef.current) nebulaRef.current.rotation.y -= delta * 0.003;
 

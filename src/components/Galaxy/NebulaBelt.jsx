@@ -1,12 +1,7 @@
 import { useRef, useMemo, useEffect } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
-import { createCircularParticleTexture, createNebulaSplatTexture } from '../../utils/threeUtils'
-
-function fadeIn(dist, edgeStart, edgeEnd) {
-  const t = Math.max(0, Math.min(1, (dist - edgeStart) / (edgeEnd - edgeStart)))
-  return t * t * (3 - 2 * t)
-}
+import { createCircularParticleTexture, createNebulaSplatTexture, fadeIn } from '../../utils/threeUtils'
 
 let _beltCloudTex = null
 function getBeltCloudTex() {

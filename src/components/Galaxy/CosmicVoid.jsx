@@ -374,6 +374,12 @@ const _cvBin     = Array.from({ length: CV_SEGS }, () => new THREE.Vector3());
 const _cvInitUp  = new THREE.Vector3();
 const _cvRotAxis = new THREE.Vector3();
 
+// Distance past which the void stops doing per-frame CPU work. The tentacles
+// span ~12 units, so well before this they are a few pixels across and their
+// motion is indiscernible — but rebuilding them costs 6 x (1440 positions +
+// 1440 normals) plus 12 buffer uploads every frame regardless.
+const CV_ACTIVE_DIST = 150;
+
 // ── Geometry builder ──────────────────────────────────────────────────────────
 
 function buildVoidTentGeo() {
@@ -516,7 +522,7 @@ function updateVoidTent(geo, config, time, hoverValue, length) {
 // Fixed Y offsets — one per tentacle, avoids Math.random instability
 const TENT_Y_OFFSETS = [0.85, -0.85, 1.0, -1.0, 0.75, -0.75];
 
-function VoidTentacle({ index, totalCount, length, hovered }) {
+function VoidTentacle({ index, totalCount, length, hovered, nearRef }) {
   const hoverRef = useRef(0);
 
   const geometry = useMemo(() => buildVoidTentGeo(), []);
@@ -563,6 +569,7 @@ function VoidTentacle({ index, totalCount, length, hovered }) {
   }, [geometry, material]);
 
   useFrame((state, delta) => {
+    if (!nearRef.current) return;   // too far to read — skip the CPU tube rebuild
     hoverRef.current += ((hovered ? 1 : 0) - hoverRef.current) * Math.min(delta * 3, 1);
     material.uniforms.uTime.value  = state.clock.elapsedTime;
     material.uniforms.uHover.value = hoverRef.current;
@@ -829,8 +836,21 @@ function VoidParticles({ count = 150, radius = 25, hovered }) {
 // ============================================================
 // Main Export
 // ============================================================
+// Writes a shared ref instead of state, so proximity changes never re-render
+// the void or its children — they just read nearRef.current in their own frame.
+function VoidProximity({ position, nearRef }) {
+  useFrame((state) => {
+    const dx = state.camera.position.x - position[0];
+    const dy = state.camera.position.y - position[1];
+    const dz = state.camera.position.z - position[2];
+    nearRef.current = (dx * dx + dy * dy + dz * dz) < CV_ACTIVE_DIST * CV_ACTIVE_DIST;
+  });
+  return null;
+}
+
 export default function CosmicVoid({ position = [0, 0, -80], onClick }) {
   const [hovered, setHovered] = useState(false);
+  const nearRef = useRef(true);   // assume near on mount; VoidProximity corrects on frame 1
 
   const tentacleProps = useMemo(() => Array.from({ length: 6 }, (_, i) => ({
     index:      i,
@@ -840,10 +860,12 @@ export default function CosmicVoid({ position = [0, 0, -80], onClick }) {
 
   return (
     <group position={position}>
+      <VoidProximity position={position} nearRef={nearRef} />
+
       <BlackHoleCore position={[0, 0, 0]} onClick={onClick} onHoverChange={setHovered} />
 
       {tentacleProps.map(p => (
-        <VoidTentacle key={p.index} hovered={hovered} {...p} />
+        <VoidTentacle key={p.index} hovered={hovered} nearRef={nearRef} {...p} />
       ))}
 
       <VoidParticles hovered={hovered} />

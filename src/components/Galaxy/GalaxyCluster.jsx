@@ -1,11 +1,7 @@
 import { useRef, useMemo, useEffect } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
-
-function fadeIn(dist, edgeStart, edgeEnd) {
-  const t = Math.max(0, Math.min(1, (dist - edgeStart) / (edgeEnd - edgeStart)))
-  return t * t * (3 - 2 * t)
-}
+import { fadeIn } from '../../utils/threeUtils'
 
 function makeGalaxyTexture(color1, color2) {
   const canvas = document.createElement('canvas')

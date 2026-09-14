@@ -90,3 +90,13 @@ export function createNebulaSplatTexture() {
   return cachedNebulaSplatTexture;
 }
 
+
+/**
+ * Smoothstep ramp from 0 at edgeStart to 1 at edgeEnd, used to fade distant
+ * scene layers in and out by camera distance. Was duplicated verbatim in
+ * NebulaBelt, AsteroidBelt, OortCloud and GalaxyCluster.
+ */
+export function fadeIn(dist, edgeStart, edgeEnd) {
+  const t = Math.max(0, Math.min(1, (dist - edgeStart) / (edgeEnd - edgeStart)));
+  return t * t * (3 - 2 * t);
+}
