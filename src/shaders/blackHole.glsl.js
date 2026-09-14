@@ -149,7 +149,7 @@ export function buildBlackHoleFragment({ steps = 0, crossings = 1, stars = 0 } =
       // so the geometry never becomes the thing that ends it.
       float tOut   = max(0.0, (r - DISK_IN) / (DISK_OUT - DISK_IN));
       float radial = smoothstep(DISK_IN, DISK_IN * 1.45, r)
-                   * exp(-pow(tOut * 2.0, 1.8));
+                   * exp(-pow(tOut * 1.15, 2.4));
 
       // Contrast the noise so it reads as filaments rather than haze.
       float fil = pow(clamp(n, 0.0, 1.0), 2.2);
@@ -222,8 +222,12 @@ export function buildBlackHoleFragment({ steps = 0, crossings = 1, stars = 0 } =
         // Refine the step near the disk slab, otherwise the volume is
         // undersampled and the gas strobes as the camera moves.
         float rxz = length(pos.xz);
-        if (abs(pos.y) < uHalfThick * 6.0 && rxz < DISK_FADE) {
-          dt = min(dt, uHalfThick * 1.1);
+        // Refine only within the slab itself, not a wide margin around it.
+        // A grazing ray travels ~25 r_s through the disk region; refining over
+        // |y| < 6*thickness at dt = 1.1*thickness cost ~75 steps and exhausted
+        // the budget on the 48-step tier, truncating those rays mid-disk.
+        if (abs(pos.y) < uHalfThick * 3.0 && rxz < DISK_FADE) {
+          dt = min(dt, uHalfThick * 1.8);
         }
         if (!jittered) { dt *= (0.5 + jitter); jittered = true; }
 
@@ -266,7 +270,7 @@ export function buildBlackHoleFragment({ steps = 0, crossings = 1, stars = 0 } =
             vec3  chroma = diskEmission(hit, hr, rd, inten);
             float tOut   = max(0.0, (hr - DISK_IN) / (DISK_OUT - DISK_IN));
             float shape  = smoothstep(DISK_IN, DISK_IN * 1.35, hr)
-                         * exp(-pow(tOut * 2.0, 1.8));
+                         * exp(-pow(tOut * 1.15, 2.4));
             float pathLen = 1.0 / max(0.06, abs(rd.y));
             float da = (1.0 - exp(-shape * pathLen * uDiskOpacity)) * ((t > tca && b < BCRIT) ? 0.0 : 1.0);
             col   += chroma * inten * da * uEmission;

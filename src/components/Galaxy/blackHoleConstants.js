@@ -34,11 +34,11 @@ export const DISK_IN_RS  = ISCO_RS;   // 3
 // out here and would be chopped mid-brightness.
 export const DISK_OUT_RS = 9;
 // Where the tail has decayed to nothing and sampling can stop.
-export const DISK_FADE_RS = 12.5;
+export const DISK_FADE_RS = 14;
 
 // Billboard reach. Must clear DISK_FADE so the disk's own falloff is what ends
 // it, never the geometry.
-export const INFLUENCE_RS = 13;
+export const INFLUENCE_RS = 15;
 
 // ── Interaction / simulation ─────────────────────────────────────────────────
 export const WELL_RAMP        = 1.5;  // seconds for gravity to reach full strength
@@ -66,6 +66,6 @@ export const TIER = { LOW: 0, MED: 1, HIGH: 2 };
 
 export const TIER_CONFIG = {
   [TIER.LOW]:  { steps: 0,  crossings: 1, stars: 0, maxScreenFrac: 0.45, dpr: 1.0  },
-  [TIER.MED]:  { steps: 48, crossings: 2, stars: 1, maxScreenFrac: 0.65, dpr: 1.5  },
+  [TIER.MED]:  { steps: 64, crossings: 2, stars: 1, maxScreenFrac: 0.65, dpr: 1.5  },
   [TIER.HIGH]: { steps: 96, crossings: 3, stars: 1, maxScreenFrac: 0.90, dpr: null }, // null = inherit
 };
