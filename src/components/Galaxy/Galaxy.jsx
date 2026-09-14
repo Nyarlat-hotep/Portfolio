@@ -12,6 +12,7 @@ import Starfield from './Starfield';
 import CosmicVoid from './CosmicVoid';
 import VoidVignette from './VoidVignette';
 import PerfProbe from './PerfProbe';
+import SceneBloom from './SceneBloom';
 import CameraController from './CameraController';
 import Constellation from './Constellation';
 import ShootingStars from './ShootingStars';
@@ -751,6 +752,8 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
           <SpaceStation onClick={handleDerelictClick} />
           <GalaxyCluster position={[350, -80, -150]} cameraFadeStart={320} cameraFadeEnd={420} />
         </Suspense>
+
+        <SceneBloom />
       </Canvas>
 
       {/* Vignette overlay - creeping darkness */}

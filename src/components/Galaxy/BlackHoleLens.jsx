@@ -42,11 +42,16 @@ export default function BlackHoleLens({ wellsRef, worldOffset }) {
     uAmount:       { value: 0 },
     uDormant:      { value: 0 },
     uFlash:        { value: 0 },
-    uTempScale:    { value: 9200 },
-    uDiskOpacity:  { value: 1.35 },
+    // 6800K peak puts the inner disk at hot cream and the rim in deep amber —
+    // the Gargantua gradient. 9200K read blue-white and clinical.
+    uTempScale:    { value: 6800 },
+    uDiskOpacity:  { value: 1.1 },
+    uEmission:     { value: 3.2 },   // HDR — values above 1 are what bloom keys on
     uDoppler:      { value: 1 },
     uSpinSign:     { value: 1 },
-    uGlow:         { value: 0.85 },
+    uGlow:         { value: 0.55 },
+    uHalfThick:    { value: 0.42 },  // disk half-thickness in r_s
+    uNoiseSpeed:   { value: 2.6 },
     uBB:           { value: getBlackbodyLUT() },
   }).current;
 
@@ -110,8 +115,8 @@ export default function BlackHoleLens({ wellsRef, worldOffset }) {
 
     // Hotter reads as whiter *through the blackbody LUT* — a far better flash
     // than lerping toward a fixed colour, and physically motivated.
-    uniforms.uTempScale.value = 9200 * (1 + flashT * 1.6) * (1 - dormantT * 0.35);
-    uniforms.uGlow.value      = 0.85 * (1 + flashT * 2.5);
+    uniforms.uTempScale.value = 6800 * (1 + flashT * 1.6) * (1 - dormantT * 0.35);
+    uniforms.uGlow.value      = 0.55 * (1 + flashT * 2.5);
 
     // Wrapped so float precision in the shader's time term stays bounded.
     uniforms.uTime.value = (state.clock.elapsedTime % 1000);
