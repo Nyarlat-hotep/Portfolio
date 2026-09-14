@@ -7,7 +7,6 @@ import { useQualityTier } from '../../utils/qualityTier';
 import {
   R_S_WORLD,
   INFLUENCE_RS,
-  DISK_FADE_RS,
   GRAVITY_DURATION,
   SPAWN_EASE,
   TIER_CONFIG,
@@ -59,7 +58,6 @@ export default function BlackHoleLens({ wellsRef, worldOffset }) {
     uGlow:         { value: 0.14 },
     uHalfThick:    { value: 0.3 },   // r_s — a band with some substance, not a needle
     uNoiseSpeed:   { value: 2.6 },
-    uWindowR:      { value: INFLUENCE_RS },  // recomputed per frame from the clamped quad
     uBB:           { value: getBlackbodyLUT() },
   }).current;
 
@@ -147,46 +145,29 @@ export default function BlackHoleLens({ wellsRef, worldOffset }) {
     _m3.identity();
     uniforms.uWorldToLocal.value.copy(_m3);
 
-    // ── Size it to the influence sphere ────────────────────────────────────
+    // ── Size the quad to the effect, and nothing else ──────────────────────
+    //
+    // The quad exists only to give the shader fragments to run on. It must
+    // cover exactly the region the effect can occupy — the projected silhouette
+    // of the influence sphere — and must NEVER be smaller, because anything it
+    // cuts through becomes a straight geometric edge on screen.
+    //
+    // There used to be a screen-coverage clamp here as a fill-rate guard. It
+    // was a mistake: fragments outside the influence radius `discard` on the
+    // shader's first three lines, before any marching, so they cost ~2 ALU ops
+    // whether the quad covers them or not. The clamp therefore saved nothing
+    // and only ever removed visible outer disk — which is exactly the edge that
+    // kept reappearing. The expensive fragments are the ones near the hole, in
+    // the middle of the quad, and no amount of cropping the rim touches those.
+    //
+    // With the clamp gone this is self-correcting at every distance: far away
+    // the quad is small and tight, and as the camera approaches, the formula
+    // grows it past the frustum on its own.
     const d = state.camera.position.distanceTo(_hole);
     const R = INFLUENCE_RS * rs;
-    let s   = R * d / Math.sqrt(Math.max(d * d - R * R, 1e-3));
-
-    // Screen-coverage clamp — a fill-rate guard against filling the viewport.
-    const halfH  = d * Math.tan(THREE.MathUtils.degToRad(state.camera.fov * 0.5));
-    const halfW  = halfH * Math.max(1, state.camera.aspect);
-    s = Math.min(s, halfW * cfg.maxScreenFrac);
-
-    // Floor: the quad must reach past where the disk's density tail has decayed
-    // to nothing. If the clamp above shrinks it inside the disk it slices
-    // through it, and any slice is a visible edge. The disk has to be what ends
-    // the disk, never the geometry. Raymarch cost is bounded by STEPS, not by
-    // fragment count, so paying fill rate here is the right trade.
-    const kDisk = DISK_FADE_RS * rs;
-    if (d > kDisk * 1.02) {
-      s = Math.max(s, kDisk * d / Math.sqrt(d * d - kDisk * kDisk));
-    } else {
-      // Camera is inside the disk's own radius. No billboard can contain the
-      // disk from in here, so cover the whole frustum instead and let the
-      // shader's own falloff be the only thing that ends anything. 1.45 clears
-      // the screen corners.
-      s = Math.max(s, halfW * 1.45);
-    }
+    const s = R * d / Math.sqrt(Math.max(d * d - R * R, 1e-3));
 
     mesh.scale.setScalar(s);
-
-    // Impact parameter of the ray through the quad's edge, in r_s: for a camera
-    // at distance d and edge offset s, the ray's closest approach to the hole is
-    // d*s/sqrt(s^2+d^2). The shader fades to zero over the outer sliver of this.
-    //
-    // If the quad already covers the whole viewport its edge is off-screen, and
-    // applying the window would cut the disk to hide a boundary nobody can see.
-    // Make it inert in that case — the window exists only to hide a visible
-    // quad edge, so with no visible edge there is nothing for it to do.
-    const coversScreen = s >= halfW * 1.4;
-    uniforms.uWindowR.value = coversScreen
-      ? 1e6
-      : (d * s / Math.sqrt(s * s + d * d)) / rs;
   });
 
   return (

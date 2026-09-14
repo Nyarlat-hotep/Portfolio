@@ -71,11 +71,6 @@ export function buildBlackHoleFragment({ steps = 0, crossings = 1, stars = 0 } =
     uniform float uGlow;
     uniform float uHalfThick;    // disk half-thickness, r_s
     uniform float uNoiseSpeed;
-    // Impact parameter at the billboard's edge, in r_s. The quad gets cropped
-    // by the screen-coverage clamp, so the soft edge has to be scaled to the
-    // quad that actually exists — scaling it to RMAX leaves the falloff
-    // unfinished at the boundary and the quad's square edge becomes visible.
-    uniform float uWindowR;
     uniform sampler2D uBB;
 
     varying vec3 vWorldPos;
@@ -309,22 +304,12 @@ export function buildBlackHoleFragment({ steps = 0, crossings = 1, stars = 0 } =
       col   *= (1.0 - shadow);
       alpha  = max(alpha, shadow);
 
-      // Soft outer window, scaled to the quad's real extent.
-      //
-      // Two requirements, both learned the hard way:
-      //
-      // It must reach exactly zero inside the quad, not merely approach it. An
-      // exponential only asymptotes — it left ~0.003 at the boundary, which is
-      // invisible against an ordinary value but obvious once that value is HDR
-      // and bloom amplifies it.
-      //
-      // And it must not begin before the disk ends. This is now insurance
-      // rather than the mechanism: the disk's exponential tail has already
-      // decayed to nothing long before here, so this should never have
-      // anything visible to act on.
-      float window = 1.0 - smoothstep(uWindowR * 0.96, uWindowR * 0.998, b);
-      col   *= window;
-      alpha *= window;
+      // No edge window. The quad is sized to contain the whole effect and is
+      // never cropped, and the disk's own density tail reaches zero at ~14.5
+      // r_s — inside the RMAX discard at 15. Nothing nonzero can reach the
+      // boundary, so there is nothing to fade out. Every previous version of
+      // this shader had a window here, and every one of them ended up cutting
+      // the disk instead of hiding an edge.
 
       col   *= uAmount * (1.0 + uFlash * 3.0);
       alpha *= uAmount;

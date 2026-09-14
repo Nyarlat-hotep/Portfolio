@@ -65,7 +65,10 @@ export const FLATTEN_RATE  = 1.8;   // rate at which matter collapses into the d
 export const TIER = { LOW: 0, MED: 1, HIGH: 2 };
 
 export const TIER_CONFIG = {
-  [TIER.LOW]:  { steps: 0,  crossings: 1, stars: 0, maxScreenFrac: 0.45, dpr: 1.0  },
-  [TIER.MED]:  { steps: 64, crossings: 2, stars: 1, maxScreenFrac: 0.65, dpr: 1.5  },
-  [TIER.HIGH]: { steps: 96, crossings: 3, stars: 1, maxScreenFrac: 0.90, dpr: null }, // null = inherit
+  // No screen-coverage cap here by design. Cropping the lens quad saved no
+  // work — fragments outside the influence radius discard before marching —
+  // and cost visible disk, which showed up as a straight edge on screen.
+  [TIER.LOW]:  { steps: 0,  crossings: 1, stars: 0, dpr: 1.0  },
+  [TIER.MED]:  { steps: 64, crossings: 2, stars: 1, dpr: 1.5  },
+  [TIER.HIGH]: { steps: 96, crossings: 3, stars: 1, dpr: null }, // null = inherit
 };
