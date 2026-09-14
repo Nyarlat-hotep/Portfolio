@@ -729,7 +729,7 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
           <AsteroidBelt innerRadius={90} outerRadius={130} count={600} cameraFadeStart={90} cameraFadeEnd={140} />
           {/* Floating outer bodies — moons and ringed bodies drifting in deep space */}
           {/* Frost (Uranus) — ice-blue rings, wide flat bands */}
-          <OuterBody position={[-65, 22, -135]} textureUrl="/textures/uranus.jpg" bodyRadius={2.2} orbitRadius={9} orbitSpeed={0.004} orbitInclination={0.10} hasRings ringColor="#99ddff" ringTilt={0.12} ringBand1={[1.6, 2.8]} ringBand2={[3.1, 4.2]} />
+          <OuterBody position={[-65, 22, -135]} textureUrl="/textures/uranus.webp" bodyRadius={2.2} orbitRadius={9} orbitSpeed={0.004} orbitInclination={0.10} hasRings ringColor="#99ddff" ringTilt={0.12} ringBand1={[1.6, 2.8]} ringBand2={[3.1, 4.2]} />
           {/* Small rocky moon — no rings */}
           <OuterBody position={[100, -8, 72]}   textureType="rocky" bodyRadius={0.9} orbitRadius={5} orbitSpeed={0.009} orbitInclination={0.42} />
           {/* Alien — no rings (replaced green ring body) */}
@@ -737,7 +737,7 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
           {/* Tiny rocky — no rings */}
           <OuterBody position={[-155, -12, 55]} textureType="rocky" bodyRadius={0.55} orbitRadius={3} orbitSpeed={0.012} orbitInclination={0.65} />
           {/* Haze (Venus) — golden-amber rings, narrow steep tilt, 1 moon */}
-          <OuterBody position={[80, 45, -160]}  textureUrl="/textures/venus.jpg"  bodyRadius={1.3} orbitRadius={6} orbitSpeed={0.006} orbitInclination={0.55} hasRings ringColor="#ffcc55" ringTilt={0.52} ringBand1={[1.8, 2.3]} ringBand2={[2.6, 3.1]} hazeColor="#ffdd88" moons={[{ radius: 3.5, speed: 0.04, tilt: 0.3, size: 0.18 }]} />
+          <OuterBody position={[80, 45, -160]}  textureUrl="/textures/venus.webp"  bodyRadius={1.3} orbitRadius={6} orbitSpeed={0.006} orbitInclination={0.55} hasRings ringColor="#ffcc55" ringTilt={0.52} ringBand1={[1.8, 2.3]} ringBand2={[2.6, 3.1]} hazeColor="#ffdd88" moons={[{ radius: 3.5, speed: 0.04, tilt: 0.3, size: 0.18 }]} />
         </Suspense>
 
         {/* Layer 3 — Oort Cloud shell surrounding everything, fade in 280–400u */}

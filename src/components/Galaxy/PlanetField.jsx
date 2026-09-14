@@ -11,11 +11,11 @@ const GRAVITY_DUR  = 10;   // must match GravityField's GRAVITY_DURATION
 
 // All positions are in GravityField's local space (same coords as particles)
 const CONFIGS = [
-  { src: '/textures/earth.jpg',   home: [-5,  0.5, -3], orbitR: 1.5, orbitSpeed: 0.12, orbitPhase: 0.0, rotSpeed: 0.40 },
-  { src: '/textures/mars.jpg',    home: [ 7, -0.5,  4], orbitR: 1.0, orbitSpeed: 0.08, orbitPhase: 1.2, rotSpeed: 0.25 },
-  { src: '/textures/jupiter.jpg', home: [-9,  1.0,  6], orbitR: 2.0, orbitSpeed: 0.05, orbitPhase: 2.5, rotSpeed: 0.18 },
-  { src: '/textures/neptune.jpg', home: [ 4, -1.0, -5], orbitR: 1.2, orbitSpeed: 0.09, orbitPhase: 4.1, rotSpeed: 0.35 },
-  { src: '/textures/venus.jpg',   home: [-2,  0.2,  8], orbitR: 0.8, orbitSpeed: 0.14, orbitPhase: 0.8, rotSpeed: 0.55 },
+  { src: '/textures/earth.webp',   home: [-5,  0.5, -3], orbitR: 1.5, orbitSpeed: 0.12, orbitPhase: 0.0, rotSpeed: 0.40 },
+  { src: '/textures/mars.webp',    home: [ 7, -0.5,  4], orbitR: 1.0, orbitSpeed: 0.08, orbitPhase: 1.2, rotSpeed: 0.25 },
+  { src: '/textures/jupiter.webp', home: [-9,  1.0,  6], orbitR: 2.0, orbitSpeed: 0.05, orbitPhase: 2.5, rotSpeed: 0.18 },
+  { src: '/textures/neptune.webp', home: [ 4, -1.0, -5], orbitR: 1.2, orbitSpeed: 0.09, orbitPhase: 4.1, rotSpeed: 0.35 },
+  { src: '/textures/venus.webp',   home: [-2,  0.2,  8], orbitR: 0.8, orbitSpeed: 0.14, orbitPhase: 0.8, rotSpeed: 0.55 },
 ];
 
 function Planet({ config, wells }) {

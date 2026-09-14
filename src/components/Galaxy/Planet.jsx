@@ -37,7 +37,7 @@ function Planet({
   const { camera, size } = useThree();
 
   // Use explicit texture from planet data, falling back to jupiter if not provided
-  const textureUrl = texture ?? '/textures/jupiter.jpg';
+  const textureUrl = texture ?? '/textures/jupiter.webp';
 
   // Load the planet texture
   const planetTexture = useTexture(textureUrl);

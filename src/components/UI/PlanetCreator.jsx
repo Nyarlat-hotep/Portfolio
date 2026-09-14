@@ -14,15 +14,15 @@ const isTouch = isTouchDevice();
 
 // Available textures
 const TEXTURES = [
-  { id: 'earth', url: '/textures/earth.jpg', name: 'Terra' },
-  { id: 'mars', url: '/textures/mars.jpg', name: 'Crimson' },
-  { id: 'jupiter', url: '/textures/jupiter.jpg', name: 'Storm' },
-  { id: 'saturn', url: '/textures/saturn.jpg', name: 'Ringed' },
-  { id: 'neptune', url: '/textures/neptune.jpg', name: 'Azure' },
-  { id: 'venus', url: '/textures/venus.jpg', name: 'Haze' },
-  { id: 'uranus', url: '/textures/uranus.jpg', name: 'Frost' },
-  { id: 'mercury', url: '/textures/mercury.jpg', name: 'Cratered' },
-  { id: 'sun', url: '/textures/sun.jpg', name: 'Solar' },
+  { id: 'earth', url: '/textures/earth.webp', name: 'Terra' },
+  { id: 'mars', url: '/textures/mars.webp', name: 'Crimson' },
+  { id: 'jupiter', url: '/textures/jupiter.webp', name: 'Storm' },
+  { id: 'saturn', url: '/textures/saturn.webp', name: 'Ringed' },
+  { id: 'neptune', url: '/textures/neptune.webp', name: 'Azure' },
+  { id: 'venus', url: '/textures/venus.webp', name: 'Haze' },
+  { id: 'uranus', url: '/textures/uranus.webp', name: 'Frost' },
+  { id: 'mercury', url: '/textures/mercury.webp', name: 'Cratered' },
+  { id: 'sun', url: '/textures/sun.webp', name: 'Solar' },
 ];
 
 // Size options
