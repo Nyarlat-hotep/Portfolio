@@ -11,6 +11,7 @@ import CustomPlanet from './CustomPlanet';
 import Starfield from './Starfield';
 import CosmicVoid from './CosmicVoid';
 import VoidVignette from './VoidVignette';
+import PerfProbe from './PerfProbe';
 import CameraController from './CameraController';
 import Constellation from './Constellation';
 import ShootingStars from './ShootingStars';
@@ -618,10 +619,14 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
       }}
     >
       <Canvas
-        dpr={[1, 2]}
+        dpr={[1, 1.75]}
         performance={{ min: 0.5 }}
         gl={{ antialias: true, powerPreference: 'high-performance' }}
       >
+        {/* Measures frame time after the intro and steps the quality tier down
+            if this device can't hold the budget. Renders nothing. */}
+        <PerfProbe />
+
         {/* Mobile tap → real raycast inside Canvas context */}
         <MobileTapHandler pendingTapRef={pendingTapRef} />
 
