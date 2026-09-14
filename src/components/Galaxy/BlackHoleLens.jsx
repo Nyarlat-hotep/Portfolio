@@ -52,6 +52,7 @@ export default function BlackHoleLens({ wellsRef, worldOffset }) {
     uGlow:         { value: 0.55 },
     uHalfThick:    { value: 0.42 },  // disk half-thickness in r_s
     uNoiseSpeed:   { value: 2.6 },
+    uWindowR:      { value: INFLUENCE_RS },  // recomputed per frame from the clamped quad
     uBB:           { value: getBlackbodyLUT() },
   }).current;
 
@@ -152,6 +153,12 @@ export default function BlackHoleLens({ wellsRef, worldOffset }) {
     s = Math.min(s, halfH * cfg.maxScreenFrac * Math.max(1, state.camera.aspect));
 
     mesh.scale.setScalar(s);
+
+    // Impact parameter of the ray through the quad's edge, in r_s. For a camera
+    // at distance d and an edge offset s, the ray's closest approach to the hole
+    // is d*s/sqrt(s^2+d^2). The shader fades the effect out over this distance,
+    // so a cropped quad fades faster rather than showing a cut edge.
+    uniforms.uWindowR.value = (d * s / Math.sqrt(s * s + d * d)) / rs;
   });
 
   return (

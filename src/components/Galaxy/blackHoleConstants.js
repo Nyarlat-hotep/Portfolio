@@ -25,12 +25,15 @@ export const SHADOW_R_WORLD = BCRIT_RS * R_S_WORLD;   // 1.299
 
 // Accretion disk extent, in r_s. Inner edge sits at the ISCO so the disk fades
 // out physically rather than being clipped by an arbitrary radius.
+// Outer edge of 9 puts the disk at 9 world units across, close to the 7x7 plane
+// this replaced. 14 was twice that and read as overwhelming the nebula.
 export const DISK_IN_RS  = ISCO_RS;   // 3
-export const DISK_OUT_RS = 14;
+export const DISK_OUT_RS = 9;
 
-// How far the lens billboard reaches. Past ~7 r_s the lensing window
-// exp(-(b/7)^2) is already ~0.005, so 16 is comfortably beyond visible effect.
-export const INFLUENCE_RS = 16;
+// How far the lens billboard reaches beyond the disk. Only the halo lives out
+// here, and the shader now fades to the quad's actual edge, so this only needs
+// enough margin for the glow to fall off naturally.
+export const INFLUENCE_RS = 11;
 
 // ── Interaction / simulation ─────────────────────────────────────────────────
 export const WELL_RAMP        = 1.5;  // seconds for gravity to reach full strength

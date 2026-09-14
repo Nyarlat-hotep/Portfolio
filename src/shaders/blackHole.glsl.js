@@ -70,6 +70,11 @@ export function buildBlackHoleFragment({ steps = 0, crossings = 1, stars = 0 } =
     uniform float uGlow;
     uniform float uHalfThick;    // disk half-thickness, r_s
     uniform float uNoiseSpeed;
+    // Impact parameter at the billboard's edge, in r_s. The quad gets cropped
+    // by the screen-coverage clamp, so the soft edge has to be scaled to the
+    // quad that actually exists — scaling it to RMAX leaves the falloff
+    // unfinished at the boundary and the quad's square edge becomes visible.
+    uniform float uWindowR;
     uniform sampler2D uBB;
 
     varying vec3 vWorldPos;
@@ -284,8 +289,10 @@ export function buildBlackHoleFragment({ steps = 0, crossings = 1, stars = 0 } =
       col   *= (1.0 - shadow);
       alpha  = max(alpha, shadow);
 
-      // Soft outer window so the billboard's square edge is never visible.
-      float window = exp(-pow(b / (RMAX * 0.46), 2.0));
+      // Soft outer window, scaled to the quad's real extent so the falloff
+      // always completes before the geometry runs out. 0.42 puts the edge at
+      // exp(-5.7) ~ 0.003, well below anything visible.
+      float window = exp(-pow(b / max(uWindowR * 0.42, 1e-3), 2.0));
       col   *= window;
       alpha *= window;
 
