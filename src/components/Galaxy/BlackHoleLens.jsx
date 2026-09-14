@@ -7,6 +7,7 @@ import { useQualityTier } from '../../utils/qualityTier';
 import {
   R_S_WORLD,
   INFLUENCE_RS,
+  DISK_OUT_RS,
   GRAVITY_DURATION,
   SPAWN_EASE,
   TIER_CONFIG,
@@ -56,7 +57,7 @@ export default function BlackHoleLens({ wellsRef, worldOffset }) {
     // thin disk, not from a wide additive halo — a strong halo just fogs the
     // shadow grey and swallows the photon ring.
     uGlow:         { value: 0.14 },
-    uHalfThick:    { value: 0.2 },   // thin disk, r_s — Gargantua's is a narrow band
+    uHalfThick:    { value: 0.3 },   // r_s — a band with some substance, not a needle
     uNoiseSpeed:   { value: 2.6 },
     uWindowR:      { value: INFLUENCE_RS },  // recomputed per frame from the clamped quad
     uBB:           { value: getBlackbodyLUT() },
@@ -158,12 +159,23 @@ export default function BlackHoleLens({ wellsRef, worldOffset }) {
     const halfH = d * Math.tan(THREE.MathUtils.degToRad(state.camera.fov * 0.5));
     s = Math.min(s, halfH * cfg.maxScreenFrac * Math.max(1, state.camera.aspect));
 
+    // Floor: the quad must always contain the accretion disk with margin.
+    // The screen-coverage clamp above is a fill-rate guard, but when the camera
+    // gets close it was shrinking the quad below the disk's own extent and
+    // slicing straight through it. Cropping the halo is invisible; cropping the
+    // disk is the artifact. Visual correctness wins here — the raymarch cost is
+    // bounded by STEPS regardless of how many fragments it covers.
+    const kDisk = DISK_OUT_RS * 1.18 * rs;
+    if (d > kDisk) {
+      s = Math.max(s, kDisk * d / Math.sqrt(d * d - kDisk * kDisk));
+    }
+
     mesh.scale.setScalar(s);
 
     // Impact parameter of the ray through the quad's edge, in r_s. For a camera
     // at distance d and an edge offset s, the ray's closest approach to the hole
-    // is d*s/sqrt(s^2+d^2). The shader fades the effect out over this distance,
-    // so a cropped quad fades faster rather than showing a cut edge.
+    // is d*s/sqrt(s^2+d^2). The shader fades the effect to zero over the outer
+    // sliver of this, entirely beyond the disk.
     uniforms.uWindowR.value = (d * s / Math.sqrt(s * s + d * d)) / rs;
   });
 

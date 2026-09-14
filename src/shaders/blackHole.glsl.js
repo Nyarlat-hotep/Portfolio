@@ -295,12 +295,18 @@ export function buildBlackHoleFragment({ steps = 0, crossings = 1, stars = 0 } =
 
       // Soft outer window, scaled to the quad's real extent.
       //
-      // This MUST reach exactly zero inside the quad, not merely approach it.
-      // An exponential only asymptotes: it left ~0.003 at the boundary, which
-      // is invisible against an ordinary value but very visible once that
-      // value is HDR and bloom amplifies it — which is what produced the hard
-      // vertical cut down the side of the effect.
-      float window = 1.0 - smoothstep(uWindowR * 0.55, uWindowR * 0.97, b);
+      // Two requirements, both learned the hard way:
+      //
+      // It must reach exactly zero inside the quad, not merely approach it. An
+      // exponential only asymptotes — it left ~0.003 at the boundary, which is
+      // invisible against an ordinary value but obvious once that value is HDR
+      // and bloom amplifies it.
+      //
+      // And it must not begin before the disk ends. Starting the fade at 0.55
+      // put the whole outer disk inside the falloff, dimming its rim by 70%
+      // and tapering it into a spike. The caller guarantees uWindowR covers
+      // the disk, so the fade belongs entirely outside it.
+      float window = 1.0 - smoothstep(uWindowR * 0.86, uWindowR * 0.99, b);
       col   *= window;
       alpha *= window;
 
