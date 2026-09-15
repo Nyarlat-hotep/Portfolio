@@ -13,7 +13,6 @@ import {
 } from './blackHoleConstants';
 
 // Scratch — never allocate inside useFrame.
-const _q      = new THREE.Quaternion();
 const _hole   = new THREE.Vector3();
 const _m3     = new THREE.Matrix3();
 
@@ -70,8 +69,19 @@ export default function BlackHoleLens({ wellsRef, worldOffset }) {
       fragmentShader: buildBlackHoleFragment(cfg),
       transparent:  true,
       depthWrite:   false,
-      depthTest:    true,
-      side:         THREE.DoubleSide,
+      // depthTest off by design. The lens used to be a flat plane with depth
+      // testing on, which meant any scene geometry nearer than that plane
+      // rejected its fragments — and since the plane grew to thousands of units
+      // as the camera approached, it sliced through the nebula, the planets and
+      // the hit plane, producing straight cuts that got worse the closer you
+      // flew. The hole draws over the nebula regardless (it always did, via
+      // renderOrder), so depth testing only ever cost correctness here.
+      depthTest:    false,
+      // BackSide: render the sphere's inner/far surface. This is what makes the
+      // containment work from inside as well as outside — with FrontSide the
+      // near hemisphere is culled once the camera enters the sphere and the
+      // effect would vanish. The silhouette is the same circle either way.
+      side:         THREE.BackSide,
       toneMapped:   true,
       // Premultiplied alpha: result = src.rgb + dst * (1 - src.a). Lets one
       // pass both darken (shadow occludes the nebula) and add (disk emission
@@ -127,52 +137,46 @@ export default function BlackHoleLens({ wellsRef, worldOffset }) {
     // Wrapped so float precision in the shader's time term stays bounded.
     uniforms.uTime.value = (state.clock.elapsedTime % 1000);
 
-    // ── Place the billboard ────────────────────────────────────────────────
+    // ── Place it ───────────────────────────────────────────────────────────
     _hole.set(well.x + worldOffset[0], well.y + worldOffset[1], well.z + worldOffset[2]);
     uniforms.uHolePos.value.copy(_hole);
 
     mesh.position.set(well.x, well.y, well.z);
 
-    // Screen-aligned, not point-facing: we want a window over a screen region.
-    mesh.quaternion.copy(state.camera.quaternion);
-    if (mesh.parent) {
-      mesh.parent.getWorldQuaternion(_q).invert();
-      mesh.quaternion.premultiply(_q);
-    }
+    // No orientation term. A sphere looks the same from every direction, so the
+    // camera-facing quaternion the billboard needed every frame is simply gone.
 
     // Disk normal is +Y in hole-local space. Identity for now; passed as a
     // matrix so the disk can be tilted later without touching the ray math.
     _m3.identity();
     uniforms.uWorldToLocal.value.copy(_m3);
 
-    // ── Size the quad to the effect, and nothing else ──────────────────────
+    // ── Containment: a sphere of the influence radius ──────────────────────
     //
-    // The quad exists only to give the shader fragments to run on. It must
-    // cover exactly the region the effect can occupy — the projected silhouette
-    // of the influence sphere — and must NEVER be smaller, because anything it
-    // cuts through becomes a straight geometric edge on screen.
+    // One line, no camera term. The sphere's surface IS r = INFLUENCE_RS in the
+    // shader's units, so its silhouette is exactly the b = RMAX circle the
+    // shader already discards outside of. There is nothing to align, nothing to
+    // clamp, and nothing to fade against a boundary.
     //
-    // There used to be a screen-coverage clamp here as a fill-rate guard. It
-    // was a mistake: fragments outside the influence radius `discard` on the
-    // shader's first three lines, before any marching, so they cost ~2 ALU ops
-    // whether the quad covers them or not. The clamp therefore saved nothing
-    // and only ever removed visible outer disk — which is exactly the edge that
-    // kept reappearing. The expensive fragments are the ones near the hole, in
-    // the middle of the quad, and no amount of cropping the rim touches those.
+    // This replaces a screen-aligned billboard whose size was re-derived every
+    // frame from camera distance, FOV and aspect. That formula diverged as the
+    // camera approached the influence radius — the quad grew from 15 world
+    // units across to over 3,500 — and a flat plane that large, with depth
+    // testing on, gets sliced by every piece of scene geometry it passes
+    // through. That was the clipping, and it is why it worsened on zoom.
     //
-    // With the clamp gone this is self-correcting at every distance: far away
-    // the quad is small and tight, and as the camera approaches, the formula
-    // grows it past the frustum on its own.
-    const d = state.camera.position.distanceTo(_hole);
-    const R = INFLUENCE_RS * rs;
-    const s = R * d / Math.sqrt(Math.max(d * d - R * R, 1e-3));
-
-    mesh.scale.setScalar(s);
+    // A sphere cannot produce a straight edge from any angle, never needs
+    // resizing, and encloses the effect as a volume rather than intersecting
+    // the scene as a plane.
+    mesh.scale.setScalar(INFLUENCE_RS * rs);
   });
 
   return (
+    // Unit sphere, scaled to the influence radius. 32 segments is plenty: the
+    // silhouette is where the effect has already fallen to zero, so faceting
+    // there is invisible.
     <mesh ref={meshRef} material={material} renderOrder={1} visible={false} raycast={null}>
-      <planeGeometry args={[2, 2]} />
+      <sphereGeometry args={[1, 32, 32]} />
     </mesh>
   );
 }

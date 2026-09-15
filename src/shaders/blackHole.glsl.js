@@ -10,10 +10,17 @@ import {
 /**
  * Black hole lens shaders.
  *
- * Rendered on a camera-facing billboard sized to the hole's influence radius,
- * not as a fullscreen post-process. That bound is what makes the effect
- * affordable on phones: cost scales with the hole's screen footprint, which is
- * clampable, rather than with the whole viewport.
+ * Rendered on a sphere of the influence radius, drawn back-face, with rays
+ * entering at its surface. Not a fullscreen post-process: cost still scales
+ * with the hole's screen footprint rather than the whole viewport, which is
+ * what keeps it affordable on phones.
+ *
+ * The containment is a sphere rather than a billboard deliberately. A sphere's
+ * silhouette is a circle from every angle and never needs resizing, so there is
+ * no geometric edge for the effect to be cut against. The earlier billboard had
+ * to be re-derived each frame from camera distance and FOV, and that formula
+ * diverged near the influence radius — producing straight cuts that worsened as
+ * the camera approached.
  *
  * All ray math runs in black-hole-local space with r_s = 1, M = 0.5, so the
  * shader is scale-invariant and the hole can animate its size through the uRs
@@ -29,9 +36,9 @@ export const blackHoleVertexShader = /* glsl */ `
   varying vec3 vWorldPos;
 
   void main() {
-    // modelMatrix, not modelViewMatrix — we need the world-space point under
-    // this fragment to build the ray. Varyings are perspective-correct, so
-    // this is exact per-pixel.
+    // modelMatrix, not modelViewMatrix — we need the world-space point on the
+    // containment sphere under this fragment to build the ray. Varyings are
+    // perspective-correct, so this is exact per-pixel.
     vec4 wp   = modelMatrix * vec4(position, 1.0);
     vWorldPos = wp.xyz;
     gl_Position = projectionMatrix * viewMatrix * wp;
@@ -181,8 +188,10 @@ export function buildBlackHoleFragment({ steps = 0, crossings = 1, stars = 0 } =
       float b   = length(cross(ro, rd));
       float tca = -dot(ro, rd);
       float d2  = dot(ro, ro) - tca * tca;
-      // The quad is square, the influence region a disc — this culls ~21% of
-      // the quad's fragments for free (depthWrite is off, so no early-Z lost).
+      // Backstop only. Every fragment sits on the containment sphere, so its
+      // ray necessarily passes within RMAX of the centre and this cannot fire
+      // in normal use — the sphere's silhouette already is the b = RMAX circle.
+      // Kept because it costs ~2 ops and guards against a bad uniform.
       if (d2 > RMAX2) discard;
 
       vec3  col   = vec3(0.0);
@@ -304,12 +313,11 @@ export function buildBlackHoleFragment({ steps = 0, crossings = 1, stars = 0 } =
       col   *= (1.0 - shadow);
       alpha  = max(alpha, shadow);
 
-      // No edge window. The quad is sized to contain the whole effect and is
-      // never cropped, and the disk's own density tail reaches zero at ~14.5
-      // r_s — inside the RMAX discard at 15. Nothing nonzero can reach the
-      // boundary, so there is nothing to fade out. Every previous version of
+      // No edge window, and none is needed. The containment sphere's surface is
+      // r = RMAX, and the disk's density tail reaches zero at ~14.5 r_s, inside
+      // it. Nothing nonzero can reach the boundary. Every earlier version of
       // this shader had a window here, and every one of them ended up cutting
-      // the disk instead of hiding an edge.
+      // the disk rather than hiding an edge.
 
       col   *= uAmount * (1.0 + uFlash * 3.0);
       alpha *= uAmount;
