@@ -113,6 +113,30 @@ function buildField() {
   return { geo, vel, home, homeCol, capturedBy, fadeProg, spiralT };
 }
 
+// Infalling matter needs to read as streaking, but pointsMaterial draws square
+// sprites and cannot stretch. A small pool of line segments, rewritten each
+// frame for whichever particles are currently spiralling, does it in one extra
+// draw call. Capped rather than one-per-particle: measured, ~864 of the 6000
+// start inside the capture radius and so are taken on the first frame, which is
+// the peak. 1024 covers that with headroom and is still one draw call and ~48KB;
+// setDrawRange means unused slots cost nothing.
+const STREAK_CAP   = 1024;
+const STREAK_TRAIL = 5;    // extrapolate the tail back this many frames of travel
+
+function buildStreaks() {
+  const pos = new Float32Array(STREAK_CAP * 6);   // 2 vertices x 3 components
+  const col = new Float32Array(STREAK_CAP * 6);
+  const posAttr = new THREE.BufferAttribute(pos, 3);
+  posAttr.usage = THREE.DynamicDrawUsage;
+  const colAttr = new THREE.BufferAttribute(col, 3);
+  colAttr.usage = THREE.DynamicDrawUsage;
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', posAttr);
+  geo.setAttribute('color', colAttr);
+  geo.setDrawRange(0, 0);
+  return geo;
+}
+
 function buildHaze() {
   const count = 300;
   const pos = new Float32Array(count * 3);
@@ -210,7 +234,8 @@ function getDotTex() {
 
 export default function GravityField() {
   const { geo, vel, home, homeCol, capturedBy, fadeProg, spiralT } = useMemo(() => buildField(), []);
-  const hazeGeo = useMemo(() => buildHaze(), []);
+  const hazeGeo   = useMemo(() => buildHaze(), []);
+  const streakGeo = useMemo(() => buildStreaks(), []);
   const tex     = useMemo(() => getDotTex(), []);
   const hazeTex = useMemo(() => createNebulaSplatTexture(), []);
 
@@ -262,13 +287,14 @@ export default function GravityField() {
   useEffect(() => () => {
     geo.dispose();
     hazeGeo.dispose();
+    streakGeo.dispose();
     blinkGeo.dispose();
     if (_tex)       { _tex.dispose();       _tex       = null; }
     if (_cloudTex)  { _cloudTex.dispose();  _cloudTex  = null; }
     // threeUtils' disposeMaterial never walks uniforms.*.value, so the lens
     // shader's blackbody LUT has to be released explicitly.
     disposeBlackbodyLUT();
-  }, [geo, hazeGeo, blinkGeo]);
+  }, [geo, hazeGeo, blinkGeo, streakGeo]);
 
   useFrame((_, delta) => {
     const posAttr = geo.attributes.position;
@@ -277,6 +303,10 @@ export default function GravityField() {
     const colArr  = colAttr.array;
     const dt      = Math.min(delta, 0.05);
     const wells   = wellsRef.current;
+
+    const streakPos = streakGeo.attributes.position.array;
+    const streakCol = streakGeo.attributes.color.array;
+    let   streakN   = 0;
 
     // Tick well ages
     for (let wi = 0; wi < wells.length; wi++) wells[wi].age += dt;
@@ -317,12 +347,35 @@ export default function GravityField() {
 
         let R   = Math.sqrt(rx * rx + rz * rz);
         let ang = Math.atan2(rz, rx);
+        const prevR = R, prevAng = ang;
 
         // Accelerates as it falls — the 3/R term steepens the approach.
         R -= INSPIRAL_RATE * dt * (1 + 3 / Math.max(R, 0.4));
         // Keplerian shear: inner radii sweep round faster than outer ones,
         // which is what makes the trails wind instead of falling straight in.
         ang += ORBIT_RATE * dt / Math.pow(Math.max(R, 0.35), ORBIT_FALLOFF);
+
+        // Streak. One frame of travel is only ~0.23 units, too short to read as
+        // a trail, so the tail is extrapolated back along the spiral using this
+        // frame's own deltas. Following the curve rather than drawing a straight
+        // chord to the previous position is what makes it look like it is being
+        // dragged in rather than jittering.
+        if (streakN < STREAK_CAP) {
+          const tailR   = Math.min(prevR - (R - prevR) * STREAK_TRAIL, SPIRAL_ENTER_R);
+          const tailAng = prevAng - (ang - prevAng) * STREAK_TRAIL;
+          const s6 = streakN * 6;
+          streakPos[s6]     = w.x + Math.cos(tailAng) * tailR;
+          streakPos[s6 + 1] = pos[i3 + 1];
+          streakPos[s6 + 2] = w.z + Math.sin(tailAng) * tailR;
+          streakPos[s6 + 3] = w.x + Math.cos(ang) * R;
+          streakPos[s6 + 4] = pos[i3 + 1];
+          streakPos[s6 + 5] = w.z + Math.sin(ang) * R;
+          // Tail fades out, head carries the disk's colour.
+          const heat = Math.min(1, (SPIRAL_ENTER_R - R) / SPIRAL_ENTER_R);
+          streakCol[s6]     = 0.18 * heat; streakCol[s6 + 1] = 0.10 * heat; streakCol[s6 + 2] = 0.05 * heat;
+          streakCol[s6 + 3] = 1.10 * heat; streakCol[s6 + 4] = 0.72 * heat; streakCol[s6 + 5] = 0.32 * heat;
+          streakN++;
+        }
 
         if (R < HORIZON_R) {
           pos[i3] = 0; pos[i3+1] = -9999; pos[i3+2] = 0;
@@ -419,6 +472,15 @@ export default function GravityField() {
     if (posDirty)   posAttr.needsUpdate = true;
     if (colorDirty) colAttr.needsUpdate = true;
 
+    // Streaks are rebuilt from scratch each frame, so the draw range alone
+    // decides what renders — unused slots in the pool cost nothing, and the
+    // range falls to zero on its own when the well collapses.
+    streakGeo.setDrawRange(0, streakN * 2);
+    if (streakN > 0) {
+      streakGeo.attributes.position.needsUpdate = true;
+      streakGeo.attributes.color.needsUpdate    = true;
+    }
+
     // Blink stars — hide when dim to avoid dark-spot alpha artifact
     blinkTimeRef.current += dt;
     const blinkArr = blinkGeo.attributes.color.array;
@@ -503,6 +565,18 @@ export default function GravityField() {
           sizeAttenuation
         />
       </points>
+
+      {/* Infall streaks — one draw call, drawn after the particles so the
+          trails read on top of them. */}
+      <lineSegments geometry={streakGeo} renderOrder={1} frustumCulled={false}>
+        <lineBasicMaterial
+          vertexColors
+          transparent
+          opacity={0.85}
+          depthWrite={false}
+          blending={THREE.AdditiveBlending}
+        />
+      </lineSegments>
 
       <Suspense fallback={null}>
         <PlanetField wells={wellSnapshot} />
