@@ -4,14 +4,17 @@ import * as THREE from 'three';
 import { createNebulaSplatTexture } from '../../utils/threeUtils';
 import PlanetField from './PlanetField';
 import { playBlackHole, stopBlackHole } from '../../utils/sounds';
-import { WELL_RAMP, GRAVITY_DURATION } from './blackHoleConstants';
+import {
+  WELL_RAMP, GRAVITY_DURATION,
+  SPIRAL_ENTER_R, HORIZON_R,
+  INSPIRAL_RATE, ORBIT_RATE, ORBIT_FALLOFF, FLATTEN_RATE,
+} from './blackHoleConstants';
 import BlackHoleLens from './BlackHoleLens';
 import { disposeBlackbodyLUT } from '../../utils/blackbodyLUT';
 
 const WORLD_X = -60, WORLD_Y = 0, WORLD_Z = 20;
 const N = 6000;
 
-const CAPTURE_R        = 1.5;
 const PULL_MAX         = 80;
 const TANGENT_F        = 25;   // tangential force constant (orbital spiraling)
 const FADE_SPEED       = 0.35; // color fade-in rate (1/s) — ~2.8s to fully reappear
@@ -81,6 +84,10 @@ function buildField() {
   const homeCol    = new Float32Array(N * 3); // original colors for fade-back
   const capturedBy = new Int32Array(N).fill(-1);
   const fadeProg   = new Float32Array(N).fill(0); // 0 = normal, >0 = fading in
+  // 0 = free, >0 = seconds spent spiralling in, -1 = past the horizon (hidden).
+  // Kept separate from capturedBy so collapseWell's existing reset, which keys
+  // on capturedBy, still catches particles in either state.
+  const spiralT    = new Float32Array(N).fill(0);
 
   for (let i = 0; i < N; i++) {
     const x = randG() * 18;
@@ -103,7 +110,7 @@ function buildField() {
   const geo = new THREE.BufferGeometry();
   geo.setAttribute('position', posAttr);
   geo.setAttribute('color', colAttr);
-  return { geo, vel, home, homeCol, capturedBy, fadeProg };
+  return { geo, vel, home, homeCol, capturedBy, fadeProg, spiralT };
 }
 
 function buildHaze() {
@@ -202,7 +209,7 @@ function getDotTex() {
 
 
 export default function GravityField() {
-  const { geo, vel, home, homeCol, capturedBy, fadeProg } = useMemo(() => buildField(), []);
+  const { geo, vel, home, homeCol, capturedBy, fadeProg, spiralT } = useMemo(() => buildField(), []);
   const hazeGeo = useMemo(() => buildHaze(), []);
   const tex     = useMemo(() => getDotTex(), []);
   const hazeTex = useMemo(() => createNebulaSplatTexture(), []);
@@ -225,6 +232,7 @@ export default function GravityField() {
       if (capturedBy[i] !== w.id) continue;
       const i3 = i * 3;
       capturedBy[i]  = -1;
+      spiralT[i]     = 0;   // clears both mid-spiral and swallowed states
       pos[i3]   = home[i3];
       pos[i3+1] = home[i3+1];
       pos[i3+2] = home[i3+2];
@@ -291,6 +299,53 @@ export default function GravityField() {
         colorDirty = true;
       }
 
+      // ── Inspiral ───────────────────────────────────────────────────────────
+      // Captured matter no longer vanishes on contact. It winds inward on a
+      // Keplerian spiral, flattens into the disk plane, and heats toward the
+      // disk's colour as it goes — so it visibly joins the plane the lens is
+      // lensing, rather than simply disappearing.
+      if (spiralT[i] > 0) {
+        const w = wells[0];
+        if (!w || w.id !== capturedBy[i]) { spiralT[i] = 0; continue; }
+
+        spiralT[i] += dt;
+        const i3 = i * 3;
+
+        const rx = pos[i3]   - w.x;
+        const ry = pos[i3+1] - w.y;
+        const rz = pos[i3+2] - w.z;
+
+        let R   = Math.sqrt(rx * rx + rz * rz);
+        let ang = Math.atan2(rz, rx);
+
+        // Accelerates as it falls — the 3/R term steepens the approach.
+        R -= INSPIRAL_RATE * dt * (1 + 3 / Math.max(R, 0.4));
+        // Keplerian shear: inner radii sweep round faster than outer ones,
+        // which is what makes the trails wind instead of falling straight in.
+        ang += ORBIT_RATE * dt / Math.pow(Math.max(R, 0.35), ORBIT_FALLOFF);
+
+        if (R < HORIZON_R) {
+          pos[i3] = 0; pos[i3+1] = -9999; pos[i3+2] = 0;
+          spiralT[i] = -1;          // past the horizon; stays hidden until collapse
+          posDirty = true;
+          continue;
+        }
+
+        pos[i3]   = w.x + Math.cos(ang) * R;
+        pos[i3+1] = w.y + ry * Math.max(0, 1 - dt * FLATTEN_RATE);
+        pos[i3+2] = w.z + Math.sin(ang) * R;
+        posDirty = true;
+
+        // Heat toward the disk's amber as it closes in.
+        const hot = Math.min(1, (SPIRAL_ENTER_R - R) / SPIRAL_ENTER_R);
+        const h   = hot * hot;
+        colArr[i3]   = homeCol[i3]   * (1 - h) + 1.50 * h;
+        colArr[i3+1] = homeCol[i3+1] * (1 - h) + 0.98 * h;
+        colArr[i3+2] = homeCol[i3+2] * (1 - h) + 0.42 * h;
+        colorDirty = true;
+        continue;
+      }
+
       if (capturedBy[i] !== -1) continue;
 
       const i3 = i * 3;
@@ -306,11 +361,13 @@ export default function GravityField() {
         const dz = w.z - pos[i3+2];
         const d2 = dx*dx + dy*dy + dz*dz;
 
-        if (d2 < CAPTURE_R * CAPTURE_R) {
+        // Hand off to the inspiral well outside the disk, rather than teleporting
+        // the particle off-screen the instant it gets close. It now falls in
+        // where the viewer can watch it.
+        if (d2 < SPIRAL_ENTER_R * SPIRAL_ENTER_R) {
           capturedBy[i] = w.id;
+          spiralT[i]    = 0.0001;
           vel[i3] = 0; vel[i3+1] = 0; vel[i3+2] = 0;
-          pos[i3] = 0; pos[i3+1] = -9999; pos[i3+2] = 0;
-          posDirty = true;
           break;
         }
 

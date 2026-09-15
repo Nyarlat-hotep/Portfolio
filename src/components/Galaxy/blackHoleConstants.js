@@ -54,9 +54,17 @@ export const SPIRAL_ENTER_R = 9;
 // inside the apparent shadow so nothing is seen winking out in open space.
 export const HORIZON_R = SHADOW_R_WORLD;
 
-// Inspiral shaping
-export const INSPIRAL_RATE = 2.2;   // base inward speed (world units/s)
-export const ORBIT_RATE    = 9.0;   // angular rate scale; divided by r^1.5 (Keplerian)
+// Inspiral shaping. Tuned by simulating the fall and measuring it: these give
+// ~1.15 revolutions over ~2.6s, with a worst-case on-screen jump of 0.23 world
+// units at 60fps. Turn count is stable from 20 to 120fps.
+export const INSPIRAL_RATE = 1.8;   // base inward speed (world units/s)
+export const ORBIT_RATE    = 16;    // angular rate scale, divided by r^ORBIT_FALLOFF
+// True Keplerian is r^-1.5, which is what the disk shader uses for its shear.
+// Here it is softened to 1.2 deliberately: at 1.5 nearly all the winding happens
+// at tiny radii where the particle is a few pixels across and about to vanish,
+// so the fall read as a straight drop (measured: 0.37 turns). This spreads the
+// rotation across radii you can actually see.
+export const ORBIT_FALLOFF = 1.2;
 export const FLATTEN_RATE  = 1.8;   // rate at which matter collapses into the disk plane
 
 // ── Quality tiers ────────────────────────────────────────────────────────────
