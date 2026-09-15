@@ -66,6 +66,12 @@ export const ORBIT_RATE    = 16;    // angular rate scale, divided by r^ORBIT_FA
 // rotation across radii you can actually see.
 export const ORBIT_FALLOFF = 1.2;
 export const FLATTEN_RATE  = 1.8;   // rate at which matter collapses into the disk plane
+// Seconds over which captured matter warms from its own nebula colour toward
+// the disk's amber. This is gated on time since capture, not on radius: ~880 of
+// the 6000 particles are already inside the capture radius when the well is
+// planted and are taken on the first frame, so a radius-keyed ramp made them
+// pop to amber instantly and read as a burst of foreign-coloured stars.
+export const HEAT_RAMP = 0.45;
 
 // ── Quality tiers ────────────────────────────────────────────────────────────
 // STEPS must be a compile-time constant: GLSL requires constant loop bounds, so

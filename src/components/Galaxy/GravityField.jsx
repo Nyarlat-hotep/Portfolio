@@ -7,7 +7,7 @@ import { playBlackHole, stopBlackHole } from '../../utils/sounds';
 import {
   WELL_RAMP, GRAVITY_DURATION,
   SPIRAL_ENTER_R, HORIZON_R,
-  INSPIRAL_RATE, ORBIT_RATE, ORBIT_FALLOFF, FLATTEN_RATE,
+  INSPIRAL_RATE, ORBIT_RATE, ORBIT_FALLOFF, FLATTEN_RATE, HEAT_RAMP,
 } from './blackHoleConstants';
 import BlackHoleLens from './BlackHoleLens';
 import { disposeBlackbodyLUT } from '../../utils/blackbodyLUT';
@@ -371,7 +371,9 @@ export default function GravityField() {
           streakPos[s6 + 4] = pos[i3 + 1];
           streakPos[s6 + 5] = w.z + Math.sin(ang) * R;
           // Tail fades out, head carries the disk's colour.
-          const heat = Math.min(1, (SPIRAL_ENTER_R - R) / SPIRAL_ENTER_R);
+          const rs0  = Math.min(1, spiralT[i] / HEAT_RAMP);
+          const heat = Math.min(1, (SPIRAL_ENTER_R - R) / SPIRAL_ENTER_R)
+                     * (rs0 * rs0 * (3 - 2 * rs0));
           streakCol[s6]     = 0.18 * heat; streakCol[s6 + 1] = 0.10 * heat; streakCol[s6 + 2] = 0.05 * heat;
           streakCol[s6 + 3] = 1.10 * heat; streakCol[s6 + 4] = 0.72 * heat; streakCol[s6 + 5] = 0.32 * heat;
           streakN++;
@@ -389,9 +391,15 @@ export default function GravityField() {
         pos[i3+2] = w.z + Math.sin(ang) * R;
         posDirty = true;
 
-        // Heat toward the disk's amber as it closes in.
+        // Heat toward the disk's amber as it closes in — but ramped on time
+        // since capture, not on radius alone. Everything already inside the
+        // capture radius is taken on the first frame, and keying this to radius
+        // alone made those hundreds of particles snap to amber the instant the
+        // well appeared. Every particle now leaves its own nebula colour.
+        const rr  = Math.min(1, spiralT[i] / HEAT_RAMP);
+        const ramp = rr * rr * (3 - 2 * rr);   // smoothstep, so it eases in
         const hot = Math.min(1, (SPIRAL_ENTER_R - R) / SPIRAL_ENTER_R);
-        const h   = hot * hot;
+        const h   = hot * hot * ramp;
         colArr[i3]   = homeCol[i3]   * (1 - h) + 1.50 * h;
         colArr[i3+1] = homeCol[i3+1] * (1 - h) + 0.98 * h;
         colArr[i3+2] = homeCol[i3+2] * (1 - h) + 0.42 * h;
