@@ -198,22 +198,24 @@ export default function BlackHoleLens({ wellsRef, worldOffset }) {
     if (lensScene) {
       mesh.visible = false;
       const prevTarget = state.gl.getRenderTarget();
-      const prevTone   = state.gl.toneMapping;
 
-      // Captured with tone mapping OFF, so the target holds pure linear scene
-      // radiance. The shader composites the disk and this background together
-      // in linear and tone maps the finished result exactly once, which is what
-      // keeps the composite bounded. Render targets never receive output
-      // colour-space encoding either, so no decode is needed coming back.
-      // drei's useFBO already defaults to HalfFloatType, so values above 1
-      // survive the round trip.
-      state.gl.toneMapping = THREE.NoToneMapping;
+      // Captured with the renderer's own tone mapping left ON, so every layer
+      // is mapped exactly as it is on screen. Capturing raw linear instead was
+      // measurably wrong here: this nebula is built from additive layers, the
+      // 8-bit canvas clamps after each additive step, and a HalfFloat target
+      // does not — so raw radiance summed far past where ACES saturates and the
+      // sphere rendered as a white disc over an identical dark nebula.
 
       state.gl.setRenderTarget(sceneFBO);
+      // MUST clear explicitly. The EffectComposer sets autoClear = false, so a
+      // plain render into this target accumulates on top of the previous frame
+      // — and with an additive nebula that compounds without bound, which is
+      // why the sphere filled with white regardless of any tone curve applied
+      // to the sample afterwards.
+      state.gl.clear(true, true, false);
       state.gl.render(state.scene, state.camera);
 
       state.gl.setRenderTarget(prevTarget);
-      state.gl.toneMapping = prevTone;
       mesh.visible = true;
 
       uniforms.uScene.value = sceneFBO.texture;

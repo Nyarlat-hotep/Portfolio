@@ -389,14 +389,21 @@ export function buildBlackHoleFragment({ steps = 0, stars = 0 } = {}) {
         // Sampled raw: the capture is rendered with tone mapping disabled, so
         // it holds pure linear scene radiance and needs no decode to join the
         // linear accumulation above.
-        bg = texture2D(uScene, clamp(suv, 0.0, 1.0)).rgb;
+        // Clamped to 1 to replicate the 8-bit canvas, which saturates after
+        // each additive draw. The HalfFloat capture has no such ceiling, and
+        // without this the accumulated nebula runs far past it.
+        bg = min(texture2D(uScene, clamp(suv, 0.0, 1.0)).rgb, vec3(1.0));
       }
 
       // Correct premultiplied front-to-back composite, in linear. col is
       // already weighted by transmittance as it accumulates, so this sum is
       // bounded by construction and cannot overflow the way the display-space
       // version did.
-      vec3 outLin = col + bg * (1.0 - alpha);
+      // Un-premultiply before tone mapping, then LERP rather than add. A lerp
+      // is bounded by max(background, disk), so the composite cannot overflow
+      // however bright either side gets — which an add demonstrably could.
+      vec3 diskTM = alpha > 0.001 ? acesToneMap(col / alpha) : vec3(0.0);
+      vec3 outLin = mix(bg, diskTM, clamp(alpha, 0.0, 1.0));
 
       // ── Shadow ────────────────────────────────────────────────────────────
       // Applied last, so it removes the background too — nothing escapes from
@@ -406,7 +413,9 @@ export function buildBlackHoleFragment({ steps = 0, stars = 0 } = {}) {
       outLin *= (1.0 - shadow);
 
       // Tone map and encode exactly ONCE, on the finished linear composite.
-      vec3 outCol = sRGBTransferOETF(vec4(acesToneMap(outLin), 1.0)).rgb;
+      // bg is already tone-mapped by the capture and diskTM was mapped above,
+      // so only the encode remains — nothing is tone mapped twice.
+      vec3 outCol = sRGBTransferOETF(vec4(outLin, 1.0)).rgb;
       outCol += (hash12(gl_FragCoord.xy * 1.7 + uTime) - 0.5) / 255.0;
 
       // Opaque: this surface paints the finished image inside its silhouette.
