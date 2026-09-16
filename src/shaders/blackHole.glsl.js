@@ -137,6 +137,16 @@ export function buildBlackHoleFragment({ steps = 0, stars = 0 } = {}) {
       return fract((p3.x + p3.y) * p3.z);
     }
 
+    // ACES filmic curve (Narkowicz approximation).
+    //
+    // Implemented here rather than calling three's injected toneMapping():
+    // that function is only emitted when the RENDERER is tone mapping, and the
+    // EffectComposer takes that over, so it does not exist in this program.
+    // Depending on it compiled to "no matching overloaded function found".
+    vec3 acesToneMap(vec3 x) {
+      return clamp((x * (2.51 * x + 0.03)) / (x * (2.43 * x + 0.59) + 0.14), 0.0, 1.0);
+    }
+
     vec3 blackbody(float kelvin) {
       float u = clamp((kelvin - 1000.0) / 19000.0, 0.0, 1.0);
       return texture2D(uBB, vec2(u, 0.5)).rgb;
@@ -235,6 +245,12 @@ export function buildBlackHoleFragment({ steps = 0, stars = 0 } = {}) {
       vec3  col   = vec3(0.0);
       float alpha = 0.0;
 
+      // Declared for both tiers so the compositing tail below is shared. On the
+      // analytic tier the ray never bends, so it stays equal to the entry
+      // direction and samples its own screen position — an exact copy.
+      vec3 dir     = rd;
+      bool escaped = false;
+
 #ifdef RAYMARCH
       // ── Geodesic integration ───────────────────────────────────────────────
       // Advance analytically to the influence sphere first; marching from the
@@ -323,18 +339,6 @@ export function buildBlackHoleFragment({ steps = 0, stars = 0 } = {}) {
       }
 #endif
 
-#ifdef RAYMARCH
-      // ── Lensed background ─────────────────────────────────────────────────
-      // Project the ray's escape direction back into the captured render and
-      // read what is actually there. Because a direction is a point at
-      // infinity, vec4(dir, 0.0) transforms correctly under the combined
-      // projection-view matrix.
-      //
-      // This needs no fade at the sphere boundary: out there deflection tends
-      // to zero, so the sampled pixel tends to the fragment's own position and
-      // the lensed image joins the unlensed scene seamlessly. The procedural
-      // starfield needed a fade precisely because it could not do that.
-      // Spawn / collapse envelope, on the emissive contributions only.
       float env = uAmount * (1.0 + uFlash * 3.0);
       col   *= env;
       alpha *= uAmount;
@@ -358,7 +362,7 @@ export function buildBlackHoleFragment({ steps = 0, stars = 0 } = {}) {
       // background being dragged through a second tone map. That second pass was
       // the source of every brightness problem here: it made the inside of the
       // sphere systematically differ from the identical scene just outside it.
-      vec3 emissive = sRGBTransferOETF(vec4(toneMapping(col), 1.0)).rgb;
+      vec3 emissive = sRGBTransferOETF(vec4(acesToneMap(col), 1.0)).rgb;
 
       vec3 bg = vec3(0.0);
       if (uHasScene > 0.5) {
