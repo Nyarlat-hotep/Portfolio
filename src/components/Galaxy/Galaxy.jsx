@@ -13,6 +13,7 @@ import CosmicVoid from './CosmicVoid';
 import VoidVignette from './VoidVignette';
 import PerfProbe from './PerfProbe';
 import SceneBloom from './SceneBloom';
+import SceneEnvironment from './SceneEnvironment';
 import CameraController from './CameraController';
 import Constellation from './Constellation';
 import ShootingStars from './ShootingStars';
@@ -627,6 +628,10 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
         {/* Measures frame time after the intro and steps the quality tier down
             if this device can't hold the budget. Renders nothing. */}
         <PerfProbe />
+
+        {/* Procedural image-based lighting — gives every standard material a
+            specular response the four point lights cannot provide. */}
+        <SceneEnvironment />
 
         {/* Mobile tap → real raycast inside Canvas context */}
         <MobileTapHandler pendingTapRef={pendingTapRef} />

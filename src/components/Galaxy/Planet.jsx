@@ -1,6 +1,8 @@
 import { useRef, useState, useMemo, useEffect, useCallback, memo } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useTexture } from '@react-three/drei';
+import { normalMapFor, roughnessFor } from '../../utils/planetMaps';
+import { getQualityTier, TIER } from '../../utils/qualityTier';
 import * as THREE from 'three';
 import Moon from './Moon';
 import { disposeObject, createCircularParticleTexture } from '../../utils/threeUtils';
@@ -40,7 +42,16 @@ function Planet({
   const textureUrl = texture ?? '/textures/jupiter.webp';
 
   // Load the planet texture
-  const planetTexture = useTexture(textureUrl);
+  // Tier is read once and frozen. It resolves synchronously at module load, so
+  // the common case is correct on the first render; freezing it means a later
+  // probe step-down cannot change what useTexture is loading and re-suspend the
+  // planet mid-session, which would flash the whole body.
+  const wantNormals = useRef(getQualityTier() >= TIER.MED).current;
+  const normalUrl   = wantNormals ? normalMapFor(textureUrl) : null;
+
+  const maps = useTexture(normalUrl ? [textureUrl, normalUrl] : [textureUrl]);
+  const planetTexture = normalUrl ? maps[0] : maps;
+  const planetNormal  = normalUrl ? maps[1] : null;
 
   // Use shared circular particle texture (cached globally)
   const particleTexture = useMemo(() => createCircularParticleTexture(), []);
@@ -195,9 +206,12 @@ function Planet({
             // Planets - realistic with better lighting response
             <meshStandardMaterial
               map={planetTexture}
+              normalMap={planetNormal || undefined}
               emissive={emissive}
               emissiveIntensity={isActive ? 0.4 : 0.2}
-              roughness={0.7}
+              // Per-body rather than a flat 0.7 for everything — dusty Mercury
+              // and a gas giant should not share a specular response.
+              roughness={roughnessFor(texture)}
               metalness={0.1}
             />
           )}
