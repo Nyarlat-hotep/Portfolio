@@ -79,10 +79,14 @@ export const HEAT_RAMP = 0.45;
 export const TIER = { LOW: 0, MED: 1, HIGH: 2 };
 
 export const TIER_CONFIG = {
+  // No `crossings` here either: the plan called for capping disk-plane
+  // crossings to control the arc over the top, but the volumetric march
+  // accumulates through the slab continuously and produces the arc on its own,
+  // so there was never a crossing count to limit.
   // No screen-coverage cap here by design. Cropping the lens quad saved no
   // work — fragments outside the influence radius discard before marching —
   // and cost visible disk, which showed up as a straight edge on screen.
-  [TIER.LOW]:  { steps: 0,  crossings: 1, stars: 0, dpr: 1.0  },
-  [TIER.MED]:  { steps: 64, crossings: 2, stars: 1, dpr: 1.5  },
-  [TIER.HIGH]: { steps: 96, crossings: 3, stars: 1, dpr: null }, // null = inherit
+  [TIER.LOW]:  { steps: 0,  stars: 0, dpr: 1.0  },
+  [TIER.MED]:  { steps: 64, stars: 1, dpr: 1.5  },
+  [TIER.HIGH]: { steps: 96, stars: 1, dpr: null }, // null = inherit
 };

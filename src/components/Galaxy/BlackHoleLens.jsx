@@ -57,6 +57,10 @@ export default function BlackHoleLens({ wellsRef, worldOffset }) {
     uGlow:         { value: 0.14 },
     uHalfThick:    { value: 0.3 },   // r_s — a band with some substance, not a needle
     uNoiseSpeed:   { value: 2.6 },
+    // Kept modest: these are procedural stars local to the lens, not the
+    // scene's Starfield, so they have to read as the same sky rather than
+    // announcing themselves.
+    uStarBright:   { value: 0.85 },
     uBB:           { value: getBlackbodyLUT() },
   }).current;
 

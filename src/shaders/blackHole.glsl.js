@@ -56,7 +56,33 @@ function novikovThorneNorm() {
   return 1 / peak;
 }
 
-export function buildBlackHoleFragment({ steps = 0, crossings = 1, stars = 0 } = {}) {
+// Star helpers, interpolated only when the tier enables them — the same
+// treatment as the simplex noise, so the low tier never carries the source.
+const starHelpers = /* glsl */ `
+    float hash13(vec3 p3) {
+      p3 = fract(p3 * 0.1031);
+      p3 += dot(p3, p3.zyx + 31.32);
+      return fract((p3.x + p3.y) * p3.z);
+    }
+
+    // Sparse procedural stars on the celestial sphere. Sampled with the ray's
+    // escape direction, so the geodesic decides which part of the sky each
+    // pixel sees — that is what produces the Einstein ring rather than any
+    // explicit ring-drawing code.
+    vec3 starField(vec3 dir) {
+      vec3 p = dir * 260.0;
+      vec3 c = floor(p);
+      vec3 f = fract(p) - 0.5;
+      float present = step(0.985, hash13(c));          // ~1.5% of cells hold a star
+      vec3  jit = vec3(hash13(c + 11.3), hash13(c + 27.7), hash13(c + 41.1)) - 0.5;
+      float d   = length(f - jit * 0.6);
+      float s   = present * exp(-d * d * 160.0) * (0.45 + 0.55 * hash13(c + 63.1));
+      vec3  tint = mix(vec3(0.72, 0.82, 1.0), vec3(1.0, 0.90, 0.74), hash13(c + 5.5));
+      return tint * s;
+    }
+`;
+
+export function buildBlackHoleFragment({ steps = 0, stars = 0 } = {}) {
   const TNORM = novikovThorneNorm();
   const RAY   = steps > 0;
 
@@ -78,6 +104,7 @@ export function buildBlackHoleFragment({ steps = 0, crossings = 1, stars = 0 } =
     uniform float uGlow;
     uniform float uHalfThick;    // disk half-thickness, r_s
     uniform float uNoiseSpeed;
+    uniform float uStarBright;
     uniform sampler2D uBB;
 
     varying vec3 vWorldPos;
@@ -90,8 +117,10 @@ export function buildBlackHoleFragment({ steps = 0, crossings = 1, stars = 0 } =
     #define RMAX2    ${(INFLUENCE_RS * INFLUENCE_RS).toFixed(6)}
     #define TNORM    ${TNORM.toFixed(6)}
     ${RAY ? `#define RAYMARCH 1\n    #define STEPS ${steps}` : '#define STEPS 0'}
+    ${RAY && stars ? '#define STARS 1' : ''}
 
     ${RAY ? glslSimplex3D : ''}
+    ${RAY && stars ? starHelpers : ''}
 
     float hash12(vec2 p) {
       vec3 p3 = fract(vec3(p.xyx) * 0.1031);
@@ -207,6 +236,7 @@ export function buildBlackHoleFragment({ steps = 0, crossings = 1, stars = 0 } =
 
       // Angular momentum is conserved along a geodesic — hoist it out of the
       // loop, never recompute it inside.
+      bool  escaped = false;
       vec3  hv = cross(pos, dir);
       float h2 = dot(hv, hv);
 
@@ -217,7 +247,7 @@ export function buildBlackHoleFragment({ steps = 0, crossings = 1, stars = 0 } =
       for (int i = 0; i < STEPS; i++) {
         float r2 = dot(pos, pos);
         if (r2 < 1.0) break;   // crossed the horizon; the analytic shadow below covers it
-        if (r2 > RMAX2 && dot(pos, dir) > 0.0) break;
+        if (r2 > RMAX2 && dot(pos, dir) > 0.0) { escaped = true; break; }
         if (alpha > 0.99) break;
 
         float r  = sqrt(r2);
@@ -281,6 +311,16 @@ export function buildBlackHoleFragment({ steps = 0, crossings = 1, stars = 0 } =
             alpha += da;
           }
         }
+      }
+#endif
+
+#ifdef STARS
+      // Lensed background stars. Faded out where deflection is negligible so
+      // these procedural stars blend into the scene's own starfield instead of
+      // forming a visible patch inside the lens sphere.
+      if (escaped) {
+        float lensZone = exp(-pow(b / (BCRIT * 3.0), 2.0));
+        col += starField(normalize(dir)) * uStarBright * lensZone * (1.0 - alpha);
       }
 #endif
 
