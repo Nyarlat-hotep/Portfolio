@@ -13,7 +13,14 @@
  */
 import puppeteer from 'puppeteer';
 
-const URL_ARG = process.argv[2] || 'http://localhost:5199/';
+const BASE = process.argv[2] || 'http://localhost:5199/';
+
+// Every quality tier compiles a DIFFERENT shader — the raymarching tiers pull in
+// blocks the analytic tier never sees. Headless SwiftShader reports few cores, so
+// the auto-detected tier here is always LOW; testing only that meant a shader
+// that failed to compile on MED and HIGH passed this suite repeatedly while the
+// hole was invisible in a real browser. ?q= forces each one.
+const TIERS = ['low', 'med', 'high'];
 const SETTLE_MS = 6000;
 
 // Noise that is not ours and not actionable.
@@ -23,6 +30,8 @@ const IGNORE = [
   /Failed to load resource.*404.*\.map/i,
 ];
 
+async function checkTier(tier) {
+const URL_ARG = `${BASE}?q=${tier}`;
 const browser = await puppeteer.launch({
   headless: true,
   args: [
@@ -57,7 +66,6 @@ page.on('requestfailed', (r) => {
   errors.push(`REQUEST FAILED: ${u} (${why})`);
 });
 
-let exitCode = 0;
 try {
   console.log(`  loading ${URL_ARG}`);
   await page.goto(URL_ARG, { waitUntil: 'domcontentloaded', timeout: 30000 });
@@ -130,15 +138,20 @@ try {
   await browser.close();
 }
 
-if (warnings.length) {
-  console.log(`\n  ${warnings.length} warning(s):`);
-  [...new Set(warnings)].slice(0, 5).forEach((w) => console.log(`    - ${w}`));
-}
 if (errors.length) {
-  console.log(`\n  FAIL — ${errors.length} error(s):`);
+  console.log(`  FAIL (${tier}) — ${errors.length} error(s):`);
   [...new Set(errors)].forEach((e) => console.log(`    ! ${e}`));
-  exitCode = 1;
-} else {
-  console.log('\n  PASS — no console errors, no uncaught exceptions, rendering');
+  return false;
 }
-process.exit(exitCode);
+console.log(`  PASS (${tier})`);
+return true;
+}
+
+let allOk = true;
+for (const t of TIERS) {
+  console.log(`\n=== tier ${t} ===`);
+  const ok = await checkTier(t);
+  if (!ok) allOk = false;
+}
+console.log(allOk ? '\nALL TIERS PASS' : '\nFAILURES ABOVE');
+process.exit(allOk ? 0 : 1);

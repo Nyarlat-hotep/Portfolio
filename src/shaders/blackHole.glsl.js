@@ -257,11 +257,10 @@ export function buildBlackHoleFragment({ steps = 0, stars = 0 } = {}) {
       // camera ~140 r_s away would waste every step.
       float tEnter = max(0.0, tca - sqrt(max(RMAX2 - d2, 0.0)));
       vec3  pos = ro + rd * tEnter;
-      vec3  dir = rd;
+      dir = rd;
 
       // Angular momentum is conserved along a geodesic — hoist it out of the
       // loop, never recompute it inside.
-      bool  escaped = false;
       vec3  hv = cross(pos, dir);
       float h2 = dot(hv, hv);
 
