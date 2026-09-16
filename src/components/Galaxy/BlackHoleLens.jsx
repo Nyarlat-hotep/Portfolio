@@ -71,8 +71,7 @@ export default function BlackHoleLens({ wellsRef, worldOffset }) {
     uStarBright:   { value: 0.85 },
     // Master dial for how strongly the background is warped. 1.0 = full.
     uLensStrength: { value: 1.0 },
-    // Ceiling on the sampled background, matching what the LDR path tops out at.
-    uBgClamp:      { value: 0.8 },
+    uResolution:   { value: new THREE.Vector2(1, 1) },
     uScene:        { value: null },
     uProjView:     { value: new THREE.Matrix4() },
     uHasScene:     { value: 0 },
@@ -199,25 +198,16 @@ export default function BlackHoleLens({ wellsRef, worldOffset }) {
     if (lensScene) {
       mesh.visible = false;
       const prevTarget = state.gl.getRenderTarget();
-      const prevTone   = state.gl.toneMapping;
-      const prevSpace  = state.gl.outputColorSpace;
 
-      // Capture in LINEAR HDR. The renderer normally tone-maps and sRGB-encodes
-      // on the way out, and sampling that back into this shader's linear
-      // accumulator meant tone mapping and encoding ran a second time at the
-      // end — which blew the whole lens sphere to white. Measured: a dim 0.05
-      // linear pixel came out at 0.626 instead of 0.233, then bloom compounded
-      // it. The target is already HalfFloat (drei's useFBO default) so values
-      // above 1 survive.
-      state.gl.toneMapping       = THREE.NoToneMapping;
-      state.gl.outputColorSpace  = THREE.LinearSRGBColorSpace;
+      // Captured with the renderer's normal tone mapping and encoding, so the
+      // target holds exactly what those pixels look like on screen. The shader
+      // composites in that same display space, which is what keeps the inside
+      // of the sphere identical to the scene just outside it.
 
       state.gl.setRenderTarget(sceneFBO);
       state.gl.render(state.scene, state.camera);
 
       state.gl.setRenderTarget(prevTarget);
-      state.gl.toneMapping      = prevTone;
-      state.gl.outputColorSpace = prevSpace;
       mesh.visible = true;
 
       uniforms.uScene.value = sceneFBO.texture;
@@ -226,6 +216,7 @@ export default function BlackHoleLens({ wellsRef, worldOffset }) {
         state.camera.matrixWorldInverse,
       );
       uniforms.uHasScene.value = 1;
+      uniforms.uResolution.value.set(sceneFBO.width, sceneFBO.height);
     } else {
       uniforms.uHasScene.value = 0;
     }

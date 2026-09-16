@@ -106,7 +106,7 @@ export function buildBlackHoleFragment({ steps = 0, stars = 0 } = {}) {
     uniform float uNoiseSpeed;
     uniform float uStarBright;
     uniform float uLensStrength;
-    uniform float uBgClamp;
+    uniform vec2  uResolution;
     // The scene rendered without the lens, plus the matrix that maps a world
     // direction back to where it appears in that render. Together these let an
     // escaping ray look up what the sky actually holds in the direction it ends
@@ -334,104 +334,66 @@ export function buildBlackHoleFragment({ steps = 0, stars = 0 } = {}) {
       // to zero, so the sampled pixel tends to the fragment's own position and
       // the lensed image joins the unlensed scene seamlessly. The procedural
       // starfield needed a fade precisely because it could not do that.
-      bool sampledScene = false;
-      if (escaped && uHasScene > 0.5) {
-        // Substitute in proportion to how much this ray ACTUALLY bent, rather
-        // than across the whole sphere. dot(escape, entry) measures the turn
-        // directly. Past b ~8 r_s a ray deflects by under 0.03, so replacing
-        // those pixels swapped them for near-identical ones while covering a
-        // large area — which is what read as an overpowering effect. Now the
-        // substitution concentrates where the bending is genuinely visible and
-        // fades out before the rim.
-        //
-        // Partial values crossfade between the warped and original samples, but
-        // only in the band where the two are nearly the same pixel anyway, so
-        // it blends rather than ghosting.
-        float turn    = 1.0 - dot(normalize(dir), rd);
-        float lensAmt = smoothstep(0.012, 0.075, turn) * uLensStrength;
-
-        vec4 clip = uProjView * vec4(normalize(dir), 0.0);
-        if (clip.w > 0.0 && lensAmt > 0.001) {
-          vec2 suv = clip.xy / clip.w * 0.5 + 0.5;
-          // No data exists beyond the viewport, so fade back to the untouched
-          // scene there rather than smearing the clamped edge pixel.
-          vec2  m    = min(suv, 1.0 - suv);
-          float edge = smoothstep(0.0, 0.035, min(m.x, m.y));
-          float w = edge * lensAmt;
-          if (w > 0.0) {
-            // The nebula is additive, and the capture is now unclamped linear
-            // HDR, so overlapping layers can accumulate well above 1. Outside
-            // the lens those same layers land in an LDR buffer and top out, so
-            // without this the inside of the sphere is simply brighter than the
-            // identical nebula just outside it.
-            vec3 bg = min(texture2D(uScene, clamp(suv, 0.0, 1.0)).rgb, vec3(uBgClamp));
-            col   += bg * w * (1.0 - alpha);
-            // Opaque in proportion to the substitution, so the unlensed original
-            // underneath is replaced rather than doubled with its warped copy.
-            alpha  = max(alpha, w);
-            sampledScene = true;
-          }
-        }
-      }
-#ifdef STARS
-      // Fallback only — used before the first capture lands, or if the ray
-      // escapes to somewhere the render does not cover.
-      if (escaped && !sampledScene) {
-        float lensZone = exp(-pow(b / (BCRIT * 3.0), 2.0));
-        col += starField(normalize(dir)) * uStarBright * lensZone * (1.0 - alpha);
-      }
-#endif
-#endif
-
-      // ── Photon ring ────────────────────────────────────────────────────────
-      // Rays near b_crit orbit before escaping. The raymarch produces most of
-      // this naturally through repeated disk crossings; this adds the thin
-      // coherent rim that a finite step count under-resolves.
-      // Thin and bright rather than broad — it should read as a hard bright
-      // rim tracing the shadow, which is what separates the silhouette from
-      // the disk behind it.
-      float ringW = 0.028 * BCRIT;
-      float ring  = exp(-pow((b - BCRIT * 1.015) / ringW, 2.0));
-      col   += blackbody(uTempScale * 1.25) * ring * uEmission * 1.7 * mix(1.0, 0.4, uDormant);
-      alpha += ring * 0.45;
-
-      // ── Halo ───────────────────────────────────────────────────────────────
-      // Pure emission at alpha 0 — with premultiplied output this is a true
-      // additive glow. Kept tight: a wide halo fogs the shadow to grey and
-      // buries the photon ring, which is most of what went wrong before.
-      float halo = exp(-pow(b / (BCRIT * 1.9 * (1.0 + uFlash * 1.5)), 2.0));
-      col += blackbody(uTempScale * 0.75) * halo * uGlow * mix(1.0, 0.5, uDormant);
-
-      // ── Shadow ─────────────────────────────────────────────────────────────
-      // The black disc subtends b_crit = 3*sqrt(3)*M = 2.598 r_s, not 1 r_s.
-      // fwidth gives exact one-pixel AA and avoids the sparkle that a boolean
-      // horizon test produces on chaotic near-critical rays.
-      float w      = max(fwidth(b), 1e-4);
-      float shadow = smoothstep(BCRIT + w, BCRIT - w, b);
-
-      col   *= (1.0 - shadow);
-      alpha  = max(alpha, shadow);
-
-      // No edge window, and none is needed. The containment sphere's surface is
-      // r = RMAX, and the disk's density tail reaches zero at ~14.5 r_s, inside
-      // it. Nothing nonzero can reach the boundary. Every earlier version of
-      // this shader had a window here, and every one of them ended up cutting
-      // the disk rather than hiding an edge.
-
-      col   *= uAmount * (1.0 + uFlash * 3.0);
+      // Spawn / collapse envelope, on the emissive contributions only.
+      float env = uAmount * (1.0 + uFlash * 3.0);
+      col   *= env;
       alpha *= uAmount;
 
+      // ── Photon ring ───────────────────────────────────────────────────────
+      float ringW = 0.028 * BCRIT;
+      float ring  = exp(-pow((b - BCRIT * 1.015) / ringW, 2.0));
+      col   += blackbody(uTempScale * 1.25) * ring * uEmission * 1.7 * mix(1.0, 0.4, uDormant) * env;
+      alpha += ring * 0.45;
+
+      // ── Halo ──────────────────────────────────────────────────────────────
+      float halo = exp(-pow(b / (BCRIT * 1.9 * (1.0 + uFlash * 1.5)), 2.0));
+      col += blackbody(uTempScale * 0.75) * halo * uGlow * mix(1.0, 0.5, uDormant) * env;
+
       alpha = clamp(alpha, 0.0, 1.0);
-      if (alpha < 0.0005 && dot(col, col) < 1e-8) discard;
 
-      col += (hash12(gl_FragCoord.xy * 1.7 + uTime) - 0.5) / 255.0;
+      // ── Composite in DISPLAY space ────────────────────────────────────────
+      // The captured scene is already tone-mapped and encoded — it is literally
+      // what those pixels look like on screen. So the emissive parts are brought
+      // into that space and the background is added untouched, rather than the
+      // background being dragged through a second tone map. That second pass was
+      // the source of every brightness problem here: it made the inside of the
+      // sphere systematically differ from the identical scene just outside it.
+      vec3 emissive = sRGBTransferOETF(vec4(toneMapping(col), 1.0)).rgb;
 
-      gl_FragColor = vec4(col, alpha);
+      vec3 bg = vec3(0.0);
+      if (uHasScene > 0.5) {
+        // Deflection fades the sample POSITION, never the opacity. Undeflected
+        // rays sample their own screen position and reproduce exactly what was
+        // already there, so the sphere's rim is seamless by construction.
+        float turn    = 1.0 - dot(normalize(dir), rd);
+        float lensAmt = smoothstep(0.004, 0.055, turn) * uLensStrength * uAmount;
 
-      // Premultiplied: .rgb is raw emission, .a is occlusion, blended as
-      // src.rgb + dst*(1 - src.a). Do NOT multiply rgb by alpha afterwards.
-      #include <tonemapping_fragment>
-      #include <colorspace_fragment>
+        vec2 ownUV = gl_FragCoord.xy / uResolution;
+        vec2 suv   = ownUV;
+
+        vec4 clip = uProjView * vec4(normalize(dir), 0.0);
+        if (escaped && clip.w > 0.0) {
+          vec2  lensUV = clip.xy / clip.w * 0.5 + 0.5;
+          vec2  m      = min(lensUV, 1.0 - lensUV);
+          float edge   = smoothstep(0.0, 0.03, min(m.x, m.y));
+          suv = mix(ownUV, lensUV, lensAmt * edge);
+        }
+        bg = texture2D(uScene, clamp(suv, 0.0, 1.0)).rgb;
+      }
+
+      vec3 outCol = emissive + bg * (1.0 - alpha);
+
+      // ── Shadow ────────────────────────────────────────────────────────────
+      // Applied last, so it removes the background too — nothing escapes from
+      // inside the horizon, including light that was behind it.
+      float wpx    = max(fwidth(b), 1e-4);
+      float shadow = smoothstep(BCRIT + wpx, BCRIT - wpx, b);
+      outCol *= (1.0 - shadow);
+
+      outCol += (hash12(gl_FragCoord.xy * 1.7 + uTime) - 0.5) / 255.0;
+
+      // Opaque: this surface paints the finished image inside its silhouette.
+      gl_FragColor = vec4(outCol, 1.0);
     }
   `;
 }
