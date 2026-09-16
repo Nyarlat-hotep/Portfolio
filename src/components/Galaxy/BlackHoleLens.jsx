@@ -1,5 +1,6 @@
 import { useRef, useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
+import { useFBO } from '@react-three/drei';
 import * as THREE from 'three';
 import { blackHoleVertexShader, buildBlackHoleFragment } from '../../shaders/blackHole.glsl';
 import { getBlackbodyLUT } from '../../utils/blackbodyLUT';
@@ -33,6 +34,13 @@ export default function BlackHoleLens({ wellsRef, worldOffset }) {
   const tier    = useQualityTier();
   const cfg     = TIER_CONFIG[tier];
 
+  // Off-screen copy of the scene, captured each frame with the lens itself
+  // hidden, so escaping rays can look up what is really behind the hole.
+  // Only the raymarching tiers use it; the analytic tier has no escape
+  // direction to look anything up with.
+  const sceneFBO   = useFBO();
+  const lensScene  = cfg.steps > 0;
+
   const uniforms = useRef({
     uHolePos:      { value: new THREE.Vector3() },
     uWorldToLocal: { value: new THREE.Matrix3() },
@@ -61,6 +69,9 @@ export default function BlackHoleLens({ wellsRef, worldOffset }) {
     // scene's Starfield, so they have to read as the same sky rather than
     // announcing themselves.
     uStarBright:   { value: 0.85 },
+    uScene:        { value: null },
+    uProjView:     { value: new THREE.Matrix4() },
+    uHasScene:     { value: 0 },
     uBB:           { value: getBlackbodyLUT() },
   }).current;
 
@@ -104,7 +115,7 @@ export default function BlackHoleLens({ wellsRef, worldOffset }) {
 
   useEffect(() => () => material.dispose(), [material]);
 
-  useFrame((state, delta) => {
+  useFrame((state) => {
     const mesh = meshRef.current;
     if (!mesh) return;
 
@@ -173,6 +184,31 @@ export default function BlackHoleLens({ wellsRef, worldOffset }) {
     // resizing, and encloses the effect as a volume rather than intersecting
     // the scene as a plane.
     mesh.scale.setScalar(INFLUENCE_RS * rs);
+
+    // ── Capture the scene behind the hole ──────────────────────────────────
+    // Runs at priority 0, which R3F sorts ahead of the composer's own render
+    // (events-*.esm.js:1085 sorts subscribers by priority ascending), so the
+    // capture is ready before anything is drawn to the screen this frame.
+    //
+    // The lens is hidden for the capture — otherwise it would sample itself,
+    // compounding its own distortion every frame.
+    if (lensScene) {
+      mesh.visible = false;
+      const prevTarget = state.gl.getRenderTarget();
+      state.gl.setRenderTarget(sceneFBO);
+      state.gl.render(state.scene, state.camera);
+      state.gl.setRenderTarget(prevTarget);
+      mesh.visible = true;
+
+      uniforms.uScene.value = sceneFBO.texture;
+      uniforms.uProjView.value.multiplyMatrices(
+        state.camera.projectionMatrix,
+        state.camera.matrixWorldInverse,
+      );
+      uniforms.uHasScene.value = 1;
+    } else {
+      uniforms.uHasScene.value = 0;
+    }
   });
 
   return (

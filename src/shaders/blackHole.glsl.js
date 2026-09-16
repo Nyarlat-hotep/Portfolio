@@ -105,6 +105,13 @@ export function buildBlackHoleFragment({ steps = 0, stars = 0 } = {}) {
     uniform float uHalfThick;    // disk half-thickness, r_s
     uniform float uNoiseSpeed;
     uniform float uStarBright;
+    // The scene rendered without the lens, plus the matrix that maps a world
+    // direction back to where it appears in that render. Together these let an
+    // escaping ray look up what the sky actually holds in the direction it ends
+    // up pointing — which is real lensing of the real scene, not a stand-in.
+    uniform sampler2D uScene;
+    uniform mat4  uProjView;
+    uniform float uHasScene;
     uniform sampler2D uBB;
 
     varying vec3 vWorldPos;
@@ -314,14 +321,44 @@ export function buildBlackHoleFragment({ steps = 0, stars = 0 } = {}) {
       }
 #endif
 
+#ifdef RAYMARCH
+      // ── Lensed background ─────────────────────────────────────────────────
+      // Project the ray's escape direction back into the captured render and
+      // read what is actually there. Because a direction is a point at
+      // infinity, vec4(dir, 0.0) transforms correctly under the combined
+      // projection-view matrix.
+      //
+      // This needs no fade at the sphere boundary: out there deflection tends
+      // to zero, so the sampled pixel tends to the fragment's own position and
+      // the lensed image joins the unlensed scene seamlessly. The procedural
+      // starfield needed a fade precisely because it could not do that.
+      bool sampledScene = false;
+      if (escaped && uHasScene > 0.5) {
+        vec4 clip = uProjView * vec4(normalize(dir), 0.0);
+        if (clip.w > 0.0) {
+          vec2 suv = clip.xy / clip.w * 0.5 + 0.5;
+          // No data exists beyond the viewport, so fade back to the untouched
+          // scene there rather than smearing the clamped edge pixel.
+          vec2  m    = min(suv, 1.0 - suv);
+          float edge = smoothstep(0.0, 0.035, min(m.x, m.y));
+          if (edge > 0.0) {
+            vec3 bg = texture2D(uScene, clamp(suv, 0.0, 1.0)).rgb;
+            col   += bg * edge * (1.0 - alpha);
+            // Opaque where we substituted, so the unlensed original underneath
+            // is replaced rather than blended with its own warped copy.
+            alpha  = max(alpha, edge);
+            sampledScene = true;
+          }
+        }
+      }
 #ifdef STARS
-      // Lensed background stars. Faded out where deflection is negligible so
-      // these procedural stars blend into the scene's own starfield instead of
-      // forming a visible patch inside the lens sphere.
-      if (escaped) {
+      // Fallback only — used before the first capture lands, or if the ray
+      // escapes to somewhere the render does not cover.
+      if (escaped && !sampledScene) {
         float lensZone = exp(-pow(b / (BCRIT * 3.0), 2.0));
         col += starField(normalize(dir)) * uStarBright * lensZone * (1.0 - alpha);
       }
+#endif
 #endif
 
       // ── Photon ring ────────────────────────────────────────────────────────

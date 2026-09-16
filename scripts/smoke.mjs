@@ -47,8 +47,14 @@ page.on('console', (m) => {
 });
 page.on('requestfailed', (r) => {
   const u = r.url();
+  const why = r.failure()?.errorText || '';
   if (IGNORE.some((re) => re.test(u))) return;
-  errors.push(`REQUEST FAILED: ${u} (${r.failure()?.errorText})`);
+  // Headless Chrome aborts media it cannot autoplay without a user gesture, so
+  // ERR_ABORTED on an audio file is expected here and not a real failure.
+  // Deliberately narrow: a missing file still surfaces, because that reports as
+  // a 404 rather than an abort.
+  if (/ERR_ABORTED/.test(why) && /\.(mp3|ogg|wav|m4a)(\?|$)/i.test(u)) return;
+  errors.push(`REQUEST FAILED: ${u} (${why})`);
 });
 
 let exitCode = 0;
@@ -76,14 +82,43 @@ try {
   console.log(`  ${frames} frames in 1s`);
   if (frames < 5) { errors.push(`RENDER STALLED: only ${frames} frames in 1s`); }
 
-  // Exercise the black hole path — click the middle of the canvas.
-  const box = await page.$eval('canvas', (c) => {
-    const r = c.getBoundingClientRect();
-    return { x: r.x + r.width / 2, y: r.y + r.height / 2 };
-  });
-  await page.mouse.click(box.x, box.y);
-  await new Promise((r) => setTimeout(r, 3000));
-  console.log('  clicked canvas, settled');
+  // Exercise the black hole path. Getting here is fiddly and was worth pinning
+  // down: the nebula sits at world (-60, 0, 20), roughly 60 units off-axis
+  // against a ~32-unit visible half-width, so it is off-screen at startup and
+  // no click on the default view can reach it. Zooming out brings it into the
+  // left edge of frame.
+  //
+  // Two traps, both of which silently made this test prove nothing:
+  //   - keyboard.press() holds for milliseconds, but the camera controller
+  //     orbits/zooms only while a key is HELD, so presses barely move it.
+  //   - focusing by clicking the centre hits the sun and opens the nav menu.
+  await page.mouse.click(1000, 620);            // focus on empty sky
+  await new Promise((r) => setTimeout(r, 400));
+  await page.keyboard.down('ArrowDown');        // zoom out
+  await new Promise((r) => setTimeout(r, 5000));
+  await page.keyboard.up('ArrowDown');
+  await new Promise((r) => setTimeout(r, 1500));
+
+  for (const x of [60, 120, 200, 300]) {
+    for (const y of [380, 440, 500]) {
+      await page.mouse.click(x, y);
+      await new Promise((r) => setTimeout(r, 250));
+    }
+  }
+  console.log('  zoomed out and clicked into the nebula');
+
+  // Let a well run: spawn, gravity window, inspiral, collapse flash.
+  await new Promise((r) => setTimeout(r, 5000));
+
+  // Frames must still be flowing afterwards — a stall here would mean the
+  // extra scene capture per frame has hung the loop.
+  const after = await page.evaluate(() => new Promise((res) => {
+    let n = 0; const t0 = performance.now();
+    const tick = () => { n++; if (performance.now() - t0 > 1000) res(n); else requestAnimationFrame(tick); };
+    requestAnimationFrame(tick);
+  }));
+  console.log(`  ${after} frames in 1s after interaction`);
+  if (after < 5) errors.push(`RENDER STALLED AFTER CLICK: ${after} frames in 1s`);
 } catch (err) {
   errors.push(`HARNESS: ${err.message}`);
 } finally {
