@@ -419,7 +419,26 @@ export function buildBlackHoleFragment({ steps = 0, stars = 0 } = {}) {
       outCol += (hash12(gl_FragCoord.xy * 1.7 + uTime) - 0.5) / 255.0;
 
       // Opaque: this surface paints the finished image inside its silhouette.
-      gl_FragColor = vec4(outCol, 1.0);
+      // Fade out at the silhouette instead of ending on the geometry.
+      //
+      // The surface is opaque, so wherever its image differs from the real
+      // scene that difference lands as a hard circular edge. Ramping alpha down
+      // toward the rim lets the framebuffer's own pixels blend back in, turning
+      // that boundary into a crossfade. It is applied where the disk tail and
+      // the deflection have both already fallen away, so nothing structural is
+      // lost — only the seam.
+      //
+      // outCol is multiplied by the same factor because the material blends
+      // premultiplied (src.rgb + dst * (1 - src.a)); scaling alpha alone would
+      // brighten the rim instead of fading it.
+      // The band has to be wide, and 0.30 is the measured optimum. A 0.80 ramp
+      // spans only ~3 r_s — barely a dozen pixels at typical zoom, far too
+      // narrow to carry a transition from a saturated interior down to open
+      // space. Widening further is not monotonic: 0.15 scored worse than 0.30,
+      // because once the ramp reaches into the bright core it fades that
+      // instead and simply moves the gradient inward.
+      float rim = smoothstep(RMAX, RMAX * 0.30, b);
+      gl_FragColor = vec4(outCol * rim, rim);
     }
   `;
 }
