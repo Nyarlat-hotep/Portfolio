@@ -361,7 +361,12 @@ export function buildBlackHoleFragment({ steps = 0, stars = 0 } = {}) {
       // background being dragged through a second tone map. That second pass was
       // the source of every brightness problem here: it made the inside of the
       // sphere systematically differ from the identical scene just outside it.
-      vec3 emissive = sRGBTransferOETF(vec4(acesToneMap(col), 1.0)).rgb;
+      // Everything stays LINEAR through the composite. Tone mapping the disk
+      // before adding the background was the overflow: tone mapping is a
+      // strongly non-linear curve, so it destroys the proportionality between
+      // colour and alpha that front-to-back compositing depends on. A disk only
+      // 20% opaque still contributed ~0.76 of display brightness, and the
+      // background then added on top of that — every combination exceeded 1.
 
       vec3 bg = vec3(0.0);
       if (uHasScene > 0.5) {
@@ -381,24 +386,27 @@ export function buildBlackHoleFragment({ steps = 0, stars = 0 } = {}) {
           float edge   = smoothstep(0.0, 0.03, min(m.x, m.y));
           suv = mix(ownUV, lensUV, lensAmt * edge);
         }
-        // three applies output colour-space encoding only when drawing to the
-        // canvas, never to a render target — so the capture holds tone-mapped
-        // LINEAR values, not display-space ones. Encoding here is what puts it
-        // in the same space as the emissive term above. Without it the nebula
-        // behind the hole came back up to 5x too dark and the sphere read as an
-        // empty black disc.
-        bg = sRGBTransferOETF(vec4(texture2D(uScene, clamp(suv, 0.0, 1.0)).rgb, 1.0)).rgb;
+        // Sampled raw: the capture is rendered with tone mapping disabled, so
+        // it holds pure linear scene radiance and needs no decode to join the
+        // linear accumulation above.
+        bg = texture2D(uScene, clamp(suv, 0.0, 1.0)).rgb;
       }
 
-      vec3 outCol = emissive + bg * (1.0 - alpha);
+      // Correct premultiplied front-to-back composite, in linear. col is
+      // already weighted by transmittance as it accumulates, so this sum is
+      // bounded by construction and cannot overflow the way the display-space
+      // version did.
+      vec3 outLin = col + bg * (1.0 - alpha);
 
       // ── Shadow ────────────────────────────────────────────────────────────
       // Applied last, so it removes the background too — nothing escapes from
       // inside the horizon, including light that was behind it.
       float wpx    = max(fwidth(b), 1e-4);
       float shadow = smoothstep(BCRIT + wpx, BCRIT - wpx, b);
-      outCol *= (1.0 - shadow);
+      outLin *= (1.0 - shadow);
 
+      // Tone map and encode exactly ONCE, on the finished linear composite.
+      vec3 outCol = sRGBTransferOETF(vec4(acesToneMap(outLin), 1.0)).rgb;
       outCol += (hash12(gl_FragCoord.xy * 1.7 + uTime) - 0.5) / 255.0;
 
       // Opaque: this surface paints the finished image inside its silhouette.
