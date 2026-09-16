@@ -79,8 +79,13 @@ try {
     };
     requestAnimationFrame(tick);
   }));
-  console.log(`  ${frames} frames in 1s`);
-  if (frames < 5) { errors.push(`RENDER STALLED: only ${frames} frames in 1s`); }
+  console.log(`  ${frames} frames in 1s (startup)`);
+  // Only asserts the page is alive. This window lands on the intro animation,
+  // texture loads and shader compiles, which on SwiftShader legitimately runs
+  // at 3-7 fps — a stricter bound here failed intermittently for no real
+  // reason. The post-interaction measurement below is the stable one and
+  // carries the actual health check.
+  if (frames < 1) { errors.push(`NOT RENDERING: ${frames} frames in 1s`); }
 
   // Exercise the black hole path. Getting here is fiddly and was worth pinning
   // down: the nebula sits at world (-60, 0, 20), roughly 60 units off-axis

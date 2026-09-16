@@ -382,7 +382,13 @@ export function buildBlackHoleFragment({ steps = 0, stars = 0 } = {}) {
           float edge   = smoothstep(0.0, 0.03, min(m.x, m.y));
           suv = mix(ownUV, lensUV, lensAmt * edge);
         }
-        bg = texture2D(uScene, clamp(suv, 0.0, 1.0)).rgb;
+        // three applies output colour-space encoding only when drawing to the
+        // canvas, never to a render target — so the capture holds tone-mapped
+        // LINEAR values, not display-space ones. Encoding here is what puts it
+        // in the same space as the emissive term above. Without it the nebula
+        // behind the hole came back up to 5x too dark and the sphere read as an
+        // empty black disc.
+        bg = sRGBTransferOETF(vec4(texture2D(uScene, clamp(suv, 0.0, 1.0)).rgb, 1.0)).rgb;
       }
 
       vec3 outCol = emissive + bg * (1.0 - alpha);
