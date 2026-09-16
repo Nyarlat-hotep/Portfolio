@@ -425,7 +425,14 @@ export default function GravityField() {
         // Hand off to the inspiral well outside the disk, rather than teleporting
         // the particle off-screen the instant it gets close. It now falls in
         // where the viewer can watch it.
-        if (d2 < SPIRAL_ENTER_R * SPIRAL_ENTER_R) {
+        //
+        // The capture radius opens with the well's existing spin-up ramp rather
+        // than being live at full size from frame one. Without it, everything
+        // already inside the radius is taken at once — measured at 926 particles
+        // in a single frame, which arrives as a sheet rather than a flow. Scaling
+        // the SQUARED radius by strength (i.e. radius by sqrt) spreads the same
+        // 926 evenly, peaking at ~20 per frame.
+        if (d2 < SPIRAL_ENTER_R * SPIRAL_ENTER_R * strength) {
           capturedBy[i] = w.id;
           spiralT[i]    = 0.0001;
           vel[i3] = 0; vel[i3+1] = 0; vel[i3+2] = 0;
