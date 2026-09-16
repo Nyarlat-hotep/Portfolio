@@ -69,6 +69,8 @@ export default function BlackHoleLens({ wellsRef, worldOffset }) {
     // scene's Starfield, so they have to read as the same sky rather than
     // announcing themselves.
     uStarBright:   { value: 0.85 },
+    // Master dial for how strongly the background is warped. 1.0 = full.
+    uLensStrength: { value: 1.0 },
     uScene:        { value: null },
     uProjView:     { value: new THREE.Matrix4() },
     uHasScene:     { value: 0 },

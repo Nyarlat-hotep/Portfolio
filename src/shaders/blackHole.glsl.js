@@ -105,6 +105,7 @@ export function buildBlackHoleFragment({ steps = 0, stars = 0 } = {}) {
     uniform float uHalfThick;    // disk half-thickness, r_s
     uniform float uNoiseSpeed;
     uniform float uStarBright;
+    uniform float uLensStrength;
     // The scene rendered without the lens, plus the matrix that maps a world
     // direction back to where it appears in that render. Together these let an
     // escaping ray look up what the sky actually holds in the direction it ends
@@ -334,19 +335,34 @@ export function buildBlackHoleFragment({ steps = 0, stars = 0 } = {}) {
       // starfield needed a fade precisely because it could not do that.
       bool sampledScene = false;
       if (escaped && uHasScene > 0.5) {
+        // Substitute in proportion to how much this ray ACTUALLY bent, rather
+        // than across the whole sphere. dot(escape, entry) measures the turn
+        // directly. Past b ~8 r_s a ray deflects by under 0.03, so replacing
+        // those pixels swapped them for near-identical ones while covering a
+        // large area — which is what read as an overpowering effect. Now the
+        // substitution concentrates where the bending is genuinely visible and
+        // fades out before the rim.
+        //
+        // Partial values crossfade between the warped and original samples, but
+        // only in the band where the two are nearly the same pixel anyway, so
+        // it blends rather than ghosting.
+        float turn    = 1.0 - dot(normalize(dir), rd);
+        float lensAmt = smoothstep(0.012, 0.075, turn) * uLensStrength;
+
         vec4 clip = uProjView * vec4(normalize(dir), 0.0);
-        if (clip.w > 0.0) {
+        if (clip.w > 0.0 && lensAmt > 0.001) {
           vec2 suv = clip.xy / clip.w * 0.5 + 0.5;
           // No data exists beyond the viewport, so fade back to the untouched
           // scene there rather than smearing the clamped edge pixel.
           vec2  m    = min(suv, 1.0 - suv);
           float edge = smoothstep(0.0, 0.035, min(m.x, m.y));
-          if (edge > 0.0) {
+          float w = edge * lensAmt;
+          if (w > 0.0) {
             vec3 bg = texture2D(uScene, clamp(suv, 0.0, 1.0)).rgb;
-            col   += bg * edge * (1.0 - alpha);
-            // Opaque where we substituted, so the unlensed original underneath
-            // is replaced rather than blended with its own warped copy.
-            alpha  = max(alpha, edge);
+            col   += bg * w * (1.0 - alpha);
+            // Opaque in proportion to the substitution, so the unlensed original
+            // underneath is replaced rather than doubled with its warped copy.
+            alpha  = max(alpha, w);
             sampledScene = true;
           }
         }
