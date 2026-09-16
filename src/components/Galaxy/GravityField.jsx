@@ -15,6 +15,14 @@ import { disposeBlackbodyLUT } from '../../utils/blackbodyLUT';
 const WORLD_X = -60, WORLD_Y = 0, WORLD_Z = 20;
 const N = 6000;
 
+// Camera distance past which the simulation stops stepping. The nebula's own
+// reach is ~55 units (particles at 3 sigma), so this clears it several times
+// over — at 240 the drift and spring motion are far below a pixel. Nothing is
+// hidden: the points and sprites still render, they simply stop updating.
+// This is the same treatment CosmicVoid, DistantGalaxy, SpaceStation and
+// OuterBody already got; GravityField was missed, and it is the heaviest of them.
+const FIELD_ACTIVE_DIST = 240;
+
 const PULL_MAX         = 80;
 const TANGENT_F        = 25;   // tangential force constant (orbital spiraling)
 const FADE_SPEED       = 0.35; // color fade-in rate (1/s) — ~2.8s to fully reappear
@@ -296,7 +304,7 @@ export default function GravityField() {
     disposeBlackbodyLUT();
   }, [geo, hazeGeo, blinkGeo, streakGeo]);
 
-  useFrame((_, delta) => {
+  useFrame((state, delta) => {
     const posAttr = geo.attributes.position;
     const colAttr = geo.attributes.color;
     const pos     = posAttr.array;
@@ -308,8 +316,18 @@ export default function GravityField() {
     const streakCol = streakGeo.attributes.color.array;
     let   streakN   = 0;
 
-    // Tick well ages
+    // Well ages tick regardless of distance — the lifecycle (gravity window,
+    // dormant lerp, collapse flash) has to stay consistent whether or not
+    // anyone is watching, or a well planted before flying away would be frozen
+    // mid-animation on return.
     for (let wi = 0; wi < wells.length; wi++) wells[wi].age += dt;
+
+    // Everything below is the per-particle simulation. Skip it outright when
+    // the nebula is too far for its motion to register.
+    const cx = state.camera.position.x - WORLD_X;
+    const cy = state.camera.position.y - WORLD_Y;
+    const cz = state.camera.position.z - WORLD_Z;
+    if (cx * cx + cy * cy + cz * cz > FIELD_ACTIVE_DIST * FIELD_ACTIVE_DIST) return;
 
     // Gravity is "active" only while well.age < GRAVITY_DURATION
     const gravityActive = wells.some(w => w.age < GRAVITY_DURATION);
