@@ -73,6 +73,16 @@ export const FLATTEN_RATE  = 1.8;   // rate at which matter collapses into the d
 // pop to amber instantly and read as a burst of foreign-coloured stars.
 export const HEAT_RAMP = 0.45;
 
+// Only every Nth particle takes part in the well at all — neither pulled nor
+// captured. Roughly 919 of the 6000 fall inside the capture radius, which read
+// as far too much matter streaming in; this cuts that to ~230.
+//
+// They have to sit out of the GRAVITY too, not just the capture. Gravity acts
+// on every particle regardless of capture radius, so merely making them
+// ineligible to be taken would have them fall inward and pile up at the hole
+// permanently, never absorbed.
+export const SPIRAL_EVERY = 4;
+
 // ── Quality tiers ────────────────────────────────────────────────────────────
 // STEPS must be a compile-time constant: GLSL requires constant loop bounds, so
 // these are injected as #defines rather than passed as uniforms.

@@ -8,6 +8,7 @@ import {
   WELL_RAMP, GRAVITY_DURATION,
   SPIRAL_ENTER_R, HORIZON_R,
   INSPIRAL_RATE, ORBIT_RATE, ORBIT_FALLOFF, FLATTEN_RATE, HEAT_RAMP,
+  SPIRAL_EVERY,
 } from './blackHoleConstants';
 import BlackHoleLens from './BlackHoleLens';
 import { disposeBlackbodyLUT } from '../../utils/blackbodyLUT';
@@ -426,6 +427,9 @@ export default function GravityField() {
       }
 
       if (capturedBy[i] !== -1) continue;
+
+      // Inert: this particle takes no part in the well — not pulled, not taken.
+      if ((i % SPIRAL_EVERY) !== 0) continue;
 
       const i3 = i * 3;
       let vx = vel[i3], vy = vel[i3+1], vz = vel[i3+2];
