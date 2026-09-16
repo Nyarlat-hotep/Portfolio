@@ -56,13 +56,13 @@ export default function BlackHoleLens({ wellsRef, worldOffset }) {
     // The Doppler term already contributes g^3 (~2.6x at the inner edge), so
     // this multiplier stays near 1. At 3.2 the peak hit 8.4 linear and clipped
     // to flat white, taking all the filament structure with it.
-    uEmission:     { value: 1.0 },
+    uEmission:     { value: 0.35 },
     uDoppler:      { value: 1 },
     uSpinSign:     { value: 1 },
     // Deliberately small. The reference's glow comes from bloom on a bright
     // thin disk, not from a wide additive halo — a strong halo just fogs the
     // shadow grey and swallows the photon ring.
-    uGlow:         { value: 0.14 },
+    uGlow:         { value: 0.05 },
     uHalfThick:    { value: 0.3 },   // r_s — a band with some substance, not a needle
     uNoiseSpeed:   { value: 2.6 },
     // Kept modest: these are procedural stars local to the lens, not the
@@ -71,6 +71,8 @@ export default function BlackHoleLens({ wellsRef, worldOffset }) {
     uStarBright:   { value: 0.85 },
     // Master dial for how strongly the background is warped. 1.0 = full.
     uLensStrength: { value: 1.0 },
+    // Ceiling on the sampled background, matching what the LDR path tops out at.
+    uBgClamp:      { value: 0.8 },
     uScene:        { value: null },
     uProjView:     { value: new THREE.Matrix4() },
     uHasScene:     { value: 0 },
@@ -149,7 +151,7 @@ export default function BlackHoleLens({ wellsRef, worldOffset }) {
     // Hotter reads as whiter *through the blackbody LUT* — a far better flash
     // than lerping toward a fixed colour, and physically motivated.
     uniforms.uTempScale.value = 5200 * (1 + flashT * 1.6) * (1 - dormantT * 0.35);
-    uniforms.uGlow.value      = 0.14 * (1 + flashT * 2.5);
+    uniforms.uGlow.value      = 0.05 * (1 + flashT * 2.5);
 
     // Wrapped so float precision in the shader's time term stays bounded.
     uniforms.uTime.value = (state.clock.elapsedTime % 1000);

@@ -106,6 +106,7 @@ export function buildBlackHoleFragment({ steps = 0, stars = 0 } = {}) {
     uniform float uNoiseSpeed;
     uniform float uStarBright;
     uniform float uLensStrength;
+    uniform float uBgClamp;
     // The scene rendered without the lens, plus the matrix that maps a world
     // direction back to where it appears in that render. Together these let an
     // escaping ray look up what the sky actually holds in the direction it ends
@@ -358,7 +359,12 @@ export function buildBlackHoleFragment({ steps = 0, stars = 0 } = {}) {
           float edge = smoothstep(0.0, 0.035, min(m.x, m.y));
           float w = edge * lensAmt;
           if (w > 0.0) {
-            vec3 bg = texture2D(uScene, clamp(suv, 0.0, 1.0)).rgb;
+            // The nebula is additive, and the capture is now unclamped linear
+            // HDR, so overlapping layers can accumulate well above 1. Outside
+            // the lens those same layers land in an LDR buffer and top out, so
+            // without this the inside of the sphere is simply brighter than the
+            // identical nebula just outside it.
+            vec3 bg = min(texture2D(uScene, clamp(suv, 0.0, 1.0)).rgb, vec3(uBgClamp));
             col   += bg * w * (1.0 - alpha);
             // Opaque in proportion to the substitution, so the unlensed original
             // underneath is replaced rather than doubled with its warped copy.
@@ -386,7 +392,7 @@ export function buildBlackHoleFragment({ steps = 0, stars = 0 } = {}) {
       // the disk behind it.
       float ringW = 0.028 * BCRIT;
       float ring  = exp(-pow((b - BCRIT * 1.015) / ringW, 2.0));
-      col   += blackbody(uTempScale * 1.25) * ring * uEmission * 1.5 * mix(1.0, 0.4, uDormant);
+      col   += blackbody(uTempScale * 1.25) * ring * uEmission * 1.7 * mix(1.0, 0.4, uDormant);
       alpha += ring * 0.45;
 
       // ── Halo ───────────────────────────────────────────────────────────────

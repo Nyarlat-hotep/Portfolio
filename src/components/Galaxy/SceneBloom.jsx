@@ -32,8 +32,8 @@ export default function SceneBloom() {
           own visible line across a smoothly fading disk. */}
       <Bloom
         mipmapBlur
-        intensity={high ? 0.55 : 0.42}
-        luminanceThreshold={0.82}
+        intensity={high ? 0.32 : 0.25}
+        luminanceThreshold={0.90}
         luminanceSmoothing={0.45}
         radius={high ? 0.55 : 0.45}
       />
