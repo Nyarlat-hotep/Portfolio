@@ -27,7 +27,7 @@ function readOverride() {
     if (q === 'low')  return TIER.LOW;
     if (q === 'med')  return TIER.MED;
     if (q === 'high') return TIER.HIGH;
-  } catch (_) { /* malformed URL — fall through to auto-detect */ }
+  } catch { /* malformed URL — fall through to auto-detect */ }
   return null;
 }
 
@@ -37,7 +37,7 @@ function detectInitialTier() {
   // Respect the accessibility preference before any performance consideration.
   try {
     if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return TIER.LOW;
-  } catch (_) { /* matchMedia unavailable */ }
+  } catch { /* matchMedia unavailable */ }
 
   const cores = navigator.hardwareConcurrency ?? 8;
   const mem   = navigator.deviceMemory ?? 8;       // Chromium-only; assume roomy elsewhere

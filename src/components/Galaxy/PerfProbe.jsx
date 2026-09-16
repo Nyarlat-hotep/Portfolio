@@ -1,13 +1,10 @@
-import { useRef, useEffect } from 'react';
-import { useFrame, useThree } from '@react-three/fiber';
+import { useRef } from 'react';
+import { useFrame } from '@react-three/fiber';
 import {
   reportProbeResult,
   isQualityTierLocked,
   getQualityTierName,
-  getQualityTier,
-  subscribeQualityTier,
 } from '../../utils/qualityTier';
-import { TIER_CONFIG } from './blackHoleConstants';
 
 // Skip the opening camera animation and any first-frame shader compiles before
 // trusting a frame time. Measuring during those reads as a slow device.
@@ -31,32 +28,7 @@ export default function PerfProbe({ onResolved }) {
   const runs    = useRef(0);
   const done    = useRef(false);
 
-  const setDpr  = useThree((s) => s.setDpr);
-  const gl      = useThree((s) => s.gl);
-  const baseDpr = useRef(null);
-  const appliedDpr = useRef(null);
 
-  // Apply the tier's pixel-ratio cap: once on mount for the synchronously
-  // resolved tier, then again on any step-down. setDpr reallocates render
-  // targets, so it is guarded against being called with a value already in
-  // effect — this fires at most three times in a session.
-  useEffect(() => {
-    // Whatever the Canvas resolved from its dpr={[1, 1.75]} cap. Tiers only ever
-    // lower this, never raise it above what the device or the cap allows.
-    if (baseDpr.current === null) baseDpr.current = gl.getPixelRatio();
-
-    const apply = (tier) => {
-      const target = TIER_CONFIG[tier]?.dpr;
-      if (target == null) return;                 // null = inherit the Canvas cap
-      const next = Math.min(target, baseDpr.current ?? target);
-      if (appliedDpr.current === next) return;
-      appliedDpr.current = next;
-      setDpr(next);
-      if (import.meta.env.DEV) console.info(`[PerfProbe] dpr -> ${next} for tier "${getQualityTierName()}"`);
-    };
-    apply(getQualityTier());
-    return subscribeQualityTier(apply);
-  }, [setDpr, gl]);
 
   useFrame((_state, delta) => {
     if (done.current) return;

@@ -22,13 +22,22 @@ import * as THREE from 'three';
 
 const W = 256, H = 128;
 
-function buildEnvTexture() {
+// Built once per page and never released. three's own PMREMGenerator docs warn
+// that "calling dispose() on one of them will cause any others to also become
+// unusable" — and three creates its own internally for environment maps. So the
+// generator is created once, reused, and deliberately not disposed; a handful of
+// small materials held for the session is far cheaper than corrupting three's
+// env-map pipeline. The result is cached so remounting the scene is free.
+let _pmrem = null;
+let _envRT = null;
+
+function buildEnvSource() {
   const canvas = document.createElement('canvas');
   canvas.width = W; canvas.height = H;
   const ctx = canvas.getContext('2d');
 
   // Base: near-black, very slightly blue, brighter toward the top of the sphere
-  // so there is a directional sense to the ambient rather than flat fill.
+  // so the ambient has a direction rather than being flat fill.
   const base = ctx.createLinearGradient(0, 0, 0, H);
   base.addColorStop(0.0, '#0b1020');
   base.addColorStop(0.5, '#05070e');
@@ -61,31 +70,48 @@ function buildEnvTexture() {
   return tex;
 }
 
+function getEnvTexture(gl) {
+  if (_envRT) return _envRT.texture;
+  if (!_pmrem) _pmrem = new THREE.PMREMGenerator(gl);
+  const src = buildEnvSource();
+  _envRT = _pmrem.fromEquirectangular(src);
+  src.dispose();          // the source canvas is only needed to produce the cubemap
+  return _envRT.texture;
+}
+
 export default function SceneEnvironment({ intensity = 0.35 }) {
   const gl    = useThree((s) => s.gl);
   const scene = useThree((s) => s.scene);
 
   useEffect(() => {
-    const src  = buildEnvTexture();
-    const pmrem = new THREE.PMREMGenerator(gl);
-    pmrem.compileEquirectangularShader();
-    const rt = pmrem.fromEquirectangular(src);
+    let tex;
+    try {
+      tex = getEnvTexture(gl);
+    } catch (err) {
+      // IBL is an enhancement, never a requirement — a failure here must not
+      // take the scene down with it.
+      console.error('[SceneEnvironment] could not build environment map', err);
+      return undefined;
+    }
 
-    scene.environment = rt.texture;
+    const prevEnv = scene.environment;
+    const prevInt = scene.environmentIntensity;
+
+    /* eslint-disable react-hooks/immutability --
+       `scene` is a mutable three.js Object3D, not React state. Assigning
+       scene.environment is the documented three API for image-based lighting,
+       and drei's own <Environment> does exactly this; the React Compiler rule
+       cannot tell an imperative graphics object from a hook-owned value.
+       Previous values are captured and restored on unmount so this stays
+       reversible. */
+    scene.environment = tex;
     scene.environmentIntensity = intensity;
 
-    // The source canvas texture and the generator are only needed to produce
-    // the prefiltered cubemap; release them immediately and keep the result.
-    src.dispose();
-    pmrem.dispose();
-
     return () => {
-      if (scene.environment === rt.texture) {
-        scene.environment = null;
-        scene.environmentIntensity = 1;
-      }
-      rt.dispose();
+      scene.environment = prevEnv;
+      scene.environmentIntensity = prevInt;
     };
+    /* eslint-enable react-hooks/immutability */
   }, [gl, scene, intensity]);
 
   return null;

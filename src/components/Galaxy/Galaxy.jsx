@@ -14,6 +14,8 @@ import VoidVignette from './VoidVignette';
 import PerfProbe from './PerfProbe';
 import SceneBloom from './SceneBloom';
 import SceneEnvironment from './SceneEnvironment';
+import { getQualityTier } from '../../utils/qualityTier';
+import { TIER_CONFIG } from './blackHoleConstants';
 import CameraController from './CameraController';
 import Constellation from './Constellation';
 import ShootingStars from './ShootingStars';
@@ -42,6 +44,14 @@ import { playBackground, stopBackground, getMuted, setMuted, playMenuClick, play
 
 // Check WebGL support once on module load
 const webGLSupported = isWebGLSupported();
+
+// Per-tier pixel-ratio cap, resolved once at module load (the tier is decided
+// synchronously there). It is passed as the Canvas `dpr` prop rather than being
+// applied imperatively with setDpr: R3F continuously reconciles viewport.dpr
+// back to whatever this prop says, so an imperative call is undone at best and
+// oscillates at worst. A later probe step-down still changes shader complexity,
+// which is the dominant cost; it just no longer moves resolution.
+const DPR_CAP = TIER_CONFIG[getQualityTier()]?.dpr ?? 1.75;
 
 // Creeping-darkness vignette. Shared by the initial style and the per-frame
 // imperative update so both always produce the same gradient.
@@ -621,7 +631,7 @@ export default function Galaxy({ onPlanetClick, activePlanetId, customPlanet, on
       }}
     >
       <Canvas
-        dpr={[1, 1.75]}
+        dpr={[1, DPR_CAP]}
         performance={{ min: 0.5 }}
         gl={{ antialias: true, powerPreference: 'high-performance' }}
       >

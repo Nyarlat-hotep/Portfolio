@@ -49,8 +49,16 @@ function Planet({
   const wantNormals = useRef(getQualityTier() >= TIER.MED).current;
   const normalUrl   = wantNormals ? normalMapFor(textureUrl) : null;
 
-  const maps = useTexture(normalUrl ? [textureUrl, normalUrl] : [textureUrl]);
-  const planetTexture = normalUrl ? maps[0] : maps;
+  // useTexture mirrors its input shape: given an array it returns an array,
+  // even for a single entry. Indexing unconditionally is the only safe read —
+  // treating the one-element case as a bare texture handed `map` an ARRAY,
+  // which three then tried to bind every frame.
+  const mapUrls = useMemo(
+    () => (normalUrl ? [textureUrl, normalUrl] : [textureUrl]),
+    [textureUrl, normalUrl],
+  );
+  const maps = useTexture(mapUrls);
+  const planetTexture = maps[0];
   const planetNormal  = normalUrl ? maps[1] : null;
 
   // Use shared circular particle texture (cached globally)
