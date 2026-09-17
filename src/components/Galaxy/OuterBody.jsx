@@ -3,6 +3,7 @@ import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { createRockyTexture, createIcyTexture, createAlienTexture } from '../../utils/planetTextures'
 import { createCircularParticleTexture } from '../../utils/threeUtils'
+import { roughnessFor, TYPE_ROUGHNESS } from '../../utils/planetMaps'
 
 const noRaycast = () => null
 
@@ -230,7 +231,7 @@ export default function OuterBody({
         <mesh ref={planetRef} geometry={sphereGeo} raycast={noRaycast}>
           <meshStandardMaterial
             map={texture}
-            roughness={0.9}
+            roughness={textureUrl ? roughnessFor(textureUrl, 0.9) : (TYPE_ROUGHNESS[textureType] ?? 0.9)}
             metalness={0.05}
             emissive={textureUrl ? '#223344' : (textureType === 'icy' ? '#88bbff' : textureType === 'alien' ? '#c4b0d4' : '#665544')}
             emissiveIntensity={0.15}
@@ -301,9 +302,11 @@ export default function OuterBody({
             geometry={moonGeos[i]}
             raycast={noRaycast}
           >
+            {/* moonTextures alternates rocky/icy by index, so roughness has to
+                alternate with it or the ice moons render like dust. */}
             <meshStandardMaterial
               map={moonTextures[i]}
-              roughness={0.95}
+              roughness={i % 2 === 0 ? TYPE_ROUGHNESS.rocky : TYPE_ROUGHNESS.icy}
               metalness={0.02}
               emissive="#332211"
               emissiveIntensity={0.12}

@@ -9,7 +9,7 @@
 // Kept in sync with the script's output. An explicit set rather than probing
 // for the file, so a missing map is a no-op instead of a 404 mid-render.
 const HAS_NORMAL = new Set([
-  'earth', 'jupiter', 'mars', 'mercury', 'neptune', 'saturn', 'uranus', 'venus',
+  'earth', 'jupiter', 'mars', 'mercury', 'saturn', 'venus',
 ]);
 
 /**
@@ -40,6 +40,16 @@ export function normalMapFor(albedoUrl) {
   const n = bodyName(albedoUrl);
   return n && HAS_NORMAL.has(n) ? `/textures/${n}_n.webp` : null;
 }
+
+/**
+ * Roughness for procedurally-textured bodies, which have no URL to key on.
+ * Same idea as ROUGHNESS above: one scalar per surface type, no extra texture.
+ */
+export const TYPE_ROUGHNESS = {
+  rocky: 0.92,   // dry, dusty, effectively no specular
+  icy:   0.45,   // ice is the one genuinely glossy surface out there
+  alien: 0.70,
+};
 
 /** Per-body roughness, falling back to the previous flat value. */
 export function roughnessFor(albedoUrl, fallback = 0.7) {

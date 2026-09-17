@@ -34,10 +34,19 @@ const STRENGTH = {
   mars:    2.6,
   venus:   1.6,   // thick atmosphere flattens the visible surface
   earth:   1.8,
-  jupiter: 0.7,   // cloud bands
-  saturn:  0.6,
-  uranus:  0.4,   // nearly featureless
-  neptune: 0.5,
+  // The gas giants were far too timid at 0.4-0.7: measured, their maps came out
+  // deviating ~1/255 from flat, i.e. invisible, so the files were pure payload.
+  // Their albedo varies almost entirely in Y (horizontal banding), so the X
+  // gradient is legitimately near zero — it is the magnitude that needed
+  // raising, not the direction.
+  jupiter: 1.4,   // cloud bands — the only gas giant with real gradient to work with
+  saturn:  1.8,
+  // Uranus and Neptune are skipped, not merely weakened. Their albedos are
+  // close to uniform, so there is no gradient to amplify: even at 1.8 the
+  // output stayed ~1/255 from flat. Shipping those is payload that implies
+  // detail the source does not contain.
+  uranus:  0.0,
+  neptune: 0.0,
   sun:     0.0,   // emissive; a normal map would be meaningless
 };
 
@@ -82,7 +91,7 @@ for (const file of files.sort()) {
   const name = path.basename(file, '.jpg');
   const strength = STRENGTH[name];
   if (strength === undefined) { console.log(`  skip ${name} (no strength configured)`); continue; }
-  if (strength === 0)         { console.log(`  skip ${name} (emissive)`); continue; }
+  if (strength === 0)         { console.log(`  skip ${name} (no derivable relief)`); continue; }
 
   const src = sharp(path.join(SRC, file));
   const { width, height } = await src.metadata();

@@ -2,6 +2,7 @@ import { useRef, useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { createRockyTexture, createIcyTexture, createAlienTexture } from '../../utils/planetTextures';
+import { TYPE_ROUGHNESS } from '../../utils/planetMaps';
 
 const noRaycast = () => null;
 
@@ -48,9 +49,12 @@ export default function Moon({ scale = 0.1, orbitRadius = 2, orbitSpeed = 0.05, 
 
   return (
     <mesh ref={meshRef} geometry={sphereGeo} scale={scale} raycast={noRaycast}>
+      {/* Roughness was a flat 0.9 for every type, so an ice moon and a
+          dust-covered rock returned identical specular. Ice is the one
+          genuinely glossy surface out here and now reads that way. */}
       <meshStandardMaterial
         map={texture}
-        roughness={0.9}
+        roughness={TYPE_ROUGHNESS[textureType] ?? 0.9}
         metalness={0.05}
         emissive={textureType === 'icy' ? '#88bbff' : textureType === 'alien' ? '#c4b0d4' : '#665544'}
         emissiveIntensity={0.1}

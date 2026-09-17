@@ -7,6 +7,7 @@ import {
   SPIRAL_ENTER_R   as SPAG_START,   // was 8 — now shares the stars' capture radius
   HORIZON_R        as PLANET_CAP_R, // was 2.0 — now the apparent shadow radius
 } from './blackHoleConstants';
+import { roughnessFor } from '../../utils/planetMaps';
 
 const PLANET_PULL  = 160;   // gravity strength
 const PLANET_DAMP  = 0.996; // low friction while gravity active — lets velocity keep building
@@ -152,7 +153,10 @@ function Planet({ config, wells }) {
   return (
     <mesh ref={meshRef}>
       <sphereGeometry args={[0.15, 24, 24]} />
-      <meshStandardMaterial map={texture} transparent />
+      {/* Roughness only, deliberately. These spheres are radius 0.15 — a few
+          pixels on screen — so a normal map would be payload for detail nobody
+          can resolve. The scalar costs nothing. */}
+      <meshStandardMaterial map={texture} transparent roughness={roughnessFor(config.src)} metalness={0.1} />
     </mesh>
   );
 }

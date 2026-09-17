@@ -1,6 +1,8 @@
 import { useRef, useState, useMemo, useEffect, useCallback } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useTexture } from '@react-three/drei';
+import { normalMapFor, roughnessFor } from '../../utils/planetMaps';
+import { getQualityTier, TIER } from '../../utils/qualityTier';
 import * as THREE from 'three';
 import { disposeObject, createCircularParticleTexture } from '../../utils/threeUtils';
 
@@ -32,7 +34,19 @@ export default function CustomPlanet({
   const { camera, size } = useThree();
 
   // Load the planet texture
-  const planetTexture = useTexture(textureUrl);
+  // Same shape as Planet.jsx: tier frozen at first render so a later step-down
+  // cannot change what is being loaded and re-suspend the planet, and the result
+  // indexed unconditionally — useTexture returns an ARRAY whenever given one,
+  // including for a single entry.
+  const wantNormals = useRef(getQualityTier() >= TIER.MED).current;
+  const normalUrl   = wantNormals ? normalMapFor(textureUrl) : null;
+  const mapUrls = useMemo(
+    () => (normalUrl ? [textureUrl, normalUrl] : [textureUrl]),
+    [textureUrl, normalUrl],
+  );
+  const maps          = useTexture(mapUrls);
+  const planetTexture = maps[0];
+  const planetNormal  = normalUrl ? maps[1] : null;
 
 
   // Use shared circular particle texture (cached globally)
@@ -200,9 +214,10 @@ export default function CustomPlanet({
         >
           <meshStandardMaterial
             map={planetTexture}
+            normalMap={planetNormal || undefined}
             emissive={color}
             emissiveIntensity={tintIntensity * 0.6}
-            roughness={0.7}
+            roughness={roughnessFor(textureUrl)}
             metalness={0.1}
           />
         </mesh>
