@@ -1,7 +1,7 @@
 import { useRef, useState, useMemo, useEffect, useCallback, memo } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useTexture } from '@react-three/drei';
-import { normalMapFor, roughnessFor } from '../../utils/planetMaps';
+import { albedoFor, normalMapFor, roughnessFor } from '../../utils/planetMaps';
 import { getQualityTier, TIER } from '../../utils/qualityTier';
 import * as THREE from 'three';
 import Moon from './Moon';
@@ -46,16 +46,20 @@ function Planet({
   // the common case is correct on the first render; freezing it means a later
   // probe step-down cannot change what useTexture is loading and re-suspend the
   // planet mid-session, which would flash the whole body.
-  const wantNormals = useRef(getQualityTier() >= TIER.MED).current;
+  const tier        = useRef(getQualityTier()).current;
+  const wantNormals = tier >= TIER.MED;
   const normalUrl   = wantNormals ? normalMapFor(textureUrl) : null;
+  // Below high tier this is the half-resolution albedo: a quarter of the GPU
+  // memory and upload cost, indistinguishable at the size a planet renders.
+  const albedoUrl   = albedoFor(textureUrl, tier);
 
   // useTexture mirrors its input shape: given an array it returns an array,
   // even for a single entry. Indexing unconditionally is the only safe read —
   // treating the one-element case as a bare texture handed `map` an ARRAY,
   // which three then tried to bind every frame.
   const mapUrls = useMemo(
-    () => (normalUrl ? [textureUrl, normalUrl] : [textureUrl]),
-    [textureUrl, normalUrl],
+    () => (normalUrl ? [albedoUrl, normalUrl] : [albedoUrl]),
+    [albedoUrl, normalUrl],
   );
   const maps = useTexture(mapUrls);
   const planetTexture = maps[0];

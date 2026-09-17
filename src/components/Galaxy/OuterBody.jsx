@@ -3,7 +3,7 @@ import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { createRockyTexture, createIcyTexture, createAlienTexture } from '../../utils/planetTextures'
 import { createCircularParticleTexture } from '../../utils/threeUtils'
-import { roughnessFor, TYPE_ROUGHNESS } from '../../utils/planetMaps'
+import { albedoFor, roughnessFor, TYPE_ROUGHNESS } from '../../utils/planetMaps'
 
 const noRaycast = () => null
 
@@ -111,7 +111,7 @@ export default function OuterBody({
   const moonRefs     = useRef([])
 
   const texture = useMemo(() => {
-    if (textureUrl) return getUrlTexture(textureUrl)
+    if (textureUrl) return getUrlTexture(albedoFor(textureUrl))
     if (textureType === 'icy')   return createIcyTexture(128)
     if (textureType === 'alien') return createAlienTexture(128, { r: 195, g: 175, b: 215 })
     return createRockyTexture(128)

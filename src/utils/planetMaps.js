@@ -1,3 +1,5 @@
+import { getQualityTier, TIER } from './qualityTier';
+
 /**
  * Derived PBR maps for the planet albedos.
  *
@@ -33,6 +35,25 @@ const ROUGHNESS = {
 function bodyName(url) {
   const m = /\/textures\/([a-z]+)\.webp(?:$|\?)/.exec(url || '');
   return m ? m[1] : null;
+}
+
+/**
+ * Tier-aware albedo path. Low and medium get the half-resolution variant: a 4x
+ * cut in GPU memory and upload time for detail that is not resolvable at the
+ * size these bodies render. High keeps the original.
+ *
+ * Resolve this only at the point of loading — everything else (roughnessFor,
+ * normalMapFor) keys off the canonical URL, so passing a resolved one around
+ * would stop those matching.
+ *
+ * Callers pass a tier they froze at first render, matching how they already
+ * freeze the normal-map decision: if a later probe step-down changed the URL
+ * mid-session, the body would re-suspend and pop.
+ */
+export function albedoFor(albedoUrl, tier = getQualityTier()) {
+  if (tier >= TIER.HIGH) return albedoUrl;
+  const n = bodyName(albedoUrl);
+  return n ? `/textures/${n}_lo.webp` : albedoUrl;
 }
 
 /** Path to the derived normal map, or null if this body has none. */

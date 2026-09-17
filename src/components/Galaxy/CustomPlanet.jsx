@@ -1,7 +1,7 @@
 import { useRef, useState, useMemo, useEffect, useCallback } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useTexture } from '@react-three/drei';
-import { normalMapFor, roughnessFor } from '../../utils/planetMaps';
+import { albedoFor, normalMapFor, roughnessFor } from '../../utils/planetMaps';
 import { getQualityTier, TIER } from '../../utils/qualityTier';
 import * as THREE from 'three';
 import { disposeObject, createCircularParticleTexture } from '../../utils/threeUtils';
@@ -38,11 +38,13 @@ export default function CustomPlanet({
   // cannot change what is being loaded and re-suspend the planet, and the result
   // indexed unconditionally — useTexture returns an ARRAY whenever given one,
   // including for a single entry.
-  const wantNormals = useRef(getQualityTier() >= TIER.MED).current;
+  const tier        = useRef(getQualityTier()).current;
+  const wantNormals = tier >= TIER.MED;
   const normalUrl   = wantNormals ? normalMapFor(textureUrl) : null;
+  const albedoUrl   = albedoFor(textureUrl, tier);
   const mapUrls = useMemo(
-    () => (normalUrl ? [textureUrl, normalUrl] : [textureUrl]),
-    [textureUrl, normalUrl],
+    () => (normalUrl ? [albedoUrl, normalUrl] : [albedoUrl]),
+    [albedoUrl, normalUrl],
   );
   const maps          = useTexture(mapUrls);
   const planetTexture = maps[0];

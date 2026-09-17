@@ -54,6 +54,7 @@ let _bgStartedAt = 0
 let _bgOffset    = 0
 let _bgPlaying   = false
 let _bgWantsPlay = false
+let _gestured    = false  // page has received a user gesture, so a context can run
 
 function getBgCtx() {
   if (!_audioCtx) {
@@ -91,6 +92,13 @@ function startBgSource() {
 
 async function tryStartBg() {
   if (!_bgWantsPlay || _muted) return
+  // Don't construct the context before a gesture. playBackground() runs at
+  // mount, and constructing an AudioContext costs ~130ms of blocking
+  // main-thread work. Autoplay policy means one built that early is born
+  // suspended and unusable, so this used to build it purely to read .state off
+  // it and bail. Deferring costs nothing: a context built after the gesture
+  // starts out running.
+  if (!_audioCtx && !_gestured) return
   const ctx = getBgCtx()
   if (ctx.state === 'suspended') return  // wait for gesture to resume
   if (!_bgBuffer) await decodeBgBuffer()
@@ -99,6 +107,9 @@ async function tryStartBg() {
 
 // On user gesture: resume suspended context then try to start bg music
 function onUserGesture() {
+  // Record the gesture even when nothing wants to play yet: a later
+  // playBackground() needs to know a context is now allowed to run.
+  _gestured = true
   if (!_bgWantsPlay) return
   const ctx = getBgCtx()
   if (ctx.state === 'suspended') {

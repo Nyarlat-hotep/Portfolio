@@ -7,7 +7,7 @@ import {
   SPIRAL_ENTER_R   as SPAG_START,   // was 8 — now shares the stars' capture radius
   HORIZON_R        as PLANET_CAP_R, // was 2.0 — now the apparent shadow radius
 } from './blackHoleConstants';
-import { roughnessFor } from '../../utils/planetMaps';
+import { albedoFor, roughnessFor } from '../../utils/planetMaps';
 
 const PLANET_PULL  = 160;   // gravity strength
 const PLANET_DAMP  = 0.996; // low friction while gravity active — lets velocity keep building
@@ -24,7 +24,9 @@ const CONFIGS = [
 
 function Planet({ config, wells }) {
   const meshRef = useRef();
-  const texture = useLoader(THREE.TextureLoader, config.src);
+  // These spheres are radius 0.15 — the full-resolution mip was never sampled,
+  // so the low tier's half-size albedo costs nothing visually here.
+  const texture = useLoader(THREE.TextureLoader, albedoFor(config.src));
 
   // Pre-allocated scratch objects — never create inside useFrame
   const _toWell = useMemo(() => new THREE.Vector3(), []);

@@ -2,6 +2,8 @@ import { useState, useRef, useEffect, Suspense, useMemo, useCallback } from 'rea
 import { motion, AnimatePresence } from 'framer-motion';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { useTexture } from '@react-three/drei';
+import { albedoFor } from '../../utils/planetMaps';
+import { TIER } from '../../utils/qualityTier';
 import * as THREE from 'three';
 import { X } from 'lucide-react';
 import DataStream from './DataStream';
@@ -35,7 +37,7 @@ const SIZES = [
 // Rotating preview planet
 function PreviewPlanet({ textureUrl, color, scale, tintIntensity = 0.3 }) {
   const meshRef = useRef();
-  const texture = useTexture(textureUrl);
+  const texture = useTexture(albedoFor(textureUrl));
 
   useFrame((state, delta) => {
     if (meshRef.current) {
@@ -61,7 +63,9 @@ function PreviewPlanet({ textureUrl, color, scale, tintIntensity = 0.3 }) {
 // Mini rotating texture preview sphere
 function TextureSphere({ textureUrl, isSelected, onClick }) {
   const meshRef = useRef();
-  const texture = useTexture(textureUrl);
+  // Forced low regardless of tier: this is a thumbnail. Nine of these mount at
+  // once, so the full-resolution albedos were nine 8MB uploads for swatches.
+  const texture = useTexture(albedoFor(textureUrl, TIER.LOW));
 
   useFrame((state, delta) => {
     if (meshRef.current) {
@@ -384,7 +388,7 @@ export default function PlanetCreator({ isOpen, onClose, onSave }) {
                           {isTouch ? (
                             // Static image on mobile to avoid WebGL context limits
                             <img
-                              src={t.url}
+                              src={albedoFor(t.url, TIER.LOW)}
                               alt={t.name}
                               className="texture-preview-img"
                             />
