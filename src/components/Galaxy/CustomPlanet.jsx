@@ -1,8 +1,9 @@
 import { useRef, useState, useMemo, useEffect, useCallback } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useTexture } from '@react-three/drei';
-import { albedoFor, normalMapFor, roughnessFor } from '../../utils/planetMaps';
+import { albedoFor, atmosphereFor, normalMapFor, roughnessFor } from '../../utils/planetMaps';
 import { getQualityTier, TIER } from '../../utils/qualityTier';
+import PlanetAtmosphere from './PlanetAtmosphere';
 import * as THREE from 'three';
 import { disposeObject, createCircularParticleTexture } from '../../utils/threeUtils';
 
@@ -42,6 +43,7 @@ export default function CustomPlanet({
   const wantNormals = tier >= TIER.MED;
   const normalUrl   = wantNormals ? normalMapFor(textureUrl) : null;
   const albedoUrl   = albedoFor(textureUrl, tier);
+  const atmos       = atmosphereFor(textureUrl);
   const mapUrls = useMemo(
     () => (normalUrl ? [albedoUrl, normalUrl] : [albedoUrl]),
     [albedoUrl, normalUrl],
@@ -222,6 +224,18 @@ export default function CustomPlanet({
             roughness={roughnessFor(textureUrl)}
             metalness={0.1}
           />
+
+          {/* Scattering rim — child of the mesh so it tracks the hover scale
+              and the deletion shrink. */}
+          {atmos && !isDeleting && (
+            <PlanetAtmosphere
+              color={atmos.color}
+              scale={atmos.scale}
+              power={atmos.power}
+              strength={atmos.strength}
+              tint={color}
+            />
+          )}
         </mesh>
 
         {/* Particle system - appear on hover */}

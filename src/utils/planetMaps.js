@@ -32,6 +32,33 @@ const ROUGHNESS = {
   sun:     1.00,
 };
 
+/**
+ * Per-body atmosphere. Colour is roughly what that body's sky actually
+ * scatters, and strength stands in for how much of one it has.
+ *
+ * Mercury is deliberately absent: it has no atmosphere, so it should have no
+ * rim. The Sun is absent because it is emissive and already carries its own
+ * corona.
+ */
+const ATMOSPHERE = {
+  // Shells are generous and the exponents low on purpose. A tight, high-contrast
+  // band sits right on the silhouette and reads as an outline stroke; a wider,
+  // softer gradient that fades outward reads as air.
+  earth:   { color: '#7fc4ff', strength: 0.34, scale: 1.085, power: 3.4 },
+  venus:   { color: '#ffd49a', strength: 0.40, scale: 1.100, power: 3.0 },  // thick, hazy
+  mars:    { color: '#ff9d6e', strength: 0.15, scale: 1.050, power: 3.8 },  // thin and dusty
+  jupiter: { color: '#ffd2a6', strength: 0.27, scale: 1.070, power: 3.5 },
+  saturn:  { color: '#ffe2ae', strength: 0.25, scale: 1.070, power: 3.5 },
+  uranus:  { color: '#9ee4ff', strength: 0.30, scale: 1.085, power: 3.2 },
+  neptune: { color: '#7b9fff', strength: 0.34, scale: 1.085, power: 3.2 },
+};
+
+/** Atmosphere config for a body, or null if it should not have one. */
+export function atmosphereFor(albedoUrl) {
+  const n = bodyName(albedoUrl);
+  return (n && ATMOSPHERE[n]) ? ATMOSPHERE[n] : null;
+}
+
 function bodyName(url) {
   const m = /\/textures\/([a-z]+)\.webp(?:$|\?)/.exec(url || '');
   return m ? m[1] : null;

@@ -1,8 +1,9 @@
 import { useRef, useState, useMemo, useEffect, useCallback, memo } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useTexture } from '@react-three/drei';
-import { albedoFor, normalMapFor, roughnessFor } from '../../utils/planetMaps';
+import { albedoFor, atmosphereFor, normalMapFor, roughnessFor } from '../../utils/planetMaps';
 import { getQualityTier, TIER } from '../../utils/qualityTier';
+import PlanetAtmosphere from './PlanetAtmosphere';
 import * as THREE from 'three';
 import Moon from './Moon';
 import { disposeObject, createCircularParticleTexture } from '../../utils/threeUtils';
@@ -52,6 +53,8 @@ function Planet({
   // Below high tier this is the half-resolution albedo: a quarter of the GPU
   // memory and upload cost, indistinguishable at the size a planet renders.
   const albedoUrl   = albedoFor(textureUrl, tier);
+  // null for Mercury (no atmosphere) and the Sun (emissive, has its own corona).
+  const atmos       = atmosphereFor(textureUrl);
 
   // useTexture mirrors its input shape: given an array it returns an array,
   // even for a single entry. Indexing unconditionally is the only safe read —
@@ -225,6 +228,18 @@ function Planet({
               // and a gas giant should not share a specular response.
               roughness={roughnessFor(texture)}
               metalness={0.1}
+            />
+          )}
+
+          {/* Scattering rim. A child of the planet mesh, so it inherits the
+              hover scale-up and stays locked to the body. */}
+          {atmos && (
+            <PlanetAtmosphere
+              color={atmos.color}
+              scale={atmos.scale}
+              power={atmos.power}
+              strength={atmos.strength}
+              tint={color}
             />
           )}
         </mesh>
