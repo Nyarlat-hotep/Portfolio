@@ -4,6 +4,7 @@ import * as THREE from 'three'
 import { createRockyTexture, createIcyTexture, createAlienTexture } from '../../utils/planetTextures'
 import { createCircularParticleTexture } from '../../utils/threeUtils'
 import { albedoFor, roughnessFor, TYPE_ROUGHNESS } from '../../utils/planetMaps'
+import PlanetRings from './PlanetRings'
 
 const noRaycast = () => null
 
@@ -15,59 +16,11 @@ const BODY_ACTIVE_DIST = 150
 // ── Loaded texture cache ──────────────────────────────────────────────────────
 // Keyed by URL so the five OuterBody instances share one Texture and one GPU
 // upload per image. Module-scoped singletons, deliberately never disposed —
-// same convention as _ringTexCache below and the shared textures in threeUtils.
+// same convention as the shared textures in threeUtils.
 const _urlTexCache = {}
 function getUrlTexture(url) {
   if (!_urlTexCache[url]) _urlTexCache[url] = new THREE.TextureLoader().load(url)
   return _urlTexCache[url]
-}
-
-// ── Ring texture — canvas radial bands with gap and grain ─────────────────────
-const _ringTexCache = {}
-function createRingTex(colorHex) {
-  if (_ringTexCache[colorHex]) return _ringTexCache[colorHex]
-  const SIZE = 256, C = SIZE / 2
-  const canvas = document.createElement('canvas')
-  canvas.width = canvas.height = SIZE
-  const ctx = canvas.getContext('2d')
-  const imgData = ctx.createImageData(SIZE, SIZE)
-  const col = new THREE.Color(colorHex)
-  const cr = Math.round(col.r * 255)
-  const cg = Math.round(col.g * 255)
-  const cb = Math.round(col.b * 255)
-
-  for (let y = 0; y < SIZE; y++) {
-    for (let x = 0; x < SIZE; x++) {
-      const dx = x - C, dy = y - C
-      const uvDist = Math.sqrt(dx * dx + dy * dy) / SIZE
-      const noise = Math.random()
-      let alpha = 0
-
-      if (uvDist > 0.30 && uvDist < 0.35) {
-        alpha = (0.55 + noise * 0.45) * 0.85         // inner bright band
-      } else if (uvDist >= 0.35 && uvDist < 0.38) {
-        alpha = noise * 0.07                           // band gap
-      } else if (uvDist >= 0.38 && uvDist < 0.455) {
-        const t = (uvDist - 0.38) / 0.075
-        alpha = (0.75 + noise * 0.25) * (1 - t * 0.35) // main dense band
-      } else if (uvDist >= 0.455 && uvDist < 0.473) {
-        alpha = noise * 0.12                           // Cassini-like division
-      } else if (uvDist >= 0.473 && uvDist <= 0.5) {
-        const t = (uvDist - 0.473) / 0.027
-        alpha = (0.38 + noise * 0.28) * (1 - t * 0.6) // wispy outer edge
-      }
-
-      const idx = (y * SIZE + x) * 4
-      imgData.data[idx]     = cr
-      imgData.data[idx + 1] = cg
-      imgData.data[idx + 2] = cb
-      imgData.data[idx + 3] = Math.min(255, alpha * 255)
-    }
-  }
-  ctx.putImageData(imgData, 0, 0)
-  const tex = new THREE.CanvasTexture(canvas)
-  _ringTexCache[colorHex] = tex
-  return tex
 }
 
 // ── Haze cloud sprite texture ─────────────────────────────────────────────────
@@ -123,15 +76,6 @@ export default function OuterBody({
   // soon as you got close to one of these.
   const sphereGeo = useMemo(() => new THREE.SphereGeometry(bodyRadius, 48, 32), [bodyRadius])
 
-  const { ringInnerGeo, ringOuterGeo, ringTex } = useMemo(() => {
-    if (!hasRings) return {}
-    return {
-      ringInnerGeo: new THREE.RingGeometry(bodyRadius * ringBand1[0], bodyRadius * ringBand1[1], 64),
-      ringOuterGeo: new THREE.RingGeometry(bodyRadius * ringBand2[0], bodyRadius * ringBand2[1], 64),
-      ringTex: createRingTex(ringColor),
-    }
-  }, [hasRings, bodyRadius, ringBand1, ringBand2, ringColor])
-
   // Atmospheric haze blobs — wispy sprites around the body
   const hazeKnots = useMemo(() => {
     const out = []
@@ -175,19 +119,18 @@ export default function OuterBody({
   const hazeTex   = useMemo(() => getBodyHazeTex(), [])
 
   // Dispose per-instance GPU resources on unmount. Only what this instance
-  // owns: circleTex, hazeTex, ringTex and URL-loaded textures are module-level
+  // owns: circleTex, hazeTex and URL-loaded textures are module-level
   // singletons shared with other components, so disposing them would blank
   // textures elsewhere. Procedural textures (createRockyTexture et al) are
-  // freshly allocated per instance and must be released here.
+  // freshly allocated per instance and must be released here. The rings own
+  // and release their own geometry and materials.
   useEffect(() => () => {
     sphereGeo?.dispose()
-    ringInnerGeo?.dispose()
-    ringOuterGeo?.dispose()
     debrisGeo?.dispose()
     moonGeos.forEach(g => g.dispose())
     moonTextures.forEach(t => t.dispose())
     if (!textureUrl) texture?.dispose()
-  }, [sphereGeo, ringInnerGeo, ringOuterGeo, debrisGeo, moonGeos, moonTextures, texture, textureUrl])
+  }, [sphereGeo, debrisGeo, moonGeos, moonTextures, texture, textureUrl])
 
   useFrame((state, delta) => {
     if (!groupRef.current || !bodyGroupRef.current) return
@@ -247,28 +190,14 @@ export default function OuterBody({
         </mesh>
 
         {/* Rings with canvas band texture */}
-        {hasRings && ringInnerGeo && (
-          <>
-            <mesh geometry={ringInnerGeo} rotation={ringRotation} raycast={noRaycast}>
-              <meshBasicMaterial
-                map={ringTex}
-                transparent
-                side={THREE.DoubleSide}
-                depthWrite={false}
-                alphaTest={0.01}
-              />
-            </mesh>
-            <mesh geometry={ringOuterGeo} rotation={ringRotation} raycast={noRaycast}>
-              <meshBasicMaterial
-                map={ringTex}
-                transparent
-                opacity={0.6}
-                side={THREE.DoubleSide}
-                depthWrite={false}
-                alphaTest={0.01}
-              />
-            </mesh>
-          </>
+        {hasRings && (
+          <PlanetRings
+            bodyRadius={bodyRadius}
+            band1={ringBand1}
+            band2={ringBand2}
+            color={ringColor}
+            rotation={ringRotation}
+          />
         )}
 
         {/* Atmospheric haze */}

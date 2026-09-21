@@ -1,16 +1,11 @@
 import { useMemo, useEffect } from 'react';
 import * as THREE from 'three';
 import { atmosphereVertexShader, atmosphereFragmentShader } from '../../shaders/atmosphere.glsl';
+import { KEY_LIGHT_DIR } from '../../utils/threeUtils';
 
 // One shared sphere for every atmosphere in the scene. The shell is always a
 // unit sphere scaled by the mesh transform, so there is nothing per-body about
 // the geometry and no reason to allocate one each time.
-// Matches the key light at Galaxy.jsx:683 (directionalLight position 10,10,10
-// aimed at the origin). Kept as a constant rather than read from the scene: a
-// directional light has one direction everywhere, and threading it through the
-// graph for a value that has not changed would be ceremony.
-const KEY_LIGHT_DIR = new THREE.Vector3(10, 10, 10).normalize();
-
 let _shellGeo = null;
 function getShellGeo() {
   if (!_shellGeo) _shellGeo = new THREE.SphereGeometry(1, 48, 32);

@@ -100,3 +100,13 @@ export function fadeIn(dist, edgeStart, edgeEnd) {
   const t = Math.max(0, Math.min(1, (dist - edgeStart) / (edgeEnd - edgeStart)));
   return t * t * (3 - 2 * t);
 }
+
+/**
+ * Direction toward the scene's key light, world space.
+ *
+ * Matches the directionalLight at Galaxy.jsx:683 (position 10,10,10, aimed at
+ * the origin). A directional light has one direction everywhere, so anything
+ * that needs to know where the light is can read this rather than having it
+ * threaded through the graph — but it has to be kept in step with that light.
+ */
+export const KEY_LIGHT_DIR = new THREE.Vector3(10, 10, 10).normalize();
