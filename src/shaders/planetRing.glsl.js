@@ -50,19 +50,40 @@ export const ringFragmentShader = /* glsl */ `
     float r = length(vLocal.xy);
     if (r < uB1i || r > uB2o) discard;
 
+    // How much radius one pixel spans. Everything below is scaled against this
+    // so the rings carry detail down to the pixel and no further — the same
+    // job mipmapping does for a texture, which a procedural surface has to do
+    // for itself.
+    float pw = max(fwidth(r), 1e-6);
+
     // ── Band structure ────────────────────────────────────────────────────
-    // Soft shoulders so the edges are not hard cutoffs, and a genuine gap
-    // between the two bands rather than the old approach of drawing the same
-    // texture twice at different scales.
-    float e = (uB2o - uB1i) * 0.035;
+    // Shoulder width is a pixel count, not a fraction of the ring. A fixed
+    // fraction is a fixed world-space distance, which reads as a crisp edge
+    // from far away and as a broad gradient up close — the edges went soft
+    // exactly when you got near enough to want them sharp.
+    float e = max(pw * 1.5, (uB2o - uB1i) * 0.004);
     float band =
         0.95 * smoothstep(uB1i, uB1i + e, r) * (1.0 - smoothstep(uB1o - e, uB1o, r))
       + 0.75 * smoothstep(uB2i, uB2i + e, r) * (1.0 - smoothstep(uB2o - e, uB2o, r));
 
-    // Concentric grooves. Radial only and time-independent, because ring
-    // divisions are fixed radial features — they do not orbit.
-    float groove = snoise(vec3(r * uGrooveScale, 0.0, 0.0)) * 0.5 + 0.5;
-    band *= mix(0.5, 1.0, groove);
+    // ── Concentric grooves ────────────────────────────────────────────────
+    // Radial and time-independent: ring divisions are fixed features, they do
+    // not orbit. Built from octaves that each drop out once their wavelength
+    // approaches a pixel, so close up the fine structure is there and far away
+    // it is gone rather than aliasing into static. A single octave cannot do
+    // both — tuned coarse enough not to sparkle at distance, it left nothing to
+    // look at up close.
+    float detail = 0.0;
+    float amp = 0.55;
+    float freq = uGrooveScale;
+    for (int i = 0; i < 4; i++) {
+      // Resolvable while its wavelength (1/freq) stays a few pixels wide.
+      float fade = smoothstep(2.0, 4.5, 1.0 / (freq * pw));
+      detail += amp * fade * snoise(vec3(r * freq, 0.0, 0.0));
+      freq *= 2.3;
+      amp  *= 0.55;
+    }
+    band *= clamp(1.0 + detail, 0.12, 1.65);
 
     // ── Orbital motion ────────────────────────────────────────────────────
     // Keplerian shear: inner material orbits faster, as r^-3/2. This is what
@@ -73,6 +94,17 @@ export const ringFragmentShader = /* glsl */ `
     // atan; feeding the angle in directly would leave a visible seam.
     float clump = snoise(vec3(cos(a) * uAzScale, sin(a) * uAzScale, r * 0.7)) * 0.5 + 0.5;
     band *= mix(0.72, 1.18, clump);
+
+    // A finer, faster-varying streak layer on the same sheared angle, so there
+    // is azimuthal structure to see close up too. Gated on pixel size like the
+    // grooves, and stretched far more around the ring than across it, which is
+    // the direction ring material actually smears.
+    float fFine = uAzScale * 9.0;
+    float fineFade = smoothstep(2.0, 4.5, 1.0 / (uGrooveScale * 6.0 * pw));
+    if (fineFade > 0.01) {
+      float streak = snoise(vec3(cos(a) * fFine, sin(a) * fFine, r * uGrooveScale * 3.0));
+      band *= 1.0 + streak * 0.30 * fineFade;
+    }
 
     if (band <= 0.001) discard;
 

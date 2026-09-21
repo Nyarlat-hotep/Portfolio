@@ -89,7 +89,7 @@ export default function PlanetRings({
       uOpacity:     { value: opacity },
       uLightLocal:  { value: new THREE.Vector3(0, 0, 1) },
       uCamLocal:    { value: new THREE.Vector3(0, 0, 1) },
-      uGrooveScale: { value: 3.2 / Math.max(bodyRadius, 0.001) },
+      uGrooveScale: { value: 2.6 / Math.max(bodyRadius, 0.001) },
       uAzScale:     { value: 2.2 },
     },
     transparent: true,
