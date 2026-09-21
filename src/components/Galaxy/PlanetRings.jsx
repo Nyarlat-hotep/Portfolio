@@ -44,7 +44,7 @@ export default function PlanetRings({
   color = '#ccddff',
   rotation = [0, 0, 0],
   spin = 0.9,
-  density = 0.7,
+  density = 0.5,
   opacity = 1.0,
 }) {
   const meshRef = useRef();
@@ -84,7 +84,7 @@ export default function PlanetRings({
       uPlanetR:     { value: bodyRadius },
       uSpin:        { value: spin },
       uDensity:     { value: density },
-      uBrightness:  { value: 0.8 },
+      uBrightness:  { value: 0.72 },
       uAmbient:     { value: 0.22 },
       uOpacity:     { value: opacity },
       uLightLocal:  { value: new THREE.Vector3(0, 0, 1) },
@@ -147,9 +147,10 @@ export default function PlanetRings({
         uColor:      { value: new THREE.Color(color) },
         uTime:       { value: 0 },
         uSpin:       { value: spin },
-        uOpacity:    { value: 0.10 },
+        uOpacity:    { value: 0.16 },
         uPixelRatio: { value: Math.min(gl.getPixelRatio?.() ?? 1, 2) },
         uSizeScale:  { value: bodyRadius },
+        uMaxPx:      { value: 2.5 },
       },
       transparent: true,
       // Additive here, unlike the surface. These are unsorted points, and

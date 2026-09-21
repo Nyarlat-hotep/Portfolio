@@ -76,10 +76,14 @@ export const ringFragmentShader = /* glsl */ `
     float detail = 0.0;
     float amp = 0.55;
     float freq = uGrooveScale;
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < 6; i++) {
       // Resolvable while its wavelength (1/freq) stays a few pixels wide.
       float fade = smoothstep(2.0, 4.5, 1.0 / (freq * pw));
-      detail += amp * fade * snoise(vec3(r * freq, 0.0, 0.0));
+      // Skip the noise entirely once an octave cannot be seen. Six octaves let
+      // the structure keep getting finer as you approach, and this is what
+      // stops the far view paying for detail it will never resolve. Pixels
+      // across one ring sit at similar depths, so the branch stays coherent.
+      if (fade > 0.01) detail += amp * fade * snoise(vec3(r * freq, 0.0, 0.0));
       freq *= 2.3;
       amp  *= 0.55;
     }
@@ -158,6 +162,7 @@ export const ringParticleVertexShader = /* glsl */ `
   uniform float uSpin;
   uniform float uPixelRatio;
   uniform float uSizeScale;
+  uniform float uMaxPx;
 
   varying float vFade;
 
@@ -167,8 +172,13 @@ export const ringParticleVertexShader = /* glsl */ `
 
     vec4 mv = modelViewMatrix * vec4(p, 1.0);
     gl_Position = projectionMatrix * mv;
-    // Attenuate with distance so specks shrink naturally as the body recedes.
-    float sz = aSize * uSizeScale * uPixelRatio * (60.0 / max(-mv.z, 0.001));
+    // Attenuate with distance so specks shrink as the body recedes — but cap
+    // it hard. Unbounded attenuation meant flying close scaled every speck into
+    // a soft blob tens of pixels wide, which buried the surface under what
+    // looked like clumped cotton. Real ring particles are metres across and are
+    // never individually resolvable; they are grain, not spheres, so a few
+    // pixels is the honest ceiling however near the camera gets.
+    float sz = min(aSize * uSizeScale * uPixelRatio * (60.0 / max(-mv.z, 0.001)), uMaxPx);
     gl_PointSize = sz;
 
     // Fade out as the rings close toward edge-on. Seen that way every particle
