@@ -72,7 +72,7 @@ function Planet({
   const particleTexture = useMemo(() => createCircularParticleTexture(), []);
 
   // Stable geometry references — memoized to prevent GPU object recreation on re-render
-  const sphereGeo = useMemo(() => new THREE.SphereGeometry(1, 32, 32), []);
+  const sphereGeo = useMemo(() => new THREE.SphereGeometry(1, 64, 48), []);
   const ringGeo   = useMemo(() => new THREE.RingGeometry(1.5, 2, 64), []);
 
   // Cleanup geometry and materials on unmount to prevent VRAM leaks

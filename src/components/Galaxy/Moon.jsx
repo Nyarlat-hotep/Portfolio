@@ -35,7 +35,7 @@ export default function Moon({ scale = 0.1, orbitRadius = 2, orbitSpeed = 0.05, 
   const texture = proceduralTexture;
 
   // Stable geometry reference — memoized to prevent GPU object recreation on re-render
-  const sphereGeo = useMemo(() => new THREE.SphereGeometry(1, 16, 16), []);
+  const sphereGeo = useMemo(() => new THREE.SphereGeometry(1, 32, 24), []);
 
   useFrame((state) => {
     if (meshRef.current) {

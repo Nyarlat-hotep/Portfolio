@@ -66,7 +66,7 @@ export default function CustomPlanet({
   }, []);
 
   // Stable geometry reference — memoized to prevent GPU object recreation on re-render
-  const sphereGeo = useMemo(() => new THREE.SphereGeometry(1, 32, 32), []);
+  const sphereGeo = useMemo(() => new THREE.SphereGeometry(1, 64, 48), []);
 
   // Create particle positions around the planet
   const particleCount = 30;

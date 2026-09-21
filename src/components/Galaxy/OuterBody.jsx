@@ -117,7 +117,11 @@ export default function OuterBody({
     return createRockyTexture(128)
   }, [textureUrl, textureType])
 
-  const sphereGeo = useMemo(() => new THREE.SphereGeometry(bodyRadius, 16, 16), [bodyRadius])
+  // 48x32, up from 16x16. Segment count costs vertices, and vertices are not
+  // what strains a phone — fill rate is. This adds no fragment work at all:
+  // identical pixels, rounder silhouette. At 16 the facets were countable as
+  // soon as you got close to one of these.
+  const sphereGeo = useMemo(() => new THREE.SphereGeometry(bodyRadius, 48, 32), [bodyRadius])
 
   const { ringInnerGeo, ringOuterGeo, ringTex } = useMemo(() => {
     if (!hasRings) return {}
@@ -164,7 +168,7 @@ export default function OuterBody({
   }, [bodyRadius, hasRings, ringBand2])
 
   // Moon geometries + textures
-  const moonGeos     = useMemo(() => moons.map(m => new THREE.SphereGeometry(m.size, 10, 10)), [moons])
+  const moonGeos     = useMemo(() => moons.map(m => new THREE.SphereGeometry(m.size, 20, 14)), [moons])
   const moonTextures = useMemo(() => moons.map((_, i) => i % 2 === 0 ? createRockyTexture(64) : createIcyTexture(64)), [moons])
 
   const circleTex = useMemo(() => createCircularParticleTexture(), [])
@@ -229,12 +233,16 @@ export default function OuterBody({
 
         {/* Planet body */}
         <mesh ref={planetRef} geometry={sphereGeo} raycast={noRaycast}>
+          {/* emissiveIntensity was 0.15, which lifted the whole surface
+              uniformly — including the unlit side, flattening the terminator
+              these bodies depend on for shape. Low enough now to still register
+              against black. */}
           <meshStandardMaterial
             map={texture}
             roughness={textureUrl ? roughnessFor(textureUrl, 0.9) : (TYPE_ROUGHNESS[textureType] ?? 0.9)}
             metalness={0.05}
             emissive={textureUrl ? '#223344' : (textureType === 'icy' ? '#88bbff' : textureType === 'alien' ? '#c4b0d4' : '#665544')}
-            emissiveIntensity={0.15}
+            emissiveIntensity={0.05}
           />
         </mesh>
 
