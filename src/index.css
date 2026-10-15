@@ -91,3 +91,30 @@ h1, h2, h3, h4, h5, h6 {
   letter-spacing: 2px;
   text-transform: uppercase;
 }
+
+/* ── Route shell ── */
+.route-fallback {
+  position: fixed;
+  inset: 0;
+  background: var(--space-dark);
+}
+
+.warp-flash {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  background: #fff;
+  pointer-events: none;
+}
+
+/* Scroll container for the document-style pages (intro, resume). body stays
+   overflow:hidden for the galaxy, so these pages scroll inside themselves. */
+.page-scroll {
+  position: fixed;
+  inset: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  background: var(--space-dark);
+}

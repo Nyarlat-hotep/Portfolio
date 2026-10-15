@@ -1,7 +1,5 @@
 import { useState, useCallback, useEffect, lazy, Suspense } from 'react';
-import { createPortal } from 'react-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { X } from 'lucide-react';
+import { LayoutGrid } from 'lucide-react';
 import Galaxy from './components/Galaxy/Galaxy';
 import PageOverlay from './components/UI/PageOverlay';
 import VoidOverlay from './components/UI/VoidOverlay';
@@ -10,14 +8,36 @@ const PlanetCreator = lazy(() => import('./components/UI/PlanetCreator'));
 const CaseStudy     = lazy(() => import('./components/Pages/CaseStudy'));
 const About         = lazy(() => import('./components/Pages/About'));
 const Experiments   = lazy(() => import('./components/Pages/Experiments'));
-import CustomCursor from './components/UI/CustomCursor';
+import GateModal from './components/UI/GateModal';
+import { isUnlocked } from './utils/gate';
 import { caseStudies, aboutContent } from './data/caseStudies';
 import { playCaseStudyOpen, playCaseStudyClose, playPlanetExplosion, playPlanetCreation, stopBackground, playBackground } from './utils/sounds';
 import './App.css';
+import * as THREE from 'three';
+import { getQualityTier, TIER } from './utils/qualityTier';
+
+// Anisotropic filtering, applied before anything constructs a texture.
+// Lives here rather than main.jsx so the intro page doesn't pull in three.
+//
+// Without it, a texture viewed at a grazing angle is minified along one axis
+// only, and trilinear filtering has to pick a mip that is far too blurry for
+// the other — which is why the ring bands shimmer and smear where they run away
+// from the camera. three clamps this to whatever the GPU actually supports, so
+// a value above the hardware maximum is harmless.
+//
+// Set as the global default rather than per texture: it only ever engages on
+// mipmapped minification, so render targets and LUTs (LinearFilter, no mips)
+// are unaffected and there is nothing to opt out.
+//
+// Tiered, because it is not free — a grazing pixel can cost up to this many
+// texture samples. The tier resolves synchronously at module load, so this is
+// decided before the first texture exists.
+THREE.Texture.DEFAULT_ANISOTROPY =
+  getQualityTier() >= TIER.HIGH ? 8 : getQualityTier() >= TIER.MED ? 4 : 1;
 
 const GATED_IDS = new Set(['case-study-1', 'case-study-3']);
 
-function App() {
+function App({ onMenu }) {
   const [activePlanet, setActivePlanet] = useState(null);
   const [isOverlayOpen, setIsOverlayOpen] = useState(false);
   const [showPlanetCreator, setShowPlanetCreator] = useState(false);
@@ -25,8 +45,6 @@ function App() {
   const [isCustomPlanetDeleting, setIsCustomPlanetDeleting] = useState(false);
 
   const [gateModal, setGateModal] = useState({ open: false, planet: null });
-  const [gateInput, setGateInput] = useState('');
-  const [gateError, setGateError] = useState(false);
   const [pendingPlanet, setPendingPlanet] = useState(null);
 
   // After gate modal closes, navigate to the planet
@@ -40,10 +58,8 @@ function App() {
   }, [pendingPlanet]);
 
   const handlePlanetClick = useCallback((planet) => {
-    if (GATED_IDS.has(planet.id)) {
+    if (GATED_IDS.has(planet.id) && !isUnlocked()) {
       setGateModal({ open: true, planet });
-      setGateInput('');
-      setGateError(false);
     } else {
       setActivePlanet(planet);
       if (planet.id !== 'home') {
@@ -56,31 +72,14 @@ function App() {
     }
   }, []);
 
-  function handleGateSubmit() {
-    if (gateInput.trim().toLowerCase() === 'cosmic1') {
-      const planet = gateModal.planet;
-      setGateModal({ open: false, planet: null });
-      setPendingPlanet(planet);
-    } else {
-      setGateError(true);
-    }
+  function handleGateSuccess() {
+    setPendingPlanet(gateModal.planet);
+    setGateModal({ open: false, planet: null });
   }
 
-  function handleGateKeyDown(e) {
-    if (e.key === 'Enter') handleGateSubmit();
-  }
-
-  useEffect(() => {
-    if (!gateModal.open) return;
-    const onKeyDown = (e) => {
-      if (e.key === 'Escape') {
-        playCaseStudyClose();
-        setGateModal({ open: false, planet: null });
-      }
-    };
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [gateModal.open]);
+  const handleGateClose = useCallback(() => {
+    setGateModal({ open: false, planet: null });
+  }, []);
 
   const handleCloseOverlay = useCallback(() => {
     playCaseStudyClose();
@@ -158,7 +157,12 @@ function App() {
 
   return (
     <div className="App">
-      <CustomCursor />
+      {onMenu && (
+        <button className="space-menu-btn" onClick={onMenu} aria-label="Back to menu">
+          <LayoutGrid size={14} />
+          <span>Menu</span>
+        </button>
+      )}
       <ErrorBoundary>
         <Galaxy
           onPlanetClick={handlePlanetClick}
@@ -204,56 +208,12 @@ function App() {
         </PageOverlay>
       )}
 
-      {/* Case study gate modal */}
-      {createPortal(
-        <AnimatePresence>
-          {gateModal.open && (
-            <div className="asteroid-message-overlay">
-              <motion.div
-                key="case-gate"
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 8 }}
-                transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
-                className={`asteroid-message gate-modal${gateError ? ' codex-rejected' : ''}`}
-              >
-                <div className="asteroid-message-header">
-                  <span className="asteroid-message-label">
-                    {gateError ? 'ACCESS DENIED' : 'CLEARANCE REQUIRED'}
-                  </span>
-                  <button
-                    className="asteroid-message-close"
-                    onClick={() => { playCaseStudyClose(); setGateModal({ open: false, planet: null }); }}
-                    aria-label="Close"
-                  ><X size={16} /></button>
-                </div>
-                <div className="asteroid-codex-body">
-                  <label className="asteroid-codex-label" htmlFor="gate-input">
-                    {gateModal.planet?.id === 'case-study-1'
-                      ? 'Restricted transmission detected. Supply clearance code to decrypt file.'
-                      : 'Classified intelligence archive. Authorization code required to proceed.'}
-                  </label>
-                  <input
-                    id="gate-input"
-                    className={`asteroid-codex-input${gateError ? ' codex-error' : ''}`}
-                    type="password"
-                    value={gateInput}
-                    onChange={(e) => {
-                      setGateInput(e.target.value);
-                      if (gateError) setGateError(false);
-                    }}
-                    onKeyDown={handleGateKeyDown}
-                    autoFocus
-                    autoComplete="off"
-                    placeholder="_ _ _ _ _ _ _"
-                  />
-                </div>
-              </motion.div>
-            </div>
-          )}
-        </AnimatePresence>,
-        document.body
-      )}
+      <GateModal
+        open={gateModal.open}
+        planetId={gateModal.planet?.id}
+        onSuccess={handleGateSuccess}
+        onClose={handleGateClose}
+      />
     </div>
   );
 }

@@ -13,55 +13,46 @@
   background: var(--space-dark);
 }
 
-/* ── Case study gate modal — amber/orange palette ── */
-.gate-modal {
-  border-color: rgba(255, 140, 0, 0.7);
-  box-shadow:
-    0 0 40px rgba(255, 119, 0, 0.15),
-    0 0 12px rgba(180, 80, 0, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+/* ── Return-to-menu button ──
+   Desktop: tucked inside the HUD frame's top-left corner, beside the hazard
+   stripes (HUDFrame .hud-tl sits at 12px; stripes span x 20–48, y 20–78).
+   ≤768px the HUD is hidden, so it moves to the plain corner. */
+.space-menu-btn {
+  position: fixed;
+  top: 32px;
+  left: 70px;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.85rem;
+  background: rgba(255, 119, 0, 0.05);
+  border: 1px solid rgba(255, 119, 0, 0.18);
+  border-radius: 8px;
+  color: rgba(200, 200, 200, 0.9);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.7rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
-.gate-modal::before {
-  background: linear-gradient(90deg, transparent, rgba(255, 140, 0, 0.7), rgba(200, 100, 0, 0.5), transparent);
-}
-
-.gate-modal .asteroid-message-header {
-  border-bottom-color: rgba(255, 140, 0, 0.15);
-}
-
-.gate-modal .asteroid-message-label {
-  color: rgba(255, 165, 0, 0.8);
-}
-
-.gate-modal .asteroid-message-close {
-  background: rgba(255, 140, 0, 0.08);
-  border-color: rgba(255, 140, 0, 0.6);
-  color: rgba(255, 165, 0, 0.8);
-}
-
-.gate-modal .asteroid-message-close:hover {
-  background: rgba(255, 140, 0, 0.2);
-  border-color: rgba(255, 165, 0, 0.9);
-  color: rgba(255, 200, 50, 1);
-  box-shadow: 0 0 10px rgba(255, 140, 0, 0.3);
-}
-
-.gate-modal .asteroid-codex-label {
-  color: rgba(255, 165, 0, 0.65);
-}
-
-.gate-modal .asteroid-codex-input {
-  border-color: rgba(255, 140, 0, 0.4);
-  color: rgba(255, 220, 150, 1);
-}
-
-.gate-modal .asteroid-codex-input:focus {
-  border-color: rgba(255, 165, 0, 0.85);
+.space-menu-btn:hover,
+.space-menu-btn:focus-visible {
+  color: #ffaa33;
+  border-color: rgba(255, 119, 0, 0.5);
+  background: rgba(255, 119, 0, 0.1);
+  box-shadow: 0 0 14px rgba(255, 119, 0, 0.2);
 }
 
 /* Mobile-specific improvements */
 @media (max-width: 768px) {
+  .space-menu-btn {
+    top: calc(16px + var(--safe-area-top));
+    left: calc(16px + var(--safe-area-left));
+  }
+
   /* Prevent pull-to-refresh and overscroll */
   html, body {
     overscroll-behavior: none;

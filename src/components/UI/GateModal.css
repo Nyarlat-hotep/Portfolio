@@ -1,0 +1,167 @@
+/* ── Case study gate — amber transmission panel ── */
+.gate-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  padding: 0 1rem 24px;
+  pointer-events: none;
+  z-index: 3000;
+}
+
+.gate-overlay--center {
+  align-items: center;
+  padding-bottom: 0;
+}
+
+.gate-scrim {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, rgba(10, 4, 0, 0.55), rgba(0, 0, 0, 0.8));
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  pointer-events: auto;
+}
+
+.gate-modal {
+  position: relative;
+  pointer-events: auto;
+  width: 100%;
+  max-width: 360px;
+  background: rgba(0, 0, 0, 0.97);
+  border: 1px solid rgba(255, 140, 0, 0.7);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow:
+    0 0 40px rgba(255, 119, 0, 0.15),
+    0 0 12px rgba(180, 80, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.gate-modal::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 140, 0, 0.7), rgba(200, 100, 0, 0.5), transparent);
+}
+
+.gate-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.7rem 1rem 0.5rem;
+  border-bottom: 1px solid rgba(255, 140, 0, 0.15);
+}
+
+.gate-status {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 3px;
+  color: rgba(255, 165, 0, 0.8);
+  animation: gateBlink 1.4s ease-in-out infinite;
+}
+
+@keyframes gateBlink {
+  0%, 100% { opacity: 0.5; }
+  50%       { opacity: 1; }
+}
+
+.gate-close,
+.gate-submit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.6rem;
+  background: rgba(255, 140, 0, 0.08);
+  border: 1px solid rgba(255, 140, 0, 0.6);
+  border-radius: 8px;
+  color: rgba(255, 165, 0, 0.8);
+  flex-shrink: 0;
+  transition: all 0.3s ease;
+}
+
+.gate-close:hover,
+.gate-submit:hover,
+.gate-submit:focus-visible {
+  background: rgba(255, 140, 0, 0.2);
+  border-color: rgba(255, 165, 0, 0.9);
+  color: rgba(255, 200, 50, 1);
+  box-shadow: 0 0 10px rgba(255, 140, 0, 0.3);
+}
+
+.gate-body {
+  padding: 1rem;
+}
+
+.gate-label {
+  display: block;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.62rem;
+  line-height: 1.6;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(255, 165, 0, 0.65);
+  margin-bottom: 0.75rem;
+}
+
+.gate-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.gate-input {
+  flex: 1;
+  min-width: 0;
+  background: rgba(255, 119, 0, 0.04);
+  border: 1px solid rgba(255, 140, 0, 0.4);
+  border-radius: 6px;
+  padding: 0.6rem 0.75rem;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 16px; /* ≥16px stops iOS zooming on focus */
+  color: rgba(255, 220, 150, 1);
+  letter-spacing: 1px;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.gate-input:focus {
+  border-color: rgba(255, 165, 0, 0.85);
+}
+
+/* ── Rejected ── */
+.gate-modal--rejected {
+  border-color: rgba(255, 55, 55, 0.8);
+  box-shadow:
+    0 0 40px rgba(255, 0, 0, 0.18),
+    0 0 12px rgba(200, 0, 60, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.gate-modal--rejected::before {
+  background: linear-gradient(90deg, transparent, rgba(255, 55, 55, 0.8), rgba(180, 0, 60, 0.6), transparent);
+}
+
+.gate-modal--rejected .gate-status { color: rgba(255, 70, 70, 0.95); }
+.gate-modal--rejected .gate-label  { color: rgba(255, 70, 70, 0.75); }
+
+.gate-modal--rejected .gate-close,
+.gate-modal--rejected .gate-submit {
+  border-color: rgba(255, 55, 55, 0.7);
+  color: rgba(255, 55, 55, 0.7);
+  background: rgba(255, 0, 0, 0.06);
+}
+
+.gate-input--error {
+  border-color: rgba(255, 80, 80, 0.8);
+  animation: gateShake 0.35s ease;
+}
+
+@keyframes gateShake {
+  0%, 100% { transform: translateX(0); }
+  20%       { transform: translateX(-6px); }
+  40%       { transform: translateX(6px); }
+  60%       { transform: translateX(-4px); }
+  80%       { transform: translateX(4px); }
+}

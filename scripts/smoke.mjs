@@ -13,7 +13,7 @@
  */
 import puppeteer from 'puppeteer';
 
-const BASE = process.argv[2] || 'http://localhost:5199/';
+const BASE = process.argv[2] || 'http://localhost:5199/space';
 
 // Every quality tier compiles a DIFFERENT shader — the raymarching tiers pull in
 // blocks the analytic tier never sees. Headless SwiftShader reports few cores, so
