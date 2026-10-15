@@ -115,7 +115,6 @@ function DestinationCard({ dest, onSelect, delay, reduce }) {
       animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
       transition={{ duration: 0.9, delay, ease: EASE }}
     >
-      <span className="dest-corners" aria-hidden="true" />
       <span className="dest-top">
         <span className="dest-index">{dest.index}</span>
         <span className="dest-kicker">{dest.kicker}</span>

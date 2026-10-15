@@ -11,6 +11,9 @@
   --text-primary: #ffffff;
   --text-secondary: rgba(255, 255, 255, 0.7);
 
+  /* Name display face — Michroma, a free Eurostile Extended lookalike */
+  --font-name: 'Michroma', 'Exo 2', sans-serif;
+
   /* Typography */
   font-family: 'Exo 2', 'Rajdhani', system-ui, -apple-system, 'Segoe UI', sans-serif;
   line-height: 1.5;
