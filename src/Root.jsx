@@ -4,7 +4,7 @@ import CustomCursor from './components/UI/CustomCursor';
 import LightspeedTransition from './components/UI/LightspeedTransition';
 import Intro from './components/Intro/Intro';
 import { useRoute, navigate } from './utils/route';
-import { playWarp, stopBackground } from './utils/sounds';
+import { playWarp, stopBackground, stopCosmicVoid, stopBlackHole, stopGameMusic } from './utils/sounds';
 
 // The galaxy is the heavy chunk (three + every shader). Keeping the import in
 // a function lets the intro warm it during idle time and the warp start it
@@ -30,6 +30,16 @@ export default function Root() {
     else document.title = ROUTES[path];
   }, [path]);
 
+  // The galaxy starts looping audio but doesn't stop it on unmount, so cut it
+  // whenever we leave /space — Menu, nav links and the browser Back button alike.
+  useEffect(() => {
+    if (path === '/space') return;
+    stopBackground();
+    stopCosmicVoid();
+    stopBlackHole();
+    stopGameMusic();
+  }, [path]);
+
   function startWarp() {
     if (warping) return;
     loadSpace();
@@ -43,13 +53,8 @@ export default function Root() {
     setWarping(false);
   }
 
-  function backToMenu() {
-    stopBackground();
-    navigate('/');
-  }
-
   let page;
-  if (path === '/space') page = <Space onMenu={backToMenu} />;
+  if (path === '/space') page = <Space onMenu={() => navigate('/')} />;
   else if (path === '/resume') page = <Resume onExplore={startWarp} />;
   else page = <Intro path={path} onExplore={startWarp} preloadSpace={loadSpace} />;
 

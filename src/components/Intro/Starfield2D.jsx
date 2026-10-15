@@ -11,13 +11,15 @@ const LAYERS = [
 const WARM = ['255,255,255', '255,240,220', '255,200,140', '255,170,90'];
 const rand = (a, b) => a + Math.random() * (b - a);
 
-export default function Starfield2D({ className = '' }) {
+export default function Starfield2D({ className = '', still = false }) {
   const ref = useRef(null);
 
   useEffect(() => {
     const canvas = ref.current;
     const ctx = canvas.getContext('2d');
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    // `still` draws one frame and stops — for pages where glass panels blur the
+    // field, since a moving canvas forces every backdrop-filter to recompute.
+    const reduced = still || window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     let W = 0, H = 0, stars = [], raf = 0, last = performance.now();
     let shooting = null, nextShoot = performance.now() + rand(3000, 7000);
@@ -134,7 +136,7 @@ export default function Starfield2D({ className = '' }) {
       window.removeEventListener('pointermove', onMove);
       document.removeEventListener('visibilitychange', onVis);
     };
-  }, []);
+  }, [still]);
 
   return <canvas ref={ref} className={className} aria-hidden="true" />;
 }

@@ -96,7 +96,7 @@ export default function Resume({ onExplore }) {
   return (
     <div className="resume page-scroll" ref={scrollRef}>
       <div className="rs-sky" aria-hidden="true">
-        <Starfield2D className="rs-stars" />
+        <Starfield2D className="rs-stars" still />
         <div className="rs-glow" />
       </div>
 

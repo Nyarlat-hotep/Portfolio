@@ -29,6 +29,11 @@ function getPool(src) {
   return _pools[src]
 }
 
+// For stop paths: never create (and preload) a pool just to pause it.
+function existingAudio(src) {
+  return _pools[src]?.instances[0]
+}
+
 let _muted = false
 
 function play(src, volume = 1) {
@@ -168,7 +173,8 @@ export function playCosmicVoid() {
 }
 
 export function stopCosmicVoid() {
-  const audio = getPool(SRCS.cosmicVoid).instances[0]
+  const audio = existingAudio(SRCS.cosmicVoid)
+  if (!audio) return
   audio.pause()
   try { audio.currentTime = 0 } catch (_) {}
 }
@@ -183,7 +189,8 @@ export function playBlackHole() {
 }
 
 export function stopBlackHole() {
-  const audio = getPool(SRCS.blackHole).instances[0]
+  const audio = existingAudio(SRCS.blackHole)
+  if (!audio) return
   audio.pause()
   try { audio.currentTime = 0 } catch (_) {}
 }
@@ -199,7 +206,8 @@ export function playGameMusic() {
 }
 
 export function stopGameMusic() {
-  const audio = getPool(SRCS.gameMusic).instances[0]
+  const audio = existingAudio(SRCS.gameMusic)
+  if (!audio) return
   audio.pause()
   try { audio.currentTime = 0 } catch (_) {}
 }

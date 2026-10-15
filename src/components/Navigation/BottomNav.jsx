@@ -4,7 +4,7 @@ import './BottomNav.css';
 import { planetsData } from '../../data/planets';
 import { aboutContent } from '../../data/caseStudies';
 import { isTouchDevice } from '../../utils/isTouchDevice';
-import { playMenuClick, playMenuHover, stopBackground } from '../../utils/sounds';
+import { playMenuClick, playMenuHover } from '../../utils/sounds';
 import { navigate } from '../../utils/route';
 
 // Check touch once on module load
@@ -98,7 +98,7 @@ const BottomNav = forwardRef(function BottomNav({ activePlanetId, onNavigate, on
           <a
             href="/resume"
             className="nav-button resume-button"
-            onClick={(e) => { e.preventDefault(); stopBackground(); navigate('/resume'); }}
+            onClick={(e) => { e.preventDefault(); navigate('/resume'); }}
             onMouseEnter={playMenuClick}
           >
             <span className="nav-icon"><FileText size={18} /></span>

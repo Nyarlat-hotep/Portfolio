@@ -143,7 +143,11 @@ export default function Intro({ path, onExplore, preloadSpace }) {
   const showCase = onCaseRoute && unlocked;
 
   // Warm the galaxy chunk once the intro has painted and the main thread is idle.
+  // Skipped on Save-Data / 2G so resume-only visitors on mobile data don't pay
+  // for ~300 KB of three.js they may never use; the warp still loads it on demand.
   useEffect(() => {
+    const conn = navigator.connection;
+    if (conn?.saveData || /2g/.test(conn?.effectiveType ?? '')) return;
     const idle = window.requestIdleCallback ?? ((cb) => setTimeout(cb, 1500));
     const cancel = window.cancelIdleCallback ?? clearTimeout;
     const id = idle(() => preloadSpace(), { timeout: 4000 });
