@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
-import { motion, useInView, useScroll, useSpring, animate, useReducedMotion } from 'framer-motion';
+import { useEffect, useRef } from 'react';
+import { motion, useScroll, useSpring } from 'framer-motion';
 import { ArrowLeft, ArrowUpRight, Download, Mail, Phone, Globe, Linkedin, Lock, Award, GraduationCap } from 'lucide-react';
 import Starfield2D from '../Intro/Starfield2D';
 import { resume } from '../../data/resume';
@@ -26,40 +26,6 @@ function tenure(start, end) {
 }
 
 const short = (label) => (label === 'Present' ? 'Present' : `${label.slice(0, 3)} ${label.split(' ')[1]}`);
-
-function Stat({ stat, index }) {
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: '-10% 0px' });
-  const reduce = useReducedMotion();
-  const [display, setDisplay] = useState(reduce ? stat.value : 0);
-
-  useEffect(() => {
-    if (!inView || reduce) return;
-    const controls = animate(0, stat.value, {
-      duration: 1.6,
-      delay: index * 0.08,
-      ease: EASE,
-      onUpdate: setDisplay,
-    });
-    return () => controls.stop();
-  }, [inView, reduce, stat.value, index]);
-
-  return (
-    <motion.div
-      ref={ref}
-      className="rs-stat"
-      initial={{ opacity: 0, y: 18 }}
-      animate={inView ? { opacity: 1, y: 0 } : undefined}
-      transition={{ duration: 0.8, delay: index * 0.08, ease: EASE }}
-    >
-      <span className="rs-stat-value">
-        {stat.prefix}{display.toFixed(stat.decimals ?? 0)}<span className="rs-stat-suffix">{stat.suffix}</span>
-      </span>
-      <span className="rs-stat-label">{stat.label}</span>
-      <span className="rs-stat-note">{stat.note}</span>
-    </motion.div>
-  );
-}
 
 function Role({ job, index }) {
   return (
@@ -156,10 +122,6 @@ export default function Resume({ onExplore }) {
             <li><a href={`https://${resume.site}`} target="_blank" rel="noreferrer"><Globe size={14} />{resume.site}</a></li>
             <li><a href={resume.linkedin} target="_blank" rel="noreferrer"><Linkedin size={14} />LinkedIn</a></li>
           </motion.ul>
-        </section>
-
-        <section className="rs-stats" aria-label="Impact">
-          {resume.stats.map((s, i) => <Stat key={s.label} stat={s} index={i} />)}
         </section>
 
         <section className="rs-section" aria-labelledby="rs-exp">

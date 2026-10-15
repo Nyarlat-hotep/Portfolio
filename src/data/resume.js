@@ -10,13 +10,6 @@ export const resume = {
   summary:
     'Product design lead with over a decade across enterprise platforms, consumer finance and the web. I set design strategy, build teams, and bring AI into tools that thousands of bankers use every day.',
 
-  stats: [
-    { value: 5.2, decimals: 1, prefix: '+', suffix: '%', label: 'Lead-to-close rate', note: '120,000 clients, first year' },
-    { value: 10, prefix: '+', suffix: '%', label: 'Eligible clients', note: 'Bank account linking' },
-    { value: 20, suffix: '+', label: 'Design system contributions', note: 'Rocket enterprise system' },
-    { value: Math.floor((Date.now() - Date.UTC(2014, 7, 1)) / 31557600000), suffix: ' yrs', label: 'Designing products', note: '2014 — present' },
-  ],
-
   experience: [
     {
       role: 'Lead Product Designer',
