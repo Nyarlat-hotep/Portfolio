@@ -102,7 +102,7 @@ export default function Resume({ onExplore }) {
 
       <header className="rs-bar">
         <button type="button" className="rs-bar-btn" onClick={back}>
-          <ArrowLeft size={15} /> <span>Menu</span>
+          <ArrowLeft size={15} /> <span>Home</span>
         </button>
         <span className="rs-bar-name">{resume.name}</span>
         <a className="rs-bar-btn rs-bar-btn--primary" href={resume.pdf} download>
